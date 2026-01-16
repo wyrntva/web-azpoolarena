@@ -3,6 +3,7 @@
 .env.local
 .env.prod
 .env.*.local
+desktop-qr-app/.env
 
 # Docker volumes data
 postgres_data/
@@ -11,6 +12,8 @@ nginx/ssl/*.pem
 
 # Backups
 backups/
+*.sql
+backup_*.sql
 
 # IDE
 .vscode/
@@ -42,3 +45,6 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+
+# Desktop QR App build artifacts
+desktop-qr-app/dist/.env.backup
