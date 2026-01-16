@@ -1,0 +1,200 @@
+╔════════════════════════════════════════════════════════════╗
+║       AZ POOLARENA ATTENDANCE - HƯỚNG DẪN CÀI ĐẶT         ║
+║              Phần mềm tạo mã QR chấm công                  ║
+╚════════════════════════════════════════════════════════════╝
+
+📋 NỘI DUNG PACKAGE:
+   ✓ AZ_POOLARENA_ATTENDANCE.exe (66 MB) - Phần mềm chính
+   ✓ .env - File cấu hình (BẮT BUỘC)
+   ✓ README.txt - Hướng dẫn ngắn gọn
+   ✓ HUONG_DAN_CAI_DAT.txt - File này
+
+════════════════════════════════════════════════════════════
+
+📦 BƯỚC 1: COPY FILES
+
+1. Tạo thư mục mới trên máy tính, ví dụ:
+   C:\AZ_POOLARENA_ATTENDANCE\
+
+2. Copy 2 files vào thư mục:
+   ✓ AZ_POOLARENA_ATTENDANCE.exe
+   ✓ .env
+
+⚠️ QUAN TRỌNG: File .env PHẢI nằm cùng thư mục với .exe!
+
+════════════════════════════════════════════════════════════
+
+🔧 BƯỚC 2: CẤU HÌNH FILE .ENV
+
+1. Click phải file .env → Open with → Notepad
+
+2. Đổi DEVICE_ID (MỖI MÁY PHẢI KHÁC NHAU):
+
+   Máy 1: DEVICE_ID=PC-QR-01
+   Máy 2: DEVICE_ID=PC-QR-02
+   Máy 3: DEVICE_ID=PC-QR-03
+
+3. Đổi DEVICE_NAME (tùy chọn):
+
+   DEVICE_NAME=Lễ tân - Máy 1
+   DEVICE_NAME=Văn phòng - Máy 2
+
+4. Lưu file (Ctrl + S) và đóng Notepad
+
+════════════════════════════════════════════════════════════
+
+🌐 BƯỚC 3: KIỂM TRA KẾT NỐI
+
+Trước khi chạy phần mềm, kiểm tra kết nối với server:
+
+1. Nhấn Win + R
+2. Gõ: cmd
+3. Nhấn Enter
+4. Gõ lệnh:
+   curl http://192.168.1.187:8000/health
+
+✅ Nếu thấy: {"status":"healthy"}
+   → Kết nối OK, tiếp tục bước 4
+
+❌ Nếu lỗi "Could not resolve host":
+   → Không cùng mạng WiFi với server
+   → Kiểm tra lại kết nối mạng
+
+❌ Nếu lỗi "Connection refused":
+   → Server backend chưa chạy
+   → Liên hệ admin để khởi động server
+
+════════════════════════════════════════════════════════════
+
+▶️ BƯỚC 4: CHẠY PHẦN MỀM
+
+1. Double-click: AZ_POOLARENA_ATTENDANCE.exe
+
+2. Nếu Windows Defender báo:
+   - Click "More info"
+   - Click "Run anyway"
+
+3. Cửa sổ phần mềm mở ra với:
+   - Tiêu đề: "MÃ QR CHẤM CÔNG"
+   - Nút: "Tạo mã QR"
+
+4. Click nút "Tạo mã QR"
+
+✅ Thành công:
+   - Mã QR hiển thị
+   - Nút đổi thành "Tạo lại mã QR"
+   - Countdown: 60s → 59s → 58s...
+
+❌ Lỗi:
+   - "Cannot connect to server" → Kiểm tra backend
+   - "Invalid API key" → Kiểm tra .env file
+   - "Configuration Error" → Thiếu file .env
+
+════════════════════════════════════════════════════════════
+
+📱 BƯỚC 5: TEST QUÉT QR TỪ MOBILE
+
+1. Mở camera hoặc app quét QR trên điện thoại
+
+2. Quét mã QR từ màn hình máy tính
+
+3. Link mở trong browser:
+   http://192.168.1.187:5173/attendance/check-in?token=...
+
+4. Trang hiển thị: "Đang xác thực..."
+
+5. Sau 2 giây tự động chuyển đến trang chấm công
+
+6. Nhập PIN và nhấn "CHẤM CÔNG"
+
+✅ Thành công: "Chấm công thành công!"
+
+════════════════════════════════════════════════════════════
+
+🔄 AUTO-START KHI KHỞI ĐỘNG WINDOWS (TÙY CHỌN)
+
+1. Nhấn Win + R
+2. Gõ: shell:startup
+3. Nhấn Enter (thư mục Startup mở ra)
+4. Tạo shortcut của AZ_POOLARENA_ATTENDANCE.exe
+5. Copy shortcut vào thư mục Startup
+
+→ Từ lần sau, phần mềm tự động chạy khi bật máy
+
+════════════════════════════════════════════════════════════
+
+🐛 XỬ LÝ LỖI THƯỜNG GẶP
+
+LỖI 1: "FileNotFoundError: .env"
+├─ Nguyên nhân: Thiếu file .env
+└─ Giải pháp: Copy file .env vào cùng thư mục với .exe
+
+LỖI 2: "Cannot connect to server at http://192.168.1.187:8000"
+├─ Nguyên nhân: Không kết nối được server
+├─ Giải pháp 1: Kiểm tra cùng WiFi (192.168.1.x)
+├─ Giải pháp 2: Ping 192.168.1.187 xem có thông không
+└─ Giải pháp 3: Liên hệ admin để khởi động backend
+
+LỖI 3: "Invalid API key"
+├─ Nguyên nhân: API key trong .env không đúng
+└─ Giải pháp: Kiểm tra INTERNAL_API_KEY trong .env
+
+LỖI 4: Quét QR thấy "Mã QR đã được sử dụng"
+├─ Nguyên nhân: Người khác đã quét QR này rồi
+└─ Giải pháp: Tạo mã QR mới (mỗi QR chỉ dùng 1 lần)
+
+LỖI 5: Quét QR thấy "Mã QR đã hết hạn"
+├─ Nguyên nhân: QR quá 60 giây chưa quét
+└─ Giải pháp: Tạo mã QR mới
+
+LỖI 6: Không quét được QR từ mobile
+├─ Nguyên nhân: Mobile không cùng WiFi
+├─ Giải pháp 1: Kết nối mobile vào WiFi công ty
+├─ Giải pháp 2: Test browser mobile: http://192.168.1.187:5173
+└─ Giải pháp 3: Kiểm tra frontend có chạy không
+
+════════════════════════════════════════════════════════════
+
+📊 THEO DÕI HOẠT ĐỘNG
+
+Xem console window (cửa sổ đen) để theo dõi log:
+- [API] Calling: ... → API request
+- [DEBUG] Seconds remaining: ... → Thời gian còn lại
+- [QR] QR code displayed successfully! → QR tạo thành công
+
+════════════════════════════════════════════════════════════
+
+📋 CHECKLIST TRIỂN KHAI
+
+□ Copy .exe và .env vào thư mục
+□ Đổi DEVICE_ID cho mỗi máy
+□ Test curl http://192.168.1.187:8000/health
+□ Chạy .exe thành công
+□ Tạo QR thành công
+□ Quét QR từ mobile thành công
+□ Chấm công thành công
+□ Setup auto-start (tùy chọn)
+
+════════════════════════════════════════════════════════════
+
+⚙️ YÊU CẦU HỆ THỐNG
+
+✓ Windows 10/11 (64-bit)
+✓ Kết nối mạng LAN
+✓ Backend server: http://192.168.1.187:8000
+✓ Frontend server: http://192.168.1.187:5173
+✓ Cùng WiFi/LAN với server (dải 192.168.1.x)
+
+════════════════════════════════════════════════════════════
+
+📞 HỖ TRỢ KỸ THUẬT
+
+Email: support@azpoolarena.com
+Phone: 0123456789
+Website: https://azpoolarena.com
+
+════════════════════════════════════════════════════════════
+
+© 2026 AZ POOLARENA. All rights reserved.
+Version: 1.0.0
+Build date: 2026-01-12

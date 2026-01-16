@@ -1,0 +1,154 @@
+════════════════════════════════════════════════════════════
+  HƯỚNG DẪN TẠO SHORTCUT TRÊN DESKTOP
+════════════════════════════════════════════════════════════
+
+📌 2 CÁCH TẠO SHORTCUT:
+
+════════════════════════════════════════════════════════════
+
+🚀 CÁCH 1: SỬ DỤNG FILE .BAT (TỰ ĐỘNG - KHUYẾN NGHỊ)
+
+1. Double-click file: "CAI_DAT_NHANH.bat"
+
+2. Làm theo hướng dẫn:
+   - Nhập DEVICE_ID (vd: PC-QR-01)
+   - Nhập tên máy (vd: Lễ tân - Máy 1)
+
+3. Script sẽ tự động:
+   ✓ Cập nhật file .env
+   ✓ Tạo shortcut trên Desktop
+   ✓ Kiểm tra kết nối server
+
+4. DONE! Icon xuất hiện trên Desktop
+
+════════════════════════════════════════════════════════════
+
+🖱️ CÁCH 2: TẠO THỦ CÔNG (MANUAL)
+
+BƯỚC 1: Tạo Shortcut
+--------------------
+1. Click phải vào "AZ_POOLARENA_ATTENDANCE.exe"
+2. Chọn: "Send to" → "Desktop (create shortcut)"
+
+BƯỚC 2: Đổi tên Shortcut
+-------------------------
+1. Click phải shortcut trên Desktop
+2. Chọn "Rename"
+3. Đổi tên: "AZ POOLARENA ATTENDANCE"
+
+BƯỚC 3: Chỉnh sửa Properties (Tùy chọn)
+---------------------------------------
+1. Click phải shortcut → Properties
+2. Tab "Shortcut":
+   - Comment: "Phần mềm tạo mã QR chấm công"
+   - Run: "Normal window"
+3. Click "OK"
+
+════════════════════════════════════════════════════════════
+
+📍 PIN VÀO TASKBAR (KHUYẾN NGHỊ)
+
+Để truy cập nhanh hơn:
+
+1. Click phải shortcut trên Desktop
+2. Chọn "Pin to taskbar"
+3. Icon xuất hiện ở thanh Taskbar bên dưới
+
+→ Bây giờ chỉ cần click vào Taskbar để mở!
+
+════════════════════════════════════════════════════════════
+
+🔄 AUTO-START KHI KHỞI ĐỘNG WINDOWS
+
+CÁCH 1: Startup Folder (Dễ nhất)
+--------------------------------
+1. Nhấn Win + R
+2. Gõ: shell:startup
+3. Nhấn Enter
+4. Copy shortcut vào thư mục này
+
+→ Phần mềm tự động chạy khi bật máy!
+
+CÁCH 2: Task Scheduler (Nâng cao)
+----------------------------------
+1. Mở Task Scheduler (gõ trong Start Menu)
+2. Create Basic Task
+3. Name: "AZ POOLARENA ATTENDANCE Auto Start"
+4. Trigger: "When I log on"
+5. Action: "Start a program"
+6. Program: Đường dẫn đến .exe
+7. Finish
+
+════════════════════════════════════════════════════════════
+
+⚙️ TIPS & TRICKS
+
+TIP 1: Phím tắt (Shortcut Key)
+-------------------------------
+1. Click phải shortcut → Properties
+2. Tab "Shortcut"
+3. Shortcut key: Nhấn Ctrl + Alt + A (hoặc phím bất kỳ)
+4. OK
+
+→ Nhấn Ctrl + Alt + A để mở phần mềm từ bất kỳ đâu!
+
+TIP 2: Run as Administrator
+----------------------------
+1. Click phải shortcut → Properties
+2. Tab "Shortcut" → Advanced
+3. ✓ "Run as administrator"
+4. OK
+
+→ Chạy với quyền admin (cần cho một số máy)
+
+TIP 3: Start Minimized
+----------------------
+1. Click phải shortcut → Properties
+2. Tab "Shortcut"
+3. Run: "Minimized"
+4. OK
+
+→ Chạy ở chế độ thu nhỏ (background)
+
+════════════════════════════════════════════════════════════
+
+❓ XỬ LÝ LỖI
+
+LỖI: "This file can't be opened"
+---------------------------------
+→ File .exe bị di chuyển hoặc xóa
+→ Tạo lại shortcut từ đầu
+
+LỖI: Shortcut không chạy
+------------------------
+→ Click phải → Properties → Check đường dẫn "Target"
+→ Đảm bảo trỏ đúng vào AZ_POOLARENA_ATTENDANCE.exe
+
+LỖI: Thiếu file .env
+--------------------
+→ File .env phải cùng thư mục với .exe
+→ Kiểm tra "Start in" trong Properties
+
+════════════════════════════════════════════════════════════
+
+✅ CHECKLIST SAU KHI TẠO SHORTCUT
+
+□ Icon xuất hiện trên Desktop
+□ Double-click shortcut → Phần mềm mở được
+□ Icon hiển thị logo AZ POOLARENA
+□ Tên shortcut: "AZ POOLARENA ATTENDANCE"
+□ (Tùy chọn) Đã pin vào Taskbar
+□ (Tùy chọn) Đã setup auto-start
+
+════════════════════════════════════════════════════════════
+
+🎯 KẾT QUẢ
+
+Sau khi hoàn thành, bạn có:
+  ✓ Icon trên Desktop để mở nhanh
+  ✓ (Tùy chọn) Icon trên Taskbar
+  ✓ (Tùy chọn) Tự động chạy khi khởi động
+
+→ Chỉ cần click 1 lần để mở phần mềm!
+
+════════════════════════════════════════════════════════════

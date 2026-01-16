@@ -1,0 +1,154 @@
+.payroll-page {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.payroll-page .ant-card {
+  overflow: hidden;
+}
+
+.payroll-page .ant-card-body {
+  overflow: hidden;
+  padding: 0;
+}
+
+.payroll-page .ant-tabs-content {
+  overflow: hidden;
+}
+
+.payroll-page .ant-tabs-tabpane {
+  padding: 16px;
+}
+
+.payroll-grid {
+  overflow-x: auto;
+  max-width: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.payroll-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 12px;
+  min-width: 2000px;
+}
+
+.payroll-table th,
+.payroll-table td {
+  border: 1px solid #d9d9d9;
+  padding: 8px 4px;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.payroll-table th {
+  background: #fafafa;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* Sticky columns */
+.payroll-table .sticky-col {
+  position: sticky;
+  background: white;
+  z-index: 10;
+}
+
+.payroll-table .sticky-header {
+  z-index: 20 !important;
+  background: #fafafa !important;
+}
+
+.payroll-table .stt-col {
+  left: 0;
+  min-width: 40px;
+  max-width: 40px;
+}
+
+.payroll-table .employee-name-col {
+  left: 40px;
+  min-width: 120px;
+  max-width: 120px;
+  text-align: left;
+  font-weight: 500;
+  padding-left: 8px;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Date headers */
+.payroll-table .date-header {
+  min-width: 32px;
+  max-width: 32px;
+  padding: 4px 2px;
+  font-size: 11px;
+}
+
+.payroll-table .day-name {
+  min-width: 32px;
+  max-width: 32px;
+  padding: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #666;
+}
+
+/* Work hours cells */
+.payroll-table .work-hours-cell {
+  min-width: 32px;
+  max-width: 32px;
+  padding: 4px 2px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.payroll-table .work-hours-cell:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+/* Summary columns */
+.payroll-table .summary-col {
+  min-width: 70px;
+  max-width: 70px;
+  font-weight: 500;
+  background: #fafafa;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.payroll-table .total-hours {
+  background: #e6f7ff;
+  font-weight: 700;
+  font-size: 13px;
+  color: #0050b3;
+}
+
+.payroll-table .total-salary {
+  background: #f6ffed;
+  font-weight: 700;
+  font-size: 12px;
+  color: #389e0d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payroll-page {
+    padding: 12px;
+  }
+
+  .payroll-table {
+    font-size: 10px;
+  }
+
+  .payroll-table .employee-name-col {
+    min-width: 100px;
+    max-width: 100px;
+  }
+}

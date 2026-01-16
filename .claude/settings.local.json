@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(alembic revision:*)",
+      "Bash(alembic upgrade:*)",
+      "Bash(python:*)",
+      "Bash(dir:*)",
+      "Bash(alembic downgrade:*)",
+      "Bash(alembic current:*)",
+      "Bash(alembic heads:*)",
+      "Bash(alembic merge:*)",
+      "Bash(alembic stamp:*)",
+      "Bash(cd:*)",
+      "Bash(tree -d -L 3 src)",
+      "Bash(mkdir:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(tree:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(del \"f:\\\\Build app web\\\\web-azpoolarena\\\\backend\\\\app\\\\api\\\\desktop_attendance.py\")",
+      "Bash(del \"f:\\\\Build app web\\\\web-azpoolarena\\\\backend\\\\app\\\\models\\\\desktop_attendance.py\")",
+      "Bash(del \"f:\\\\Build app web\\\\web-azpoolarena\\\\backend\\\\app\\\\schemas\\\\desktop_attendance.py\")",
+      "Bash(del \"f:\\\\Build app web\\\\web-azpoolarena\\\\backend\\\\app\\\\core\\\\desktop_qr_manager.py\")",
+      "Bash(wc:*)",
+      "Bash(cat:*)"
+    ]
+  }
+}

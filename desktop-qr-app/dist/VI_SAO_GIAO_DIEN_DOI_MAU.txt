@@ -1,0 +1,61 @@
+════════════════════════════════════════════════════════════
+  TẠI SAO GIAO DIỆN ĐỔI MÀU TRÊN MÁY KHÁC?
+════════════════════════════════════════════════════════════
+
+🎨 NGUYÊN NHÂN:
+
+Windows có 3 theme chính:
+  • Light Mode (Sáng) - Background trắng/xám nhạt
+  • Dark Mode (Tối) - Background đen/xám đậm
+  • High Contrast (Tương phản cao) - Màu đậm nét
+
+Phần mềm sử dụng Qt Fusion style, tự động thích nghi
+với theme hệ thống → Màu sắc thay đổi theo theme Windows!
+
+════════════════════════════════════════════════════════════
+
+✅ GIẢI PHÁP:
+
+CÁCH 1: Đổi Theme Windows về mặc định
+--------------------------------------
+1. Nhấn Win + I (Settings)
+2. Personalization → Colors
+3. Chọn "Light" hoặc "Dark"
+4. Restart phần mềm
+
+CÁCH 2: Tắt High Contrast (Nếu đang bật)
+----------------------------------------
+1. Nhấn Win + I
+2. Accessibility → Color filters
+3. Tắt "Color filters"
+4. Accessibility → Contrast themes
+5. Chọn "None"
+
+CÁCH 3: Fix màu cố định (Khuyến nghị)
+-------------------------------------
+Version mới của phần mềm (v1.1) sẽ có màu cố định,
+không đổi theo theme Windows.
+
+Liên hệ admin để cập nhật version mới!
+
+════════════════════════════════════════════════════════════
+
+📋 SO SÁNH:
+
+Theme Windows         | Giao diện phần mềm
+---------------------|-------------------
+Light Mode           | Nền trắng/xám nhạt ✓
+Dark Mode            | Nền đen/xám đậm
+High Contrast        | Màu sắc lạ
+
+LƯU Ý: Phần mềm vẫn hoạt động bình thường với mọi theme,
+chỉ khác về màu sắc giao diện!
+
+════════════════════════════════════════════════════════════
+
+💡 KHUYẾN NGHỊ:
+
+Để giao diện đẹp và nhất quán trên tất cả máy:
+→ Sử dụng Windows Light Mode (theme sáng mặc định)
+
+════════════════════════════════════════════════════════════
