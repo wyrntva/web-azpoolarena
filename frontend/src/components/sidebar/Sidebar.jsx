@@ -10,7 +10,7 @@ import {
 } from "@ant-design/icons";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import Logo from "../../assets/logo home.png";
+import Logo from "../../assets/logo-home.png";
 import { useAuth } from "../../auth/AuthContext";
 import { hasPermission } from "../../utils/permissions";
 import { PERMISSIONS } from "../../constants/permissions";
@@ -173,27 +173,27 @@ export default function Sidebar() {
               canView(PERMISSIONS.SAFE.VIEW_PAGE) ||
               canView(PERMISSIONS.DEBT.VIEW_PAGE) ||
               canView(PERMISSIONS.FINANCE_TYPES.VIEW_PAGE)) && (
-              <Menu.SubMenu key="finance" icon={<ShoppingOutlined />} title="Thu chi">
-                {canView(PERMISSIONS.RECEIPTS.VIEW_PAGE) && (
-                  <Menu.Item key="/finance"><Link to="/finance">Thu chi</Link></Menu.Item>
-                )}
-                {canView(PERMISSIONS.FINANCE_TRADE.VIEW_PAGE) && (
-                  <Menu.Item key="/finance-trade"><Link to="/finance-trade">Đổi tiền</Link></Menu.Item>
-                )}
-                {canView(PERMISSIONS.REVENUES.VIEW_PAGE) && (
-                  <Menu.Item key="/revenue"><Link to="/revenue">Doanh thu</Link></Menu.Item>
-                )}
-                {canView(PERMISSIONS.SAFE.VIEW_PAGE) && (
-                  <Menu.Item key="/safe"><Link to="/safe">Tài chính</Link></Menu.Item>
-                )}
-                {canView(PERMISSIONS.DEBT.VIEW_PAGE) && (
-                  <Menu.Item key="/debt"><Link to="/debt">Công nợ</Link></Menu.Item>
-                )}
-                {canView(PERMISSIONS.FINANCE_TYPES.VIEW_PAGE) && (
-                  <Menu.Item key="/finance-types"><Link to="/finance-types">Danh mục chi</Link></Menu.Item>
-                )}
-              </Menu.SubMenu>
-            )}
+                <Menu.SubMenu key="finance" icon={<ShoppingOutlined />} title="Thu chi">
+                  {canView(PERMISSIONS.RECEIPTS.VIEW_PAGE) && (
+                    <Menu.Item key="/finance"><Link to="/finance">Thu chi</Link></Menu.Item>
+                  )}
+                  {canView(PERMISSIONS.FINANCE_TRADE.VIEW_PAGE) && (
+                    <Menu.Item key="/finance-trade"><Link to="/finance-trade">Đổi tiền</Link></Menu.Item>
+                  )}
+                  {canView(PERMISSIONS.REVENUES.VIEW_PAGE) && (
+                    <Menu.Item key="/revenue"><Link to="/revenue">Doanh thu</Link></Menu.Item>
+                  )}
+                  {canView(PERMISSIONS.SAFE.VIEW_PAGE) && (
+                    <Menu.Item key="/safe"><Link to="/safe">Tài chính</Link></Menu.Item>
+                  )}
+                  {canView(PERMISSIONS.DEBT.VIEW_PAGE) && (
+                    <Menu.Item key="/debt"><Link to="/debt">Công nợ</Link></Menu.Item>
+                  )}
+                  {canView(PERMISSIONS.FINANCE_TYPES.VIEW_PAGE) && (
+                    <Menu.Item key="/finance-types"><Link to="/finance-types">Danh mục chi</Link></Menu.Item>
+                  )}
+                </Menu.SubMenu>
+              )}
 
             {/* Kho hàng */}
             {canView(PERMISSIONS.INVENTORY.VIEW_PAGE) && (

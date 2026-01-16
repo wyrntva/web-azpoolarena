@@ -3,7 +3,7 @@ import { Form, Input, Button, Card } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import Logo from '../../assets/Logo login.png';
+import Logo from '../../assets/logo-login.png';
 import AuthBackground from '../../assets/images/auth_img.png';
 import { COLORS, SHADOWS, BORDER_RADIUS } from '../../constants/theme';
 
