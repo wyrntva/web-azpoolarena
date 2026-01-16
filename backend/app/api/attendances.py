@@ -68,23 +68,9 @@ def public_check_attendance(
             detail="Mã PIN không đúng hoặc không tồn tại"
         )
 
-    # Get REAL IP address from request (not from client payload)
-    # This is the IP address that the server sees (local IP if on same network)
+    # Get REAL IP address from request (for logging purposes only)
+    # WiFi validation disabled - Desktop QR App ensures users are at office
     real_ip_address = http_request.client.host if http_request.client else None
-
-    # Validate WiFi connection
-    is_valid_wifi, wifi_message = validate_wifi_connection(
-        db=db,
-        ssid=attendance_request.wifi_ssid,
-        bssid=attendance_request.wifi_bssid,
-        ip_address=real_ip_address  # Use server-detected IP instead of client-provided
-    )
-
-    if not is_valid_wifi:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=wifi_message
-        )
 
     # Validate QR token - Try new QR Access system first, then fall back to old system
     qr_session = None

@@ -5,13 +5,11 @@ import {
   Button,
   Alert,
   Space,
-  Typography,
-  Spin
+  Typography
 } from "antd";
 import { message as antdMessage } from "../../utils/antdGlobal";
 import {
   ClockCircleOutlined,
-  WifiOutlined,
   CheckCircleOutlined,
   LockOutlined
 } from "@ant-design/icons";
@@ -25,9 +23,6 @@ export default function MobileAttendance() {
 
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
-  const [wifiInfo, setWifiInfo] = useState(null);
-  const [checkingWifi, setCheckingWifi] = useState(true);
-  const [wifiError, setWifiError] = useState(null);
   const [actionType, setActionType] = useState("");
   const [checkedInInfo, setCheckedInInfo] = useState(null);
 
@@ -46,7 +41,7 @@ export default function MobileAttendance() {
 
     const init = async () => {
       if (isMounted) {
-        await checkWifiConnection();
+        // WiFi check removed - Desktop QR App ensures office presence
         loadCheckedInStatus();
       }
     };
@@ -109,53 +104,10 @@ export default function MobileAttendance() {
     }
   };
 
-  const checkWifiConnection = async () => {
-    setCheckingWifi(true);
-
-    try {
-      // Try to get WiFi info from browser (limited support)
-      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-
-      // Try to get WiFi SSID from browser (very limited support - mainly Android)
-      let detectedSSID = "auto-detected";
-
-      // Check if NetworkInformation API is available
-      if (connection && 'effectiveType' in connection) {
-        // Only works on some Android devices with Chrome
-        try {
-          // @ts-ignore - experimental API
-          if (navigator.connection?.ssid) {
-            detectedSSID = navigator.connection.ssid;
-          }
-        } catch (e) {
-          console.log("SSID detection not available");
-        }
-      }
-
-      // Backend sẽ tự động lấy IP từ request.client.host
-      setWifiInfo({
-        ip: "auto-detected",
-        ssid: detectedSSID,
-        effectiveType: connection?.effectiveType || "unknown"
-      });
-
-      setWifiError(null);
-    } catch (error) {
-      console.error("Error checking WiFi:", error);
-      setWifiError("Không thể kiểm tra kết nối mạng. Vui lòng đảm bảo bạn đã kết nối WiFi công ty.");
-    } finally {
-      setCheckingWifi(false);
-    }
-  };
 
   const handleCheckAttendance = async () => {
     if (!pin || pin.length !== 4) {
       antdMessage.error("Vui lòng nhập mã PIN 4 số");
-      return;
-    }
-
-    if (!wifiInfo) {
-      antdMessage.error("Chưa kiểm tra được kết nối mạng");
       return;
     }
 
@@ -171,9 +123,9 @@ export default function MobileAttendance() {
       const response = await attendanceAPI.publicCheckAttendance({
         qr_token: qrToken,
         pin: pin,
-        wifi_ssid: wifiInfo.ssid || "auto-detected", // Use detected SSID if available
+        wifi_ssid: null,  // WiFi validation disabled
         wifi_bssid: null,
-        ip_address: wifiInfo.ip,
+        ip_address: null,
       });
 
       const { action, message, check_in_time, check_out_time } = response.data;
@@ -258,93 +210,69 @@ export default function MobileAttendance() {
           </Text>
         </div>
 
-        {checkingWifi ? (
-          <div style={{ textAlign: "center", padding: "32px 0" }}>
-            <Spin size="large" />
-            <div style={{ marginTop: 12 }}>
-              <Text type="secondary" style={{ fontSize: "14px" }}>Đang kiểm tra kết nối WiFi...</Text>
-            </div>
-          </div>
-        ) : (
-          <Space direction="vertical" style={{ width: "100%" }} size="middle">
-            {checkedInInfo && (
-              <Alert
-                message={<span style={{ fontSize: "14px" }}>Đã chấm công vào ca</span>}
-                description={
-                  <div style={{ fontSize: "13px" }}>
-                    <div>Giờ vào: {new Date(checkedInInfo.checkInTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
-                    <div style={{ fontSize: 12, marginTop: 4, opacity: 0.8 }}>
-                      Thiết bị này đã chấm công với mã PIN {checkedInInfo.pin.replace(/./g, '•')}
-                    </div>
+        <Space direction="vertical" style={{ width: "100%" }} size="middle">
+          {checkedInInfo && (
+            <Alert
+              message={<span style={{ fontSize: "14px" }}>Đã chấm công vào ca</span>}
+              description={
+                <div style={{ fontSize: "13px" }}>
+                  <div>Giờ vào: {new Date(checkedInInfo.checkInTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div style={{ fontSize: 12, marginTop: 4, opacity: 0.8 }}>
+                    Thiết bị này đã chấm công với mã PIN {checkedInInfo.pin.replace(/./g, '•')}
                   </div>
-                }
-                type="info"
-                showIcon
-                icon={<CheckCircleOutlined />}
-                style={{ backgroundColor: '#e6f7ff', border: '1px solid #91d5ff' }}
-              />
-            )}
+                </div>
+              }
+              type="info"
+              showIcon
+              icon={<CheckCircleOutlined />}
+              style={{ backgroundColor: '#e6f7ff', border: '1px solid #91d5ff' }}
+            />
+          )}
 
-            {wifiError && (
-              <Alert
-                message={<span style={{ fontSize: "14px" }}>Cảnh báo kết nối</span>}
-                description={<span style={{ fontSize: "13px" }}>{wifiError}</span>}
-                type="warning"
-                showIcon
-                icon={<WifiOutlined />}
-                action={
-                  <Button size="small" onClick={checkWifiConnection}>
-                    Thử lại
-                  </Button>
-                }
-              />
-            )}
-
-            <div>
-              <Text strong style={{ fontSize: 15 }}>
-                <LockOutlined /> Mã PIN chấm công
-              </Text>
-              <Input.Password
-                size="large"
-                placeholder="Nhập mã PIN 4 số"
-                value={pin}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "");
-                  if (value.length <= 4) {
-                    setPin(value);
-                  }
-                }}
-                maxLength={4}
-                style={{ marginTop: 8, fontSize: 20, textAlign: "center", letterSpacing: "6px" }}
-                autoFocus
-              />
-              <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 8 }}>
-                Nhập mã PIN cá nhân của bạn để chấm công
-              </Text>
-            </div>
-
-            <Button
-              type="primary"
+          <div>
+            <Text strong style={{ fontSize: 15 }}>
+              <LockOutlined /> Mã PIN chấm công
+            </Text>
+            <Input.Password
               size="large"
-              onClick={handleCheckAttendance}
-              loading={loading}
-              disabled={pin.length !== 4}
-              block
-              style={{
-                height: 50,
-                fontSize: 16,
-                fontWeight: 600,
-                borderRadius: 8
+              placeholder="Nhập mã PIN 4 số"
+              value={pin}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                if (value.length <= 4) {
+                  setPin(value);
+                }
               }}
-            >
-              {actionType === "attendance"
-                ? "Chấm công ngay"
-                : actionType === "check_in"
-                  ? "Vào ca ngay"
-                  : "Tan ca ngay"}
-            </Button>
-          </Space>
-        )}
+              maxLength={4}
+              style={{ marginTop: 8, fontSize: 20, textAlign: "center", letterSpacing: "6px" }}
+              autoFocus
+            />
+            <Text type="secondary" style={{ fontSize: 12, display: "block", marginTop: 8 }}>
+              Nhập mã PIN cá nhân của bạn để chấm công
+            </Text>
+          </div>
+
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleCheckAttendance}
+            loading={loading}
+            disabled={pin.length !== 4}
+            block
+            style={{
+              height: 50,
+              fontSize: 16,
+              fontWeight: 600,
+              borderRadius: 8
+            }}
+          >
+            {actionType === "attendance"
+              ? "Chấm công ngay"
+              : actionType === "check_in"
+                ? "Vào ca ngay"
+                : "Tan ca ngay"}
+          </Button>
+        </Space>
       </Card>
     </div>
   );
