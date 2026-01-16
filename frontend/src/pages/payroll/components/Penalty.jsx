@@ -26,7 +26,7 @@ import { userAPI } from "../../../api/user.api";
 import { payrollAPI } from "../../../api/payroll.api";
 import { attendanceSettingsAPI } from "../../../api/attendance.api";
 import { useAuth } from "../../../auth/AuthContext";
-import { isAdmin } from "../../../auth/roles";
+import { isAdmin, ROLES } from "../../../auth/roles";
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
@@ -48,12 +48,10 @@ export default function Penalty() {
   const isUserAdmin = isAdmin(user);
 
   useEffect(() => {
-    if (isUserAdmin) {
-      fetchEmployees();
-      fetchSettings();
-    }
+    fetchEmployees();
+    fetchSettings();
     fetchPenalties();
-  }, [isUserAdmin]);
+  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -74,7 +72,7 @@ export default function Penalty() {
     try {
       const response = await userAPI.getAll();
       const staffUsers = (response.data || [])
-        .filter((u) => u.role?.name === "staff" && u.is_active === true);
+        .filter((u) => Number(u.role_id) !== 4 && u.is_active === true);
       setEmployees(staffUsers);
     } catch (error) {
       message.error("Không thể tải danh sách nhân viên");

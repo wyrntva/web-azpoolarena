@@ -376,7 +376,12 @@ def get_timesheet(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.is_admin:
+    # Check if user is admin or accountant
+    is_privileged = current_user.is_admin or (
+        current_user.role and (current_user.role.name in ["Thu ngân", "accountant"] or current_user.role_id == 5)
+    )
+
+    if is_privileged:
         query = db.query(Attendance)
         if user_id:
             query = query.filter(Attendance.user_id == user_id)

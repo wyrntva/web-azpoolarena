@@ -95,7 +95,14 @@ def require_accountant_or_admin(current_user: User = Depends(get_current_user)) 
     if current_user.is_admin:
         return current_user
         
-    if not current_user.role or current_user.role.name != "Thu ngân":
+    if not current_user.role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User has no role assigned"
+        )
+    
+    role_name = current_user.role.name
+    if role_name not in ["Thu ngân", "accountant"] and current_user.role_id != 5:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Accountant or Admin access required"

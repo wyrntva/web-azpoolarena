@@ -21,7 +21,7 @@ export default function Payroll() {
     {
       key: "salary",
       label: (
-        <span>
+        <span style={{ paddingLeft: 12 }}>
           <TableOutlined /> Bảng Lương
         </span>
       ),
@@ -69,7 +69,6 @@ export default function Payroll() {
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
-          size="large"
         />
       </Card>
     </div>

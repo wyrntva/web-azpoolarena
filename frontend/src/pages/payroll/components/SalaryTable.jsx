@@ -12,7 +12,7 @@ import { userAPI } from "../../../api/user.api";
 import { payrollAPI } from "../../../api/payroll.api";
 import { debtAPI } from "../../../api/debt.api";
 import { useAuth } from "../../../auth/AuthContext";
-import { isAdmin } from "../../../auth/roles";
+import { isAdmin, ROLES } from "../../../auth/roles";
 import "dayjs/locale/vi";
 
 dayjs.locale("vi");
@@ -52,12 +52,10 @@ export default function SalaryTable() {
   }, [schedules]);
 
   useEffect(() => {
-    if (isUserAdmin) {
-      fetchEmployees();
-    }
+    fetchEmployees();
     fetchData();
     fetchDebts();
-  }, [selectedDate, isUserAdmin]);
+  }, [selectedDate]);
 
   // Save salary coefficients to localStorage whenever they change
   useEffect(() => {
@@ -68,7 +66,7 @@ export default function SalaryTable() {
     try {
       const response = await userAPI.getAll();
       const staffUsers = (response.data || [])
-        .filter((u) => u.role?.name === "staff" && u.is_active === true)
+        .filter((u) => Number(u.role_id) !== 4)
         .reduce((acc, curr) => {
           if (!acc.find((item) => item.id === curr.id)) acc.push(curr);
           return acc;
@@ -125,7 +123,15 @@ export default function SalaryTable() {
         // Trường hợp 2: Có check-in nhưng về sớm (có check-out trước giờ quy định)
         else if (attendance.check_out_time) {
           const checkOutTime = dayjs(attendance.check_out_time);
-          const scheduledEnd = dayjs(`${attendance.date} ${schedule.end_time}`);
+
+          // Xác định thời gian kết thúc ca (xử lý ca qua đêm)
+          const startDateTime = dayjs(`${attendance.date} ${schedule.start_time}`);
+          let scheduledEnd = dayjs(`${attendance.date} ${schedule.end_time}`);
+
+          if (scheduledEnd.isBefore(startDateTime) || scheduledEnd.isSame(startDateTime)) {
+            scheduledEnd = scheduledEnd.add(1, 'day');
+          }
+
           const earlyMinutes = scheduledEnd.diff(checkOutTime, "minute");
 
           if (earlyMinutes > 0) {
@@ -253,7 +259,14 @@ export default function SalaryTable() {
       return 0;
     }
     const checkOutTime = dayjs(attendance.check_out_time);
-    const scheduledEnd = dayjs(`${attendance.date} ${schedule.end_time}`);
+    const startDateTime = dayjs(`${attendance.date} ${schedule.start_time}`);
+    let scheduledEnd = dayjs(`${attendance.date} ${schedule.end_time}`);
+
+    // Nếu giờ kết thúc nhỏ hơn giờ bắt đầu -> ca qua đêm
+    if (scheduledEnd.isBefore(startDateTime) || scheduledEnd.isSame(startDateTime)) {
+      scheduledEnd = scheduledEnd.add(1, 'day');
+    }
+
     const earlyMinutes = scheduledEnd.diff(checkOutTime, "minute");
     return Math.max(0, earlyMinutes);
   };
@@ -264,7 +277,13 @@ export default function SalaryTable() {
       return 0;
     }
     const start = dayjs(`2000-01-01 ${schedule.start_time}`);
-    const end = dayjs(`2000-01-01 ${schedule.end_time}`);
+    let end = dayjs(`2000-01-01 ${schedule.end_time}`);
+
+    // Xử lý ca qua đêm (VD: 16:00 -> 02:00)
+    if (end.isBefore(start) || end.isSame(start)) {
+      end = end.add(1, "day");
+    }
+
     return end.diff(start, "hour", true);
   };
 
@@ -355,14 +374,10 @@ export default function SalaryTable() {
       return { backgroundColor: "#fff7e6", color: "#d46b08" };
     }
 
-    // Giờ làm đầy đủ (>= 8 giờ)
-    if (hours >= 8) {
+    // Nếu đã hoàn thành ca làm (có check-in, check-out) và không bị vi phạm status
+    // Thì hiển thị màu xanh (thành công) bất kể số giờ (vì có thể là ca part-time 4h, 6h...)
+    if (attendance.check_in_time && attendance.check_out_time) {
       return { backgroundColor: "#d4edda", color: "#000" };
-    }
-
-    // Giờ làm không đủ (< 8 giờ)
-    if (hours < 8 && hours > 0) {
-      return { backgroundColor: "#fff7e6", color: "#d46b08" };
     }
 
     return { backgroundColor: "#d4edda", color: "#000" };
@@ -419,8 +434,8 @@ export default function SalaryTable() {
                     {index + 1}
                   </th>
                 ))}
-                <th rowSpan="2" className="summary-col">Tổng giờ<br/>làm việc</th>
-                <th rowSpan="2" className="summary-col">Hệ số<br/>lương</th>
+                <th rowSpan="2" className="summary-col">Tổng giờ<br />làm việc</th>
+                <th rowSpan="2" className="summary-col">Hệ số<br />lương</th>
                 <th rowSpan="2" className="summary-col">Tổng lương</th>
                 <th rowSpan="2" className="summary-col">Thưởng</th>
                 <th rowSpan="2" className="summary-col">Tiền ứng</th>

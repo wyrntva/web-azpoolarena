@@ -12,11 +12,24 @@ export const hasRole = (user, allowedRoles) => {
 };
 
 export const isAdmin = (user) => {
-  if (!user || !user.role) return false;
-  return user.role.name === ROLES.ADMIN || user.role.name === 'admin' || user.role.name === 'Quản lý';
+  if (!user) return false;
+  // Use explicit field from API if available
+  if (user.is_admin === true) return true;
+  // Check by ID (safest fallback)
+  const roleId = Number(user.role_id || (user.role && user.role.id));
+  if (roleId === 4) return true;
+  // Fallback to role name with normalization
+  if (!user.role) return false;
+  const name = (user.role.name || '').toLowerCase().trim().normalize('NFC');
+  return name === 'quản lý' || name === 'admin';
 };
 
 export const isAccountantOrAdmin = (user) => {
   if (!user) return false;
-  return hasRole(user, [ROLES.ADMIN, ROLES.ACCOUNTANT, 'admin', 'Quản lý']);
+  if (isAdmin(user)) return true;
+  const roleId = Number(user.role_id || (user.role && user.role.id));
+  if (roleId === 5) return true;
+  if (!user.role) return false;
+  const name = (user.role.name || '').toLowerCase().trim().normalize('NFC');
+  return name === 'thu ngân' || name === 'accountant';
 };

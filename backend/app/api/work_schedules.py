@@ -78,10 +78,14 @@ def get_work_schedules(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if not current_user.is_admin:
+    is_privileged = current_user.is_admin or (
+        current_user.role and (current_user.role.name in ["Thu ngân", "accountant"] or current_user.role_id == 5)
+    )
+
+    if not is_privileged:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only admins can view all work schedules"
+            detail="Only admins and accountants can view all work schedules"
         )
 
     query = db.query(WorkSchedule)

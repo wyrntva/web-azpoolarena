@@ -1,7 +1,5 @@
 .payroll-page {
-  padding: 24px;
-  background: #f0f2f5;
-  min-height: 100vh;
+  padding: 0;
 }
 
 .payroll-page .ant-card {
@@ -11,6 +9,11 @@
 .payroll-page .ant-card-body {
   overflow: hidden;
   padding: 0;
+}
+
+.payroll-page .ant-tabs-nav {
+  margin-bottom: 0 !important;
+  /* Ensure nav bar doesn't cause extra spacing or overflow issues */
 }
 
 .payroll-page .ant-tabs-content {

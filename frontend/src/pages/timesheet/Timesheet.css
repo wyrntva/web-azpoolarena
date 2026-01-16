@@ -74,7 +74,6 @@
   left: 0;
   z-index: 1;
   min-height: 70px;
-  position: relative;
 }
 
 .employee-name {
@@ -114,16 +113,48 @@
 }
 
 /* Màu sắc trạng thái */
-.checked-complete { background: #d4edda; } /* Xanh - Hoàn hảo */
-.checked-warning { background: #fff3cd; } /* Vàng đậm - Có vấn đề (trễ/về sớm) */
-.incomplete { background: #fff7e6; } /* Vàng nhạt - Chưa chấm ra */
-.not-checked { background: #e6f4ff; } /* Xanh nhạt - Chưa chấm vào */
-.no-schedule { background: #f5f5f5; cursor: not-allowed; } /* Xám - Không có lịch */
+.checked-complete {
+  background: #d4edda;
+}
 
-.checked-complete:hover { background: #c3e6cb; }
-.checked-warning:hover { background: #ffe8a1; }
-.incomplete:hover { background: #ffe7ba; }
-.not-checked:hover { background: #bae0ff; }
+/* Xanh - Hoàn hảo */
+.checked-warning {
+  background: #fff3cd;
+}
+
+/* Vàng đậm - Có vấn đề (trễ/về sớm) */
+.incomplete {
+  background: #fff7e6;
+}
+
+/* Vàng nhạt - Chưa chấm ra */
+.not-checked {
+  background: #ffffff;
+}
+
+/* Xanh nhạt - Chưa chấm vào */
+.no-schedule {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* Xám - Không có lịch */
+
+.checked-complete:hover {
+  background: #c3e6cb;
+}
+
+.checked-warning:hover {
+  background: #ffe8a1;
+}
+
+.incomplete:hover {
+  background: #ffe7ba;
+}
+
+.not-checked:hover {
+  background: #fafafa;
+}
 
 .attendance-content {
   display: flex;

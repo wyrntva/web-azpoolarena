@@ -5,14 +5,12 @@ import {
   Modal,
   Form,
   TimePicker,
+  message,
   Spin,
   Select,
   DatePicker,
   Checkbox,
-  Tag,
-  Space,
 } from "antd";
-import { message } from '../../utils/antdGlobal';
 import {
   CalendarOutlined,
   ClockCircleOutlined,
@@ -149,7 +147,7 @@ export default function WorkSchedule() {
     try {
       const response = await userAPI.getAll();
       const staffUsers = (response.data || [])
-        .filter((u) => u.role?.name === "staff" && u.is_active === true);
+        .filter((u) => u.is_active === true && !isAdmin(u));
       setEmployees(staffUsers);
     } catch (error) {
       console.error("Error fetching employees:", error);

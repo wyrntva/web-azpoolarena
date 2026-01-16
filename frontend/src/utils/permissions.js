@@ -4,15 +4,32 @@
  * Kiểm tra user có quyền cụ thể không
  * Admin tự động có tất cả quyền
  */
+const internalIsAdmin = (user) => {
+  if (!user) return false;
+  if (user.is_admin === true) return true;
+  const roleId = Number(user.role_id || (user.role && user.role.id));
+  if (roleId === 4) return true;
+  const name = (user.role?.name || '').toLowerCase().trim().normalize('NFC');
+  return name === 'quản lý' || name === 'admin';
+};
+
 export const hasPermission = (user, permission) => {
   if (!user) return false;
   // Admin hoặc Quản lý có tất cả quyền
-  if (user.role && (user.role.name === 'admin' || user.role.name === 'Quản lý')) return true;
+  if (internalIsAdmin(user)) return true;
   if (!user.role) return false;
 
   // Kiểm tra permission trong role.permissions
-  const permissions = user.role.permissions || [];
-  return permissions.includes(permission);
+  let permissions = [];
+  try {
+    permissions = typeof user.role.permissions === 'string'
+      ? JSON.parse(user.role.permissions)
+      : (user.role.permissions || []);
+  } catch (e) {
+    permissions = user.role.permissions || [];
+  }
+
+  return Array.isArray(permissions) && permissions.includes(permission);
 };
 
 /**
@@ -21,25 +38,20 @@ export const hasPermission = (user, permission) => {
 export const hasAnyPermission = (user, permissionArray) => {
   if (!user) return false;
   // Admin hoặc Quản lý có tất cả quyền
-  if (user.role && (user.role.name === 'admin' || user.role.name === 'Quản lý')) return true;
+  if (internalIsAdmin(user)) return true;
   if (!user.role) return false;
 
-  // Kiểm tra có ít nhất 1 permission match
-  const permissions = user.role.permissions || [];
+  const permissions = getUserPermissions(user);
   return permissionArray.some(permission => permissions.includes(permission));
 };
 
-/**
- * Kiểm tra user có tất cả các quyền được chỉ định
- */
 export const hasAllPermissions = (user, permissionArray) => {
   if (!user) return false;
   // Admin hoặc Quản lý có tất cả quyền
-  if (user.role && (user.role.name === 'admin' || user.role.name === 'Quản lý')) return true;
+  if (internalIsAdmin(user)) return true;
   if (!user.role) return false;
 
-  // Kiểm tra có tất cả permissions
-  const permissions = user.role.permissions || [];
+  const permissions = getUserPermissions(user);
   return permissionArray.every(permission => permissions.includes(permission));
 };
 
@@ -80,5 +92,12 @@ export const isAdmin = (user) => {
  */
 export const getUserPermissions = (user) => {
   if (!user || !user.role) return [];
-  return user.role.permissions || [];
+  try {
+    const perms = typeof user.role.permissions === 'string'
+      ? JSON.parse(user.role.permissions)
+      : (user.role.permissions || []);
+    return Array.isArray(perms) ? perms : [];
+  } catch (e) {
+    return Array.isArray(user.role.permissions) ? user.role.permissions : [];
+  }
 };

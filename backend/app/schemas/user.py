@@ -103,6 +103,7 @@ class UserResponse(UserBase):
     id: int
     pin: Optional[str] = None
     is_active: bool
+    is_admin: bool = False
     role_id: int
     role: RoleResponse
     salary_type: str

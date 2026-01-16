@@ -59,7 +59,8 @@ class User(Base):
     @property
     def is_admin(self) -> bool:
         """Returns True if the user has an administrative role"""
-        return self.role.name in ["admin", "Quản lý"] if self.role else False
+        # Role ID 4 is the definitive "Quản lý" role from our standard setup
+        return self.role_id == 4 or (self.role and self.role.name in ["admin", "Quản lý"])
 
 
 class ReceiptType(Base):

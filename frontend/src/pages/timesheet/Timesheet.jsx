@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Card,
   Button,
+  message,
   Spin,
   Modal,
   Descriptions,
@@ -9,10 +10,7 @@ import {
   TimePicker,
   Form,
   Typography,
-  Tag,
-  Space,
 } from "antd";
-import { message } from '../../utils/antdGlobal';
 import {
   CalendarOutlined,
   ClockCircleOutlined,
@@ -75,7 +73,7 @@ export default function Timesheet() {
     try {
       const response = await userAPI.getAll();
       const staffUsers = (response.data || [])
-        .filter((u) => u.role?.name === "staff" && u.is_active === true)
+        .filter((u) => u.is_active === true && !isAdmin(u))
         .reduce((acc, curr) => {
           if (!acc.find((item) => item.id === curr.id)) acc.push(curr);
           return acc;
@@ -466,8 +464,8 @@ export default function Timesheet() {
             <span>Chưa chấm ra (đã vào ca)</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <div style={{ width: 16, height: 16, backgroundColor: "#e6f4ff", border: "1px solid #91caff" }}></div>
-            <span>Chưa chấm vào ca</span>
+            <div style={{ width: 16, height: 16, backgroundColor: "#ffffff", border: "1px solid #d9d9d9" }}></div>
+            <span>Chưa chấm vào ca (Có lịch sự kiện)</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <div style={{ width: 16, height: 16, backgroundColor: "#f5f5f5", border: "1px solid #d9d9d9" }}></div>

@@ -8,7 +8,7 @@ from app.db.session import get_db
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
 from app.models import User, Role
 from app.core.security import get_password_hash
-from app.dependencies.permissions import require_admin
+from app.dependencies.permissions import require_admin, require_accountant_or_admin
 
 from app.core.permissions import ALL_PERMISSIONS
 
@@ -28,6 +28,7 @@ def parse_user_permissions(user: User) -> dict:
         "full_name": user.full_name,
         "pin": user.pin,
         "is_active": user.is_active,
+        "is_admin": user.is_admin, # Thêm trường này để frontend dùng luôn
         "role_id": user.role_id,
         "salary_type": user.salary_type.value if hasattr(user.salary_type, 'value') else user.salary_type,
         "fixed_salary": user.fixed_salary,
@@ -47,7 +48,7 @@ def parse_user_permissions(user: User) -> dict:
         }
 
         # Quản lý automatically gets all permissions
-        if user.role.name in ["admin", "Quản lý"]:
+        if user.is_admin:
             role_data["permissions"] = ALL_PERMISSIONS
         else:
             try:
@@ -114,9 +115,9 @@ def get_users(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin)
+    current_user: User = Depends(require_accountant_or_admin)
 ):
-    users = db.query(User).order_by(
+    users = db.query(User).options(joinedload(User.role)).order_by(
         User.display_order.asc().nullslast(),
         User.id.asc()
     ).offset(skip).limit(limit).all()

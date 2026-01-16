@@ -28,6 +28,7 @@ def parse_user_permissions(user: User) -> dict:
         "full_name": user.full_name,
         "pin": user.pin,
         "is_active": user.is_active,
+        "is_admin": user.is_admin,
         "role_id": user.role_id,
         "salary_type": user.salary_type.value if hasattr(user.salary_type, 'value') else user.salary_type,
         "fixed_salary": user.fixed_salary,
@@ -47,7 +48,7 @@ def parse_user_permissions(user: User) -> dict:
         }
 
         # Quản lý automatically gets all permissions
-        if user.role.name in ["admin", "Quản lý"]:
+        if user.is_admin:
             role_data["permissions"] = ALL_PERMISSIONS
         else:
             try:
