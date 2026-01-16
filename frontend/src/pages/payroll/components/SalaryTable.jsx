@@ -96,77 +96,23 @@ export default function SalaryTable() {
   };
 
   // Tự động tạo phiếu phạt cho nhân viên vắng mặt và về sớm
-  const createAutoPenalties = async (schedules, attendances, employees) => {
+  const createAutoPenalties = async (startDate, endDate) => {
     if (!isUserAdmin) return;
 
     try {
-      const penaltyCases = [];
+      const response = await payrollAPI.autoGeneratePenalties(startDate, endDate);
+      const createdCount = response.data?.data?.length || 0;
 
-      schedules.forEach(schedule => {
-        const attendance = attendances.find(
-          a => a.user_id === schedule.user_id && a.date === schedule.work_date
-        );
-
-        const employee = employees.find(e => e.id === schedule.user_id);
-        if (!employee) return;
-
-        // Trường hợp 1: Có lịch nhưng không có attendance hoặc không check-in (Vắng mặt)
-        if (!attendance || !attendance.check_in_time) {
-          penaltyCases.push({
-            user_id: schedule.user_id,
-            employee_name: employee.full_name,
-            date: schedule.work_date,
-            amount: 100000,
-            reason: `Vắng mặt không phép ngày ${dayjs(schedule.work_date).format("DD/MM/YYYY")}`,
-          });
-        }
-        // Trường hợp 2: Có check-in nhưng về sớm (có check-out trước giờ quy định)
-        else if (attendance.check_out_time) {
-          const checkOutTime = dayjs(attendance.check_out_time);
-
-          // Xác định thời gian kết thúc ca (xử lý ca qua đêm)
-          const startDateTime = dayjs(`${attendance.date} ${schedule.start_time}`);
-          let scheduledEnd = dayjs(`${attendance.date} ${schedule.end_time}`);
-
-          if (scheduledEnd.isBefore(startDateTime) || scheduledEnd.isSame(startDateTime)) {
-            scheduledEnd = scheduledEnd.add(1, 'day');
-          }
-
-          const earlyMinutes = scheduledEnd.diff(checkOutTime, "minute");
-
-          if (earlyMinutes > 0) {
-            penaltyCases.push({
-              user_id: schedule.user_id,
-              employee_name: employee.full_name,
-              date: schedule.work_date,
-              amount: 50000,
-              reason: `Về sớm ${earlyMinutes} phút ngày ${dayjs(schedule.work_date).format("DD/MM/YYYY")}`,
-            });
-          }
-        }
-      });
-
-      // Tạo phiếu phạt cho các trường hợp
-      let successCount = 0;
-      for (const penalty of penaltyCases) {
-        try {
-          await payrollAPI.createPenalty({
-            user_id: penalty.user_id,
-            amount: penalty.amount,
-            reason: penalty.reason,
-            penalty_date: penalty.date,
-          });
-          successCount++;
-        } catch (error) {
-          // Bỏ qua lỗi nếu phiếu phạt đã tồn tại
-          if (error.response?.status !== 400) {
-            console.error(`Error creating penalty for ${penalty.employee_name}:`, error);
-          }
-        }
-      }
-
-      if (successCount > 0) {
-        message.success(`Đã tạo ${successCount} phiếu phạt tự động`);
+      if (createdCount > 0) {
+        message.success(`Đã tạo ${createdCount} phiếu phạt tự động`);
+        // Refresh summary info after generating penalties
+        const monthStr = dayjs(startDate).format("YYYY-MM");
+        const summaryRes = await payrollAPI.getPayrollSummary(monthStr);
+        const summaryMap = {};
+        (summaryRes.data || []).forEach(item => {
+          summaryMap[item.user_id] = item;
+        });
+        setPayrollSummary(summaryMap);
       }
     } catch (error) {
       console.error("Error creating auto penalties:", error);
@@ -211,7 +157,7 @@ export default function SalaryTable() {
 
       // Tự động tạo phiếu phạt cho nhân viên vắng và về sớm (chỉ nếu có employees data)
       if (employees.length > 0) {
-        await createAutoPenalties(monthSchedules, attendanceItems, employees);
+        await createAutoPenalties(startDate, endDate);
       }
     } catch (error) {
       message.error("Không thể tải dữ liệu bảng lương");
@@ -287,7 +233,7 @@ export default function SalaryTable() {
     return end.diff(start, "hour", true);
   };
 
-  // Tính số giờ làm việc (theo lịch, đã trừ phạt)
+  // Tính số giờ làm việc (theo lịch, không trừ thời gian đi muộn)
   const calculateWorkHours = (attendance, schedule) => {
     // Không có lịch làm việc
     if (!schedule) {
@@ -300,14 +246,9 @@ export default function SalaryTable() {
     }
 
     // Lấy số giờ theo lịch làm việc
-    const scheduledHours = calculateScheduledHours(schedule);
-
-    // Tính phạt nếu đi muộn
-    const lateMinutes = calculateLateMinutes(attendance, schedule);
-    const penalty = calculateLatePenalty(lateMinutes, scheduledHours);
-
-    // Giờ tính lương = Giờ theo lịch - Phạt
-    return Math.max(0, scheduledHours - penalty);
+    // Theo yêu cầu mới: Tính đủ công theo lịch, không trừ giờ đi muộn/về sớm
+    // (Vì đã có phiếu phạt tiền riêng cho các vi phạm này)
+    return calculateScheduledHours(schedule);
   };
 
   // Tính tổng giờ làm việc trong tháng (đã trừ phạt)

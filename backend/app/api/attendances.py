@@ -53,6 +53,9 @@ def public_check_attendance(
     IMPORTANT: IP address is now automatically detected from request.client.host
     instead of relying on client-provided IP (which could be public IP from ipify.org).
     """
+    # DEBUG REQUEST
+    print(f"DEBUG ATTENDANCE: Received Request used_qr={attendance_request.qr_token}, pin={attendance_request.pin}")
+
     # Find user by PIN
     if not attendance_request.pin or len(attendance_request.pin) != 4:
         raise HTTPException(
@@ -82,7 +85,7 @@ def public_check_attendance(
         db=db,
         access_token=attendance_request.qr_token,
         allow_used=True,
-        grace_period_seconds=20
+        grace_period_seconds=60
     )
 
     if is_valid_access:
@@ -146,6 +149,11 @@ def public_check_attendance(
 
         try:
             attendance = perform_check_in(db, attendance, user.id, work_schedule, attendance_request, real_ip_address, now)
+            
+            # Consume QR Token if using new system
+            if using_qr_access:
+                qr_access_manager.consume_qr_access_token(db, attendance_request.qr_token, user.pin)
+
             return AttendanceCheckResponse(
                 success=True,
                 action="check_in",
@@ -182,6 +190,10 @@ def public_check_attendance(
                 )
 
             attendance = perform_check_out(db, attendance, work_schedule, attendance_request, now)
+
+            # Consume QR Token if using new system
+            if using_qr_access:
+                qr_access_manager.consume_qr_access_token(db, attendance_request.qr_token, user.pin)
 
             return AttendanceCheckResponse(
                 success=True,

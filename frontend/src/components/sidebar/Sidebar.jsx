@@ -43,6 +43,17 @@ export default function Sidebar() {
     localStorage.setItem("sidebarOpenKeys", JSON.stringify(openKeys));
   }, [openKeys]);
 
+  const rootSubmenuKeys = ['reports', 'finance', 'inventory', 'staff', 'attendance'];
+
+  const onOpenChange = (keys) => {
+    const latestOpenKey = keys.find((key) => openKeys.indexOf(key) === -1);
+    if (rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
+      setOpenKeys(keys);
+    } else {
+      setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
+    }
+  };
+
   /* ===== RESPONSIVE AUTO COLLAPSE ===== */
   useEffect(() => {
     const handleResize = () => {
@@ -147,7 +158,7 @@ export default function Sidebar() {
             mode="inline"
             selectedKeys={[location.pathname]}
             openKeys={collapsed ? [] : openKeys}
-            onOpenChange={setOpenKeys}
+            onOpenChange={onOpenChange}
             style={{ background: "#172339", borderRight: "none" }}
           >
             {/* Dashboard - luôn hiển thị */}

@@ -89,9 +89,13 @@ function SortableEmployeeRow({ employee, weekDates, today, getScheduleForCell, h
           >
             <div className="schedule-content">
               {schedule ? (
-                <div className="schedule-time">
-                  {schedule.start_time} - {schedule.end_time}
-                </div>
+                !schedule.is_active ? (
+                  <div className="schedule-off" style={{ color: '#ff4d4f', fontWeight: 'bold' }}>OFF</div>
+                ) : (
+                  <div className="schedule-time">
+                    {schedule.start_time} - {schedule.end_time}
+                  </div>
+                )
               ) : (
                 <div className="dash">-</div>
               )}
@@ -193,14 +197,23 @@ export default function WorkSchedule() {
     const existing = getScheduleForCell(employee.id, dateStr);
 
     if (existing) {
-      form.setFieldsValue({
-        time_range: [
-          dayjs(existing.start_time, "HH:mm"),
-          dayjs(existing.end_time, "HH:mm"),
-        ],
-      });
+      if (!existing.is_active) {
+        form.setFieldsValue({
+          off_day: true,
+          time_range: null,
+        });
+      } else {
+        form.setFieldsValue({
+          time_range: [
+            dayjs(existing.start_time, "HH:mm"),
+            dayjs(existing.end_time, "HH:mm"),
+          ],
+          off_day: false,
+        });
+      }
     } else {
       form.resetFields();
+      form.setFieldsValue({ off_day: false });
     }
     setModalVisible(true);
   };
@@ -210,31 +223,42 @@ export default function WorkSchedule() {
       const values = await form.validateFields();
       const dateStr = selectedCell.date.format("YYYY-MM-DD");
       const existing = getScheduleForCell(selectedCell.employee.id, dateStr);
+      let payload;
 
-      const payload = {
-        user_id: selectedCell.employee.id,
-        work_date: dateStr,
-        start_time: values.time_range[0].format("HH:mm"),
-        end_time: values.time_range[1].format("HH:mm"),
-        allowed_late_minutes: 0,
-        is_active: true,
-      };
+      if (values.off_day) {
+        payload = {
+          user_id: selectedCell.employee.id,
+          work_date: dateStr,
+          start_time: "00:00",
+          end_time: "00:00",
+          allowed_late_minutes: 0,
+          is_active: false,
+        };
+      } else {
+        payload = {
+          user_id: selectedCell.employee.id,
+          work_date: dateStr,
+          start_time: values.time_range[0].format("HH:mm"),
+          end_time: values.time_range[1].format("HH:mm"),
+          allowed_late_minutes: 0,
+          is_active: true,
+        };
+      }
 
       if (existing) {
         await workScheduleAPI.update(existing.id, payload);
-        message.success("Đã cập nhật lịch làm việc");
+        message.success(values.off_day ? "Đã đặt ngày nghỉ (OFF)" : "Đã cập nhật lịch làm việc");
       } else {
         await workScheduleAPI.create(payload);
-        message.success("Đã tạo lịch làm việc");
+        message.success(values.off_day ? "Đã đặt ngày nghỉ (OFF)" : "Đã tạo lịch làm việc");
       }
 
       setModalVisible(false);
       form.resetFields();
-      fetchSchedules(); // reload chỉ schedules
+      fetchSchedules();
     } catch (error) {
-      message.error(
-        error.response?.data?.detail || "Không thể lưu lịch làm việc"
-      );
+      if (error.errorFields) return;
+      message.error(error.response?.data?.detail || "Không thể lưu lịch làm việc");
     }
   };
 
@@ -488,19 +512,40 @@ export default function WorkSchedule() {
         width={500}
       >
         <Form form={form} layout="vertical">
+          <Form.Item name="off_day" valuePropName="checked" style={{ marginBottom: 12 }}>
+            <Checkbox onChange={(e) => {
+              // Nếu check OFF thì clear validation của time_range
+              if (e.target.checked) {
+                form.validateFields(['off_day']);
+              }
+            }}>
+              OFF (Không có lịch làm việc)
+            </Checkbox>
+          </Form.Item>
+
           <Form.Item
-            name="time_range"
-            label="Giờ làm việc"
-            rules={[{ required: true, message: "Vui lòng chọn giờ làm việc" }]}
-            tooltip="Hỗ trợ ca làm qua 0h (VD: 20:00 - 02:00)"
+            noStyle
+            shouldUpdate={(prev, curr) => prev.off_day !== curr.off_day}
           >
-            <TimePicker.RangePicker
-              style={{ width: "100%" }}
-              format="HH:mm"
-              placeholder={["Giờ bắt đầu", "Giờ kết thúc"]}
-              size="large"
-              order={false}
-            />
+            {({ getFieldValue }) => {
+              const isOff = getFieldValue("off_day");
+              return !isOff ? (
+                <Form.Item
+                  name="time_range"
+                  label="Giờ làm việc"
+                  rules={[{ required: true, message: "Vui lòng chọn giờ làm việc" }]}
+                  tooltip="Hỗ trợ ca làm qua 0h (VD: 20:00 - 02:00)"
+                >
+                  <TimePicker.RangePicker
+                    style={{ width: "100%" }}
+                    format="HH:mm"
+                    placeholder={["Giờ bắt đầu", "Giờ kết thúc"]}
+                    size="large"
+                    order={false}
+                  />
+                </Form.Item>
+              ) : null;
+            }}
           </Form.Item>
         </Form>
       </Modal>

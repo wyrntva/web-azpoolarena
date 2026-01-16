@@ -189,7 +189,7 @@ export default function Penalty() {
         endDate.format("YYYY-MM-DD")
       );
 
-      message.success(`Đã tạo ${response.data.penalties.length} phiếu phạt tự động`);
+      message.success(`Đã tạo ${response.data.data.length} phiếu phạt tự động`);
       setAutoGenModalVisible(false);
       fetchPenalties();
     } catch (error) {

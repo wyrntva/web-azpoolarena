@@ -171,7 +171,7 @@ def validate_qr_access_token(
     db: Session,
     access_token: str,
     allow_used: bool = False,
-    grace_period_seconds: int = 10
+    grace_period_seconds: int = 20
 ) -> Tuple[bool, str, Optional[QRAccessToken], Optional[int]]:
     """
     Validate token without consuming it
@@ -194,6 +194,11 @@ def validate_qr_access_token(
 
     now = datetime.utcnow()
 
+    # DEBUG LOGGING for Grace Period
+    if token.is_used:
+        time_since_used = (now - token.used_at).total_seconds() if token.used_at else 9999
+        print(f"DEBUG GRACE: Token Used. TimeSinceUsed={time_since_used}, Grace={grace_period_seconds}, Allow={allow_used}")
+
     # Check if token is used
     if token.is_used:
         if allow_used and token.used_at:
@@ -204,8 +209,10 @@ def validate_qr_access_token(
                 expires_in = int((token.expires_at - now).total_seconds())
                 return True, f"Token đã dùng nhưng trong grace period ({int(grace_period_seconds - time_since_used)}s còn lại)", token, expires_in
             else:
+                print(f"DEBUG GRACE: FAIL - TimeSinceUsed ({time_since_used}) > Grace ({grace_period_seconds})")
                 return False, "Mã QR đã được sử dụng", token, None
         else:
+            print("DEBUG GRACE: FAIL - Not allowed used or missing used_at")
             return False, "Mã QR đã được sử dụng", token, None
 
     # Check expiration

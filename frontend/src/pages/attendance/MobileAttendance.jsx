@@ -134,18 +134,17 @@ export default function MobileAttendance() {
 
       if (action === "check_in") {
         const checkInTimeStr = new Date(check_in_time).toLocaleTimeString('vi-VN');
-        antdMessage.info(`Giờ vào: ${checkInTimeStr}`, 5);
+        // antdMessage.info(`Giờ vào: ${checkInTimeStr}`, 5); // Already shown in success message usually
 
-        // Lưu trạng thái đã chấm công vào
+        // Lưu trạng thái đã chấm công
         saveCheckedInStatus(pin, check_in_time);
 
         // Update action type for next scan
         if (actionType === "attendance") {
-          setActionType("attendance"); // Will auto-detect as check_out next time
+          // Keep as attendance to allow checkout later
         }
       } else if (action === "check_out") {
         const checkOutTimeStr = new Date(check_out_time).toLocaleTimeString('vi-VN');
-        antdMessage.info(`Giờ ra: ${checkOutTimeStr}`, 5);
 
         // Xóa trạng thái đã chấm công sau khi chấm ra
         const deviceId = getDeviceFingerprint();
@@ -158,7 +157,8 @@ export default function MobileAttendance() {
       setPin("");
 
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || "Chấm công thất bại";
+      console.error(error);
+      const errorMsg = error.response?.data?.detail || "Chấm công thất bại: " + error.message;
       antdMessage.error(errorMsg, 5);
     } finally {
       setLoading(false);

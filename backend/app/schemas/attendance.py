@@ -99,7 +99,7 @@ class WorkScheduleWithUser(WorkScheduleResponse):
 class AttendanceCheckRequest(BaseModel):
     qr_token: str = Field(..., min_length=1)
     pin: str = Field(..., min_length=4, max_length=4, pattern=r"^\d{4}$")
-    wifi_ssid: str = Field(..., min_length=1, max_length=100)
+    wifi_ssid: Optional[str] = Field(None, max_length=100)
     wifi_bssid: Optional[str] = Field(None, max_length=17)
     ip_address: Optional[str] = Field(None, max_length=50)
 
@@ -108,7 +108,7 @@ class PublicAttendanceCheckRequest(BaseModel):
     """Request for checking attendance without authentication"""
     qr_token: str = Field(..., min_length=1)
     pin: str = Field(..., min_length=4, max_length=4, pattern=r"^\d{4}$")
-    wifi_ssid: str = Field(..., min_length=1, max_length=100)
+    wifi_ssid: Optional[str] = Field(None, max_length=100)
     wifi_bssid: Optional[str] = Field(None, max_length=17)
     ip_address: Optional[str] = Field(None, max_length=50)
 

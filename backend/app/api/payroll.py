@@ -30,7 +30,6 @@ def get_advances(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     user_id: Optional[int] = None,
-    status_filter: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -43,8 +42,6 @@ def get_advances(
         query = query.filter(AdvancePayment.date <= end_date)
     if user_id:
         query = query.filter(AdvancePayment.user_id == user_id)
-    if status_filter:
-        query = query.filter(AdvancePayment.status == status_filter)
 
     advances = query.order_by(AdvancePayment.date.desc()).all()
 
@@ -56,8 +53,6 @@ def get_advances(
             "user_id": adv.user_id,
             "date": adv.date,
             "amount": adv.amount,
-            "reason": adv.reason,
-            "status": adv.status.value if hasattr(adv.status, 'value') else adv.status,
             "notes": adv.notes,
             "created_by": adv.created_by,
             "created_at": adv.created_at,
@@ -100,8 +95,6 @@ def create_advance(
             "user_id": advance.user_id,
             "date": advance.date,
             "amount": advance.amount,
-            "reason": advance.reason,
-            "status": advance.status.value if hasattr(advance.status, 'value') else advance.status,
             "notes": advance.notes,
             "created_by": advance.created_by,
             "created_at": advance.created_at,
@@ -144,8 +137,6 @@ def update_advance(
             "user_id": advance.user_id,
             "date": advance.date,
             "amount": advance.amount,
-            "reason": advance.reason,
-            "status": advance.status.value if hasattr(advance.status, 'value') else advance.status,
             "notes": advance.notes,
             "created_by": advance.created_by,
             "created_at": advance.created_at,
@@ -186,7 +177,6 @@ def get_bonuses(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     user_id: Optional[int] = None,
-    bonus_type: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -199,8 +189,6 @@ def get_bonuses(
         query = query.filter(Bonus.date <= end_date)
     if user_id:
         query = query.filter(Bonus.user_id == user_id)
-    if bonus_type:
-        query = query.filter(Bonus.bonus_type == bonus_type)
 
     bonuses = query.order_by(Bonus.date.desc()).all()
 
@@ -211,8 +199,6 @@ def get_bonuses(
             "user_id": bonus.user_id,
             "date": bonus.date,
             "amount": bonus.amount,
-            "bonus_type": bonus.bonus_type.value if hasattr(bonus.bonus_type, 'value') else bonus.bonus_type,
-            "reason": bonus.reason,
             "notes": bonus.notes,
             "created_by": bonus.created_by,
             "created_at": bonus.created_at,
@@ -255,8 +241,6 @@ def create_bonus(
             "user_id": bonus.user_id,
             "date": bonus.date,
             "amount": bonus.amount,
-            "bonus_type": bonus.bonus_type.value if hasattr(bonus.bonus_type, 'value') else bonus.bonus_type,
-            "reason": bonus.reason,
             "notes": bonus.notes,
             "created_by": bonus.created_by,
             "created_at": bonus.created_at,
@@ -299,8 +283,6 @@ def update_bonus(
             "user_id": bonus.user_id,
             "date": bonus.date,
             "amount": bonus.amount,
-            "bonus_type": bonus.bonus_type.value if hasattr(bonus.bonus_type, 'value') else bonus.bonus_type,
-            "reason": bonus.reason,
             "notes": bonus.notes,
             "created_by": bonus.created_by,
             "created_at": bonus.created_at,
@@ -559,14 +541,32 @@ def auto_generate_penalties(
 
     settings = db.query(AttendanceSettings).filter_by(is_active=True).first()
     if not settings:
-        raise HTTPException(status_code=404, detail="Attendance settings not found")
+        # Create default settings if not found
+        default_tiers = json.dumps([
+            {"max_minutes": 15, "penalty_amount": 0},
+            {"max_minutes": 30, "penalty_amount": 50000},
+            {"max_minutes": 60, "penalty_amount": 100000},
+            {"max_minutes": None, "penalty_amount": 200000}
+        ])
+        settings = AttendanceSettings(
+            allowed_late_minutes=15,
+            penalty_tiers=default_tiers,
+            early_checkout_grace_minutes=10,
+            early_checkout_penalty=50000,
+            absent_penalty=100000,
+            auto_absent_enabled=True,
+            is_active=True
+        )
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
 
     penalty_tiers = json.loads(settings.penalty_tiers)
 
+    # Filter out OFF days and inactive schedules
     schedules = db.query(WorkSchedule).filter(
         WorkSchedule.work_date.between(start_date, end_date),
-        WorkSchedule.is_active == True,
-        WorkSchedule.is_off == False
+        WorkSchedule.is_active == True
     ).all()
 
     attendances = db.query(Attendance).filter(
@@ -578,13 +578,19 @@ def auto_generate_penalties(
     ).all()
 
     attendance_map = {(a.user_id, a.date): a for a in attendances}
-    penalty_map = {(p.user_id, p.date, p.penalty_type): p for p in penalties}
+    # Track existing penalties by user_id and date. 
+    penalty_map = set((p.user_id, p.date) for p in penalties)
 
     created = []
 
     try:
         for sch in schedules:
             key = (sch.user_id, sch.work_date)
+            
+            # Skip if penalty already exists for this user on this date
+            if key in penalty_map:
+                continue
+
             attendance = attendance_map.get(key)
 
             penalty_type = None
@@ -622,7 +628,8 @@ def auto_generate_penalties(
                     if tier["max_minutes"] is None or late_minutes <= tier["max_minutes"]:
                         penalty_amount = tier["penalty_amount"]
                         break
-
+                
+                # If late but under threshold (amount=0), no penalty
                 if penalty_amount > 0:
                     penalty_type = "LATE"
                     reason = f"Đi muộn {late_minutes} phút"
@@ -636,14 +643,11 @@ def auto_generate_penalties(
             if not penalty_type or penalty_amount <= 0:
                 continue
 
-            if (sch.user_id, sch.work_date, penalty_type) in penalty_map:
-                continue
-
             new_penalty = Penalty(
                 user_id=sch.user_id,
                 date=sch.work_date,
                 amount=penalty_amount,
-                penalty_type=penalty_type,
+                # penalty_type=penalty_type,  <-- REMOVED
                 notes=f"{reason} (Tự động)",
                 created_by=current_user.id,
                 created_at=datetime.now(),
@@ -651,6 +655,9 @@ def auto_generate_penalties(
             )
 
             db.add(new_penalty)
+            # Add to map to prevent multiple penalties for same day/user in this loop if logic changes
+            penalty_map.add((sch.user_id, sch.work_date))
+            
             created.append({
                 "user_id": sch.user_id,
                 "date": sch.work_date,

@@ -10,6 +10,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-azpoolarena}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
@@ -43,6 +44,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       FRONTEND_URL: ${FRONTEND_URL}
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:

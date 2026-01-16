@@ -18,7 +18,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const { Title, Text } = Typography;
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = "http://192.168.1.187:8000"; // import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function QRAccess() {
   const [searchParams] = useSearchParams();
@@ -98,8 +98,15 @@ export default function QRAccess() {
       if (result.valid) {
         setExpiresIn(result.expires_in_seconds);
 
-        // No need to consume token here - will be consumed after successful attendance
-        // Backend has 20s grace period for reusing the same token
+        // CONSUME TOKEN IMMEDIATELY to prevent others from scanning
+        try {
+          await axios.post(`${API_BASE_URL}/api/qr-access/consume`, {
+            access_token: accessToken
+          });
+        } catch (consumeError) {
+          console.error("Failed to consume token early:", consumeError);
+          // Continue anyway, backend double-check will handle it
+        }
 
         // Auto-redirect after 2 seconds
         setTimeout(() => {

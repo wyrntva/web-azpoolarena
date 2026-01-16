@@ -106,7 +106,7 @@ def create_qr_access_token(
 
         # Generate QR URL (configure base URL in settings or use placeholder)
         base_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-        qr_url = f"{base_url}/attendance/check-in?token={token.access_token}"
+        qr_url = f"{base_url}/attendance/check-in?token={token.access_token}&type=attendance"
 
         return QRAccessTokenCreateResponse(
             success=True,
