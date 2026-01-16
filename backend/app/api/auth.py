@@ -31,8 +31,8 @@ def parse_user_permissions(user: User) -> dict:
         "role_id": user.role_id,
         "salary_type": user.salary_type.value if hasattr(user.salary_type, 'value') else user.salary_type,
         "fixed_salary": user.fixed_salary,
-        "created_at": user.created_at or now,
-        "updated_at": user.updated_at or now,
+        "created_at": (user.created_at or now).isoformat() if user.created_at else now.isoformat(),
+        "updated_at": (user.updated_at or now).isoformat() if user.updated_at else now.isoformat(),
     }
 
     if user.role:
@@ -42,8 +42,8 @@ def parse_user_permissions(user: User) -> dict:
             "description": user.role.description,
             "is_active": user.role.is_active,
             "is_system": user.role.is_system,
-            "created_at": user.role.created_at or now,
-            "updated_at": user.role.updated_at or now,
+            "created_at": (user.role.created_at or now).isoformat() if user.role.created_at else now.isoformat(),
+            "updated_at": (user.role.updated_at or now).isoformat() if user.role.updated_at else now.isoformat(),
         }
 
         # Quản lý automatically gets all permissions

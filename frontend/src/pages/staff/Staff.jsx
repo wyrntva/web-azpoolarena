@@ -197,6 +197,11 @@ export default function Staff() {
 
   const handleSubmit = async (values) => {
     try {
+      // Xóa email nếu để trống (tránh gửi empty string)
+      if (!values.email || values.email.trim() === '') {
+        delete values.email;
+      }
+
       if (editingUser) {
         const updateData = { ...values };
         // Xóa username vì không được phép thay đổi
@@ -354,12 +359,23 @@ export default function Staff() {
 
           <Form.Item
             name="email"
-            label="Email"
+            label="Email (không bắt buộc)"
             rules={[
-              { type: 'email', message: 'Email không hợp lệ' },
+              {
+                validator: (_, value) => {
+                  if (!value || value.trim() === '') {
+                    return Promise.resolve();
+                  }
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (emailRegex.test(value)) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('Email không hợp lệ'));
+                },
+              },
             ]}
           >
-            <Input placeholder="Nhập email (tùy chọn)" />
+            <Input placeholder="Nhập email (tùy chọn)" allowClear />
           </Form.Item>
 
           <Form.Item

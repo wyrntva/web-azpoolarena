@@ -70,8 +70,8 @@ REM Create new .env file with updated values
 echo # Desktop QR Generator Configuration > .env.new
 echo. >> .env.new
 echo # Backend API Configuration >> .env.new
-echo API_BASE_URL=http://192.168.1.187:8000 >> .env.new
-echo INTERNAL_API_KEY=azpoolarena-internal-qr-2026 >> .env.new
+echo API_BASE_URL=http://192.168.1.188:8000 >> .env.new
+echo INTERNAL_API_KEY=azpool_secret_key_2024 >> .env.new
 echo. >> .env.new
 echo # Device Configuration (ĐÃ THAY ĐỔI) >> .env.new
 echo DEVICE_ID=%DEVICE_ID% >> .env.new
@@ -83,7 +83,7 @@ echo QR_SIZE=10 >> .env.new
 echo QR_BORDER=4 >> .env.new
 echo. >> .env.new
 echo # Frontend URL (for QR code) >> .env.new
-echo FRONTEND_URL=http://192.168.1.187:5173 >> .env.new
+echo FRONTEND_URL=http://192.168.1.188:5173 >> .env.new
 
 REM Replace old .env with new one
 del .env
@@ -132,7 +132,7 @@ echo ========================================
 echo.
 
 echo Đang kiểm tra kết nối đến server...
-curl -s http://192.168.1.187:8000/health > nul 2>&1
+curl -s http://192.168.1.188:8000/health > nul 2>&1
 
 if %ERRORLEVEL% EQU 0 (
     echo ✅ Kết nối server thành công!
@@ -142,9 +142,9 @@ if %ERRORLEVEL% EQU 0 (
     echo Vui lòng kiểm tra:
     echo   1. Đã kết nối WiFi cùng mạng với server chưa?
     echo   2. Server backend có đang chạy không?
-    echo   3. IP 192.168.1.187 có đúng không?
+    echo   3. IP 192.168.1.188 có đúng không?
     echo.
-    echo   Test thử: curl http://192.168.1.187:8000/health
+    echo   Test thử: curl http://192.168.1.188:8000/health
 )
 
 echo.

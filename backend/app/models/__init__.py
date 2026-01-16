@@ -35,7 +35,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
-    email = Column(String(100), unique=True, nullable=False, index=True)
+    email = Column(String(100), unique=True, nullable=True, index=True)
     full_name = Column(String(100), nullable=False)
     hashed_password = Column(String(255), nullable=False)
     pin = Column(String(4), nullable=True, index=True)  # 4-digit PIN for attendance
