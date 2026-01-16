@@ -46,5 +46,5 @@ __pycache__/
 *.sqlite
 *.sqlite3
 
-# Desktop QR App build artifacts
-desktop-qr-app/dist/.env.backup
+# Desktop QR App (Windows only - không dùng trên server)
+desktop-qr-app/
