@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\icon.ico</ApplicationIcon>
+    <AssemblyName>MyPos.Client.WPF</AssemblyName>
+    <RootNamespace>MyPos.Client.WPF</RootNamespace>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyPos.Core.Business\MyPos.Core.Business.csproj" />
+    <ProjectReference Include="..\MyPos.Data.Repository\MyPos.Data.Repository.csproj" />
+    <ProjectReference Include="..\MyPos.SyncService\MyPos.SyncService.csproj" />
+    <ProjectReference Include="..\MyPos.Hardware.Printer\MyPos.Hardware.Printer.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- UI Library: Material Design -->
+    <PackageReference Include="MaterialDesignThemes" Version="5.1.0" />
+    <PackageReference Include="MaterialDesignColors" Version="3.1.0" />
+    <!-- MVVM Toolkit -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <!-- DI + Host -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
+    <!-- Logging -->
+    <PackageReference Include="Serilog" Version="4.1.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <!-- QR Code -->
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+    <!-- SignalR client -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.10" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Assets -->
+    <Resource Include="Assets\**\*" />
+  </ItemGroup>
+</Project>

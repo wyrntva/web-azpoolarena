@@ -1,0 +1,463 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@200..900&display=swap");
+@import './layouts/container.css';
+@import './layouts/sidebar.css';
+@import './layouts/header.css';
+@import './theme/default-colors.css';
+@import './override/reboot.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+@layer components {
+  .container {
+    @apply max-w-[1500px] px-30;
+  }
+
+
+  .landingpage .container {
+    @apply max-w-[1320px];
+  }
+
+  html {
+    @apply overflow-x-hidden;
+  }
+
+  body {
+    @apply text-sm text-bodytext;
+    background-color: #e8e8e8 !important;
+  }
+
+  .dropdown {
+    @apply shadow-md bg-white dark:bg-dark relative rounded-md dark:shadow-dark-md overflow-hidden;
+  }
+
+  .card-title {
+    @apply text-lg font-semibold text-dark dark:text-white mb-1
+  }
+
+  .card-subtitle {
+    @apply text-15 text-bodytext
+  }
+
+
+  /*heading text color*/
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-dark dark:text-white font-semibold;
+  }
+
+  .border-ld {
+    @apply border-border dark:border-darkborder;
+  }
+
+  .bg-hover {
+    @apply hover:bg-lighthover hover:dark:bg-darkmuted
+  }
+
+  .form-control input {
+    @apply rounded-md border border-border dark:border-darkborder bg-transparent dark:bg-transparent w-full text-sm;
+  }
+
+  .form-control-chat input {
+    @apply rounded-md border-0 bg-transparent dark:bg-transparent w-full text-sm;
+  }
+
+  .form-control-chat input:focus {
+    @apply !border-0 bg-transparent dark:bg-transparent w-full text-sm ring-transparent dark:ring-transparent;
+  }
+
+  .form-control-rounded input {
+    @apply rounded-full border border-border dark:border-darkborder bg-transparent dark:bg-transparent w-full text-sm;
+  }
+
+  .form-control-rounded input:focus {
+    @apply border-primary dark:border-primary outline-none shadow-none ring-offset-0 ring-transparent;
+  }
+
+  .form-control-textarea {
+    @apply !rounded-md border border-border dark:border-darkborder bg-transparent dark:bg-transparent w-full text-sm p-4;
+  }
+
+  .form-control-textarea:focus {
+    @apply border-primary dark:border-primary outline-none shadow-none ring-offset-0 ring-transparent;
+  }
+
+  .form-control input:focus {
+    @apply border-primary dark:border-primary outline-none shadow-none ring-offset-0 ring-transparent;
+  }
+
+  .form-control-input {
+    @apply rounded-md border border-border dark:border-darkborder bg-transparent dark:bg-transparent w-full text-sm;
+  }
+
+  .form-control-input:focus {
+    @apply border-primary dark:border-primary outline-none shadow-none ring-offset-0 ring-transparent;
+  }
+
+  .form-control-validation input {
+    @apply rounded-md
+  }
+
+  .form-rounded-md input {
+    @apply rounded-md
+  }
+
+  .input-center input {
+    @apply text-center;
+  }
+
+  .elipse {
+    @apply w-[18px] h-[10px]
+  }
+
+  input::placeholder {
+    @apply text-bodytext
+  }
+
+  .select-option select {
+    @apply bg-muted border-0 text-darklink dark:text-white/80 py-2 ps-4 pe-9 w-auto focus:border-0 focus:ring-0 font-medium;
+  }
+
+  .select-md select {
+    @apply border-ld bg-transparent dark:bg-darkgray w-full text-sm rounded-md focus:border-primary dark:focus:border-primary focus:ring-0;
+  }
+
+  .tournament-select select {
+    @apply h-[34px] px-2 py-1.5 text-xs rounded-md;
+  }
+
+  .tournament-locked {
+    @apply h-[34px] px-2 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md flex items-center;
+  }
+
+  .checkbox {
+    @apply h-[18px] w-[18px] border border-border dark:border-darkborder bg-transparent focus:ring-0 focus:ring-offset-0
+  }
+
+  .text-primary-ld {
+    @apply hover:text-primary dark:hover:text-primary;
+  }
+
+  /* Apps */
+  .left-part {
+    @apply w-80 border-e border-ld p-6;
+  }
+
+  .btn-circle {
+    @apply h-8 w-8 !rounded-full flex justify-center items-center p-0;
+  }
+
+  .btn-circle-hover {
+    @apply h-9 w-9 flex justify-center items-center !rounded-full hover:bg-lightprimary hover:text-primary cursor-pointer bg-transparent
+  }
+
+  .text-ld {
+    @apply text-dark dark:text-white;
+  }
+
+  .avatar-full img {
+    @apply w-full h-full;
+  }
+
+  .sorting button {
+    @apply bg-transparent text-dark dark:text-white p-0
+  }
+
+  .sorting button:hover {
+    @apply bg-transparent
+  }
+
+  .sorting button span {
+    @apply p-0
+  }
+
+  /* Custom Dialog Title */
+  div[role="dialog"] h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px;
+    font-style: italic;
+    font-weight: 700;
+    line-height: 24px;
+    text-transform: uppercase;
+  }
+
+  /* Custom Loader */
+  .loader {
+    width: 50px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid #0000;
+    border-right-color: #ffa50097;
+    position: relative;
+    animation: l24 1s infinite linear;
+  }
+
+  .loader:before,
+  .loader:after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: inherit;
+    animation: inherit;
+    animation-duration: 2s;
+  }
+
+  .loader:after {
+    animation-duration: 4s;
+  }
+
+  @keyframes l24 {
+    100% {
+      transform: rotate(1turn)
+    }
+  }
+
+  /* Remove focus ring from Flowbite Tabs */
+  button[role="tab"]:focus {
+    @apply ring-0 ring-offset-0 outline-none;
+  }
+
+  /* Match Management Dialog — custom portal modal */
+  .match-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .match-dialog-modal-box {
+    width: 580px;
+    max-width: 580px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .match-dialog-content {
+    width: 580px;
+    overflow-y: auto;
+  }
+
+  .match-dialog-label {
+    color: var(--Grey-400, #575E70);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    white-space: nowrap;
+  }
+
+  /* Match Management Dialog Fields */
+  .match-dialog-field select,
+  .match-dialog-field input {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    gap: 10px;
+    width: 300px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--Neutral-500, #EDEEF2);
+    background: var(--Neutral-0, #FFF);
+    color: var(--Grey-1000, #161A22);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    outline: none;
+    box-shadow: none;
+  }
+
+  .match-dialog-field input[type="datetime-local"] {
+    -webkit-appearance: none;
+    position: relative;
+    padding-right: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5.5876 8.63342L10.0001 13.0334L14.4126 8.63342' stroke='%2337393E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px 20px;
+  }
+
+  .match-dialog-field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+
+  .match-dialog-field select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='6' viewBox='0 0 11 6' fill='none'%3E%3Cpath d='M0.75 0.75L5.1625 5.15L9.575 0.75' stroke='%2337393E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 11px 6px;
+  }
+
+  .match-dialog-field select:focus,
+  .match-dialog-field input:focus {
+    border-color: #635BFF;
+    box-shadow: none;
+    outline: none;
+  }
+
+  /* Custom status dropdown (dot + text + arrow inside field) */
+  .match-dialog-select {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    gap: 10px;
+    width: 300px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--Neutral-500, #EDEEF2);
+    background: var(--Neutral-0, #FFF);
+    color: var(--Grey-1000, #161A22);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+
+  .match-dialog-select:hover {
+    border-color: #d0d1d6;
+  }
+
+  .match-dialog-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 300px;
+    background: #FFF;
+    border: 1px solid var(--Neutral-500, #EDEEF2);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    overflow: hidden;
+  }
+
+  .match-dialog-select-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    color: var(--Grey-1000, #161A22);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .match-dialog-select-option:hover {
+    background: #F5F6F8;
+  }
+
+  .match-dialog-static {
+    display: flex;
+    padding: 8px 16px;
+    align-items: center;
+    gap: 10px;
+    width: 300px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--Neutral-500, #EDEEF2);
+    background: var(--Neutral-0, #FFF);
+    color: var(--Grey-1000, #161A22);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+  }
+
+  .match-dialog-score input {
+    width: 100%;
+    height: 40px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--Neutral-500, #EDEEF2);
+    background: var(--Neutral-0, #FFF);
+    color: var(--Grey-1000, #161A22);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: center;
+    outline: none;
+    box-shadow: none;
+  }
+
+  .match-dialog-score input:focus {
+    border-color: #635BFF;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .match-dialog-save-btn {
+    display: flex;
+    width: 150px;
+    padding: 8px 24px;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    border-radius: 24px;
+    background: var(--Primary-Strong, #C6010B);
+    color: #FFF;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .match-dialog-save-btn:hover {
+    background: #a5000a;
+  }
+
+  .match-dialog-save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Inline player select in table */
+  .match-table-player-select {
+    width: 100%;
+    padding: 6px 32px 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--Neutral-500, #EDEEF2);
+    background: var(--Neutral-0, #FFF);
+    color: var(--Grey-1000, #161A22);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='6' viewBox='0 0 11 6' fill='none'%3E%3Cpath d='M0.75 0.75L5.1625 5.15L9.575 0.75' stroke='%2337393E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 11px 6px;
+    cursor: pointer;
+  }
+
+  .match-table-player-select:focus {
+    border-color: #635BFF;
+  }
+}

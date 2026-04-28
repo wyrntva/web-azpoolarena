@@ -1,0 +1,8 @@
+<UserControl x:Class="MyPos.Client.WPF.Views.ScoreboardApprovalDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="#030033">
+        <TextBlock Text="ScoreboardApprovalDialog" FontSize="24" Foreground="White"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Grid>
+</UserControl>

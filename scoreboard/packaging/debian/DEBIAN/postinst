@@ -1,0 +1,272 @@
+#!/bin/bash
+set -e
+
+APP_DIR="/opt/azpool-scoreboard"
+KIOSK_USER="azscoreboard"
+KIOSK_HOME="/home/${KIOSK_USER}"
+
+echo ">>> [azpool-scoreboard] Post-install starting..."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Create kiosk user (no password, auto-login, member of video/audio/input)
+# ─────────────────────────────────────────────────────────────────────────────
+if ! id "$KIOSK_USER" &>/dev/null; then
+    useradd -m -s /bin/bash -G video,audio,input,tty,render "$KIOSK_USER"
+    # Lock password so no one can login with password
+    passwd -l "$KIOSK_USER"
+    echo ">>> Created kiosk user: $KIOSK_USER"
+else
+    # Ensure groups are correct
+    usermod -a -G video,audio,input,tty,render "$KIOSK_USER" 2>/dev/null || true
+    echo ">>> Kiosk user already exists: $KIOSK_USER"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Create Python virtual environment and install dependencies
+# ─────────────────────────────────────────────────────────────────────────────
+echo ">>> Setting up Python virtual environment..."
+if [ ! -d "$APP_DIR/venv" ]; then
+    python3 -m venv "$APP_DIR/venv"
+fi
+# Upgrade pip first (Ubuntu 24.04 ships with older pip that may not support newer wheels)
+"$APP_DIR/venv/bin/pip" install --no-cache-dir -q --upgrade pip
+# Install dependencies (PySide6 is ~200MB, allow longer timeout for slow networks)
+"$APP_DIR/venv/bin/pip" install --no-cache-dir -q --timeout 300 -r "$APP_DIR/requirements.txt"
+echo ">>> Python dependencies installed."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Create runtime directories
+# ─────────────────────────────────────────────────────────────────────────────
+mkdir -p "$APP_DIR/runtime/hls" \
+         "$APP_DIR/runtime/recordings" \
+         "$APP_DIR/runtime/clips"
+chown -R "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/runtime"
+
+# Ensure config dir is writable for the kiosk user
+chown -R "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/config"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. Create default .env if missing
+# ─────────────────────────────────────────────────────────────────────────────
+if [ ! -f "$APP_DIR/.env" ]; then
+    cat > "$APP_DIR/.env" <<'ENVEOF'
+# Scoreboard Environment Configuration
+# Edit this file to match your backend server
+POOLARENA_API_BASE_URL=http://192.168.1.188:8000
+ENVEOF
+    chown "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/.env"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Create default camera config if missing
+# ─────────────────────────────────────────────────────────────────────────────
+if [ ! -f "$APP_DIR/config/camera.json" ]; then
+    cat > "$APP_DIR/config/camera.json" <<'CAMEOF'
+{
+    "_comment": "Camera Configuration - Edit host/username/password to match your camera",
+    "camera": {
+        "host": "192.168.1.7",
+        "port": 554,
+        "username": "admin",
+        "password": "changeme"
+    },
+    "liveStream": {
+        "rtspUrl": "rtsp://admin:changeme@192.168.1.7:554/Streaming/Channels/1202",
+        "delaySec": 7,
+        "hlsPort": 8554,
+        "delayServerPort": 8555,
+        "localStreamUrl": "http://127.0.0.1:8555/playlist.m3u8",
+        "segmentSec": 2,
+        "playlistLen": 10
+    },
+    "recording": {
+        "channel": 801,
+        "rtspUrl": "rtsp://admin:changeme@192.168.1.7:554/Streaming/Channels/801",
+        "outputDir": "runtime/recordings",
+        "segmentSec": 60,
+        "maxHours": 6,
+        "latencyMs": 200
+    },
+    "hardware": {
+        "useVaapi": "auto"
+    }
+}
+CAMEOF
+    chown "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/config/camera.json"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 5b. Generate camera.env from camera.json (for systemd services)
+# ─────────────────────────────────────────────────────────────────────────────
+if command -v jq &>/dev/null && [ -f "$APP_DIR/config/camera.json" ]; then
+    echo ">>> Generating camera.env from camera.json..."
+    _CAM_URL=$(jq -r '.liveStream.rtspUrl // empty' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _DELAY_SEC=$(jq -r '.liveStream.delaySec // 7' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _LOCAL_PORT=$(jq -r '.liveStream.hlsPort // 8554' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _SEG_SEC_LIVE=$(jq -r '.liveStream.segmentSec // 2' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _PLAYLIST_LEN=$(jq -r '.liveStream.playlistLen // 10' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _DVR_CAM_URL=$(jq -r '.recording.rtspUrl // empty' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _REC_DIR=$(jq -r '.recording.outputDir // "runtime/recordings"' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _SEG_SEC=$(jq -r '.recording.segmentSec // 60' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _MAX_HOURS=$(jq -r '.recording.maxHours // 6' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _LATENCY_MS=$(jq -r '.recording.latencyMs // 200' "$APP_DIR/config/camera.json" 2>/dev/null)
+    _USE_VAAPI=$(jq -r '.hardware.useVaapi // "auto"' "$APP_DIR/config/camera.json" 2>/dev/null)
+
+    # Convert relative path to absolute
+    if [[ ! "$_REC_DIR" = /* ]]; then
+        _OUT_DIR="$APP_DIR/$_REC_DIR"
+    else
+        _OUT_DIR="$_REC_DIR"
+    fi
+
+    cat > "$APP_DIR/config/camera.env" <<ENVEOF
+# Camera Delay Relay Configuration
+# =================================
+# Auto-generated from camera.json - regenerated on package install
+# Primary config is in camera.json
+
+# ==================== LIVE STREAM ====================
+CAM_URL=$_CAM_URL
+DELAY_SEC=$_DELAY_SEC
+LOCAL_PORT=$_LOCAL_PORT
+SEGMENT_SEC=$_SEG_SEC_LIVE
+PLAYLIST_LEN=$_PLAYLIST_LEN
+
+# ==================== RECORDING ====================
+DVR_CAM_URL=$_DVR_CAM_URL
+OUT_DIR=$_OUT_DIR
+SEG_SEC=$_SEG_SEC
+MAX_HOURS=$_MAX_HOURS
+LATENCY_MS=$_LATENCY_MS
+
+# ==================== HARDWARE ====================
+USE_VAAPI=$_USE_VAAPI
+ENVEOF
+    chown "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/config/camera.env"
+    echo ">>> camera.env generated successfully."
+else
+    echo ">>> WARNING: jq not found or camera.json missing, skipping camera.env generation."
+    echo ">>> camera.env must be created manually for prune service to work."
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Create Xorg wrapper config to allow non-root startx
+# ─────────────────────────────────────────────────────────────────────────────
+mkdir -p /etc/X11
+cat > /etc/X11/Xwrapper.config <<'XEOF'
+allowed_users=anybody
+needs_root_rights=yes
+XEOF
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. Create kiosk .xinitrc
+# ─────────────────────────────────────────────────────────────────────────────
+cat > "${KIOSK_HOME}/.xinitrc" <<'XIEOF'
+#!/bin/bash
+# AZ Scoreboard Kiosk - X11 init
+
+# Disable screen blanking and DPMS
+xset s off
+xset s noblank
+xset -dpms
+
+# Hide cursor after 3 seconds of inactivity
+unclutter -idle 3 -root &
+
+# Create minimal Openbox config (avoid /dev/null XML error)
+mkdir -p "${HOME}/.config/openbox"
+cat > "${HOME}/.config/openbox/rc.xml" <<'OBEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+  <resistance><strength>10</strength><screen_edge_strength>20</screen_edge_strength></resistance>
+  <focus><followMouse>no</followMouse></focus>
+  <placement><policy>Smart</policy></placement>
+  <desktops><number>1</number></desktops>
+  <keyboard/>
+  <mouse/>
+  <applications>
+    <application class="*"><fullscreen>yes</fullscreen><decor>no</decor></application>
+  </applications>
+</openbox_config>
+OBEOF
+
+# Start openbox as minimal window manager (needed for fullscreen)
+openbox &
+sleep 1
+
+# Launch the scoreboard application (kiosk-run.sh has its own restart loop)
+exec /opt/azpool-scoreboard/kiosk-run.sh
+XIEOF
+chown "$KIOSK_USER":"$KIOSK_USER" "${KIOSK_HOME}/.xinitrc"
+chmod 755 "${KIOSK_HOME}/.xinitrc"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Create kiosk .bash_profile for auto startx on tty1
+# ─────────────────────────────────────────────────────────────────────────────
+cat > "${KIOSK_HOME}/.bash_profile" <<'BPEOF'
+# AZ Scoreboard Kiosk - Auto start X on tty1
+if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+    exec startx -- -nocursor 2>/dev/null
+fi
+BPEOF
+chown "$KIOSK_USER":"$KIOSK_USER" "${KIOSK_HOME}/.bash_profile"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. Configure auto-login on tty1 via systemd getty override
+# ─────────────────────────────────────────────────────────────────────────────
+GETTY_OVERRIDE="/etc/systemd/system/getty@tty1.service.d"
+mkdir -p "$GETTY_OVERRIDE"
+cat > "${GETTY_OVERRIDE}/autologin.conf" <<GEOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin ${KIOSK_USER} --noclear %I \$TERM
+Type=idle
+GEOF
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 10. Enable systemd services
+# ─────────────────────────────────────────────────────────────────────────────
+systemctl daemon-reload
+
+# Camera services
+systemctl enable azpool-cam-delay.service  2>/dev/null || true
+systemctl enable azpool-cam-record.service 2>/dev/null || true
+systemctl enable azpool-cam-prune.timer    2>/dev/null || true
+systemctl enable azpool-cam-index.service  2>/dev/null || true
+systemctl enable azpool-clip-server.service 2>/dev/null || true
+systemctl restart azpool-cam-index.service  2>/dev/null || true
+systemctl restart azpool-clip-server.service 2>/dev/null || true
+
+# Enable auto-login on tty1
+systemctl enable getty@tty1.service 2>/dev/null || true
+
+# Enable SSH for remote access/debugging
+systemctl enable ssh.service 2>/dev/null || true
+systemctl start  ssh.service 2>/dev/null || true
+
+# Set default target to multi-user (no desktop manager, we bring our own X)
+systemctl set-default multi-user.target 2>/dev/null || true
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════════════╗"
+echo "║          AZ Pool Arena Scoreboard - Installed!                  ║"
+echo "╠══════════════════════════════════════════════════════════════════╣"
+echo "║                                                                ║"
+echo "║  App directory:  /opt/azpool-scoreboard                        ║"
+echo "║  Kiosk user:     azscoreboard                                  ║"
+echo "║                                                                ║"
+echo "║  CONFIGURE BEFORE FIRST USE:                                   ║"
+echo "║    1. Edit /opt/azpool-scoreboard/.env                         ║"
+echo "║       → Set POOLARENA_API_BASE_URL                             ║"
+echo "║    2. Edit /opt/azpool-scoreboard/config/camera.json           ║"
+echo "║       → Set camera IP/username/password                        ║"
+echo "║                                                                ║"
+echo "║  Then reboot:  sudo reboot                                     ║"
+echo "║  The machine will auto-boot into kiosk mode.                   ║"
+echo "║                                                                ║"
+echo "║  ADMIN EXIT: Press Ctrl+Shift+Q three times quickly            ║"
+echo "║  SSH ACCESS: ssh your_admin_user@this_machine                  ║"
+echo "╚══════════════════════════════════════════════════════════════════╝"
+echo ""
+
+exit 0

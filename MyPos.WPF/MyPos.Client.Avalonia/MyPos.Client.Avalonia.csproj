@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- net8.0 KHÔNG có -windows → chạy được trên Ubuntu/Linux/macOS -->
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MyPos.Client.Avalonia</AssemblyName>
+    <RootNamespace>MyPos.Client.Avalonia</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Cross-platform projects (không có -windows) -->
+    <ProjectReference Include="..\MyPos.Core.Business\MyPos.Core.Business.csproj" />
+    <ProjectReference Include="..\MyPos.Data.Repository\MyPos.Data.Repository.csproj" />
+    <ProjectReference Include="..\MyPos.SyncService\MyPos.SyncService.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Avalonia UI 11 (LTS) -->
+    <PackageReference Include="Avalonia" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
+    <!-- For Linux icon rendering -->
+    <PackageReference Include="Avalonia.Skia" Version="11.2.3" />
+
+    <!-- MVVM (same as WPF version) -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+
+    <!-- DI + Host -->
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
+
+    <!-- Logging -->
+    <PackageReference Include="Serilog" Version="4.1.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+
+    <!-- SignalR client -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- AXAML files phải có Build Action = AvaloniaResource -->
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+</Project>

@@ -1,160 +1,98 @@
-# AZ POOLARENA Backend API
+<p align="center">
+  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+</p>
 
-FastAPI-based backend for the AZ POOLARENA financial management system.
+[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
+[circleci-url]: https://circleci.com/gh/nestjs/nest
 
-## Setup
+  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
+    <p align="center">
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
+<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
+<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
+<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
+<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
+  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
+    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
+  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+</p>
+  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
+  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-### 1. Install Dependencies
+## Description
 
-```bash
-pip install -r requirements.txt
-```
+[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-### 2. Configure Environment
-
-Copy `.env.example` to `.env` and update the database credentials:
-
-```bash
-DATABASE_URL=postgresql://username:password@localhost:5432/azpoolarena
-SECRET_KEY=your-secret-key-here
-```
-
-### 3. Create Database
-
-Create a PostgreSQL database named `azpoolarena`:
-
-```sql
-CREATE DATABASE azpoolarena;
-```
-
-### 4. Run Migrations & Seed Data
+## Project setup
 
 ```bash
-python seed.py
+$ npm install
 ```
 
-This will:
-- Drop existing tables
-- Create all tables
-- Seed initial data (roles, users, sample transactions)
-
-### 5. Start Server
+## Compile and run the project
 
 ```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# development
+$ npm run start
+
+# watch mode
+$ npm run start:dev
+
+# production mode
+$ npm run start:prod
 ```
 
-The API will be available at: `http://localhost:8000`
+## Run tests
 
-API Documentation: `http://localhost:8000/docs`
+```bash
+# unit tests
+$ npm run test
 
-## Default Accounts
+# e2e tests
+$ npm run test:e2e
 
-After seeding, you can log in with:
-
-**Admin Account:**
-- Username: `admin`
-- Password: `admin123`
-
-**Accountant Account:**
-- Username: `accountant`
-- Password: `accountant123`
-
-**Staff Accounts:**
-- Username: `staff1` / `staff2`
-- Password: `staff123`
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - Login
-- `POST /api/auth/refresh` - Refresh access token
-- `GET /api/auth/me` - Get current user
-- `POST /api/auth/logout` - Logout
-
-### Users (Admin only)
-- `POST /api/users` - Create user
-- `GET /api/users` - List users
-- `GET /api/users/{id}` - Get user
-- `PATCH /api/users/{id}` - Update user
-- `DELETE /api/users/{id}` - Delete user
-
-### Receipt Types (Accountant/Admin)
-- `POST /api/receipt-types` - Create receipt type
-- `GET /api/receipt-types` - List receipt types
-- `GET /api/receipt-types/{id}` - Get receipt type
-- `PATCH /api/receipt-types/{id}` - Update receipt type
-- `DELETE /api/receipt-types/{id}` - Delete receipt type
-
-### Receipts (Accountant/Admin)
-- `POST /api/receipts` - Create receipt
-- `GET /api/receipts` - List receipts (with filters)
-- `GET /api/receipts/{id}` - Get receipt
-- `PATCH /api/receipts/{id}` - Update receipt
-- `DELETE /api/receipts/{id}` - Delete receipt
-
-### Revenues (Accountant/Admin)
-- `POST /api/revenues` - Create revenue
-- `GET /api/revenues` - List revenues
-- `GET /api/revenues/{id}` - Get revenue
-- `GET /api/revenues/by-date/{date}` - Get revenue by date
-- `PATCH /api/revenues/{id}` - Update revenue
-- `DELETE /api/revenues/{id}` - Delete revenue
-
-### Exchanges (Accountant/Admin)
-- `POST /api/exchanges` - Create exchange
-- `GET /api/exchanges` - List exchanges
-- `GET /api/exchanges/{id}` - Get exchange
-- `PATCH /api/exchanges/{id}` - Update exchange
-- `DELETE /api/exchanges/{id}` - Delete exchange
-
-## Project Structure
-
-```
-backend/
-├── app/
-│   ├── main.py                 # FastAPI app entry point
-│   ├── core/
-│   │   ├── config.py          # Configuration settings
-│   │   ├── security.py        # Password hashing
-│   │   └── jwt.py             # JWT token management
-│   ├── db/
-│   │   ├── base.py            # SQLAlchemy base
-│   │   └── session.py         # Database session
-│   ├── models/
-│   │   └── __init__.py        # Database models
-│   ├── schemas/
-│   │   ├── auth.py            # Auth schemas
-│   │   ├── user.py            # User schemas
-│   │   ├── receipt.py         # Receipt schemas
-│   │   ├── revenue.py         # Revenue schemas
-│   │   └── exchange.py        # Exchange schemas
-│   ├── api/
-│   │   ├── auth.py            # Auth endpoints
-│   │   ├── users.py           # User endpoints
-│   │   ├── receipt_types.py   # Receipt type endpoints
-│   │   ├── receipts.py        # Receipt endpoints
-│   │   ├── revenues.py        # Revenue endpoints
-│   │   └── exchanges.py       # Exchange endpoints
-│   └── dependencies/
-│       └── permissions.py      # Auth & permission dependencies
-├── alembic/                    # Database migrations
-├── seed.py                     # Database seeding script
-├── requirements.txt            # Python dependencies
-└── .env                        # Environment variables
+# test coverage
+$ npm run test:cov
 ```
 
-## Role-Based Access Control
+## Deployment
 
-- **Admin**: Full access to all endpoints
-- **Accountant**: Access to financial modules (receipts, revenues, exchanges)
-- **Staff**: Limited read-only access
+When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
-## Technologies
+If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-- **FastAPI**: Modern web framework
-- **SQLAlchemy**: ORM for database operations
-- **PostgreSQL**: Production database
-- **Alembic**: Database migrations
-- **JWT**: Authentication tokens
-- **Pydantic**: Data validation
+```bash
+$ npm install -g @nestjs/mau
+$ mau deploy
+```
+
+With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+
+## Resources
+
+Check out a few resources that may come in handy when working with NestJS:
+
+- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
+- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
+- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
+- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
+- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
+- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
+- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+
+## Support
+
+Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+
+## Stay in touch
+
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
+- Website - [https://nestjs.com](https://nestjs.com/)
+- Twitter - [@nestframework](https://twitter.com/nestframework)
+
+## License
+
+Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).

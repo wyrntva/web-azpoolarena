@@ -1,0 +1,264 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!--
+    AppStyles.axaml — PoolArena POS Design System
+    Ported from pos-app tokens.css + screen CSS files
+    Primary: #635BFF (purple), Navy: #030033, Blue: #0091FF
+  -->
+
+  <!-- ================================================ -->
+  <!-- HEADER TAB (homeTab in pos-app)                  -->
+  <!-- ================================================ -->
+  <Style Selector="Button.homeTab">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="FontSize" Value="16"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Padding" Value="20,8"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.homeTab:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1AFFFFFF"/>
+  </Style>
+  <Style Selector="Button.homeTab.active /template/ ContentPresenter">
+    <Setter Property="Background" Value="#635BFF"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- ICON BUTTON (top-right header icons)             -->
+  <!-- ================================================ -->
+  <Style Selector="Button.iconBtn">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="Width" Value="40"/>
+    <Setter Property="Height" Value="40"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="FontSize" Value="18"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.iconBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#1AFFFFFF"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- FILTER BUTTON (sidebar) — dark style             -->
+  <!-- ================================================ -->
+  <Style Selector="Button.filterBtn">
+    <Setter Property="Background" Value="#1AFFFFFF"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="15"/>
+    <Setter Property="Height" Value="70"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Padding" Value="20,0"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.filterBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#26FFFFFF"/>
+  </Style>
+  <Style Selector="Button.filterBtn.active /template/ ContentPresenter">
+    <Setter Property="Background" Value="#635BFF"/>
+  </Style>
+
+  <!-- FILTER small (white bg) -->
+  <Style Selector="Button.filterBtnSmall">
+    <Setter Property="Background" Value="White"/>
+    <Setter Property="Foreground" Value="#030033"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Height" Value="70"/>
+    <Setter Property="Width" Value="145"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    <Setter Property="Padding" Value="12,0"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.filterBtnSmall.active /template/ ContentPresenter">
+    <Setter Property="Background" Value="#635BFF"/>
+    <Setter Property="TextElement.Foreground" Value="White"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- CREATE ORDER BTN (top of sidebar)                -->
+  <!-- ================================================ -->
+  <Style Selector="Button.createOrderBtn">
+    <Setter Property="Background" Value="#635BFF"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="FontSize" Value="15"/>
+    <Setter Property="Height" Value="52"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.createOrderBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#5a52e6"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- SCROLL BTN (bottom sidebar nav)                  -->
+  <!-- ================================================ -->
+  <Style Selector="Button.scrollBtn">
+    <Setter Property="Background" Value="White"/>
+    <Setter Property="Foreground" Value="#030033"/>
+    <Setter Property="Height" Value="52"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="FontSize" Value="18"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.scrollBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#f0f0f0"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- PIN KEYBOARD BUTTON (lockScreen)                 -->
+  <!-- ================================================ -->
+  <Style Selector="Button.keyBtn">
+    <Setter Property="Background" Value="White"/>
+    <Setter Property="Foreground" Value="#0f172a"/>
+    <Setter Property="FontSize" Value="30"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Height" Value="76"/>
+    <Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.keyBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#e8e8e8"/>
+    <Setter Property="TextElement.Foreground" Value="#635BFF"/>
+  </Style>
+  <Style Selector="Button.keyBtn:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="#e0e0e0"/>
+  </Style>
+  <Style Selector="Button.keyBtn:disabled /template/ ContentPresenter">
+    <Setter Property="Background" Value="#F5F5F5"/>
+    <Setter Property="Opacity" Value="0.6"/>
+  </Style>
+
+  <!-- PIN Login Button -->
+  <Style Selector="Button.loginBtn">
+    <Setter Property="Background" Value="#635BFF"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="FontSize" Value="17"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="Height" Value="68"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.loginBtn:disabled /template/ ContentPresenter">
+    <Setter Property="Background" Value="#C0BDFF"/>
+    <Setter Property="Opacity" Value="0.7"/>
+  </Style>
+
+  <!-- Warn / Danger buttons -->
+  <Style Selector="Button.warnBtn">
+    <Setter Property="Background" Value="#f59e0b"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="Height" Value="55"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.dangerBtn">
+    <Setter Property="Background" Value="#ef4444"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="Height" Value="55"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- CASHIER CATEGORY BTN                             -->
+  <!-- ================================================ -->
+  <Style Selector="Button.categoryBtn">
+    <Setter Property="Background" Value="White"/>
+    <Setter Property="Foreground" Value="#030033"/>
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="Height" Value="52"/>
+    <Setter Property="Margin" Value="2,1"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.categoryBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#EBF5FF"/>
+    <Setter Property="TextElement.Foreground" Value="#0091FF"/>
+  </Style>
+  <Style Selector="Button.categoryBtn.active /template/ ContentPresenter">
+    <Setter Property="Background" Value="#635BFF"/>
+    <Setter Property="TextElement.Foreground" Value="White"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- PRODUCT CARD BTN (Cashier product grid)          -->
+  <!-- ================================================ -->
+  <Style Selector="Button.productBtn">
+    <Setter Property="Background" Value="#1A1A4E"/>
+    <Setter Property="Foreground" Value="White"/>
+    <Setter Property="Width" Value="128"/>
+    <Setter Property="Height" Value="96"/>
+    <Setter Property="Margin" Value="3"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="8"/>
+    <Setter Property="Cursor" Value="Hand"/>
+  </Style>
+  <Style Selector="Button.productBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#2A2A6E"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- QTY BUTTONS (+/-) in cart                        -->
+  <!-- ================================================ -->
+  <Style Selector="Button.qtyBtn">
+    <Setter Property="Background" Value="#F0F0F8"/>
+    <Setter Property="Foreground" Value="#333"/>
+    <Setter Property="Width" Value="28"/>
+    <Setter Property="Height" Value="28"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="FontSize" Value="16"/>
+    <Setter Property="FontWeight" Value="Bold"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="Button.qtyBtn:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#635BFF"/>
+    <Setter Property="TextElement.Foreground" Value="White"/>
+  </Style>
+
+  <!-- ================================================ -->
+  <!-- GLOBAL TextBox                                   -->
+  <!-- ================================================ -->
+  <Style Selector="TextBox">
+    <Setter Property="SelectionBrush" Value="#635BFF"/>
+  </Style>
+
+  <!-- Remove focus glow on Buttons -->
+  <Style Selector="Button:focus-visible /template/ ContentPresenter">
+    <Setter Property="BoxShadow" Value="0 0 0 2 #66635BFF"/>
+  </Style>
+
+</Styles>

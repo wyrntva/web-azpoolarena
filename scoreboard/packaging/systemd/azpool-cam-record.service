@@ -1,0 +1,22 @@
+[Unit]
+Description=AZ Pool Arena - Camera DVR Recorder (RTSP to MP4 segments)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=azscoreboard
+Group=azscoreboard
+WorkingDirectory=/opt/azpool-scoreboard
+EnvironmentFile=-/opt/azpool-scoreboard/config/camera.env
+ExecStart=/opt/azpool-scoreboard/scripts/cam_record_main.sh
+Restart=always
+RestartSec=3
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=azpool-cam-record
+
+[Install]
+WantedBy=multi-user.target

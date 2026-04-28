@@ -1,0 +1,232 @@
+/* TABLE LAYOUT SCREEN */
+
+.tableLayoutMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 20px;
+  overflow-y: auto;
+  background: transparent;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 180px);
+  gap: 20px;
+  flex: 1;
+  align-content: start;
+}
+
+.tableCard {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-3);
+  display: flex;
+  flex-direction: column;
+  width: 180px;
+  height: 180px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.tableCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.tableCard.occupied {
+  background: #638BFF;
+  border-color: #638BFF;
+}
+
+.tableCard.occupied .tableNumber,
+.tableCard.occupied .tableDuration {
+  color: #ffffff;
+}
+
+.tableCard.empty {
+  background: var(--bg-primary);
+  border-color: var(--border-medium);
+}
+
+.tableCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.tableNumber {
+  font-weight: var(--font-weight-bold);
+  font-size: 34px;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.tableNumber::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 75%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.15), transparent);
+}
+
+.tableCard.occupied .tableNumber::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+}
+
+.tableCardBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.tableDuration {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+
+.tableStatusBadge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  padding: var(--spacing-1) var(--spacing-4);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+}
+
+.tableEmptyLabel {
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+}
+
+.tableLayoutSidebar {
+  width: var(--sidebar-width);
+  background: #030033;
+  backdrop-filter: blur(12px);
+  padding: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.locationBtn {
+  width: 100%;
+  height: 60px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #030033;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 var(--spacing-4);
+  gap: var(--spacing-2);
+  box-shadow: var(--shadow-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.locationBtn.active {
+  background: #635BFF;
+  color: #ffffff;
+}
+
+.locationBtn:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Canvas Layout - Absolute Positioning (like frontend) */
+.tableCanvas {
+  position: relative;
+  flex: 1;
+  background: transparent;
+  overflow: hidden;
+}
+
+.tableCardAbsolute {
+  position: absolute;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  transition: box-shadow var(--transition-base);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.tableCardAbsolute:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.tableCardAbsolute.occupied {
+  background: #638BFF;
+  border-color: #638BFF;
+}
+
+.tableCardAbsolute.occupied .tableNumber,
+.tableCardAbsolute.occupied .tableDuration,
+.tableCardAbsolute.occupied .tableEmptyLabel {
+  color: #ffffff;
+}
+
+.tableCardAbsolute.empty {
+  background: var(--bg-primary);
+  border-color: var(--border-medium);
+}
+
+.tableCardAbsolute .tableCardHeader {
+  padding: 4px 8px;
+  flex: 0;
+}
+
+.tableCardAbsolute .tableNumber {
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  margin-top: 0;
+  padding-bottom: 0;
+  text-align: center;
+}
+
+.tableCardAbsolute .tableNumber::after {
+  display: none;
+}
+
+.tableCardAbsolute .tableCardBody {
+  flex: 1;
+  padding: 2px 8px 4px;
+}
+
+.tableCardAbsolute .tableEmptyLabel {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.tableCardAbsolute .tableDuration {
+  font-size: 12px;
+}

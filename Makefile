@@ -46,7 +46,7 @@ dev-setup:
 	@docker-compose up -d
 	@echo "⏳ Waiting for services to start..."
 	@sleep 10
-	@docker-compose exec backend alembic upgrade head
+	@docker-compose exec backend npm run typeorm migration:run
 	@echo ""
 	@echo "✅ Development environment ready!"
 	@echo "📍 Frontend: http://localhost:5173"
@@ -88,12 +88,12 @@ dev-shell-fe:
 
 db-migrate:
 	@echo "📊 Running database migrations..."
-	@docker-compose exec backend alembic upgrade head
+	@docker-compose exec backend npm run typeorm migration:run
 	@echo "✅ Migrations complete!"
 
 db-seed:
 	@echo "🌱 Seeding database..."
-	@docker-compose exec backend python seed.py
+	@docker-compose exec backend npm run seed
 	@echo "✅ Database seeded!"
 
 db-shell:

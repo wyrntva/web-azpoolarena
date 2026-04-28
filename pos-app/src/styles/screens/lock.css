@@ -1,0 +1,291 @@
+/* LOCK SCREEN - PIN Entry */
+
+.lockScreen {
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #93c5fd 100%);
+  display: grid;
+  grid-template-columns: 1fr minmax(320px, 460px);
+  gap: var(--spacing-8);
+  padding: var(--spacing-6);
+  overflow: hidden;
+}
+
+.lockLeft {
+  position: relative;
+  padding: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+}
+
+.brandRow {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-8);
+}
+
+.brandDot {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  margin-top: var(--spacing-2);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  box-shadow: var(--shadow-md);
+}
+
+.brandName {
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-4xl);
+  color: var(--text-primary);
+  letter-spacing: -1.5px;
+  margin-bottom: var(--spacing-2);
+  line-height: var(--line-height-tight);
+}
+
+.brandAddr {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  max-width: 900px;
+  line-height: var(--line-height-relaxed);
+  font-weight: var(--font-weight-medium);
+}
+
+.clockWrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.clockTime {
+  font-size: clamp(80px, 12vw, 160px);
+  font-weight: 200;
+  color: var(--text-primary);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.clockDate {
+  margin-top: var(--spacing-4);
+  font-size: var(--font-size-xl);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.footerRow {
+  position: absolute;
+  left: var(--spacing-6);
+  right: var(--spacing-6);
+  bottom: var(--spacing-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--spacing-6);
+}
+
+.footerLeft {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: flex-end;
+}
+
+
+.footerMeta {
+  color: var(--text-secondary);
+  font-size: 16px;
+  display: grid;
+  gap: var(--spacing-1);
+  font-weight: var(--font-weight-medium);
+}
+
+.footerHint {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.lockRight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pinPanel {
+  width: 100%;
+  background: var(--bg-primary);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid var(--border-light);
+  padding: var(--spacing-6);
+}
+
+.pinDots {
+  height: 100px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  display: flex;
+  gap: var(--spacing-5);
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-5);
+  box-shadow: var(--shadow-lg);
+}
+
+.dot {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  transition: all var(--transition-base);
+}
+
+.dot.filled {
+  background: var(--text-light);
+  border-color: var(--text-light);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.pinPad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-3);
+}
+
+.keyBtn {
+  height: 76px;
+  border-radius: var(--radius-xl);
+  border: none;
+  background: var(--bg-primary);
+  font-size: var(--font-size-3xl);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+}
+
+.keyBtn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.keyBtn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.keyBtn.zero {
+  grid-column: span 2;
+}
+
+.keyBtn.back {
+  font-size: var(--font-size-2xl);
+}
+
+.pinError {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.loginBtn {
+  margin-top: var(--spacing-4);
+  width: 100%;
+  height: 68px;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  box-shadow: var(--shadow-lg);
+}
+
+.loginBtn:hover {
+  box-shadow: var(--shadow-xl);
+}
+
+.loginBtn:active {
+  transform: translateY(0);
+}
+
+.actionsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+}
+
+.warnBtn,
+.dangerBtn {
+  height: 55px;
+  border-radius: var(--radius-xl);
+  border: none;
+  color: var(--text-light);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+}
+
+.warnBtn {
+  background: linear-gradient(135deg, var(--color-warning) 0%, #d97706 100%);
+}
+
+.warnBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.dangerBtn {
+  background: linear-gradient(135deg, var(--color-danger) 0%, #dc2626 100%);
+}
+
+.dangerBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.pinTools {
+  margin-top: var(--spacing-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.linkBtn {
+  background: transparent;
+  border: none;
+  padding: var(--spacing-1) var(--spacing-2);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-base);
+}
+
+.linkBtn:hover {
+  color: var(--color-primary);
+}
+
+.pinHint {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}

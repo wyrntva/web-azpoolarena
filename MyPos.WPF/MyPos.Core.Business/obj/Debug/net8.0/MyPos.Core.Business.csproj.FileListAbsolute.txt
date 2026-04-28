@@ -1,0 +1,13 @@
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/bin/Debug/net8.0/MyPos.Core.Business.deps.json
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/bin/Debug/net8.0/MyPos.Core.Business.dll
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/bin/Debug/net8.0/MyPos.Core.Business.pdb
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.csproj.AssemblyReference.cache
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.GeneratedMSBuildEditorConfig.editorconfig
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.AssemblyInfoInputs.cache
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.AssemblyInfo.cs
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.csproj.CoreCompileInputs.cache
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.sourcelink.json
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.dll
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/refint/MyPos.Core.Business.dll
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/MyPos.Core.Business.pdb
+/home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Core.Business/obj/Debug/net8.0/ref/MyPos.Core.Business.dll

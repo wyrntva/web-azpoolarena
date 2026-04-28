@@ -1,0 +1,95 @@
+import { InventoriesService } from '../services/inventories.service';
+import { CreateInventoryDto, UpdateInventoryDto } from '../dto/inventory.dto';
+import { InventoryStatus } from '../entities';
+export declare class InventoriesController {
+    private readonly inventoriesService;
+    constructor(inventoriesService: InventoriesService);
+    create(dto: CreateInventoryDto, req: any): Promise<{
+        base_unit: import("../entities").UnitEntity;
+        large_unit: import("../entities").UnitEntity;
+        id: number;
+        product_name: string;
+        quantity: number;
+        min_quantity: number;
+        category_id: number;
+        base_unit_id: number;
+        conversion_unit_id: number;
+        conversion_rate: number;
+        status: InventoryStatus;
+        created_by: number;
+        created_at: Date;
+        updated_at: Date;
+        created_by_user: import("../../users/entities/user.entity").UserEntity;
+        category: import("../entities").CategoryEntity;
+        base_unit_ref: import("../entities").UnitEntity;
+        conversion_unit_ref: import("../entities").UnitEntity;
+    }>;
+    findAll(skipStr?: string, limitStr?: string, statusFilter?: InventoryStatus, search?: string): Promise<{
+        data: {
+            base_unit: import("../entities").UnitEntity;
+            large_unit: import("../entities").UnitEntity;
+            id: number;
+            product_name: string;
+            quantity: number;
+            min_quantity: number;
+            category_id: number;
+            base_unit_id: number;
+            conversion_unit_id: number;
+            conversion_rate: number;
+            status: InventoryStatus;
+            created_by: number;
+            created_at: Date;
+            updated_at: Date;
+            created_by_user: import("../../users/entities/user.entity").UserEntity;
+            category: import("../entities").CategoryEntity;
+            base_unit_ref: import("../entities").UnitEntity;
+            conversion_unit_ref: import("../entities").UnitEntity;
+        }[];
+        meta: {
+            total: number;
+            skip: number;
+            limit: number;
+        };
+    }>;
+    findOne(id: number): Promise<{
+        base_unit: import("../entities").UnitEntity;
+        large_unit: import("../entities").UnitEntity;
+        id: number;
+        product_name: string;
+        quantity: number;
+        min_quantity: number;
+        category_id: number;
+        base_unit_id: number;
+        conversion_unit_id: number;
+        conversion_rate: number;
+        status: InventoryStatus;
+        created_by: number;
+        created_at: Date;
+        updated_at: Date;
+        created_by_user: import("../../users/entities/user.entity").UserEntity;
+        category: import("../entities").CategoryEntity;
+        base_unit_ref: import("../entities").UnitEntity;
+        conversion_unit_ref: import("../entities").UnitEntity;
+    }>;
+    update(id: number, dto: UpdateInventoryDto): Promise<{
+        base_unit: import("../entities").UnitEntity;
+        large_unit: import("../entities").UnitEntity;
+        id: number;
+        product_name: string;
+        quantity: number;
+        min_quantity: number;
+        category_id: number;
+        base_unit_id: number;
+        conversion_unit_id: number;
+        conversion_rate: number;
+        status: InventoryStatus;
+        created_by: number;
+        created_at: Date;
+        updated_at: Date;
+        created_by_user: import("../../users/entities/user.entity").UserEntity;
+        category: import("../entities").CategoryEntity;
+        base_unit_ref: import("../entities").UnitEntity;
+        conversion_unit_ref: import("../entities").UnitEntity;
+    }>;
+    remove(id: number): Promise<null>;
+}

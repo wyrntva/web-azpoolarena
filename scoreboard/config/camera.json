@@ -1,0 +1,46 @@
+{
+    "_comment": "Camera Configuration - Single source of truth",
+    "camera": {
+        "host": "192.168.1.7",
+        "port": 554,
+        "username": "admin",
+        "password": "ysH63sy6"
+    },
+    "liveStream": {
+        "_comment": "Channel for live display",
+        "rtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1602",
+        "delaySec": 7,
+        "hlsPort": 8554,
+        "delayServerPort": 8555,
+        "localStreamUrl": "http://127.0.0.1:8555/playlist.m3u8",
+        "segmentSec": 2,
+        "playlistLen": 3
+    },
+    "recording": {
+        "_comment": "Channel 801 = main stream (higher quality, for DVR recording)",
+        "channel": 801,
+        "rtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1601",
+        "outputDir": "runtime/recordings",
+        "segmentSec": 12,
+        "maxHours": 6,
+        "latencyMs": 200,
+        "rtspUrl2": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1001"
+    },
+    "hardware": {
+        "useVaapi": "auto"
+    },
+    "_legacy": {
+        "_comment": "Legacy keys for backward compatibility",
+        "cameraRtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1602",
+        "dvrCameraRtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1601",
+        "recordingsDir": "runtime/recordings",
+        "recordSegSec": 12,
+        "delaySec": 7,
+        "localPort": 8554,
+        "delayServerPort": 8555,
+        "localStreamUrl": "http://127.0.0.1:8555/playlist.m3u8",
+        "useVaapi": "auto",
+        "segmentSec": 2,
+        "playlistLen": 3
+    }
+}

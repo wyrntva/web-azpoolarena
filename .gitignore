@@ -48,3 +48,14 @@ __pycache__/
 
 # Desktop QR App (Windows only - không dùng trên server)
 desktop-qr-app/
+
+# Core dumps
+core
+core.*
+
+# Scoreboard runtime
+scoreboard/runtime/
+
+# POS App Releases
+pos-app/release*/
+pos-app/dist/

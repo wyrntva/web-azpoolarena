@@ -1,0 +1,2 @@
+# Từ bất kỳ thư mục nào cũng được:
+dotnet run --project /home/wavy/web-azpoolarena/MyPos.WPF/MyPos.Client.Avalonia/MyPos.Client.Avalonia.csproj

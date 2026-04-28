@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+*.log.*
+
+# Runtime data (generated at runtime)
+runtime/hls/
+runtime/recordings/
+runtime/clips/
+runtime/*.pid
+runtime/*.log
+
+# Config backups
+config/*.env
+config/*.bak
+
+# Build artifacts
+build/
+
+# Image/banner cache (downloaded at runtime)
+cache/
+
+# Debug files
+debug*.txt
+dummy.txt
+
+# Test/temp media
+test_vid*.mp4
+
+# Backup files
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db

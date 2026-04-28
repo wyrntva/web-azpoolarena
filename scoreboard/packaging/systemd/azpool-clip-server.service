@@ -1,0 +1,21 @@
+[Unit]
+Description=AZ Pool Arena - Clip Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=azscoreboard
+Group=azscoreboard
+WorkingDirectory=/opt/azpool-scoreboard
+Environment=PYTHONPATH=/opt/azpool-scoreboard
+ExecStart=/opt/azpool-scoreboard/venv/bin/python /opt/azpool-scoreboard/scripts/clip_server.py --port 8580
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=azpool-clip-server
+
+[Install]
+WantedBy=multi-user.target

@@ -1,71 +1,38 @@
-# ========================================
-# Multi-stage Dockerfile for React/Vite Frontend
-# ========================================
+# Base stage
+FROM node:20-alpine AS base
 
-# Stage 1: Base image with Node.js
-FROM node:20-alpine as base
+# Development stage
+FROM base AS development
 
-# Set working directory
+# Thiết lập thư mục làm việc
 WORKDIR /app
 
-# Install dependencies for node-gyp
-RUN apk add --no-cache python3 make g++
-
-
-# Stage 2: Development image
-FROM base as development
-
-# Copy package files
+# Copy file package.json và package-lock.json
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies)
-RUN npm ci
+# Cài đặt dependencies
+RUN npm install --legacy-peer-deps
 
-# Copy source code
+# Copy toàn bộ source code vào container
 COPY . .
 
-# Expose Vite dev server port
+# Expose port (Vite mặc định dùng 5173)
 EXPOSE 5173
 
-# Health check for development
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:5173 || exit 1
+# Lệnh khởi chạy server dev
+CMD ["npm", "run", "dev", "--", "--host"]
 
-# Run dev server with host 0.0.0.0 to be accessible from outside container
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
-
-
-# Stage 3: Builder for production
-FROM base as builder
-
-# Copy package files
+# Production build stage
+FROM base AS builder
+WORKDIR /app
 COPY package*.json ./
-
-# Install dependencies
-RUN npm ci
-
-# Copy source code
+RUN npm ci --legacy-peer-deps
 COPY . .
-
-# Build production bundle
 RUN npm run build
 
-
-# Stage 4: Production image with Nginx
-FROM nginx:alpine as production
-
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built assets from builder
+# Production stage
+FROM nginx:alpine AS production
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Add healthcheck for nginx
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80/health || exit 1
-
-# Expose port 80
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

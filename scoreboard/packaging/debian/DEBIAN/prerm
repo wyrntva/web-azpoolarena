@@ -1,0 +1,49 @@
+#!/bin/bash
+set -e
+
+APP_DIR="/opt/azpool-scoreboard"
+KIOSK_USER="azscoreboard"
+KIOSK_HOME="/home/${KIOSK_USER}"
+
+echo ">>> [azpool-scoreboard] Pre-removal starting..."
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Stop and disable services
+# ─────────────────────────────────────────────────────────────────────────────
+systemctl stop azpool-cam-delay.service    2>/dev/null || true
+systemctl stop azpool-cam-record.service   2>/dev/null || true
+systemctl stop azpool-cam-prune.timer      2>/dev/null || true
+systemctl stop azpool-cam-index.service    2>/dev/null || true
+systemctl stop azpool-clip-server.service  2>/dev/null || true
+
+systemctl disable azpool-cam-delay.service  2>/dev/null || true
+systemctl disable azpool-cam-record.service 2>/dev/null || true
+systemctl disable azpool-cam-prune.timer    2>/dev/null || true
+systemctl disable azpool-cam-index.service  2>/dev/null || true
+systemctl disable azpool-clip-server.service 2>/dev/null || true
+
+# Kill any running relay/delay processes
+pkill -f "cam_delay_relay_loop" 2>/dev/null || true
+pkill -f "delay_server_loop"   2>/dev/null || true
+pkill -f "hls_delay_server.py" 2>/dev/null || true
+pkill -f "cam_record_main"     2>/dev/null || true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Remove auto-login override
+# ─────────────────────────────────────────────────────────────────────────────
+rm -f /etc/systemd/system/getty@tty1.service.d/autologin.conf
+rmdir /etc/systemd/system/getty@tty1.service.d 2>/dev/null || true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Restore default target to graphical
+# ─────────────────────────────────────────────────────────────────────────────
+systemctl set-default graphical.target 2>/dev/null || true
+
+systemctl daemon-reload
+
+echo ">>> [azpool-scoreboard] Pre-removal complete."
+echo ">>> Note: Kiosk user '$KIOSK_USER' was NOT removed."
+echo ">>>       Runtime data in $APP_DIR/runtime was NOT removed."
+echo ">>>       To fully clean up: sudo userdel -r $KIOSK_USER && sudo rm -rf $APP_DIR/runtime"
+
+exit 0

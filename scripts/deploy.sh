@@ -48,7 +48,7 @@ sleep 15
 
 # Run migrations
 echo "📊 Running database migrations..."
-docker-compose -f docker-compose.prod.yml exec -T backend alembic upgrade head
+docker-compose -f docker-compose.prod.yml exec -T backend npm run typeorm migration:run
 
 # Health check
 echo "🏥 Performing health checks..."

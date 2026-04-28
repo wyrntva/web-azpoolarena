@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="MyPos.Client.Avalonia.Views.TableLayoutView"
+             Background="#030033">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
+        <TextBlock Text="🎱" FontSize="64" HorizontalAlignment="Center" />
+        <TextBlock Text="TableLayoutView" FontSize="24" Foreground="White"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="(Under Construction)" FontSize="13" Foreground="#6666AA"
+                   HorizontalAlignment="Center" />
+    </StackPanel>
+</UserControl>
