@@ -47,7 +47,7 @@ __pycache__/
 *.sqlite3
 
 # Desktop QR App (Windows only - không dùng trên server)
-desktop-qr-app/
+# desktop-qr-app/
 
 # Core dumps
 core
