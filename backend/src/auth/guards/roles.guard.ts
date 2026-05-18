@@ -78,10 +78,10 @@ export class AccountantOrAdminGuard implements CanActivate {
     if (user.is_admin) return true;
     if (!user.role) throw new ForbiddenException('User has no role');
     if (
-      ['Thu ngân', 'accountant'].includes(user.role.name) ||
-      user.role_id === 5
+      ['Trưởng ca', 'shift leader'].includes(user.role.name) ||
+      user.role_id === 2
     )
       return true;
-    throw new ForbiddenException('Accountant or Admin access required');
+    throw new ForbiddenException('Shift Leader or Admin access required');
   }
 }

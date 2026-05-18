@@ -152,7 +152,8 @@ const TournamentDetail = () => {
             }
             // Cả hai vắng → completed, no winner
 
-            console.log(`[AutoComplete] Match ${m.match_no}: p1_check_in=${m.player1_check_in}, p2_check_in=${m.player2_check_in} → winner=${winnerId}`);
+
+
 
             upsertMatch(tournament.id, m.match_no, {
                 bracket: m.bracket,

@@ -4,7 +4,7 @@
  * Extracted: StaffFormModal → StaffFormModal.tsx
  */
 import { useState, useEffect } from 'react';
-import { Card, Table, Button, Badge } from 'flowbite-react';
+import { Card, Table, Button, Badge, Checkbox, Label } from 'flowbite-react';
 import toast from 'react-hot-toast';
 import { userAPI } from '../../api/user.api';
 import { roleAPI } from '../../api/role.api';
@@ -18,9 +18,9 @@ import type { User, Role } from './StaffFormModal';
 
 const ROLE_BADGE_COLORS: Record<string, string> = {
     'admin': 'failure',
-    'Quản lý': 'failure',
+    'Quản trị': 'failure',
     'accountant': 'info',
-    'Thu ngân': 'info',
+    'Trưởng ca': 'info',
     'staff': 'success',
     'Nhân viên': 'success',
 };
@@ -38,6 +38,7 @@ const Staff = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [showInactive, setShowInactive] = useState(false);
 
     // --- Data Loading ---
 
@@ -69,10 +70,11 @@ const Staff = () => {
 
     // --- Pagination ---
 
+    const filteredUsers = users.filter(u => showInactive || u.is_active);
     const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
     const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-    const currentUsers = users.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
+    const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
 
     // --- Actions ---
 
@@ -98,7 +100,8 @@ const Staff = () => {
             toast.success('Xóa nhân viên thành công');
             fetchUsers();
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Xóa nhân viên thất bại');
+            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Xóa nhân viên thất bại';
+            toast.error(errorMsg);
         }
     };
 
@@ -113,7 +116,13 @@ const Staff = () => {
                         Quản lý thông tin nhân viên và phân quyền hệ thống
                     </p>
                 </div>
-                <Button onClick={handleCreate} color="blue">Thêm nhân viên</Button>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <Checkbox id="showInactive" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
+                        <Label htmlFor="showInactive" className="text-sm text-gray-500 font-medium cursor-pointer">Hiển thị NV đã xóa</Label>
+                    </div>
+                    <Button onClick={handleCreate} color="blue">Thêm nhân viên</Button>
+                </div>
             </div>
 
             <Card>
@@ -157,10 +166,10 @@ const Staff = () => {
                     </Table>
                 </div>
 
-                {users.length > 0 && (
+                {filteredUsers.length > 0 && (
                     <div className="flex justify-between items-center pt-4 p-4 border-t border-gray-200 dark:border-gray-700">
                         <span className="text-sm text-blue-700 dark:text-blue-400">
-                            Hiển thị từ {indexOfFirstItem + 1} đến {Math.min(indexOfLastItem, users.length)} trên tổng {users.length}
+                            Hiển thị từ {indexOfFirstItem + 1} đến {Math.min(indexOfLastItem, filteredUsers.length)} trên tổng {filteredUsers.length}
                         </span>
                         <CustomPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                     </div>

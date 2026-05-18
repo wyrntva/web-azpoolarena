@@ -6,7 +6,7 @@ import { Roles } from '../../auth/decorators/auth.decorators';
 
 @Controller('api/roles')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin', 'Super Admin', 'Quản lý')
+@Roles('admin', 'Super Admin', 'Quản trị')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

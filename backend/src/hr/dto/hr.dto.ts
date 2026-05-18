@@ -6,7 +6,9 @@ import {
   IsArray,
   IsEnum,
   Matches,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { AttendanceStatus } from '../../common/enums';
 
 // --- Work Schedules ---
@@ -61,7 +63,7 @@ export class PenaltyTierDto {
 
 export class CreateAttendanceSettingsDto {
   @IsOptional() @IsNumber() allowed_late_minutes?: number;
-  @IsArray() penalty_tiers: PenaltyTierDto[];
+  @IsArray() @ValidateNested({ each: true }) @Type(() => PenaltyTierDto) penalty_tiers: PenaltyTierDto[];
   @IsOptional() @IsNumber() early_checkout_grace_minutes?: number;
   @IsOptional() @IsNumber() early_checkout_penalty?: number;
   @IsOptional() @IsNumber() absent_penalty?: number;
@@ -71,7 +73,7 @@ export class CreateAttendanceSettingsDto {
 
 export class UpdateAttendanceSettingsDto {
   @IsOptional() @IsNumber() allowed_late_minutes?: number;
-  @IsOptional() @IsArray() penalty_tiers?: PenaltyTierDto[];
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => PenaltyTierDto) penalty_tiers?: PenaltyTierDto[];
   @IsOptional() @IsNumber() early_checkout_grace_minutes?: number;
   @IsOptional() @IsNumber() early_checkout_penalty?: number;
   @IsOptional() @IsNumber() absent_penalty?: number;

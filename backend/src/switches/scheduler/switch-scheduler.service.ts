@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, Not } from 'typeorm';
 import { SwitchEntity } from '../entities/switch.entity';
+import { SwitchesService } from '../switches.service';
 import * as http from 'http';
 
 @Injectable()
@@ -14,6 +15,8 @@ export class SwitchSchedulerService {
   constructor(
     @InjectRepository(SwitchEntity)
     private readonly switchRepo: Repository<SwitchEntity>,
+    @Inject(forwardRef(() => SwitchesService))
+    private readonly switchesService: SwitchesService,
   ) {}
 
   @Cron('*/5 * * * * *') // Every 5 seconds
@@ -76,13 +79,11 @@ export class SwitchSchedulerService {
           !this.triggeredToday.has(keyOn) &&
           !sw.is_active
         ) {
-          sw.is_active = true;
-          await this.switchRepo.save(sw);
+          await this.switchesService.update(sw.id, { is_active: true });
           this.triggeredToday.set(keyOn, today);
           this.logger.log(
             `[SCHEDULE] Bật ${sw.name} (${now.toTimeString().slice(0, 5)})`,
           );
-          this.sendEspCommand(sw, 'on');
         }
 
         // Turn OFF (once)
@@ -91,13 +92,11 @@ export class SwitchSchedulerService {
           !this.triggeredToday.has(keyOff) &&
           sw.is_active
         ) {
-          sw.is_active = false;
-          await this.switchRepo.save(sw);
+          await this.switchesService.update(sw.id, { is_active: false });
           this.triggeredToday.set(keyOff, today);
           this.logger.log(
             `[SCHEDULE] Tắt ${sw.name} (${now.toTimeString().slice(0, 5)})`,
           );
-          this.sendEspCommand(sw, 'off');
         }
       }
     } catch (err) {

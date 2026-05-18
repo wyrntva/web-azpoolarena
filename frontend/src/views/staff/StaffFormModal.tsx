@@ -80,6 +80,8 @@ const StaffFormModal = ({ open, onClose, editingUser, roles, onSaved }: StaffFor
             const data: any = { ...formData };
             if (data.salary_type === 'hourly') delete data.fixed_salary;
             else delete data.hourly_rate;
+            
+            if (!data.email || data.email.trim() === '') delete data.email;
 
             if (isEditing) {
                 delete data.username;
@@ -93,7 +95,7 @@ const StaffFormModal = ({ open, onClose, editingUser, roles, onSaved }: StaffFor
             onClose();
             onSaved();
         } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+            toast.error(error.response?.data?.message || error.response?.data?.detail || 'Thao tác thất bại');
         }
     };
 

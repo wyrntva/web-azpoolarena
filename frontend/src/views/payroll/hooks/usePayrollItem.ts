@@ -3,9 +3,10 @@ import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import { userAPI } from '../../../api/user.api';
 import { useAuth } from '../../../auth/AuthContext';
+import { isAdmin as checkIsAdmin } from '../../../auth/roles';
 
 interface PayrollItemAPI {
-    getAll: () => Promise<{ data: any[] }>;
+    getAll: (params?: any) => Promise<{ data: any[] }>;
     create: (data: any) => Promise<any>;
     update: (id: number, data: any) => Promise<any>;
     delete: (id: number) => Promise<any>;
@@ -14,9 +15,10 @@ interface PayrollItemAPI {
 interface UsePayrollItemOptions {
     api: PayrollItemAPI;
     itemName: string;
+    selectedDate?: dayjs.Dayjs;
 }
 
-export const usePayrollItem = ({ api, itemName }: UsePayrollItemOptions) => {
+export const usePayrollItem = ({ api, itemName, selectedDate }: UsePayrollItemOptions) => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
@@ -31,7 +33,7 @@ export const usePayrollItem = ({ api, itemName }: UsePayrollItemOptions) => {
         notes: '',
     });
 
-    const isAdmin = user?.role?.name === 'admin' || user?.role?.name === 'Quản lý';
+    const isAdmin = checkIsAdmin(user);
 
     const fetchEmployees = useCallback(async () => {
         try {
@@ -45,14 +47,18 @@ export const usePayrollItem = ({ api, itemName }: UsePayrollItemOptions) => {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await api.getAll();
+            const params = selectedDate ? {
+                start_date: selectedDate.startOf('month').format('YYYY-MM-DD'),
+                end_date: selectedDate.endOf('month').format('YYYY-MM-DD')
+            } : undefined;
+            const res = await api.getAll(params);
             setItems(res.data || []);
         } catch (error) {
             toast.error(`Không thể tải danh sách ${itemName}`);
         } finally {
             setLoading(false);
         }
-    }, [api, itemName]);
+    }, [api, itemName, selectedDate]);
 
     useEffect(() => {
         fetchData();

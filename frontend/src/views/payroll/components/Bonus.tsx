@@ -1,5 +1,6 @@
 import { payrollAPI } from '../../../api/payroll.api';
 import PayrollItemManager from './PayrollItemManager';
+import dayjs from 'dayjs';
 
 const bonusAPI = {
     getAll: payrollAPI.getBonuses,
@@ -8,7 +9,7 @@ const bonusAPI = {
     delete: payrollAPI.deleteBonus,
 };
 
-const Bonus = () => {
+const Bonus = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
     return (
         <PayrollItemManager
             api={bonusAPI}
@@ -18,6 +19,7 @@ const Bonus = () => {
             buttonColor="green"
             amountColor="text-green-600"
             notesPlaceholder="Lý do thưởng..."
+            selectedDate={selectedDate}
         />
     );
 };

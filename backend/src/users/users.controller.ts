@@ -24,14 +24,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @UseGuards(AdminGuard)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: any) {
     return this.usersService.create(dto);
   }
 
   @Get()
-  @UseGuards(AccountantOrAdminGuard)
+  @UseGuards(JwtAuthGuard)
   findAll(@Query('skip') skip?: number, @Query('limit') limit?: number) {
     return this.usersService.findAll(skip, limit);
   }
@@ -40,6 +39,14 @@ export class UsersController {
   @UseGuards(AdminGuard)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.findOne(id);
+  }
+
+  @Patch('me/password')
+  updateMyPassword(
+    @CurrentUser() user: UserEntity,
+    @Body() dto: { old_password?: string; password?: string },
+  ) {
+    return this.usersService.updateMyPassword(user.id, dto.old_password, dto.password);
   }
 
   @Patch(':id')

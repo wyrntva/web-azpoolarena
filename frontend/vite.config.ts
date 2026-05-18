@@ -69,8 +69,7 @@ export default defineConfig({
                         return 'vendor-icons';
                     }
                     // Utilities
-                    if (id.includes('node_modules/dayjs') || id.includes('node_modules/axios') ||
-                        id.includes('node_modules/formik') || id.includes('node_modules/yup')) {
+                    if (id.includes('node_modules/dayjs') || id.includes('node_modules/axios')) {
                         return 'vendor-utils';
                     }
                 },

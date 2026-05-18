@@ -79,20 +79,22 @@ export const ALL_PERMISSIONS = [
 ];
 
 export const ROLE_PERMISSIONS_MAP: Record<string, string[]> = {
-  'Quản lý': ALL_PERMISSIONS,
-  'Thu ngân': [
+  'Quản trị': ALL_PERMISSIONS,
+  'Trưởng ca': [
     'view_dashboard',
-    'view_receipts_page',
-    'create_receipt',
-    'view_revenues_page',
-    'create_revenue',
+    'view_work_schedule_page',
+    'create_schedule',
+    'edit_schedule',
+    'delete_schedule',
     'view_attendance_page',
+    'create_attendance',
+    'edit_attendance',
+    'delete_attendance',
+    'approve_attendance_requests',
   ],
   'Nhân viên': [
     'view_dashboard',
-    'view_receipts_page',
-    'view_revenues_page',
-    'view_inventory_page',
-    'view_reports_page',
+    'view_work_schedule_page',
+    'view_attendance_page',
   ],
 };

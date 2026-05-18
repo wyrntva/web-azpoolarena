@@ -1,4 +1,6 @@
-import { uniqueId } from "lodash";
+// Lightweight uniqueId replacement (avoids importing entire lodash ~70KB)
+let _idCounter = 0;
+const uniqueId = (prefix = '') => `${prefix}${++_idCounter}`;
 
 export interface ChildItem {
   id?: number | string;
@@ -52,13 +54,43 @@ const SidebarContent: MenuItem[] = [
             id: uniqueId(),
             url: "/expense-report",
           },
+          {
+            name: "Báo cáo doanh thu",
+            icon: "solar:chart-square-outline",
+            id: uniqueId(),
+            url: "/reports/revenue",
+          },
+          {
+            name: "Báo cáo mặt hàng",
+            icon: "solar:bag-3-outline",
+            id: uniqueId(),
+            url: "/reports/products",
+          },
+          {
+            name: "Báo cáo kho hàng",
+            icon: "solar:box-outline",
+            id: uniqueId(),
+            url: "/reports/inventory",
+          },
+          {
+            name: "Báo cáo tài chính",
+            icon: "solar:dollar-outline",
+            id: uniqueId(),
+            url: "/reports/finance",
+          },
+          {
+            name: "Báo cáo khuyến mãi",
+            icon: "solar:ticket-sale-outline",
+            id: uniqueId(),
+            url: "/reports/promotions",
+          },
+          {
+            name: "Báo cáo nhân viên",
+            icon: "solar:users-group-rounded-outline",
+            id: uniqueId(),
+            url: "/reports/staff",
+          },
         ],
-      },
-      {
-        name: "Hóa đơn",
-        icon: "solar:file-text-outline",
-        id: uniqueId(),
-        url: "/invoices",
       },
       {
         name: "Mặt hàng",
@@ -83,23 +115,18 @@ const SidebarContent: MenuItem[] = [
             id: uniqueId(),
             url: "/products/categories",
           },
-          {
-            name: "Nhóm lựa chọn",
-            icon: "solar:layers-minimalistic-outline",
-            id: uniqueId(),
-            url: "/products/option-groups",
-          },
-          {
-            name: "Combo",
-            icon: "solar:box-minimalistic-outline",
-            id: uniqueId(),
-            url: "/products/combos",
-          },
+          // TODO: Nhóm lựa chọn & Combo - chưa có route, thêm lại khi implement
         ],
       },
       {
+        name: "Hóa đơn",
+        icon: "solar:file-text-outline",
+        id: uniqueId(),
+        url: "/invoices",
+      },
+      {
         name: "Đặt lịch",
-        icon: "solar:calendar-date-outline",
+        icon: "solar:calendar-mark-outline",
         id: uniqueId(),
         url: "/bookings",
       },
@@ -219,23 +246,12 @@ const SidebarContent: MenuItem[] = [
             id: uniqueId(),
             url: "/customers",
           },
-          {
-            name: "Nhóm khách hàng",
-            icon: "solar:users-group-rounded-outline",
-            id: uniqueId(),
-            url: "/customers/groups",
-          },
-          {
-            name: "Thẻ thành viên",
-            icon: "solar:card-outline",
-            id: uniqueId(),
-            url: "/customers/membership-cards",
-          },
+          // TODO: Nhóm khách hàng & Thẻ thành viên - chưa có route, thêm lại khi implement
         ],
       },
       {
         name: "Khuyến mãi",
-        icon: "solar:sale-square-outline",
+        icon: "solar:ticket-sale-outline",
         id: uniqueId(),
         url: "/promotions",
       },
@@ -294,41 +310,6 @@ const SidebarContent: MenuItem[] = [
         url: "/tournament-settings",
       }
     ]
-  },
-
-  // UTILITIES (Keep old pages)
-  {
-    heading: "UTILITIES",
-    children: [
-      {
-        name: "Typography",
-        icon: "solar:text-circle-outline",
-        id: uniqueId(),
-        url: "/ui/typography",
-        isPro: false,
-      },
-      {
-        name: "Table",
-        icon: "solar:bedside-table-3-linear",
-        id: uniqueId(),
-        url: "/ui/table",
-        isPro: false,
-      },
-      {
-        name: "Form",
-        icon: "solar:password-minimalistic-outline",
-        id: uniqueId(),
-        url: "/ui/form",
-        isPro: false,
-      },
-      {
-        name: "Alert",
-        icon: "solar:airbuds-case-charge-outline",
-        id: uniqueId(),
-        url: "/ui/alert",
-        isPro: false,
-      },
-    ],
   },
 ];
 

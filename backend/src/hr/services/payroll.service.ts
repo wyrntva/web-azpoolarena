@@ -394,4 +394,97 @@ export class PayrollService {
       data: created,
     };
   }
+
+  // ==================== Auto Generate Penalty For Single Attendance ====================
+  async autoGeneratePenaltyForAttendance(
+    userId: number,
+    dateStr: string,
+    currentUserId?: number,
+  ) {
+    let settings = await this.settingsRepo.findOne({
+      where: { is_active: true },
+    });
+    if (!settings) {
+      return null;
+    }
+
+    const tiers = JSON.parse(settings.penalty_tiers);
+
+    const sch = await this.scheduleRepo.findOne({
+      where: { user_id: userId, work_date: dateStr, is_active: true },
+    });
+
+    const att = await this.attendanceRepo.findOne({
+      where: { user_id: userId, date: dateStr },
+    });
+
+    // Delete existing auto penalty for this user and date
+    await this.penaltyRepo
+      .createQueryBuilder()
+      .delete()
+      .where('user_id = :userId', { userId })
+      .andWhere('date = :dateStr', { dateStr })
+      .andWhere("notes LIKE '%Tự động%'")
+      .execute();
+
+    if (!sch) return null;
+
+    let amount = 0;
+    let reason = '';
+    let type = '';
+
+    if (!att || !att.check_in_time) {
+      if (settings.auto_absent_enabled) {
+        type = 'ABSENT';
+        amount = settings.absent_penalty;
+        reason = 'Vắng mặt không phép';
+      }
+    } else if (att.status === AttendanceStatus.LATE) {
+      const checkInDt = moment(att.check_in_time);
+      const startDt = moment(
+        `${typeof sch.work_date === 'string' ? sch.work_date : moment(sch.work_date).format('YYYY-MM-DD')} ${sch.start_time}`,
+        'YYYY-MM-DD HH:mm',
+      );
+      const lateMins = Math.max(0, checkInDt.diff(startDt, 'minutes'));
+
+      for (const t of tiers) {
+        if (t.max_minutes === null || lateMins <= t.max_minutes) {
+          amount = t.penalty_amount;
+          break;
+        }
+      }
+
+      if (amount > 0) {
+        type = 'LATE';
+        reason = `Đi muộn ${lateMins} phút`;
+      }
+    } else if (att.status === AttendanceStatus.EARLY_CHECKOUT) {
+      type = 'EARLY_CHECKOUT';
+      amount = settings.early_checkout_penalty;
+      reason = 'Về sớm';
+    }
+
+    if (amount > 0) {
+      // Use provided userId or find first admin as creator
+      let creatorId = currentUserId;
+      if (!creatorId) {
+        const adminUser = await this.userRepo.findOne({
+          where: { role_id: 1 },
+          order: { id: 'ASC' },
+        });
+        creatorId = adminUser?.id ?? sch.user_id;
+      }
+
+      const pen = this.penaltyRepo.create({
+        user_id: sch.user_id,
+        date: sch.work_date,
+        amount,
+        notes: `${reason} (Tự động)`,
+        created_by: creatorId,
+      });
+      await this.penaltyRepo.save(pen);
+      return pen;
+    }
+    return null;
+  }
 }

@@ -1,3 +1,8 @@
+import dayjs from 'dayjs';
+import 'dayjs/locale/vi';
+
+dayjs.locale('vi');
+
 // Format currency to Vietnamese Dong
 export const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('vi-VN', {
@@ -27,4 +32,9 @@ export const formatDateTime = (date: Date | string): string => {
         hour: '2-digit',
         minute: '2-digit',
     }).format(dateObj);
+};
+
+// Parse date string to dayjs object
+export const parseDate = (dateString: string) => {
+    return dayjs(dateString);
 };

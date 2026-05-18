@@ -29,6 +29,7 @@ import {
   normalizeManualCheckTimes,
   recalculateStatus,
 } from '../helpers/attendance.helpers';
+import { PayrollService } from './payroll.service';
 import moment from 'moment';
 import * as crypto from 'crypto';
 
@@ -47,6 +48,7 @@ export class AttendancesService {
     private readonly qrAccessTokenRepo: Repository<QRAccessTokenEntity>,
     @InjectRepository(WiFiConfigEntity)
     private readonly wifiConfigRepo: Repository<WiFiConfigEntity>,
+    private readonly payrollService: PayrollService,
   ) {}
 
   // ==================== Validation Logic ====================
@@ -257,6 +259,11 @@ export class AttendancesService {
       await this.attendanceRepo.save(newAttendance);
       await this.consumeQrAccessToken(dto.qr_token, user.pin);
 
+      const dateStr = typeof newAttendance.date === 'string'
+        ? newAttendance.date
+        : moment(newAttendance.date).format('YYYY-MM-DD');
+      await this.payrollService.autoGeneratePenaltyForAttendance(user.id, dateStr);
+
       return {
         success: true,
         action: 'check_in',
@@ -301,6 +308,11 @@ export class AttendancesService {
 
       await this.attendanceRepo.save(attendance);
       await this.consumeQrAccessToken(dto.qr_token, user.pin);
+
+      const dateStr = typeof attendance.date === 'string'
+        ? attendance.date
+        : moment(attendance.date).format('YYYY-MM-DD');
+      await this.payrollService.autoGeneratePenaltyForAttendance(user.id, dateStr);
 
       return {
         success: true,
@@ -363,15 +375,7 @@ export class AttendancesService {
     pageSize: number = 20,
     currentUser: any = null,
   ) {
-    const isPrivileged =
-      currentUser.is_admin ||
-      ['Thu ngân', 'accountant'].includes(currentUser.role?.name) ||
-      currentUser.role_id === 5;
-
     let targetUserId = userId;
-    if (!isPrivileged) {
-      targetUserId = currentUser.id;
-    }
 
     const qb = this.attendanceRepo
       .createQueryBuilder('att')
@@ -445,10 +449,21 @@ export class AttendancesService {
     if (!attendance)
       throw new NotFoundException('Không tìm thấy bản ghi chấm công');
 
-    if (dto.check_in_time !== undefined)
-      attendance.check_in_time = dto.check_in_time;
-    if (dto.check_out_time !== undefined)
-      attendance.check_out_time = dto.check_out_time;
+    if (attendance.work_schedule) {
+      const { checkInDt, checkOutDt } = normalizeManualCheckTimes(
+        attendance.work_schedule.work_date.toString(),
+        attendance.work_schedule.start_time,
+        attendance.work_schedule.end_time,
+        dto.check_in_time !== undefined ? dto.check_in_time : attendance.check_in_time,
+        dto.check_out_time !== undefined ? dto.check_out_time : attendance.check_out_time,
+      );
+      if (dto.check_in_time !== undefined) attendance.check_in_time = checkInDt as Date | null;
+      if (dto.check_out_time !== undefined) attendance.check_out_time = checkOutDt as Date | null;
+    } else {
+      if (dto.check_in_time !== undefined) attendance.check_in_time = dto.check_in_time as Date | null;
+      if (dto.check_out_time !== undefined) attendance.check_out_time = dto.check_out_time as Date | null;
+    }
+
     if (dto.notes !== undefined) attendance.notes = dto.notes;
 
     if (attendance.work_schedule) {
@@ -456,6 +471,12 @@ export class AttendancesService {
     }
 
     await this.attendanceRepo.save(attendance);
+
+    const dateStr = typeof attendance.date === 'string'
+      ? attendance.date
+      : moment(attendance.date).format('YYYY-MM-DD');
+    await this.payrollService.autoGeneratePenaltyForAttendance(attendance.user_id, dateStr);
+
     return attendance;
   }
 
@@ -501,6 +522,12 @@ export class AttendancesService {
     recalculateStatus(attendance, checkSchedule);
 
     await this.attendanceRepo.save(attendance);
+
+    const dateStr = typeof attendance.date === 'string'
+      ? attendance.date
+      : moment(attendance.date).format('YYYY-MM-DD');
+    await this.payrollService.autoGeneratePenaltyForAttendance(attendance.user_id, dateStr);
+
     return attendance;
   }
 }

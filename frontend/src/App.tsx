@@ -15,15 +15,15 @@ function App() {
       <ThemeModeScript />
       <Toaster position="top-right" />
       <Flowbite theme={{ theme: customTheme }}>
-        <CategoryProvider>
-          <ProductProvider>
-            <MenuProvider>
-              <AuthProvider>
+        <AuthProvider>
+          <CategoryProvider>
+            <ProductProvider>
+              <MenuProvider>
                 <Router />
-              </AuthProvider>
-            </MenuProvider>
-          </ProductProvider>
-        </CategoryProvider>
+              </MenuProvider>
+            </ProductProvider>
+          </CategoryProvider>
+        </AuthProvider>
       </Flowbite>
     </>
   );

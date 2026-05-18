@@ -32,11 +32,15 @@ export class PayrollController {
   // ==================== Advances ====================
   @Get('advances')
   async getAdvances(
+    @Request() req,
     @Query('start_date') startDate?: string,
     @Query('end_date') endDate?: string,
     @Query('user_id') userIdStr?: string,
   ) {
-    const userId = userIdStr ? parseInt(userIdStr, 10) : undefined;
+    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    const userId = isAdmin 
+        ? (userIdStr ? parseInt(userIdStr, 10) : undefined)
+        : req.user.id;
     return this.payrollService.findAllAdvances(userId, startDate, endDate);
   }
 
@@ -65,11 +69,15 @@ export class PayrollController {
   // ==================== Bonuses ====================
   @Get('bonuses')
   async getBonuses(
+    @Request() req,
     @Query('start_date') startDate?: string,
     @Query('end_date') endDate?: string,
     @Query('user_id') userIdStr?: string,
   ) {
-    const userId = userIdStr ? parseInt(userIdStr, 10) : undefined;
+    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    const userId = isAdmin 
+        ? (userIdStr ? parseInt(userIdStr, 10) : undefined)
+        : req.user.id;
     return this.payrollService.findAllBonuses(userId, startDate, endDate);
   }
 
@@ -98,11 +106,15 @@ export class PayrollController {
   // ==================== Penalties ====================
   @Get('penalties')
   async getPenalties(
+    @Request() req,
     @Query('start_date') startDate?: string,
     @Query('end_date') endDate?: string,
     @Query('user_id') userIdStr?: string,
   ) {
-    const userId = userIdStr ? parseInt(userIdStr, 10) : undefined;
+    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    const userId = isAdmin 
+        ? (userIdStr ? parseInt(userIdStr, 10) : undefined)
+        : req.user.id;
     return this.payrollService.findAllPenalties(userId, startDate, endDate);
   }
 
@@ -130,8 +142,13 @@ export class PayrollController {
 
   // ==================== Summary ====================
   @Get('summary')
-  async getSummary(@Query('month') month: string) {
-    return this.payrollService.getSummary(month);
+  async getSummary(@Request() req, @Query('month') month: string) {
+    const summary = await this.payrollService.getSummary(month);
+    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    if (!isAdmin) {
+      return summary.filter(item => item.user_id === req.user.id);
+    }
+    return summary;
   }
 
   @Post('auto-generate-penalties')

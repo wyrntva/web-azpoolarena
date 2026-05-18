@@ -17,21 +17,21 @@ const axiosClient: AxiosInstance = axios.create({
     timeout: 30000, // 30s timeout
 });
 
-// Configure retry logic with exponential backoff
+// Configure retry logic with exponential backoff (only for safe, idempotent requests)
 axiosRetry(axiosClient, {
-    retries: 3,
+    retries: 2,
     retryDelay: axiosRetry.exponentialDelay,
     retryCondition: (error: AxiosError) => {
+        const method = error.config?.method?.toLowerCase();
+        // Only retry safe idempotent methods (never retry mutations)
+        const isSafeMethod = !method || ['get', 'head', 'options'].includes(method);
+        if (!isSafeMethod) return false;
         // Retry on network errors or 5xx server errors
         return axiosRetry.isNetworkOrIdempotentRequestError(error)
-            || error.response?.status === 429 // Rate limit
             || (error.response?.status !== undefined && error.response.status >= 500 && error.response.status < 600);
     },
-    onRetry: (retryCount: number, error: AxiosError, requestConfig: AxiosRequestConfig) => {
-        console.warn(`🔄 Retry attempt ${retryCount} for ${requestConfig.url}`, {
-            status: error.response?.status,
-            message: error.message,
-        });
+    onRetry: (_retryCount: number, _error: AxiosError, _requestConfig: AxiosRequestConfig) => {
+        // Retry silently in production
     },
 });
 

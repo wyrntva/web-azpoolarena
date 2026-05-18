@@ -1,5 +1,6 @@
 import { payrollAPI } from '../../../api/payroll.api';
 import PayrollItemManager from './PayrollItemManager';
+import dayjs from 'dayjs';
 
 const advanceAPI = {
     getAll: payrollAPI.getAdvances,
@@ -8,7 +9,7 @@ const advanceAPI = {
     delete: payrollAPI.deleteAdvance,
 };
 
-const AdvancePayment = () => {
+const AdvancePayment = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
     return (
         <PayrollItemManager
             api={advanceAPI}
@@ -18,6 +19,7 @@ const AdvancePayment = () => {
             buttonColor="blue"
             amountColor="text-red-600"
             notesPlaceholder="Lý do ứng tiền..."
+            selectedDate={selectedDate}
         />
     );
 };

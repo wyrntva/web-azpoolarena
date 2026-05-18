@@ -36,7 +36,20 @@ const AttendanceSettings = () => {
                 return;
             }
 
-            await attendanceSettingsAPI.update(settings);
+            // Clean up empty strings to 0
+            const sanitizedSettings = {
+                ...settings,
+                allowed_late_minutes: Number(settings.allowed_late_minutes) || 0,
+                early_checkout_grace_minutes: Number(settings.early_checkout_grace_minutes) || 0,
+                early_checkout_penalty: Number(settings.early_checkout_penalty) || 0,
+                absent_penalty: Number(settings.absent_penalty) || 0,
+                penalty_tiers: settings.penalty_tiers.map(tier => ({
+                    max_minutes: tier.max_minutes === null || tier.max_minutes as any === '' ? null : Number(tier.max_minutes) || 0,
+                    penalty_amount: Number(tier.penalty_amount) || 0
+                }))
+            };
+
+            await attendanceSettingsAPI.update(sanitizedSettings);
             toast.success('Cập nhật thành công');
             fetchSettings();
         } catch (error: any) {
@@ -95,8 +108,8 @@ const AttendanceSettings = () => {
                                     <TextInput
                                         type="number"
                                         className="flex-1"
-                                        value={settings?.allowed_late_minutes}
-                                        onChange={(e) => setSettings({ ...settings!, allowed_late_minutes: parseInt(e.target.value) })}
+                                        value={settings?.allowed_late_minutes ?? ''}
+                                        onChange={(e) => setSettings({ ...settings!, allowed_late_minutes: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
                                     />
                                     <span className="text-sm text-gray-500">phút</span>
                                 </div>
@@ -120,7 +133,7 @@ const AttendanceSettings = () => {
                                                     type="number"
                                                     className="flex-1"
                                                     disabled={tier.max_minutes === null}
-                                                    value={tier.max_minutes === null ? '' : tier.max_minutes}
+                                                    value={tier.max_minutes ?? ''}
                                                     onChange={(e) => updateTier(idx, 'max_minutes', e.target.value === '' ? null : parseInt(e.target.value))}
                                                     placeholder="VD: 30"
                                                 />
@@ -140,8 +153,8 @@ const AttendanceSettings = () => {
                                                 <TextInput
                                                     type="number"
                                                     className="flex-1"
-                                                    value={tier.penalty_amount}
-                                                    onChange={(e) => updateTier(idx, 'penalty_amount', parseInt(e.target.value))}
+                                                    value={tier.penalty_amount ?? ''}
+                                                    onChange={(e) => updateTier(idx, 'penalty_amount', e.target.value === '' ? '' : parseInt(e.target.value))}
                                                 />
                                                 <span className="text-sm text-gray-500">đ</span>
                                             </div>
@@ -166,8 +179,8 @@ const AttendanceSettings = () => {
                                         <Label value="Phút được phép về sớm" />
                                         <TextInput
                                             type="number"
-                                            value={settings?.early_checkout_grace_minutes}
-                                            onChange={(e) => setSettings({ ...settings!, early_checkout_grace_minutes: parseInt(e.target.value) })}
+                                            value={settings?.early_checkout_grace_minutes ?? ''}
+                                            onChange={(e) => setSettings({ ...settings!, early_checkout_grace_minutes: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
                                         />
                                     </div>
                                     <div>
@@ -176,8 +189,8 @@ const AttendanceSettings = () => {
                                             <TextInput
                                                 type="number"
                                                 className="flex-1"
-                                                value={settings?.early_checkout_penalty}
-                                                onChange={(e) => setSettings({ ...settings!, early_checkout_penalty: parseInt(e.target.value) })}
+                                                value={settings?.early_checkout_penalty ?? ''}
+                                                onChange={(e) => setSettings({ ...settings!, early_checkout_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
                                             />
                                             <span className="text-sm text-gray-500">đ</span>
                                         </div>
@@ -193,8 +206,8 @@ const AttendanceSettings = () => {
                                             <TextInput
                                                 type="number"
                                                 className="flex-1"
-                                                value={settings?.absent_penalty}
-                                                onChange={(e) => setSettings({ ...settings!, absent_penalty: parseInt(e.target.value) })}
+                                                value={settings?.absent_penalty ?? ''}
+                                                onChange={(e) => setSettings({ ...settings!, absent_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
                                             />
                                             <span className="text-sm text-gray-500">đ</span>
                                         </div>
@@ -225,7 +238,7 @@ const AttendanceSettings = () => {
                                 {settings?.penalty_tiers.map((t, i) => (
                                     <div key={i} className="flex justify-between pl-2">
                                         <span>{t.max_minutes ? `≤ ${t.max_minutes} phút:` : 'Mức còn lại:'}</span>
-                                        <span className="font-bold text-red-600">{formatCurrency(t.penalty_amount)}</span>
+                                        <span className="font-bold text-red-600">{formatCurrency(Number(t.penalty_amount) || 0)}</span>
                                     </div>
                                 ))}
                             </div>
@@ -245,7 +258,7 @@ const AttendanceSettings = () => {
                         <textarea
                             className="mt-1 w-full border-gray-300 rounded-lg text-sm"
                             rows={4}
-                            value={settings?.notes}
+                            value={settings?.notes || ''}
                             onChange={(e) => setSettings({ ...settings!, notes: e.target.value })}
                             placeholder="Ghi chú về các thay đổi chính sách..."
                         />

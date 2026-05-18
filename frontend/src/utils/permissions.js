@@ -8,14 +8,14 @@ const internalIsAdmin = (user) => {
   if (!user) return false;
   if (user.is_admin === true) return true;
   const roleId = Number(user.role_id || (user.role && user.role.id));
-  if (roleId === 4) return true;
+  if (roleId === 1) return true;
   const name = (user.role?.name || '').toLowerCase().trim().normalize('NFC');
-  return name === 'quản lý' || name === 'admin';
+  return name === 'quản trị' || name === 'admin';
 };
 
 export const hasPermission = (user, permission) => {
   if (!user) return false;
-  // Admin hoặc Quản lý có tất cả quyền
+  // Admin hoặc Quản trị có tất cả quyền
   if (internalIsAdmin(user)) return true;
   if (!user.role) return false;
 
@@ -37,7 +37,7 @@ export const hasPermission = (user, permission) => {
  */
 export const hasAnyPermission = (user, permissionArray) => {
   if (!user) return false;
-  // Admin hoặc Quản lý có tất cả quyền
+  // Admin hoặc Quản trị có tất cả quyền
   if (internalIsAdmin(user)) return true;
   if (!user.role) return false;
 
@@ -47,7 +47,7 @@ export const hasAnyPermission = (user, permissionArray) => {
 
 export const hasAllPermissions = (user, permissionArray) => {
   if (!user) return false;
-  // Admin hoặc Quản lý có tất cả quyền
+  // Admin hoặc Quản trị có tất cả quyền
   if (internalIsAdmin(user)) return true;
   if (!user.role) return false;
 
@@ -84,7 +84,7 @@ export const canDelete = (user, deletePermission) => {
 };
 
 export const isAdmin = (user) => {
-  return user?.role?.name === 'admin' || user?.role?.name === 'Quản lý';
+  return user?.role?.name === 'admin' || user?.role?.name === 'Quản trị';
 };
 
 /**

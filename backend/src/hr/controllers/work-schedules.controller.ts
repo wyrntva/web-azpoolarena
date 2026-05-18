@@ -30,7 +30,7 @@ export class WorkSchedulesController {
   constructor(private readonly schedulesService: WorkSchedulesService) {}
 
   @Post()
-  @Roles('admin', 'Super Admin')
+  @Roles('admin', 'Super Admin', 'Trưởng ca')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateWorkScheduleDto) {
     return this.schedulesService.create(dto);
@@ -44,20 +44,6 @@ export class WorkSchedulesController {
     @Query('end_date') endDate?: string,
     @Query('is_active') isActiveStr?: string,
   ) {
-    const userRole = req.user.role?.name;
-    const isPrivileged =
-      req.user.is_admin ||
-      ['Thu ngân', 'accountant'].includes(userRole) ||
-      req.user.role_id === 5;
-
-    if (!isPrivileged) {
-      return this.schedulesService.findMySchedules(
-        req.user.id,
-        startDate,
-        endDate,
-      );
-    }
-
     const userId = userIdStr ? parseInt(userIdStr, 10) : undefined;
     const isActive = isActiveStr
       ? isActiveStr.toLowerCase() === 'true'
@@ -85,7 +71,7 @@ export class WorkSchedulesController {
   }
 
   @Put(':id')
-  @Roles('admin', 'Super Admin')
+  @Roles('admin', 'Super Admin', 'Trưởng ca')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateWorkScheduleDto,
@@ -94,20 +80,20 @@ export class WorkSchedulesController {
   }
 
   @Delete(':id')
-  @Roles('admin', 'Super Admin')
+  @Roles('admin', 'Super Admin', 'Trưởng ca')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.schedulesService.remove(id);
   }
 
   @Post('copy-schedule')
-  @Roles('admin', 'Super Admin')
+  @Roles('admin', 'Super Admin', 'Trưởng ca')
   async copySchedule(@Body() dto: CopyScheduleRequestDto) {
     return this.schedulesService.copySchedule(dto);
   }
 
   @Post('copy-week-schedule')
-  @Roles('admin', 'Super Admin')
+  @Roles('admin', 'Super Admin', 'Trưởng ca')
   async copyWeekSchedule(@Body() dto: CopyWeekScheduleRequestDto) {
     return this.schedulesService.copyWeekSchedule(dto);
   }

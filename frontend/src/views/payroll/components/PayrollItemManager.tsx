@@ -1,11 +1,12 @@
-import { Button, Table, Modal, Label, TextInput, Select } from 'flowbite-react';
+import { Button, Table, Modal, Label, TextInput, Select, Card } from 'flowbite-react';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { usePayrollItem } from '../hooks/usePayrollItem';
+import dayjs from 'dayjs';
 
 type ColorType = 'blue' | 'green' | 'failure' | 'warning';
 
 interface PayrollItemAPI {
-    getAll: () => Promise<{ data: any[] }>;
+    getAll: (params?: any) => Promise<{ data: any[] }>;
     create: (data: any) => Promise<any>;
     update: (id: number, data: any) => Promise<any>;
     delete: (id: number) => Promise<any>;
@@ -20,6 +21,7 @@ interface PayrollItemManagerProps {
     amountColor: string;
     notesPlaceholder: string;
     extraActions?: React.ReactNode;
+    selectedDate?: dayjs.Dayjs;
 }
 
 const PayrollItemManager = ({
@@ -31,6 +33,7 @@ const PayrollItemManager = ({
     amountColor,
     notesPlaceholder,
     extraActions,
+    selectedDate,
 }: PayrollItemManagerProps) => {
     const {
         loading,
@@ -45,7 +48,7 @@ const PayrollItemManager = ({
         handleSubmit,
         handleDelete,
         closeModal,
-    } = usePayrollItem({ api, itemName });
+    } = usePayrollItem({ api, itemName, selectedDate });
 
     return (
         <div className="space-y-4">
@@ -61,7 +64,8 @@ const PayrollItemManager = ({
                 )}
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
                 <Table striped hoverable>
                     <Table.Head>
                         <Table.HeadCell>Ngày</Table.HeadCell>
@@ -113,6 +117,48 @@ const PayrollItemManager = ({
                         ))}
                     </Table.Body>
                 </Table>
+            </div>
+
+            {/* Mobile View */}
+            <div className="md:hidden space-y-3 pb-4">
+                {loading ? (
+                    <div className="text-center p-4">Đang tải...</div>
+                ) : items.length === 0 ? (
+                    <div className="text-center p-4">Chưa có dữ liệu</div>
+                ) : items.map((item) => (
+                    <Card key={item.id} className="p-0 shadow-sm border-gray-200">
+                        <div className="p-3 bg-gray-50 dark:bg-gray-800 border-b flex justify-between items-center">
+                            <div className="font-bold text-gray-900 dark:text-white">
+                                {item.employee_name || `User #${item.user_id}`}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                                {formatDate(item.date)}
+                            </div>
+                        </div>
+                        <div className="p-3 space-y-2">
+                            <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                <span className="text-sm text-gray-500">Số tiền</span>
+                                <span className={`font-bold ${amountColor}`}>
+                                    {amountColor.includes('red') ? '-' : ''}{formatCurrency(item.amount)}
+                                </span>
+                            </div>
+                            {item.notes && (
+                                <div className="text-sm text-gray-600 pb-2 border-b border-gray-100 italic">
+                                    "{item.notes}"
+                                </div>
+                            )}
+                            <div className="flex justify-between items-center pt-1">
+                                <span className="text-xs text-gray-400">Tạo bởi: {item.created_by_name || '-'}</span>
+                                {isAdmin && (
+                                    <div className="flex gap-3 text-sm">
+                                        <button onClick={() => handleOpenModal(item)} className="text-blue-600 font-medium">Sửa</button>
+                                        <button onClick={() => handleDelete(item.id)} className="text-red-600 font-medium">Xóa</button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </Card>
+                ))}
             </div>
 
             <Modal show={modalOpen} onClose={closeModal}>

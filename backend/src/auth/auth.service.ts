@@ -164,6 +164,7 @@ export class AuthService {
       is_admin: user.is_admin,
       role_id: user.role_id,
       salary_type: user.salary_type,
+      hourly_rate: user.hourly_rate,
       fixed_salary: user.fixed_salary,
       created_at: (user.created_at || now).toISOString(),
       updated_at: (user.updated_at || now).toISOString(),
@@ -176,6 +177,7 @@ export class AuthService {
         description: user.role.description,
         is_active: user.role.is_active,
         is_system: user.role.is_system,
+        requires_timekeeping: user.role.requires_timekeeping,
         created_at: (user.role.created_at || now).toISOString(),
         updated_at: (user.role.updated_at || now).toISOString(),
       };

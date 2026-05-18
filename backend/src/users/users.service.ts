@@ -29,9 +29,35 @@ export class UsersService {
     const existing = await this.userRepo.findOne({
       where: { username: dto.username },
     });
-    if (existing) throw new BadRequestException('Username already exists');
+    
+    if (existing) {
+      if (!existing.is_active) {
+        // Reactivate soft-deleted user
+        existing.is_active = true;
+        existing.full_name = dto.full_name;
+        if (dto.email !== undefined) {
+          existing.email = dto.email.trim() !== '' ? dto.email : null;
+        }
+        if (dto.password) {
+          existing.hashed_password = await this.authService.hashPassword(dto.password);
+        }
+        if (dto.role_id) existing.role_id = dto.role_id;
+        if (dto.pin) existing.pin = dto.pin;
+        if (dto.salary_type) existing.salary_type = dto.salary_type;
+        if (dto.hourly_rate !== undefined) existing.hourly_rate = dto.hourly_rate;
+        if (dto.fixed_salary !== undefined) existing.fixed_salary = dto.fixed_salary;
+        
+        const saved = await this.userRepo.save(existing);
+        const full = await this.userRepo.findOne({
+          where: { id: saved.id },
+          relations: ['role'],
+        });
+        return this.parseUserPermissions(full!);
+      }
+      throw new BadRequestException('Số điện thoại (tài khoản) đã tồn tại');
+    }
 
-    if (dto.email) {
+    if (dto.email && dto.email.trim() !== '') {
       const existingEmail = await this.userRepo.findOne({
         where: { email: dto.email },
       });
@@ -43,11 +69,12 @@ export class UsersService {
 
     const user = this.userRepo.create({
       username: dto.username,
-      email: dto.email,
+      email: dto.email && dto.email.trim() !== '' ? dto.email : null,
       full_name: dto.full_name,
       hashed_password: await this.authService.hashPassword(dto.password),
       role_id: dto.role_id,
       pin: dto.pin,
+      is_active: dto.is_active !== undefined ? dto.is_active : true,
       salary_type: dto.salary_type,
       hourly_rate: dto.hourly_rate,
       fixed_salary: dto.fixed_salary,
@@ -87,7 +114,7 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('User not found');
 
-    if (dto.email) {
+    if (dto.email && dto.email.trim() !== '') {
       const existing = await this.userRepo.findOne({
         where: { email: dto.email },
       });
@@ -105,6 +132,10 @@ export class UsersService {
       if (!role) throw new NotFoundException('Role not found');
     }
 
+    if (dto.email !== undefined && dto.email.trim() === '') {
+      dto.email = null;
+    }
+    
     Object.assign(user, dto);
     const saved = await this.userRepo.save(user);
     const full = await this.userRepo.findOne({
@@ -114,13 +145,37 @@ export class UsersService {
     return this.parseUserPermissions(full!);
   }
 
+  async updateMyPassword(userId: number, oldPassword?: string, newPassword?: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!oldPassword) throw new BadRequestException('Vui lòng nhập mật khẩu cũ');
+    
+    const isPasswordValid = await this.authService.verifyPassword(oldPassword, user.hashed_password);
+    if (!isPasswordValid) throw new BadRequestException('Mật khẩu cũ không chính xác');
+
+    if (!newPassword || newPassword.length < 6) throw new BadRequestException('Mật khẩu mới phải có ít nhất 6 ký tự');
+
+    user.hashed_password = await this.authService.hashPassword(newPassword);
+    await this.userRepo.save(user);
+
+    return { success: true, message: 'Đổi mật khẩu thành công' };
+  }
+
   async remove(id: number, currentUserId: number) {
     const user = await this.userRepo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
     if (user.id === currentUserId)
       throw new BadRequestException('Cannot delete your own account');
 
-    await this.userRepo.remove(user);
+    try {
+      await this.userRepo.remove(user);
+    } catch (error) {
+      // If hard delete fails due to foreign key constraints (like attendances or work schedules),
+      // fallback to soft delete (deactivate) to preserve historical data
+      user.is_active = false;
+      await this.userRepo.save(user);
+    }
   }
 
   async updateDisplayOrder(

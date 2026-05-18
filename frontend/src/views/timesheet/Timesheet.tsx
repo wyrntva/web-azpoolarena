@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { attendanceAPI, workScheduleAPI } from '../../api/attendance.api';
 import { userAPI } from '../../api/user.api';
 import { useAuth } from '../../auth/AuthContext';
+import { isAdmin } from '../../auth/roles';
 import { formatDate } from '../../utils/formatters';
 
 const Timesheet = () => {
@@ -23,7 +24,7 @@ const Timesheet = () => {
         notes: '',
     });
 
-    const isAdmin = user?.is_admin;
+    const isManager = isAdmin(user);
 
     const mondayDate = useMemo(() => {
         return selectedDate.subtract((selectedDate.day() + 6) % 7, 'days').startOf('day');
@@ -46,14 +47,14 @@ const Timesheet = () => {
     }, [schedules]);
 
     useEffect(() => {
-        if (isAdmin) fetchEmployees();
+        fetchEmployees();
         fetchData();
-    }, [selectedDate, isAdmin]);
+    }, [selectedDate]);
 
     const fetchEmployees = async () => {
         try {
             const response = await userAPI.getUsers();
-            setEmployees(response.data.filter((u: any) => u.is_active && u.role?.requires_timekeeping !== false));
+            setEmployees(response.data);
         } catch (error) {
             toast.error('Không thể tải danh sách nhân viên');
         }
@@ -65,21 +66,12 @@ const Timesheet = () => {
             const start = mondayDate.format('YYYY-MM-DD');
             const end = mondayDate.add(6, 'days').format('YYYY-MM-DD');
 
-            if (isAdmin) {
-                const [attRes, schedRes] = await Promise.all([
-                    attendanceAPI.getTimesheet({ start_date: start, end_date: end, page_size: 1000 }),
-                    workScheduleAPI.getAll({ start_date: start, end_date: end }),
-                ]);
-                setAttendances(attRes.data.items || []);
-                setSchedules(schedRes.data || []);
-            } else {
-                const [attRes, schedRes] = await Promise.all([
-                    attendanceAPI.getMyTimesheet({ start_date: start, end_date: end, page_size: 1000 }),
-                    workScheduleAPI.getMy({ start_date: start, end_date: end }),
-                ]);
-                setAttendances(attRes.data.items || []);
-                setSchedules(schedRes.data || []);
-            }
+            const [attRes, schedRes] = await Promise.all([
+                attendanceAPI.getTimesheet({ start_date: start, end_date: end, page_size: 1000 }),
+                workScheduleAPI.getAll({ start_date: start, end_date: end }),
+            ]);
+            setAttendances(attRes.data.items || []);
+            setSchedules(schedRes.data || []);
         } catch (error) {
             toast.error('Không thể tải dữ liệu chấm công');
         } finally {
@@ -92,10 +84,20 @@ const Timesheet = () => {
     };
 
     const weekDates = getWeekDates();
-    const displayEmployees = (isAdmin ? employees : (user ? [user] : [])).filter(Boolean);
+    const displayEmployees = useMemo(() => {
+        return employees.filter((u: any) => {
+            if (u.role?.requires_timekeeping === false) return false;
+
+            const hasData = attendances.some(a => a.user_id === u.id) || schedules.some(s => s.user_id === u.id);
+            if (hasData) return true;
+
+            return u.is_active;
+        });
+    }, [employees, attendances, schedules, mondayDate]);
 
 
     const handleCellClick = (employee: any, date: dayjs.Dayjs) => {
+        if (!isManager) return; // Only managers can edit attendances
         const dateStr = date.format('YYYY-MM-DD');
         const attendance = attendanceMap[`${employee.id}_${dateStr}`];
         const schedule = scheduleMap[`${employee.id}_${dateStr}`];
@@ -150,36 +152,43 @@ const Timesheet = () => {
     };
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="p-2 md:p-6 space-y-3 md:space-y-6 -mt-2 md:mt-0">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                         Bảng chấm công
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">
-                        {isAdmin ? 'Quản lý thời gian làm việc của toàn bộ nhân viên' : 'Lịch sử chấm công của bạn'}
+                        {isManager ? 'Quản lý thời gian làm việc của toàn bộ nhân viên' : 'Lịch sử chấm công của bạn'}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button color="gray" onClick={() => setSelectedDate(selectedDate.subtract(7, 'days'))}>← Tuần trước</Button>
-                    <div className="bg-white dark:bg-gray-800 border rounded-lg px-4 py-2 font-bold">
-                        Tuần {mondayDate.format('DD/MM')} - {mondayDate.add(6, 'days').format('DD/MM/YYYY')}
+                <div className="flex flex-col md:flex-row items-center justify-center md:justify-end gap-3 w-full md:w-auto">
+                    {/* Desktop Date Navigation */}
+                    <div className="hidden md:flex items-center gap-2">
+                        <Button color="gray" onClick={() => setSelectedDate(selectedDate.subtract(7, 'days'))}>← Tuần trước</Button>
+                        <div className="bg-white dark:bg-gray-800 border rounded-lg px-4 py-2 font-bold">
+                            Tuần {mondayDate.format('DD/MM')} - {mondayDate.add(6, 'days').format('DD/MM/YYYY')}
+                        </div>
+                        <Button color="gray" onClick={() => setSelectedDate(selectedDate.add(7, 'days'))}>Tuần sau →</Button>
                     </div>
-                    <Button color="gray" onClick={() => setSelectedDate(selectedDate.add(7, 'days'))}>Tuần sau →</Button>
-                    <Button color="blue" onClick={() => setSelectedDate(dayjs())}>Hôm nay</Button>
+
+                    {/* Actions Row (Desktop) */}
+                    <div className="hidden md:flex items-center justify-center gap-2 w-full md:w-auto">
+                        <Button color="blue" onClick={() => setSelectedDate(dayjs())}>Tuần này</Button>
+                    </div>
                 </div>
             </div>
 
-            <Card className="overflow-hidden rounded-lg shadow-sm">
+            <Card className="overflow-hidden rounded-lg shadow-sm p-0">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-center border-collapse">
+                    <table className="w-[820px] md:w-full table-fixed text-xs md:text-sm text-center border-collapse">
                         <thead>
-                            <tr className="bg-white dark:bg-gray-700">
-                                <th className="p-4 text-left font-bold sticky left-0 bg-white dark:bg-gray-700 z-10 w-48 rounded-tl-lg">Nhân viên</th>
+                            <tr className="bg-gray-50 dark:bg-gray-700 h-[44px] md:h-[56px]">
+                                <th className="p-2 md:p-4 text-left font-bold text-gray-900 dark:text-white sticky left-0 bg-gray-50 dark:bg-gray-700 z-10 w-32 md:w-48">Nhân viên</th>
                                 {weekDates.map((d, i) => (
-                                    <th key={i} className={`p-4 min-w-[120px] ${i === 6 ? 'rounded-tr-lg' : ''}`}>
-                                        <p className="text-xs uppercase text-gray-500 mb-1">{i === 6 ? 'CN' : `Thứ ${i + 2}`}</p>
-                                        <span className={`font-bold px-3 py-1 rounded-full ${d.isSame(dayjs(), 'day') ? 'bg-[#635BFF] text-white' : 'text-gray-900'}`}>
+                                    <th key={i} className="p-2 md:p-4">
+                                        <p className="text-[10px] md:text-xs uppercase text-gray-500 mb-1">{i === 6 ? 'CN' : `Thứ ${i + 2}`}</p>
+                                        <span className={`font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-sm ${d.isSame(dayjs(), 'day') ? 'bg-[#635BFF] text-white' : 'text-gray-900'}`}>
                                             {d.format('DD/MM')}
                                         </span>
                                     </th>
@@ -197,9 +206,9 @@ const Timesheet = () => {
                                 </tr>
                             ) : (
                                 displayEmployees.map((emp) => (
-                                    <tr key={emp.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                        <td className="p-4 text-left font-medium sticky left-0 bg-white dark:bg-gray-800 z-10">
-                                            <p className="font-bold">{emp.full_name}</p>
+                                    <tr key={emp.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 h-[44px] md:h-[56px]">
+                                        <td className="p-2 md:p-4 text-left font-medium sticky left-0 bg-white dark:bg-gray-800 z-10 border-r">
+                                            <p className="font-bold leading-tight text-[11px] md:text-sm">{emp.full_name}</p>
                                         </td>
                                         {weekDates.map((date, i) => {
                                             const dateStr = date.format('YYYY-MM-DD');
@@ -208,7 +217,7 @@ const Timesheet = () => {
                                             return (
                                                 <td
                                                     key={i}
-                                                    className={`p-4 transition-colors cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 ${attendance ? 'bg-white' : schedule ? 'bg-white' : 'bg-gray-50/50'}`}
+                                                    className={`p-2 md:p-4 transition-colors cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 ${attendance ? 'bg-white' : schedule ? 'bg-white' : 'bg-gray-50/50'}`}
                                                     onClick={() => handleCellClick(emp, date)}
                                                 >
                                                     {attendance ? (
@@ -237,7 +246,7 @@ const Timesheet = () => {
                                                             }
 
                                                             return (
-                                                                <p className="font-bold">
+                                                                <p className="font-bold whitespace-nowrap">
                                                                     <span className={checkInClass}>{checkIn.format('HH:mm')}</span>
                                                                     <span className="text-gray-400 mx-1">-</span>
                                                                     <span className={checkOutClass}>{checkOut ? checkOut.format('HH:mm') : '--:--'}</span>
@@ -262,9 +271,31 @@ const Timesheet = () => {
                         </tbody>
                     </table>
                 </div>
-
-
             </Card>
+
+            {/* Mobile Date Navigation (Moved to bottom) */}
+            <div className="flex md:hidden items-center justify-center gap-2 w-full pt-2">
+                <button 
+                    className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-800 rounded-lg transition-colors"
+                    onClick={() => setSelectedDate(selectedDate.subtract(7, 'days'))}
+                >
+                    <span className="text-xl">←</span>
+                </button>
+                <div className="px-3 py-1.5 font-bold text-sm text-center text-gray-900 dark:text-white">
+                    Tuần {mondayDate.format('DD/MM')} - {mondayDate.add(6, 'days').format('DD/MM/YYYY')}
+                </div>
+                <button 
+                    className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white active:bg-gray-100 dark:active:bg-gray-800 rounded-lg transition-colors"
+                    onClick={() => setSelectedDate(selectedDate.add(7, 'days'))}
+                >
+                    <span className="text-xl">→</span>
+                </button>
+            </div>
+
+            {/* Mobile Actions Row (Moved to bottom) */}
+            <div className="flex md:hidden items-center justify-center gap-3 w-full pt-1 pb-4">
+                <Button color="blue" size="sm" onClick={() => setSelectedDate(dayjs())}>Tuần này</Button>
+            </div>
 
             <Modal show={modalOpen} onClose={() => setModalOpen(false)}>
                 <Modal.Header>Chi tiết chấm công</Modal.Header>
@@ -314,7 +345,7 @@ const Timesheet = () => {
                                 </div>
                             )}
 
-                            {isAdmin && (
+                            {isManager && (
                                 <div className="border-t pt-4 space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
@@ -352,7 +383,7 @@ const Timesheet = () => {
                     )}
                 </Modal.Body>
                 <Modal.Footer>
-                    {isAdmin && (
+                    {isManager && (
                         <Button color="blue" onClick={handleSaveAttendance} isProcessing={saving} disabled={saving}>
                             {selectedCell?.attendance ? 'Cập nhật' : 'Tạo chấm công'}
                         </Button>

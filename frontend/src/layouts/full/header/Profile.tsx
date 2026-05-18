@@ -41,19 +41,11 @@ const Profile = () => {
 
         <Dropdown.Item
           as={Link}
-          to="/settings"
+          to="/change-password"
           className="px-3 py-3 flex items-center bg-hover group/link w-full gap-3 text-dark"
         >
-          <Icon icon="solar:user-circle-outline" height={20} />
-          Hồ sơ cá nhân
-        </Dropdown.Item>
-        <Dropdown.Item
-          as={Link}
-          to="/settings"
-          className="px-3 py-3 flex items-center bg-hover group/link w-full gap-3 text-dark"
-        >
-          <Icon icon="solar:settings-outline" height={20} />
-          Cài đặt
+          <Icon icon="solar:lock-password-outline" height={20} />
+          Đổi mật khẩu
         </Dropdown.Item>
 
         <div className="p-3 pt-0">

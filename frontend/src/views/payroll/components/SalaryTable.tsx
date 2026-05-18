@@ -1,26 +1,27 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Button, Spinner } from 'flowbite-react';
+import { Button, Spinner, Card } from 'flowbite-react';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import { attendanceAPI, workScheduleAPI } from '../../../api/attendance.api';
 import { userAPI } from '../../../api/user.api';
 import { payrollAPI } from '../../../api/payroll.api';
 import { debtAPI } from '../../../api/debt.api';
-// import { useAuth } from '../../../auth/AuthContext';
+import { useAuth } from '../../../auth/AuthContext';
+import { isAdmin } from '../../../auth/roles';
 import { formatCurrency } from '../../../utils/formatters';
 import type { Attendance, WorkSchedule, User, PayrollSummary, Debt } from '../../../types/api';
 
-const SalaryTable = () => {
-    // const { user } = useAuth();
+const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [attendances, setAttendances] = useState<Attendance[]>([]);
     const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
     const [employees, setEmployees] = useState<User[]>([]);
-    const [selectedDate, setSelectedDate] = useState(dayjs());
+
     const [payrollSummary, setPayrollSummary] = useState<Record<number, PayrollSummary>>({});
     const [debts, setDebts] = useState<Debt[]>([]);
 
-    // const isAdmin = user?.role?.name === 'admin' || user?.role?.name === 'Quản lý';
+    const isManager = isAdmin(user);
 
     const attendanceMap = useMemo(() => {
         const map: Record<string, Attendance> = {};
@@ -47,8 +48,7 @@ const SalaryTable = () => {
     const fetchEmployees = async () => {
         try {
             const response = await userAPI.getUsers();
-            // userAPI.getUsers returns User[] directly based on user.api.ts
-            setEmployees(response.data.filter((u: User) => u.is_active && u.role?.requires_timekeeping !== false));
+            setEmployees(response.data);
         } catch (error) {
             toast.error('Không thể tải danh sách nhân viên');
         }
@@ -115,6 +115,30 @@ const SalaryTable = () => {
         return end.diff(start, 'hour', true);
     };
 
+    const displayEmployees = useMemo(() => {
+        const isPastMonth = selectedDate.isBefore(dayjs(), 'month');
+        
+        return employees.filter(emp => {
+            if (!isManager && emp.id !== user?.id) return false;
+            if (emp.role?.requires_timekeeping === false) return false;
+            
+            if (emp.created_at && dayjs(emp.created_at).isAfter(selectedDate.endOf('month'))) return false;
+
+            const hasData = attendances.some(a => a.user_id === emp.id) || 
+                            schedules.some(s => s.user_id === emp.id) ||
+                            (payrollSummary[emp.id] && (
+                                payrollSummary[emp.id].total_bonuses > 0 || 
+                                payrollSummary[emp.id].total_advances > 0 || 
+                                payrollSummary[emp.id].total_penalties > 0
+                            ));
+            
+            if (hasData) return true;
+            if (isPastMonth) return false;
+
+            return emp.is_active;
+        });
+    }, [employees, attendances, schedules, payrollSummary, selectedDate, isManager, user]);
+
     const calculateEmployeeDebt = (name: string) => {
         if (!name) return 0;
         return debts
@@ -124,16 +148,8 @@ const SalaryTable = () => {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-                <div className="flex gap-2">
-                    <Button size="sm" color="gray" onClick={() => setSelectedDate(selectedDate.subtract(1, 'month'))}>← Tháng trước</Button>
-                    <div className="bg-white border px-4 py-1.5 rounded font-bold">{selectedDate.format('MM / YYYY')}</div>
-                    <Button size="sm" color="gray" onClick={() => setSelectedDate(selectedDate.add(1, 'month'))}>Tháng sau →</Button>
-                </div>
-                <p className="text-xs text-gray-500 italic">Cập nhật: {dayjs().format('HH:mm DD/MM')}</p>
-            </div>
-
-            <div className="overflow-x-auto border rounded-xl shadow-sm">
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto border rounded-xl shadow-sm">
                 <table className="w-full text-[11px] text-center border-collapse">
                     <thead>
                         <tr className="bg-gray-100 dark:bg-gray-700">
@@ -157,7 +173,7 @@ const SalaryTable = () => {
                     <tbody className="divide-y">
                         {loading ? (
                             <tr><td colSpan={monthDates.length + 9} className="p-10 text-center"><Spinner /></td></tr>
-                        ) : employees.map((emp, idx) => {
+                        ) : displayEmployees.map((emp, idx) => {
                             const totalHours = monthDates.reduce((sum, d) => sum + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
                             const summary = payrollSummary[emp.id] || { total_bonuses: 0, total_advances: 0, total_penalties: 0 };
                             const empDebt = calculateEmployeeDebt(emp.full_name);
@@ -184,7 +200,11 @@ const SalaryTable = () => {
                                         );
                                     })}
                                     <td className="p-2 border font-bold text-blue-700 bg-blue-50/30">{totalHours.toFixed(1)}</td>
-                                    <td className="p-2 border font-medium text-center">{emp.hourly_rate ? formatCurrency(emp.hourly_rate) : '-'}</td>
+                                    <td className="p-2 border font-medium text-center">
+                                        {emp.salary_type === 'fixed' 
+                                            ? <span className="text-gray-500 text-[10px]">Cố định</span> 
+                                            : formatCurrency(emp.hourly_rate || 20000)}
+                                    </td>
                                     <td className="p-2 border font-medium">{formatCurrency(baseSalary)}</td>
                                     <td className="p-2 border text-green-600 font-medium">{formatCurrency(summary.total_bonuses)}</td>
                                     <td className="p-2 border text-orange-600">-{formatCurrency(summary.total_advances)}</td>
@@ -203,45 +223,45 @@ const SalaryTable = () => {
                                 <td key={i} className="p-1 border"></td>
                             ))}
                             <td className="p-2 border text-blue-700 bg-blue-50">
-                                {employees.reduce((sum, emp) => {
+                                {displayEmployees.reduce((sum, emp) => {
                                     const totalHours = monthDates.reduce((s, d) => s + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
                                     return sum + totalHours;
                                 }, 0).toFixed(1)}
                             </td>
                             <td className="p-2 border"></td>
                             <td className="p-2 border bg-blue-50">
-                                {formatCurrency(employees.reduce((sum, emp) => {
+                                {formatCurrency(displayEmployees.reduce((sum, emp) => {
                                     const totalHours = monthDates.reduce((s, d) => s + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
                                     const baseSalary = emp.salary_type === 'fixed' ? (emp.fixed_salary || 0) : (totalHours * (emp.hourly_rate || 20000));
                                     return sum + baseSalary;
                                 }, 0))}
                             </td>
                             <td className="p-2 border text-green-600 bg-green-50">
-                                {formatCurrency(employees.reduce((sum, emp) => {
+                                {formatCurrency(displayEmployees.reduce((sum, emp) => {
                                     const summary = payrollSummary[emp.id] || { total_bonuses: 0 };
                                     return sum + summary.total_bonuses;
                                 }, 0))}
                             </td>
                             <td className="p-2 border text-orange-600 bg-orange-50">
-                                -{formatCurrency(employees.reduce((sum, emp) => {
+                                -{formatCurrency(displayEmployees.reduce((sum, emp) => {
                                     const summary = payrollSummary[emp.id] || { total_advances: 0 };
                                     return sum + summary.total_advances;
                                 }, 0))}
                             </td>
                             <td className="p-2 border text-yellow-600 bg-yellow-50">
-                                -{formatCurrency(employees.reduce((sum, emp) => {
+                                -{formatCurrency(displayEmployees.reduce((sum, emp) => {
                                     const empDebt = calculateEmployeeDebt(emp.full_name);
                                     return sum + empDebt;
                                 }, 0))}
                             </td>
                             <td className="p-2 border text-red-600 bg-red-50">
-                                -{formatCurrency(employees.reduce((sum, emp) => {
+                                -{formatCurrency(displayEmployees.reduce((sum, emp) => {
                                     const summary = payrollSummary[emp.id] || { total_penalties: 0 };
                                     return sum + summary.total_penalties;
                                 }, 0))}
                             </td>
                             <td className="p-2 border text-indigo-700 bg-indigo-100 font-black text-lg">
-                                {formatCurrency(employees.reduce((sum, emp) => {
+                                {formatCurrency(displayEmployees.reduce((sum, emp) => {
                                     const totalHours = monthDates.reduce((s, d) => s + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
                                     const summary = payrollSummary[emp.id] || { total_bonuses: 0, total_advances: 0, total_penalties: 0 };
                                     const empDebt = calculateEmployeeDebt(emp.full_name);
@@ -256,6 +276,66 @@ const SalaryTable = () => {
                 </table>
             </div>
 
+            {/* Mobile View */}
+            <div className="md:hidden space-y-4 pb-4">
+                {loading ? (
+                    <div className="flex justify-center p-10"><Spinner /></div>
+                ) : displayEmployees.map((emp, idx) => {
+                    const totalHours = monthDates.reduce((sum, d) => sum + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
+                    const summary = payrollSummary[emp.id] || { total_bonuses: 0, total_advances: 0, total_penalties: 0 };
+                    const empDebt = calculateEmployeeDebt(emp.full_name);
+
+                    const baseSalary = emp.salary_type === 'fixed'
+                        ? (emp.fixed_salary || 0)
+                        : (totalHours * (emp.hourly_rate || 20000));
+
+                    const totalReductions = summary.total_advances + summary.total_penalties + empDebt;
+                    const netSalary = baseSalary + summary.total_bonuses - totalReductions;
+
+                    return (
+                        <Card key={emp.id} className="p-0 overflow-hidden shadow-sm border-gray-200">
+                            <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b flex justify-between items-center">
+                                <div className="font-bold text-[15px] uppercase text-gray-900 dark:text-white truncate pr-2">
+                                    {idx + 1}. {emp.full_name}
+                                </div>
+                                <div className="text-xs font-medium px-2 py-1 bg-indigo-100 text-indigo-800 rounded whitespace-nowrap">
+                                    {emp.salary_type === 'fixed' ? 'Cố định' : formatCurrency(emp.hourly_rate || 20000) + '/h'}
+                                </div>
+                            </div>
+                            <div className="p-4 space-y-3 text-sm">
+                                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <span className="text-gray-500">Tổng giờ làm</span>
+                                    <span className="font-bold text-blue-600">{totalHours.toFixed(1)} giờ</span>
+                                </div>
+                                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <span className="text-gray-500">Lương cơ bản</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(baseSalary)}</span>
+                                </div>
+                                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <span className="text-gray-500">Thưởng</span>
+                                    <span className="font-medium text-green-600">+{formatCurrency(summary.total_bonuses)}</span>
+                                </div>
+                                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <span className="text-gray-500">Ứng lương</span>
+                                    <span className="font-medium text-orange-600">-{formatCurrency(summary.total_advances)}</span>
+                                </div>
+                                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <span className="text-gray-500">Ghi nợ</span>
+                                    <span className="font-medium text-yellow-600">-{formatCurrency(empDebt)}</span>
+                                </div>
+                                <div className="flex justify-between items-center pb-2 border-b border-gray-100">
+                                    <span className="text-gray-500">Phạt</span>
+                                    <span className="font-medium text-red-600">-{formatCurrency(summary.total_penalties)}</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1">
+                                    <span className="text-gray-900 font-bold uppercase text-[13px]">Thực nhận</span>
+                                    <span className="text-[18px] font-black text-indigo-700">{formatCurrency(netSalary)}</span>
+                                </div>
+                            </div>
+                        </Card>
+                    );
+                })}
+            </div>
 
         </div>
     );

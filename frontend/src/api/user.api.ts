@@ -60,4 +60,8 @@ export const userAPI = {
             user_orders: userOrders
         });
     },
+
+    changeMyPassword: (oldPassword: string, password: string): Promise<AxiosResponse<void>> => {
+        return axiosClient.patch('/api/users/me/password', { old_password: oldPassword, password });
+    },
 };

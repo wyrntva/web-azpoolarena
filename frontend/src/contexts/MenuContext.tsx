@@ -48,7 +48,13 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     useEffect(() => {
-        refreshMenus();
+        // Only fetch if user is authenticated
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            refreshMenus();
+        } else {
+            setLoading(false);
+        }
     }, []);
 
     const addMenu = async (menuData: { name: string; icon: string; image?: string | null; productIds: number[] }) => {

@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
-import { RequireAuth } from '../auth/RequireAuth';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router";
+import { RequireAuth, AdminRoute, ManagerRoute } from '../auth/RequireAuth';
 
 /* ***Layouts**** */
 const FullLayout = lazy(() => import('../layouts/full/FullLayout'));
@@ -58,6 +58,7 @@ const Devices = lazy(() => import('../views/settings/devices/Devices'));
 const Switches = lazy(() => import('../views/settings/switches/Switches'));
 
 // Utilities (Old template pages)
+const ChangePassword = lazy(() => import('../views/change-password/ChangePassword'));
 const Typography = lazy(() => import("../views/typography/Typography"));
 const Table = lazy(() => import("../views/tables/Table"));
 const Form = lazy(() => import("../views/forms/Form"));
@@ -97,55 +98,68 @@ const Router = () => {
               </RequireAuth>
             }
           >
-            {/* Dashboard */}
-            <Route index element={<Dashboard />} />
+            {/* Admin Only Routes */}
+            <Route element={<AdminRoute><Outlet /></AdminRoute>}>
+              {/* Dashboard */}
+              <Route index element={<Dashboard />} />
 
-            {/* Finance Routes */}
-            <Route path="finance" element={<Finance />} />
-            <Route path="revenues" element={<Revenues />} />
-            <Route path="revenue" element={<Revenues />} />
-            <Route path="exchanges" element={<Exchanges />} />
-            <Route path="finance-trade" element={<Exchanges />} />
-            <Route path="safe" element={<Safe />} />
-            <Route path="debt" element={<Debt />} />
-            <Route path="receipt-types" element={<ReceiptTypes />} />
-            <Route path="finance-types" element={<ReceiptTypes />} />
+              {/* Finance Routes */}
+              <Route path="finance" element={<Finance />} />
+              <Route path="revenues" element={<Revenues />} />
+              <Route path="revenue" element={<Revenues />} />
+              <Route path="exchanges" element={<Exchanges />} />
+              <Route path="finance-trade" element={<Exchanges />} />
+              <Route path="safe" element={<Safe />} />
+              <Route path="debt" element={<Debt />} />
+              <Route path="receipt-types" element={<ReceiptTypes />} />
+              <Route path="finance-types" element={<ReceiptTypes />} />
 
-            {/* Reports */}
-            <Route path="reports" element={<Reports />} />
-            <Route path="expense-report" element={<ExpenseReport />} />
+              {/* Reports */}
+              <Route path="reports" element={<Reports />} />
+              <Route path="reports/revenue" element={<Reports />} />
+              <Route path="reports/products" element={<Reports />} />
+              <Route path="reports/inventory" element={<Reports />} />
+              <Route path="reports/finance" element={<Reports />} />
+              <Route path="reports/promotions" element={<Reports />} />
+              <Route path="reports/staff" element={<Reports />} />
+              <Route path="expense-report" element={<ExpenseReport />} />
 
-            {/* Inventory */}
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="units" element={<Units />} />
-            <Route path="warehouse-setup" element={<WarehouseSetup />} />
-            <Route path="inventory-transaction" element={<InventoryTransaction />} />
-            <Route path="inventory-in" element={<InventoryTransaction />} />
-            <Route path="inventory-out" element={<InventoryTransaction />} />
-            <Route path="inventory-check" element={<InventoryCheck />} />
-            <Route path="inventory-history" element={<InventoryHistory />} />
+              {/* Inventory */}
+              <Route path="inventory" element={<Inventory />} />
+              <Route path="units" element={<Units />} />
+              <Route path="warehouse-setup" element={<WarehouseSetup />} />
+              <Route path="inventory-transaction" element={<InventoryTransaction />} />
+              <Route path="inventory-in" element={<InventoryTransaction />} />
+              <Route path="inventory-out" element={<InventoryTransaction />} />
+              <Route path="inventory-check" element={<InventoryCheck />} />
+              <Route path="inventory-history" element={<InventoryHistory />} />
 
-            {/* Staff */}
-            <Route path="staff" element={<Staff />} />
-            <Route path="staff-role" element={<StaffRole />} />
+              {/* Staff (Except Attendance) */}
+              <Route path="staff" element={<Staff />} />
+              <Route path="staff-role" element={<StaffRole />} />
+              <Route path="attendance-settings" element={<AttendanceSettings />} />
 
-            {/* Customers */}
-            <Route path="customers" element={<Customers />} />
+              {/* Customers */}
+              <Route path="customers" element={<Customers />} />
+              
+              {/* Settings */}
+              <Route path="settings" element={<Settings />} />
+              <Route path="settings/devices" element={<Devices />} />
+              <Route path="settings/switches" element={<Switches />} />
+              <Route path="settings/areas" element={<Areas />} />
+              <Route path="settings/areas/:id" element={<AreaDetail />} />
+            </Route>
 
-            {/* Attendance */}
+            {/* Attendance (Open to all employees, but readonly for them) */}
             <Route path="timesheet" element={<Timesheet />} />
             <Route path="work-schedule" element={<WorkSchedule />} />
             <Route path="payroll" element={<Payroll />} />
-            <Route path="attendance-settings" element={<AttendanceSettings />} />
+            
+            {/* User Profile */}
+            <Route path="change-password" element={<ChangePassword />} />
 
-            {/* Settings */}
-            <Route path="settings" element={<Settings />} />
-            <Route path="settings/devices" element={<Devices />} />
-            <Route path="settings/switches" element={<Switches />} />
-            <Route path="settings/areas" element={<Areas />} />
-            <Route path="settings/areas/:id" element={<AreaDetail />} />
-
-            {/* Utilities */}
+            {/* Admin Utilities */}
+            <Route element={<AdminRoute><Outlet /></AdminRoute>}>
             <Route path="products/list" element={<ProductList />} />
             <Route path="products/categories" element={<ProductCategories />} />
             <Route path="products/menu" element={<ProductMenus />} />
@@ -162,7 +176,13 @@ const Router = () => {
             <Route path="ui/shadow" element={<Shadow />} />
             <Route path="icons/solar" element={<Solar />} />
             <Route path="sample-page" element={<SamplePage />} />
+            
+            {/* Placeholders for unimplemented features */}
+            <Route path="invoices" element={<SamplePage />} />
+            <Route path="bookings" element={<SamplePage />} />
+            <Route path="promotions" element={<SamplePage />} />
           </Route>
+        </Route>
 
           {/* Public Routes with BlankLayout - NO AUTH REQUIRED */}
           <Route element={<BlankLayout />}>

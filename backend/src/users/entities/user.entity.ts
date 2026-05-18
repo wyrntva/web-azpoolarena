@@ -62,8 +62,8 @@ export class UserEntity {
   /** Computed: check if user is admin */
   get is_admin(): boolean {
     return (
-      this.role_id === 4 ||
-      (this.role && ['admin', 'Quản lý'].includes(this.role.name))
+      this.role_id === 1 ||
+      (this.role && ['admin', 'Quản trị'].includes(this.role.name))
     );
   }
 }

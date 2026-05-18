@@ -79,7 +79,13 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
 
     useEffect(() => {
-        refreshProducts();
+        // Only fetch if user is authenticated
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            refreshProducts();
+        } else {
+            setLoading(false);
+        }
     }, []);
 
     const addProduct = async (product: Omit<Product, 'id' | 'createdAt'>) => {

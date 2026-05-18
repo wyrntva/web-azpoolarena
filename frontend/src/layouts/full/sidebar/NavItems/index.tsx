@@ -9,8 +9,9 @@ import { Link, useLocation } from "react-router";
 interface NavItemsProps {
   item: ChildItem;
   isChild?: boolean;
+  centered?: boolean;
 }
-const NavItems: React.FC<NavItemsProps> = ({ item, isChild }) => {
+const NavItems: React.FC<NavItemsProps> = ({ item, isChild, centered }) => {
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -25,7 +26,7 @@ const NavItems: React.FC<NavItemsProps> = ({ item, isChild }) => {
           : "text-link bg-transparent group/link "
           } ${isChild ? "ml-5 mb-0.5" : ""} `}
       >
-        <div className="flex items-center justify-between">
+        <div className={`flex items-center ${centered ? 'justify-center' : 'justify-between'}`}>
           <span className="flex gap-3 align-center items-center">
             {!isChild && (
               item.icon ? (

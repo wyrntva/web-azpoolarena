@@ -3,8 +3,8 @@
  */
 
 export const ROLE_TRANSLATIONS = {
-  'admin': 'Quản lý',
-  'accountant': 'Thu ngân',
+  'admin': 'Quản trị',
+  'accountant': 'Trưởng ca',
   'staff': 'Nhân viên',
 };
 
