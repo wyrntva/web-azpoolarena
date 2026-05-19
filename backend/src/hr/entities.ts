@@ -186,6 +186,9 @@ export class AttendanceSettingsEntity {
   @Column({ type: 'float', default: 50000 })
   early_checkout_penalty: number;
 
+  @Column({ type: 'float', default: 30000 })
+  missing_checkout_penalty: number;
+
   @Column({ type: 'float', default: 100000 })
   absent_penalty: number;
 

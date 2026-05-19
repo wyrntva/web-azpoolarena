@@ -227,6 +227,7 @@ export interface AttendanceSettings {
     penalty_tiers: PenaltyTier[];
     early_checkout_grace_minutes: number;
     early_checkout_penalty: number;
+    missing_checkout_penalty: number;
     absent_penalty: number;
     auto_absent_enabled: boolean;
     notes?: string;

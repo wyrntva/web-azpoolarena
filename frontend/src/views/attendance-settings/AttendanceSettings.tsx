@@ -42,6 +42,7 @@ const AttendanceSettings = () => {
                 allowed_late_minutes: Number(settings.allowed_late_minutes) || 0,
                 early_checkout_grace_minutes: Number(settings.early_checkout_grace_minutes) || 0,
                 early_checkout_penalty: Number(settings.early_checkout_penalty) || 0,
+                missing_checkout_penalty: Number(settings.missing_checkout_penalty) || 0,
                 absent_penalty: Number(settings.absent_penalty) || 0,
                 penalty_tiers: settings.penalty_tiers.map(tier => ({
                     max_minutes: tier.max_minutes === null || tier.max_minutes as any === '' ? null : Number(tier.max_minutes) || 0,
@@ -198,7 +199,7 @@ const AttendanceSettings = () => {
                                 </div>
                             </div>
                             <div>
-                                <h4 className="font-semibold text-gray-700 mb-2">Vắng mặt</h4>
+                                <h4 className="font-semibold text-gray-700 mb-2">Vắng mặt & Khác</h4>
                                 <div className="space-y-4">
                                     <div>
                                         <Label value="Tiền phạt vắng mặt (mỗi ca)" />
@@ -208,6 +209,18 @@ const AttendanceSettings = () => {
                                                 className="flex-1"
                                                 value={settings?.absent_penalty ?? ''}
                                                 onChange={(e) => setSettings({ ...settings!, absent_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                            />
+                                            <span className="text-sm text-gray-500">đ</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label value="Tiền phạt quên chấm ca ra" />
+                                        <div className="flex items-center gap-2">
+                                            <TextInput
+                                                type="number"
+                                                className="flex-1"
+                                                value={settings?.missing_checkout_penalty ?? ''}
+                                                onChange={(e) => setSettings({ ...settings!, missing_checkout_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
                                             />
                                             <span className="text-sm text-gray-500">đ</span>
                                         </div>
@@ -251,6 +264,10 @@ const AttendanceSettings = () => {
                             <div className="flex justify-between border-b border-blue-100 pb-2">
                                 <span>Về sớm phạt:</span>
                                 <span className="font-bold text-red-600">{formatCurrency(settings?.early_checkout_penalty || 0)}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-blue-100 pb-2">
+                                <span>Quên chấm ra phạt:</span>
+                                <span className="font-bold text-red-600">{formatCurrency(settings?.missing_checkout_penalty || 0)}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span>Vắng mặt phạt:</span>

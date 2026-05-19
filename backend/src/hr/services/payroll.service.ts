@@ -294,6 +294,7 @@ export class PayrollService {
         ]),
         early_checkout_grace_minutes: 10,
         early_checkout_penalty: 50000,
+        missing_checkout_penalty: 30000,
         absent_penalty: 100000,
         auto_absent_enabled: true,
         is_active: true,
@@ -345,6 +346,10 @@ export class PayrollService {
         type = 'ABSENT';
         amount = settings.absent_penalty;
         reason = 'Vắng mặt không phép';
+      } else if (!att.check_out_time) {
+        type = 'MISSING_CHECKOUT';
+        amount = settings.missing_checkout_penalty;
+        reason = 'Quên chấm ca ra';
       } else if (att.status === AttendanceStatus.LATE) {
         const checkInDt = moment(att.check_in_time);
         const startDt = moment(
@@ -439,6 +444,10 @@ export class PayrollService {
         amount = settings.absent_penalty;
         reason = 'Vắng mặt không phép';
       }
+    } else if (!att.check_out_time) {
+      type = 'MISSING_CHECKOUT';
+      amount = settings.missing_checkout_penalty;
+      reason = 'Quên chấm ca ra';
     } else if (att.status === AttendanceStatus.LATE) {
       const checkInDt = moment(att.check_in_time);
       const startDt = moment(

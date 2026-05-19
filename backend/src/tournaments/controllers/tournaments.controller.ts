@@ -34,6 +34,17 @@ export class TournamentsController {
     return { data, meta: { total, skip, limit } };
   }
 
+  @Get('public')
+  async findPublic(
+    @Query('skip') skipStr?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    const skip = skipStr ? parseInt(skipStr, 10) : 0;
+    const limit = limitStr ? parseInt(limitStr, 10) : 50;
+    const [data, total] = await this.service.findPublic(skip, limit);
+    return { data, meta: { total, skip, limit } };
+  }
+
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);

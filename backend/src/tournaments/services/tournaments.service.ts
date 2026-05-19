@@ -33,6 +33,16 @@ export class TournamentsService {
     return qb.getManyAndCount();
   }
 
+  async findPublic(skip = 0, limit = 50) {
+    const qb = this.tourRepo
+      .createQueryBuilder('t')
+      .where('t.display = :display', { display: 'public' })
+      .skip(skip)
+      .take(limit)
+      .orderBy('t.created_at', 'DESC');
+    return qb.getManyAndCount();
+  }
+
   async findOne(id: number) {
     const tour = await this.tourRepo.findOne({ where: { id } });
     if (!tour) throw new NotFoundException('Tournament not found');

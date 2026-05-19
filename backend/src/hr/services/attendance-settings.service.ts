@@ -30,6 +30,7 @@ export class AttendanceSettingsService {
       penalty_tiers: JSON.parse(settings.penalty_tiers || '[]'),
       early_checkout_grace_minutes: settings.early_checkout_grace_minutes,
       early_checkout_penalty: settings.early_checkout_penalty,
+      missing_checkout_penalty: settings.missing_checkout_penalty,
       absent_penalty: settings.absent_penalty,
       auto_absent_enabled: settings.auto_absent_enabled,
       notes: settings.notes,
@@ -50,6 +51,7 @@ export class AttendanceSettingsService {
         penalty_tiers: this.getDefaultPenaltyTiers(),
         early_checkout_grace_minutes: 10,
         early_checkout_penalty: 50000,
+        missing_checkout_penalty: 30000,
         absent_penalty: 100000,
         auto_absent_enabled: true,
         is_active: true,
@@ -71,6 +73,7 @@ export class AttendanceSettingsService {
         penalty_tiers: this.getDefaultPenaltyTiers(),
         early_checkout_grace_minutes: 10,
         early_checkout_penalty: 50000,
+        missing_checkout_penalty: 30000,
         absent_penalty: 100000,
         auto_absent_enabled: true,
         is_active: true,
@@ -85,6 +88,8 @@ export class AttendanceSettingsService {
       settings.early_checkout_grace_minutes = dto.early_checkout_grace_minutes;
     if (dto.early_checkout_penalty !== undefined)
       settings.early_checkout_penalty = dto.early_checkout_penalty;
+    if (dto.missing_checkout_penalty !== undefined)
+      settings.missing_checkout_penalty = dto.missing_checkout_penalty;
     if (dto.absent_penalty !== undefined)
       settings.absent_penalty = dto.absent_penalty;
     if (dto.auto_absent_enabled !== undefined)
@@ -103,6 +108,7 @@ export class AttendanceSettingsService {
       penalty_tiers: JSON.stringify(dto.penalty_tiers),
       early_checkout_grace_minutes: dto.early_checkout_grace_minutes ?? 10,
       early_checkout_penalty: dto.early_checkout_penalty ?? 50000,
+      missing_checkout_penalty: dto.missing_checkout_penalty ?? 30000,
       absent_penalty: dto.absent_penalty ?? 100000,
       auto_absent_enabled: dto.auto_absent_enabled ?? true,
       notes: dto.notes,
