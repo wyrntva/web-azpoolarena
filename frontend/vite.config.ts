@@ -56,10 +56,6 @@ export default defineConfig({
                     if (id.includes('node_modules/react-router')) {
                         return 'vendor-router';
                     }
-                    // Flowbite UI
-                    if (id.includes('node_modules/flowbite')) {
-                        return 'vendor-flowbite';
-                    }
                     // Charts
                     if (id.includes('node_modules/apexcharts')) {
                         return 'vendor-charts';
