@@ -113,7 +113,6 @@ const WorkSchedule = () => {
                 start_time: formData.off_day ? '00:00' : formData.start_time,
                 end_time: formData.off_day ? '00:00' : formData.end_time,
                 is_active: !formData.off_day,
-                allowed_late_minutes: 0,
             };
 
             if (existing) {

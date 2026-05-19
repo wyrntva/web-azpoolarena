@@ -67,8 +67,12 @@ class APIClient:
                 
                 return result
             else:
-                error_detail = response.json().get("detail", "Unknown error")
-                raise Exception(f"API Error [{response.status_code}]: {error_detail}")
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get("message") or error_data.get("detail") or str(error_data)
+                except Exception:
+                    error_msg = response.text
+                raise Exception(f"API Error [{response.status_code}]: {error_msg}")
 
         except requests.exceptions.ConnectionError as e:
             raise Exception(f"Cannot connect to server at {self.base_url}. Backend not running?")

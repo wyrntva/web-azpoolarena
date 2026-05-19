@@ -146,7 +146,10 @@ class QRGeneratorWindow(QMainWindow):
                 self.expires_at = datetime.fromisoformat(expires_str).replace(tzinfo=timezone.utc)
             else:
                 # Aware time -> Parse directly
+                import re
                 expires_str = expires_str.replace("Z", "+00:00")
+                # Fix for Python < 3.11 which fails on 3-digit fractional seconds
+                expires_str = re.sub(r'\.(\d{3})(?=\+|-|$)', r'.\g<1>000', expires_str)
                 self.expires_at = datetime.fromisoformat(expires_str)
 
             # 2. Calculate Clock Skew (Difference between Local and Server)
@@ -194,7 +197,7 @@ class QRGeneratorWindow(QMainWindow):
                 buffer = io.BytesIO()
                 img.save(buffer, format="PNG")
                 qpixmap = QPixmap()
-                qpixmap.loadFromData(QByteArray(buffer.getvalue()))
+                qpixmap.loadFromData(buffer.getvalue())
 
                 # Display QR code
                 print("[QR] Displaying QR code...")

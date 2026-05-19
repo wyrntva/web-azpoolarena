@@ -34,6 +34,7 @@ yarn-debug.log*
 node_modules/
 frontend/dist/
 frontend/.cache/
+backend/dist/
 
 # Python
 __pycache__/
@@ -48,6 +49,8 @@ __pycache__/
 
 # Desktop QR App (Windows only - không dùng trên server)
 # desktop-qr-app/
+desktop-qr-app/build/
+desktop-qr-app/dist/
 
 # Core dumps
 core

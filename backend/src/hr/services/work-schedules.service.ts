@@ -46,12 +46,15 @@ export class WorkSchedulesService {
       );
     }
 
+    const settings = await this.scheduleRepo.manager.query('SELECT allowed_late_minutes FROM hr_attendance_settings WHERE is_active = true LIMIT 1');
+    const globalLate = settings.length > 0 ? settings[0].allowed_late_minutes : 0;
+
     const schedule = this.scheduleRepo.create({
       user_id: dto.user_id,
       work_date: dto.work_date,
       start_time: dto.start_time,
       end_time: dto.end_time,
-      allowed_late_minutes: dto.allowed_late_minutes ?? 0,
+      allowed_late_minutes: dto.allowed_late_minutes ?? globalLate,
       is_active: true,
     });
 

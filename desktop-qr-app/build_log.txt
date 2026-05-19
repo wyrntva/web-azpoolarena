@@ -1,0 +1,159 @@
+Collecting pyinstaller
+  Using cached pyinstaller-6.20.0-py3-none-manylinux2014_x86_64.whl.metadata (8.5 kB)
+Collecting PySide6>=6.6.0
+  Using cached pyside6-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl.metadata (5.3 kB)
+Collecting qrcode>=7.4.2 (from qrcode[pil]>=7.4.2)
+  Using cached qrcode-8.2-py3-none-any.whl.metadata (17 kB)
+Collecting requests
+  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting python-dotenv
+  Using cached python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+Collecting Pillow
+  Using cached pillow-12.2.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+Collecting altgraph (from pyinstaller)
+  Using cached altgraph-0.17.5-py2.py3-none-any.whl.metadata (7.5 kB)
+Collecting packaging>=22.0 (from pyinstaller)
+  Using cached packaging-26.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting pyinstaller-hooks-contrib>=2026.4 (from pyinstaller)
+  Using cached pyinstaller_hooks_contrib-2026.5-py3-none-any.whl.metadata (16 kB)
+Collecting setuptools>=42.0.0 (from pyinstaller)
+  Using cached setuptools-82.0.1-py3-none-any.whl.metadata (6.5 kB)
+Collecting shiboken6==6.11.1 (from PySide6>=6.6.0)
+  Using cached shiboken6-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl.metadata (2.4 kB)
+Collecting PySide6_Essentials==6.11.1 (from PySide6>=6.6.0)
+  Using cached pyside6_essentials-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl.metadata (3.6 kB)
+Collecting PySide6_Addons==6.11.1 (from PySide6>=6.6.0)
+  Using cached pyside6_addons-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl.metadata (4.0 kB)
+Collecting charset_normalizer<4,>=2 (from requests)
+  Using cached charset_normalizer-3.4.7-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+Collecting idna<4,>=2.5 (from requests)
+  Using cached idna-3.15-py3-none-any.whl.metadata (7.7 kB)
+Collecting urllib3<3,>=1.26 (from requests)
+  Using cached urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Collecting certifi>=2023.5.7 (from requests)
+  Using cached certifi-2026.4.22-py3-none-any.whl.metadata (2.5 kB)
+Using cached pyinstaller-6.20.0-py3-none-manylinux2014_x86_64.whl (748 kB)
+Using cached pyside6-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl (572 kB)
+Downloading pyside6_addons-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl (175.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 175.1/175.1 MB 12.6 MB/s eta 0:00:00
+Downloading pyside6_essentials-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl (79.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 79.9/79.9 MB 4.3 MB/s eta 0:00:00
+Downloading shiboken6-6.11.1-cp310-abi3-manylinux_2_34_x86_64.whl (272 kB)
+Using cached qrcode-8.2-py3-none-any.whl (45 kB)
+Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Downloading charset_normalizer-3.4.7-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (215 kB)
+Downloading idna-3.15-py3-none-any.whl (72 kB)
+Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+Using cached python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Downloading pillow-12.2.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 3.9 MB/s eta 0:00:00
+Downloading certifi-2026.4.22-py3-none-any.whl (135 kB)
+Downloading packaging-26.2-py3-none-any.whl (100 kB)
+Downloading pyinstaller_hooks_contrib-2026.5-py3-none-any.whl (457 kB)
+Downloading setuptools-82.0.1-py3-none-any.whl (1.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.0/1.0 MB 4.2 MB/s eta 0:00:00
+Downloading altgraph-0.17.5-py2.py3-none-any.whl (21 kB)
+Installing collected packages: altgraph, urllib3, shiboken6, setuptools, qrcode, python-dotenv, Pillow, packaging, idna, charset_normalizer, certifi, requests, PySide6_Essentials, pyinstaller-hooks-contrib, PySide6_Addons, pyinstaller, PySide6
+
+Successfully installed Pillow-12.2.0 PySide6-6.11.1 PySide6_Addons-6.11.1 PySide6_Essentials-6.11.1 altgraph-0.17.5 certifi-2026.4.22 charset_normalizer-3.4.7 idna-3.15 packaging-26.2 pyinstaller-6.20.0 pyinstaller-hooks-contrib-2026.5 python-dotenv-1.2.2 qrcode-8.2 requests-2.34.2 setuptools-82.0.1 shiboken6-6.11.1 urllib3-2.7.0
+50 INFO: PyInstaller: 6.20.0, contrib hooks: 2026.5
+50 INFO: Python: 3.13.7
+53 INFO: Platform: Linux-6.17.0-22-generic-x86_64-with-glibc2.42
+53 INFO: Python environment: /home/wavy/web-azpoolarena/desktop-qr-app/venv
+54 INFO: Removing temporary files and cleaning cache in /home/wavy/.cache/pyinstaller
+55 INFO: Module search paths (PYTHONPATH):
+['/usr/lib/python313.zip',
+ '/usr/lib/python3.13',
+ '/usr/lib/python3.13/lib-dynload',
+ '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages',
+ '/home/wavy/web-azpoolarena/desktop-qr-app']
+161 INFO: Appending 'datas' from .spec
+161 INFO: checking Analysis
+161 INFO: Building Analysis because Analysis-00.toc is non existent
+161 INFO: Looking for Python shared library...
+180 INFO: Using Python shared library: /lib/x86_64-linux-gnu/libpython3.13.so.1.0
+180 INFO: Running Analysis Analysis-00.toc
+180 INFO: Target bytecode optimization level: 0
+180 INFO: Initializing module dependency graph...
+181 INFO: Initializing module graph hook caches...
+186 INFO: Analyzing modules for base_library.zip ...
+989 INFO: Processing standard module hook 'hook-encodings.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+2388 INFO: Processing standard module hook 'hook-pickle.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+3371 INFO: Processing standard module hook 'hook-heapq.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+3739 INFO: Caching module dependency graph...
+3764 INFO: Analyzing /home/wavy/web-azpoolarena/desktop-qr-app/main.py
+3775 INFO: Processing standard module hook 'hook-PySide6.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+3892 INFO: Processing standard module hook 'hook-shiboken6.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+4585 INFO: Processing standard module hook 'hook-PySide6.QtWidgets.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+5253 INFO: Processing standard module hook 'hook-PySide6.QtCore.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+6064 INFO: Processing standard module hook 'hook-PySide6.QtGui.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+6717 INFO: Processing standard module hook 'hook-PIL.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+6808 INFO: Processing standard module hook 'hook-PIL.Image.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+7012 INFO: Processing standard module hook 'hook-xml.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+7031 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+7195 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+7538 INFO: Processing standard module hook 'hook-urllib3.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+7689 INFO: Processing pre-safe-import-module hook 'hook-backports.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+7690 INFO: SetuptoolsInfo: initializing cached setuptools info...
+7904 INFO: Setuptools: 'backports' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.backports'!
+7910 INFO: Processing standard module hook 'hook-setuptools.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+7945 INFO: Processing standard module hook 'hook-platform.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+7962 INFO: Processing standard module hook 'hook-_ctypes.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+7966 INFO: Processing pre-safe-import-module hook 'hook-distutils.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8004 INFO: Processing standard module hook 'hook-sysconfig.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+8008 INFO: Processing pre-safe-import-module hook 'hook-jaraco.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8008 INFO: Setuptools: 'jaraco' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.jaraco'!
+8020 INFO: Processing pre-safe-import-module hook 'hook-more_itertools.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8020 INFO: Setuptools: 'more_itertools' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.more_itertools'!
+8142 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8214 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8387 INFO: Processing standard module hook 'hook-setuptools._vendor.jaraco.text.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+8388 INFO: Processing pre-safe-import-module hook 'hook-importlib_resources.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8766 INFO: Processing pre-safe-import-module hook 'hook-importlib_metadata.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8766 INFO: Setuptools: 'importlib_metadata' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.importlib_metadata'!
+8789 INFO: Processing standard module hook 'hook-setuptools._vendor.importlib_metadata.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+8809 INFO: Processing pre-safe-import-module hook 'hook-zipp.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+8809 INFO: Setuptools: 'zipp' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.zipp'!
+9032 INFO: Processing pre-safe-import-module hook 'hook-tomli.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+9032 INFO: Setuptools: 'tomli' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.tomli'!
+9487 INFO: Processing pre-safe-import-module hook 'hook-wheel.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_safe_import_module'
+9488 INFO: Setuptools: 'wheel' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.wheel'!
+9953 INFO: Processing standard module hook 'hook-certifi.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+9986 INFO: Processing standard module hook 'hook-charset_normalizer.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+10147 INFO: Processing module hooks (post-graph stage)...
+10748 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+11209 INFO: Processing standard module hook 'hook-difflib.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+11827 INFO: Processing standard module hook 'hook-PySide6.QtDBus.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+12174 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+12237 INFO: Performing binary vs. data reclassification (155 entries)
+12398 INFO: Looking for ctypes DLLs
+12547 INFO: Analyzing run-time hooks ...
+12549 INFO: Including run-time hook 'pyi_rth_inspect.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/rthooks'
+12552 INFO: Including run-time hook 'pyi_rth_setuptools.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/rthooks'
+12553 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/rthooks'
+12555 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/rthooks'
+12557 INFO: Including run-time hook 'pyi_rth_pyside6.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/rthooks'
+12559 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks/pre_find_module_path'
+12560 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/hooks'
+12569 INFO: Creating base_library.zip...
+12586 INFO: Looking for dynamic libraries
+15385 WARNING: Library not found: could not resolve 'libtiff.so.5', dependency of '/home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PySide6/Qt/plugins/imageformats/libqtiff.so'.
+15404 INFO: Warnings written to /home/wavy/web-azpoolarena/desktop-qr-app/build/AZ_POOLARENA_ATTENDANCE/warn-AZ_POOLARENA_ATTENDANCE.txt
+15426 INFO: Graph cross-reference written to /home/wavy/web-azpoolarena/desktop-qr-app/build/AZ_POOLARENA_ATTENDANCE/xref-AZ_POOLARENA_ATTENDANCE.html
+15444 INFO: checking PYZ
+15444 INFO: Building PYZ because PYZ-00.toc is non existent
+15444 INFO: Building PYZ (ZlibArchive) /home/wavy/web-azpoolarena/desktop-qr-app/build/AZ_POOLARENA_ATTENDANCE/PYZ-00.pyz
+15844 INFO: Building PYZ (ZlibArchive) /home/wavy/web-azpoolarena/desktop-qr-app/build/AZ_POOLARENA_ATTENDANCE/PYZ-00.pyz completed successfully.
+15849 WARNING: Ignoring icon; supported only on Windows and macOS!
+15858 INFO: checking PKG
+15858 INFO: Building PKG because PKG-00.toc is non existent
+15858 INFO: Building PKG (CArchive) AZ_POOLARENA_ATTENDANCE.pkg
+39038 INFO: Building PKG (CArchive) AZ_POOLARENA_ATTENDANCE.pkg completed successfully.
+39043 INFO: Bootloader /home/wavy/web-azpoolarena/desktop-qr-app/venv/lib/python3.13/site-packages/PyInstaller/bootloader/Linux-64bit-intel/run
+39043 INFO: checking EXE
+39043 INFO: Building EXE because EXE-00.toc is non existent
+39043 INFO: Building EXE from EXE-00.toc
+39043 INFO: Copying bootloader EXE to /home/wavy/web-azpoolarena/desktop-qr-app/dist/AZ_POOLARENA_ATTENDANCE
+39043 INFO: Appending PKG archive to custom ELF section in EXE
+39202 INFO: Building EXE from EXE-00.toc completed successfully.
+39206 INFO: Build complete! The results are available in: /home/wavy/web-azpoolarena/desktop-qr-app/dist

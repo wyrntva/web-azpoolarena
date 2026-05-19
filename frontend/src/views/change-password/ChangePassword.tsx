@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Card, Button, Label, TextInput } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router';
 import { userAPI } from '../../api/user.api';
 
 const ChangePassword = () => {
+    const navigate = useNavigate();
     const [oldPassword, setOldPassword] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -30,9 +32,7 @@ const ChangePassword = () => {
         try {
             await userAPI.changeMyPassword(oldPassword, password);
             toast.success('Đổi mật khẩu thành công!');
-            setOldPassword('');
-            setPassword('');
-            setConfirmPassword('');
+            navigate('/');
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Lỗi khi đổi mật khẩu!');
         } finally {

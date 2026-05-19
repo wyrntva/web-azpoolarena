@@ -235,12 +235,18 @@ const AttendanceSettings = () => {
                             </div>
                             <div className="space-y-1">
                                 <span className="text-xs text-gray-500">Mức phạt đi muộn:</span>
-                                {settings?.penalty_tiers.map((t, i) => (
-                                    <div key={i} className="flex justify-between pl-2">
-                                        <span>{t.max_minutes ? `≤ ${t.max_minutes} phút:` : 'Mức còn lại:'}</span>
-                                        <span className="font-bold text-red-600">{formatCurrency(Number(t.penalty_amount) || 0)}</span>
-                                    </div>
-                                ))}
+                                {settings?.penalty_tiers.map((t, i) => {
+                                    const prevMax = i === 0 ? (settings.allowed_late_minutes || 0) : (settings.penalty_tiers[i-1].max_minutes || 0);
+                                    const text = t.max_minutes 
+                                        ? `Từ ${prevMax + 1} đến ${t.max_minutes} phút:`
+                                        : `Trên ${prevMax} phút:`;
+                                    return (
+                                        <div key={i} className="flex justify-between pl-2">
+                                            <span>{text}</span>
+                                            <span className="font-bold text-red-600">{formatCurrency(Number(t.penalty_amount) || 0)}</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
                             <div className="flex justify-between border-b border-blue-100 pb-2">
                                 <span>Về sớm phạt:</span>

@@ -35,15 +35,15 @@ fi
 echo ">>> Python dependencies installed."
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 3. Create runtime directories
+# 3. Create runtime directories and fix permissions
 # ─────────────────────────────────────────────────────────────────────────────
 mkdir -p "$APP_DIR/runtime/hls" \
          "$APP_DIR/runtime/recordings" \
-         "$APP_DIR/runtime/clips"
-chown -R "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/runtime"
+         "$APP_DIR/runtime/clips" \
+         "$APP_DIR/cache"
 
-# Ensure config dir is writable for the kiosk user
-chown -R "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/config"
+# Chown the entire app directory so the kiosk user can create logs, cache, etc.
+chown -R "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. Create default .env if missing
