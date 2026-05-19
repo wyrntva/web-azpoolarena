@@ -24,13 +24,42 @@ export class TournamentsService {
     private readonly regRepo: Repository<TournamentRegistrationEntity>,
   ) {}
 
+  private mapTournament(t: TournamentEntity) {
+    if (!t) return t;
+
+    let sponsor_logos = [];
+    if (t.sponsor_logos) {
+      try {
+        sponsor_logos = JSON.parse(t.sponsor_logos);
+      } catch (e) {
+        sponsor_logos = [];
+      }
+    }
+
+    let ranks = [];
+    if (t.ranks) {
+      try {
+        ranks = JSON.parse(t.ranks);
+      } catch (e) {
+        ranks = [];
+      }
+    }
+
+    return {
+      ...t,
+      sponsor_logos,
+      ranks,
+    };
+  }
+
   async findAll(skip = 0, limit = 50) {
     const qb = this.tourRepo
       .createQueryBuilder('t')
       .skip(skip)
       .take(limit)
       .orderBy('t.created_at', 'DESC');
-    return qb.getManyAndCount();
+    const [data, total] = await qb.getManyAndCount();
+    return [data.map((t) => this.mapTournament(t)), total];
   }
 
   async findPublic(skip = 0, limit = 50) {
@@ -40,19 +69,20 @@ export class TournamentsService {
       .skip(skip)
       .take(limit)
       .orderBy('t.created_at', 'DESC');
-    return qb.getManyAndCount();
+    const [data, total] = await qb.getManyAndCount();
+    return [data.map((t) => this.mapTournament(t)), total];
   }
 
   async findOne(id: number) {
     const tour = await this.tourRepo.findOne({ where: { id } });
     if (!tour) throw new NotFoundException('Tournament not found');
-    return tour;
+    return this.mapTournament(tour);
   }
 
   async findBySlug(slug: string) {
     const tour = await this.tourRepo.findOne({ where: { slug } });
     if (!tour) throw new NotFoundException('Tournament not found');
-    return tour;
+    return this.mapTournament(tour);
   }
 
   async getMatches(tournamentId: number) {
