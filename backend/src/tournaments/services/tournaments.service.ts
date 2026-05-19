@@ -12,6 +12,7 @@ import {
   CreateMatchDto,
   UpdateMatchDto,
 } from '../dto/tournaments.dto';
+import { PoolArenaUserEntity } from '../../pool-arena/entities';
 
 @Injectable()
 export class TournamentsService {
@@ -222,5 +223,89 @@ export class TournamentsService {
 
     if (updated) await this.matchRepo.save(match);
     return { success: true };
+  }
+
+  async getEligibleUsers(tournamentId: number, search?: string) {
+    const regs = await this.regRepo.find({
+      where: { tournament_id: tournamentId },
+      select: ['user_id'],
+    });
+    const registeredUserIds = regs.map((r) => r.user_id);
+
+    const qb = this.regRepo.manager
+      .getRepository(PoolArenaUserEntity)
+      .createQueryBuilder('u')
+      .where('u.is_active = :isActive', { isActive: true });
+
+    if (registeredUserIds.length > 0) {
+      qb.andWhere('u.id NOT IN (:...ids)', { ids: registeredUserIds });
+    }
+
+    if (search) {
+      qb.andWhere(
+        '(u.full_name ILIKE :search OR u.phone_number ILIKE :search OR u.email ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    return qb.limit(50).getMany();
+  }
+
+  async registerPlayer(tournamentId: number, userId: number) {
+    const existing = await this.regRepo.findOne({
+      where: { tournament_id: tournamentId, user_id: userId },
+    });
+    if (existing) {
+      return existing;
+    }
+
+    const reg = this.regRepo.create({
+      tournament_id: tournamentId,
+      user_id: userId,
+    });
+    await this.regRepo.save(reg);
+
+    return this.regRepo.findOne({
+      where: { id: reg.id },
+      relations: ['user'],
+    });
+  }
+
+  async unregisterPlayer(tournamentId: number, userId: number) {
+    const reg = await this.regRepo.findOne({
+      where: { tournament_id: tournamentId, user_id: userId },
+    });
+    if (!reg) {
+      throw new NotFoundException('Registration not found');
+    }
+    await this.regRepo.remove(reg);
+  }
+
+  async upsertMatch(tournamentId: number, matchNo: number, dto: UpdateMatchDto) {
+    let match = await this.matchRepo.findOne({
+      where: { tournament_id: tournamentId, match_no: matchNo },
+    });
+
+    if (!match) {
+      match = this.matchRepo.create({
+        tournament_id: tournamentId,
+        match_no: matchNo,
+        bracket: dto.bracket || 'knockout',
+        round: dto.round || 1,
+      });
+    }
+
+    Object.assign(match, dto);
+
+    if (match.winner_id && match.status !== TournamentMatchStatus.COMPLETED) {
+      match.status = TournamentMatchStatus.COMPLETED;
+    }
+
+    await this.matchRepo.save(match);
+
+    return this.matchRepo.findOne({
+      where: { id: match.id },
+      relations: ['player1', 'player2', 'winner'],
+    });
   }
 }

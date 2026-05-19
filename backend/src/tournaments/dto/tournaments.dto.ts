@@ -43,4 +43,6 @@ export class UpdateMatchDto {
   @IsOptional() @IsDateString() match_time?: string;
   @IsOptional() @IsString() player1_check_in?: string;
   @IsOptional() @IsString() player2_check_in?: string;
+  @IsOptional() @IsString() bracket?: string;
+  @IsOptional() @IsNumber() round?: number;
 }

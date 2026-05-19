@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   Param,
   Query,
@@ -106,5 +107,52 @@ export class TournamentsController {
     @Body() dto: any,
   ) {
     return this.service.updateDeviceMatchCheckIn(id, dto);
+  }
+
+  // ==== ADMIN / WEB BRACKET & REGISTRATION API ==== //
+
+  @Get(':id/bracket')
+  async getBracket(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getMatches(id);
+  }
+
+  @Put(':id/matches/:matchNo')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async upsertMatch(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('matchNo', ParseIntPipe) matchNo: number,
+    @Body() dto: UpdateMatchDto,
+  ) {
+    return this.service.upsertMatch(id, matchNo, dto);
+  }
+
+  @Get(':id/eligible-users')
+  async getEligibleUsers(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('search') search?: string,
+  ) {
+    return this.service.getEligibleUsers(id, search);
+  }
+
+  @Post(':id/registrations')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async registerPlayer(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('user_id', ParseIntPipe) userId: number,
+  ) {
+    return this.service.registerPlayer(id, userId);
+  }
+
+  @Delete(':id/registrations/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async unregisterPlayer(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    await this.service.unregisterPlayer(id, userId);
+    return { success: true };
   }
 }
