@@ -3,7 +3,7 @@ import { Card, Alert, Spinner } from 'flowbite-react';
 import { useSearchParams, useNavigate } from 'react-router';
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://192.168.1.188:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const QRAccess = () => {
     const [searchParams] = useSearchParams();

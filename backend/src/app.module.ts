@@ -44,10 +44,13 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: false, // Keep existing schema, use migrations
+        synchronize: false,
         logging: config.get<string>('ENV') !== 'production',
+        migrations: [join(__dirname, 'migrations', '*.js')],
+        migrationsRun: true,
+        migrationsTableName: 'typeorm_migrations',
         extra: {
-          max: 20, // pool_size + max_overflow
+          max: 20,
           connectionTimeoutMillis: 30000,
           idleTimeoutMillis: 1800000,
         },

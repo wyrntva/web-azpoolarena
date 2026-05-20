@@ -10,21 +10,17 @@ const penaltyAPI = {
 };
 
 const Penalty = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
-
     return (
-        <>
-            <PayrollItemManager
-                api={penaltyAPI}
-                title="Danh sách phiếu phạt"
-                itemName="phạt"
-                buttonLabel="Tạo phiếu phạt"
-                buttonColor="failure"
-                amountColor="text-red-700"
-                notesPlaceholder="Lý do phạt..."
-                selectedDate={selectedDate}
-            />
-
-        </>
+        <PayrollItemManager
+            api={penaltyAPI}
+            title="Danh sách phiếu phạt"
+            itemName="phạt"
+            buttonLabel="Tạo phiếu phạt"
+            buttonColor="failure"
+            amountColor="text-red-700"
+            notesPlaceholder="Lý do phạt..."
+            selectedDate={selectedDate}
+        />
     );
 };
 

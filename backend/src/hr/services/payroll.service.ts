@@ -285,11 +285,10 @@ export class PayrollService {
     });
     if (!settings) {
       settings = this.settingsRepo.create({
-        allowed_late_minutes: 15,
+        allowed_late_minutes: 5,
         penalty_tiers: JSON.stringify([
-          { max_minutes: 15, penalty_amount: 0 },
-          { max_minutes: 30, penalty_amount: 50000 },
-          { max_minutes: 60, penalty_amount: 100000 },
+          { max_minutes: 15, penalty_amount: 50000 },
+          { max_minutes: 30, penalty_amount: 100000 },
           { max_minutes: null, penalty_amount: 200000 },
         ]),
         early_checkout_grace_minutes: 10,
@@ -358,10 +357,12 @@ export class PayrollService {
         );
         const lateMins = Math.max(0, checkInDt.diff(startDt, 'minutes'));
 
-        for (const t of tiers) {
-          if (t.max_minutes === null || lateMins <= t.max_minutes) {
-            amount = t.penalty_amount;
-            break;
+        if (lateMins > (settings.allowed_late_minutes || 0)) {
+          for (const t of tiers) {
+            if (t.max_minutes === null || lateMins <= t.max_minutes) {
+              amount = t.penalty_amount;
+              break;
+            }
           }
         }
 
@@ -401,29 +402,29 @@ export class PayrollService {
   }
 
   // ==================== Auto Generate Penalty For Single Attendance ====================
+  // Called on check-in, check-out, attendance edit, and cron job.
+  // Deletes all auto-penalties for the user/date and re-evaluates from scratch.
   async autoGeneratePenaltyForAttendance(
     userId: number,
     dateStr: string,
     currentUserId?: number,
   ) {
-    let settings = await this.settingsRepo.findOne({
+    const settings = await this.settingsRepo.findOne({
       where: { is_active: true },
     });
-    if (!settings) {
-      return null;
-    }
+    if (!settings) return null;
 
-    const tiers = JSON.parse(settings.penalty_tiers);
+    const tiers: Array<{ max_minutes: number | null; penalty_amount: number }> =
+      JSON.parse(settings.penalty_tiers);
 
     const sch = await this.scheduleRepo.findOne({
       where: { user_id: userId, work_date: dateStr, is_active: true },
     });
-
     const att = await this.attendanceRepo.findOne({
       where: { user_id: userId, date: dateStr },
     });
 
-    // Delete existing auto penalty for this user and date
+    // Always wipe auto-penalties first so re-evaluation is clean
     await this.penaltyRepo
       .createQueryBuilder()
       .delete()
@@ -434,66 +435,83 @@ export class PayrollService {
 
     if (!sch) return null;
 
-    let amount = 0;
-    let reason = '';
-    let type = '';
+    const workDate =
+      typeof sch.work_date === 'string'
+        ? sch.work_date
+        : moment(sch.work_date).format('YYYY-MM-DD');
+    const shiftStartDt = moment(`${workDate} ${sch.start_time}`, 'YYYY-MM-DD HH:mm');
+    const shiftEndDt = moment(`${workDate} ${sch.end_time}`, 'YYYY-MM-DD HH:mm');
+    const now = moment();
 
-    if (!att || !att.check_in_time) {
-      if (settings.auto_absent_enabled) {
-        type = 'ABSENT';
-        amount = settings.absent_penalty;
-        reason = 'Vắng mặt không phép';
+    const toCreate: Array<{ amount: number; reason: string }> = [];
+
+    if (!att?.check_in_time) {
+      // ABSENT — once the check-in window has closed (start + grace period)
+      const latestCheckInDt = shiftStartDt.clone().add(settings.allowed_late_minutes || 0, 'minutes');
+      if (settings.auto_absent_enabled && now.isAfter(latestCheckInDt)) {
+        toCreate.push({ amount: settings.absent_penalty, reason: 'Vắng mặt không phép' });
       }
-    } else if (!att.check_out_time) {
-      type = 'MISSING_CHECKOUT';
-      amount = settings.missing_checkout_penalty;
-      reason = 'Quên chấm ca ra';
-    } else if (att.status === AttendanceStatus.LATE) {
-      const checkInDt = moment(att.check_in_time);
-      const startDt = moment(
-        `${typeof sch.work_date === 'string' ? sch.work_date : moment(sch.work_date).format('YYYY-MM-DD')} ${sch.start_time}`,
-        'YYYY-MM-DD HH:mm',
-      );
-      const lateMins = Math.max(0, checkInDt.diff(startDt, 'minutes'));
-
-      for (const t of tiers) {
-        if (t.max_minutes === null || lateMins <= t.max_minutes) {
-          amount = t.penalty_amount;
-          break;
+    } else {
+      // LATE — use settings.allowed_late_minutes as the real penalty threshold
+      if (att.status === AttendanceStatus.LATE) {
+        const lateMins = Math.max(
+          0,
+          moment(att.check_in_time).diff(shiftStartDt, 'minutes'),
+        );
+        if (lateMins > (settings.allowed_late_minutes || 0)) {
+          for (const t of tiers) {
+            if (t.max_minutes === null || lateMins <= t.max_minutes) {
+              if (t.penalty_amount > 0) {
+                toCreate.push({ amount: t.penalty_amount, reason: `Đi muộn ${lateMins} phút` });
+              }
+              break;
+            }
+          }
         }
       }
 
-      if (amount > 0) {
-        type = 'LATE';
-        reason = `Đi muộn ${lateMins} phút`;
+      // EARLY_CHECKOUT — only when checked out
+      if (att.check_out_time && att.status === AttendanceStatus.EARLY_CHECKOUT) {
+        if (settings.early_checkout_penalty > 0) {
+          toCreate.push({ amount: settings.early_checkout_penalty, reason: 'Về sớm' });
+        }
       }
-    } else if (att.status === AttendanceStatus.EARLY_CHECKOUT) {
-      type = 'EARLY_CHECKOUT';
-      amount = settings.early_checkout_penalty;
-      reason = 'Về sớm';
+
+      // MISSING_CHECKOUT — only 2+ hours after shift ends (not right at check-in)
+      if (
+        !att.check_out_time &&
+        now.isAfter(shiftEndDt.clone().add(2, 'hours'))
+      ) {
+        if (settings.missing_checkout_penalty > 0) {
+          toCreate.push({ amount: settings.missing_checkout_penalty, reason: 'Quên chấm ca ra' });
+        }
+      }
     }
 
-    if (amount > 0) {
-      // Use provided userId or find first admin as creator
-      let creatorId = currentUserId;
-      if (!creatorId) {
-        const adminUser = await this.userRepo.findOne({
-          where: { role_id: 1 },
-          order: { id: 'ASC' },
-        });
-        creatorId = adminUser?.id ?? sch.user_id;
-      }
+    if (toCreate.length === 0) return null;
 
+    let creatorId = currentUserId;
+    if (!creatorId) {
+      const adminUser = await this.userRepo.findOne({
+        where: { role_id: 1 },
+        order: { id: 'ASC' },
+      });
+      creatorId = adminUser?.id ?? userId;
+    }
+
+    const saved: PenaltyEntity[] = [];
+    for (const p of toCreate) {
       const pen = this.penaltyRepo.create({
         user_id: sch.user_id,
         date: sch.work_date,
-        amount,
-        notes: `${reason} (Tự động)`,
+        amount: p.amount,
+        notes: `${p.reason} (Tự động)`,
         created_by: creatorId,
       });
       await this.penaltyRepo.save(pen);
-      return pen;
+      saved.push(pen);
     }
-    return null;
+
+    return saved;
   }
 }

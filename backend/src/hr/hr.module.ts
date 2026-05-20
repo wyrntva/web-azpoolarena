@@ -21,6 +21,7 @@ import { AttendancesService } from './services/attendances.service';
 import { WifiConfigsService } from './services/wifi-configs.service';
 import { PayrollService } from './services/payroll.service';
 import { QrAccessService } from './services/qr-access.service';
+import { AttendanceSchedulerService } from './scheduler/attendance-scheduler.service';
 
 import { AttendanceSettingsController } from './controllers/attendance-settings.controller';
 import { WorkSchedulesController } from './controllers/work-schedules.controller';
@@ -60,6 +61,7 @@ import { QrAccessController } from './controllers/qr-access.controller';
     WifiConfigsService,
     PayrollService,
     QrAccessService,
+    AttendanceSchedulerService,
   ],
   exports: [
     AttendanceSettingsService,
