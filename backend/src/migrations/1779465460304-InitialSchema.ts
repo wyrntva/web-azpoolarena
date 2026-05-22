@@ -4,6 +4,154 @@ export class InitialSchema1779465460304 implements MigrationInterface {
     name = 'InitialSchema1779465460304'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        // Pre-populate NULL values for columns being changed to NOT NULL
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "is_phone_verified" = false WHERE "is_phone_verified" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "is_email_verified" = false WHERE "is_email_verified" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "points" = 0 WHERE "points" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "total_games" = 0 WHERE "total_games" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "wins" = 0 WHERE "wins" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "losses" = 0 WHERE "losses" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "pool_arena_users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "tournament_ranks" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "tournament_ranks" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "tournament_rounds" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "tournament_rounds" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "scoring_rules" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "scoring_rules" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "tournaments" SET "can_register" = true WHERE "can_register" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "free_table_fee" = false WHERE "free_table_fee" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "pre_payment" = false WHERE "pre_payment" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "has_draw" = false WHERE "has_draw" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "round_1_64" = false WHERE "round_1_64" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "round_1_16" = false WHERE "round_1_16" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "round_1_32" = false WHERE "round_1_32" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "round_1_8" = false WHERE "round_1_8" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "tournaments" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "tournament_registrations" SET "registered_at" = NOW() WHERE "registered_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "tournament_matches" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "tournament_matches" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "store_settings" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "store_settings" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "pos_orders" SET "customer_count" = 1 WHERE "customer_count" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_orders" SET "order_type" = 'dine-in' WHERE "order_type" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_orders" SET "status" = 'pending' WHERE "status" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_orders" SET "total_amount" = 0 WHERE "total_amount" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_orders" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_orders" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "pos_order_items" SET "quantity" = 1 WHERE "quantity" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_order_items" SET "price" = 0 WHERE "price" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_order_items" SET "is_time_based" = false WHERE "is_time_based" IS NULL`);
+        await queryRunner.query(`UPDATE "pos_order_items" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "roles" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "roles" SET "is_system" = false WHERE "is_system" IS NULL`);
+        await queryRunner.query(`UPDATE "roles" SET "requires_timekeeping" = false WHERE "requires_timekeeping" IS NULL`);
+        await queryRunner.query(`UPDATE "roles" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "roles" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "users" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "users" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "categories" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "categories" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "categories" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "units" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "units" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "units" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "inventories" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "inventories" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "inventory_transactions" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "inventory_transaction_details" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "wifi_configs" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "wifi_configs" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "wifi_configs" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "qr_sessions" SET "is_used" = false WHERE "is_used" IS NULL`);
+        await queryRunner.query(`UPDATE "qr_sessions" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "work_schedules" SET "allowed_late_minutes" = 0 WHERE "allowed_late_minutes" IS NULL`);
+        await queryRunner.query(`UPDATE "work_schedules" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "work_schedules" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "work_schedules" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "attendances" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "attendances" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "attendance_settings" SET "missing_checkout_penalty" = 0 WHERE "missing_checkout_penalty" IS NULL`);
+        await queryRunner.query(`UPDATE "attendance_settings" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "attendance_settings" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "advance_payments" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "advance_payments" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "bonuses" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "bonuses" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "penalties" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "penalties" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "qr_access_devices" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "qr_access_devices" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "qr_access_tokens" SET "is_used" = false WHERE "is_used" IS NULL`);
+        await queryRunner.query(`UPDATE "qr_access_tokens" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "receipt_types" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "receipt_types" SET "is_inventory" = false WHERE "is_inventory" IS NULL`);
+        await queryRunner.query(`UPDATE "receipt_types" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "receipt_types" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "receipts" SET "is_income" = false WHERE "is_income" IS NULL`);
+        await queryRunner.query(`UPDATE "receipts" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "receipts" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "revenues" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "revenues" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "exchanges" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "exchanges" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "safes" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "safes" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "debts" SET "is_paid" = false WHERE "is_paid" IS NULL`);
+        await queryRunner.query(`UPDATE "debts" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "debts" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "switches" SET "is_active" = true WHERE "is_active" IS NULL`);
+        await queryRunner.query(`UPDATE "switches" SET "sort_order" = 0 WHERE "sort_order" IS NULL`);
+        await queryRunner.query(`UPDATE "switches" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "devices" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "areas" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "areas" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
+        await queryRunner.query(`UPDATE "tables" SET "x" = 0 WHERE "x" IS NULL`);
+        await queryRunner.query(`UPDATE "tables" SET "y" = 0 WHERE "y" IS NULL`);
+        await queryRunner.query(`UPDATE "tables" SET "width" = 100 WHERE "width" IS NULL`);
+        await queryRunner.query(`UPDATE "tables" SET "height" = 60 WHERE "height" IS NULL`);
+        await queryRunner.query(`UPDATE "tables" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "tables" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+
         await queryRunner.query(`ALTER TABLE "tournament_registrations" DROP CONSTRAINT "tournament_registrations_user_id_fkey"`);
         await queryRunner.query(`ALTER TABLE "tournament_registrations" DROP CONSTRAINT "tournament_registrations_tournament_id_fkey"`);
         await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_winner_id_fkey"`);
