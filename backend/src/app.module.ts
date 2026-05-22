@@ -47,7 +47,7 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
         synchronize: false,
         logging: config.get<string>('ENV') !== 'production',
         migrations: [join(__dirname, 'migrations', '*.js')],
-        migrationsRun: true,
+        migrationsRun: false,
         migrationsTableName: 'typeorm_migrations',
         extra: {
           max: 20,
