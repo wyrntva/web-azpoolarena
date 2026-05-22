@@ -25,7 +25,8 @@ const Devices: React.FC = () => {
             setLoading(true);
             const response = await deviceAPI.getAll();
             setDevices(response.data);
-        } catch (error) {
+        } catch {
+            // ignore
         } finally {
             setLoading(false);
         }
@@ -59,8 +60,8 @@ const Devices: React.FC = () => {
                 // Reload devices list
                 await loadDevices();
             }
-        } catch (error: any) {
-            setCreateError(error.response?.data?.detail || 'Không thể tạo mã thiết bị');
+        } catch (error) {
+            setCreateError((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tạo mã thiết bị');
         } finally {
             setIsCreating(false);
         }
@@ -74,7 +75,7 @@ const Devices: React.FC = () => {
         try {
             await deviceAPI.delete(deviceId);
             await loadDevices();
-        } catch (error) {
+        } catch (_error) {
             alert('Không thể xóa thiết bị');
         }
     };

@@ -9,7 +9,7 @@ import { useParams, Link } from 'react-router';
 import { Button, Spinner } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
-import Draggable from 'react-draggable';
+import Draggable, { type DraggableData, type DraggableEvent } from 'react-draggable';
 import { areaAPI, type Area, type Table } from '../../../api/area.api';
 import TableEditModal from './TableEditModal';
 
@@ -19,7 +19,7 @@ import TableEditModal from './TableEditModal';
 
 const DraggableTableItem = memo(({ table, onStop, onEdit, onDelete }: {
     table: Table;
-    onStop: (e: any, data: any, id: number) => void;
+    onStop: (e: DraggableEvent, data: DraggableData, id: number) => void;
     onEdit: (table: Table) => void;
     onDelete: (id: number) => void;
 }) => {
@@ -105,6 +105,7 @@ const AreaDetail = () => {
                 setEditingTable(updated);
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tables]);
 
     // --- Data Loading ---
@@ -118,7 +119,7 @@ const AreaDetail = () => {
                 setTables(response.data.tables);
                 setOriginalTables(JSON.parse(JSON.stringify(response.data.tables)));
             }
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải thông tin khu vực');
         } finally {
             setLoading(false);
@@ -134,7 +135,7 @@ const AreaDetail = () => {
     const isOverlapping = (r1: { x: number; y: number; w: number; h: number }, r2: { x: number; y: number; w: number; h: number }) =>
         !(r1.x + r1.w <= r2.x || r1.x >= r2.x + r2.w || r1.y + r1.h <= r2.y || r1.y >= r2.y + r2.h);
 
-    const handleDragStop = (_e: any, data: { x: number; y: number }, tableId: number) => {
+    const handleDragStop = (_e: DraggableEvent, data: DraggableData, tableId: number) => {
         const newRect = { x: data.x, y: data.y, w: TABLE_SIZE, h: TABLE_SIZE };
         const overlappingTable = tables.find(t => {
             if (t.id === tableId) return false;
@@ -159,7 +160,7 @@ const AreaDetail = () => {
             await areaAPI.updateLayout(area.id, tables.map(t => ({ id: t.id, x: t.x, y: t.y })));
             toast.success('Đã lưu cấu hình vị trí bàn');
             setOriginalTables(JSON.parse(JSON.stringify(tables)));
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể lưu cấu hình');
         } finally {
             setSaving(false);
@@ -173,7 +174,7 @@ const AreaDetail = () => {
             await areaAPI.update(area.id, { ...area, table_count: area.table_count + 1 });
             toast.success('Đã thêm bàn mới');
             await loadArea(area.id);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể thêm bàn');
             setSaving(false);
         }
@@ -186,7 +187,7 @@ const AreaDetail = () => {
             await areaAPI.deleteTable(area.id, tableId);
             toast.success('Đã xóa bàn');
             await loadArea(area.id);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể xóa bàn');
             setSaving(false);
         }

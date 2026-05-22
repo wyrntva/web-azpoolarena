@@ -4,12 +4,7 @@ import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import { useMenus } from '../../contexts/MenuContext';
 import { useNavigate } from 'react-router';
-import {
-    GiCoffeeCup, GiBeerStein, GiWineGlass, GiHotMeal, GiCakeSlice,
-    GiIceCreamCone, GiPizzaSlice, GiHamburger, GiNoodles, GiFishCooked,
-    GiChickenOven, GiBreadSlice, GiCarrot, GiFruitBowl, GiCupcake,
-    GiForkKnifeSpoon, GiCoffeePot, GiWaterBottle, GiSandwich, GiGamepad
-} from 'react-icons/gi';
+import { GiHotMeal } from 'react-icons/gi';
 
 const TrashIcon = () => (
     <svg viewBox="0 0 1024 1024" className="icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="1em" height="1em">
@@ -91,11 +86,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 const menuIcons = Object.keys(ICON_MAP);
 
-const DragHandleIcon = ({ className }: { className?: string }) => (
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={className} fill="currentColor">
-        <path d="M12 2a2 2 0 110 4 2 2 0 010-4zm0 8a2 2 0 110 4 2 2 0 010-4zm0 8a2 2 0 110 4 2 2 0 010-4z" />
-    </svg>
-);
 
 const ProductMenus = () => {
     const { menus, addMenu, reorderMenus } = useMenus();

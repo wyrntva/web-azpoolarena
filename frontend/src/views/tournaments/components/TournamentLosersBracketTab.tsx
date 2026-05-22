@@ -66,6 +66,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     useEffect(() => {
         setRound1(round1Nos.map(n => toVM(createEmptyMatch(n, 'losers', 1))));
         setRound2(round2Nos.map(n => toVM(createEmptyMatch(n, 'losers', 2))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round1Nos.join(','), round2Nos.join(',')]);
 
     const matchMap = useMemo(() => new Map(matches.map(m => [m.match_no, m])), [matches]);
@@ -126,6 +127,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
             });
         setRound1(syncRound(round1Nos, 1, losersRound1Seed));
         setRound2(syncRound(round2Nos, 2, losersRound2Seed));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [matchMap, losersRound1Seed, losersRound2Seed, round1Nos, round2Nos]);
 
     // Helper: check if a WR1 match feeding a LR1 slot is a BYE
@@ -186,6 +188,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
             }
         }
         if (changed) setRound1(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round1, matchMap, players.length, size, isWR1SourceBye]);
 
     const onChange = (round: 1 | 2, idx: number, field: keyof MatchVM, value: string) => {

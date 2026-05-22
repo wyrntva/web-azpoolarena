@@ -18,11 +18,12 @@ export interface ApiError {
 /**
  * Get user-friendly error message from API error
  */
-export const getErrorMessage = (error: ApiError | any): string => {
+export const getErrorMessage = (error: ApiError | unknown): string => {
+    const err = error as ApiError;
     // Handle axios errors
-    if (error.response) {
-        const status = error.response.status;
-        const detail = error.response.data?.detail || error.response.data?.message;
+    if (err.response) {
+        const status = err.response.status;
+        const detail = err.response.data?.detail || err.response.data?.message;
 
         // Map common HTTP status codes to Vietnamese messages
         switch (status) {
@@ -53,37 +54,38 @@ export const getErrorMessage = (error: ApiError | any): string => {
     }
 
     // Handle network errors
-    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+    if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         return 'Kết nối timeout. Vui lòng kiểm tra mạng và thử lại.';
     }
 
-    if (error.code === 'ERR_NETWORK' || !error.response) {
+    if (err.code === 'ERR_NETWORK' || !err.response) {
         return 'Không thể kết nối đến máy chủ. Kiểm tra kết nối mạng.';
     }
 
     // Handle cancelled requests
-    if (error.code === 'ERR_CANCELED') {
+    if (err.code === 'ERR_CANCELED') {
         return 'Yêu cầu đã bị hủy.';
     }
 
     // Fallback to generic message
-    return error.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+    return err.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
 };
 
 /**
  * Check if error is retryable
  */
-export const isRetryableError = (error: ApiError | any): boolean => {
-    if (!error.response) return true; // Network errors are retryable
+export const isRetryableError = (error: ApiError | unknown): boolean => {
+    const err = error as ApiError;
+    if (!err.response) return true; // Network errors are retryable
 
-    const status = error.response.status;
+    const status = err.response.status;
     return status >= 500 || status === 429; // Server errors and rate limits
 };
 
 /**
  * Log error with context for debugging
  */
-export const logError = (error: ApiError | any, _context?: Record<string, any>) => {
+export const logError = (_error: ApiError | unknown, _context?: Record<string, unknown>) => {
     // errors are handled by toast notifications; no console output in production
 };
 

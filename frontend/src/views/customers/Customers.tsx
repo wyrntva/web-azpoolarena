@@ -34,10 +34,10 @@ const Customers = () => {
         setLoading(true);
         try {
             const response = await poolArenaUserAPI.getUsers({ limit: 10000 });
-            const responseData = response.data as any;
-            const rawData = Array.isArray(responseData) ? responseData : responseData?.data;
+            const responseData = response.data as PoolArenaUser[] | { data?: PoolArenaUser[] };
+            const rawData = Array.isArray(responseData) ? responseData : (responseData as { data?: PoolArenaUser[] })?.data;
             setCustomers(Array.isArray(rawData) ? rawData : []);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách khách hàng');
         } finally {
             setLoading(false);
@@ -83,8 +83,9 @@ const Customers = () => {
             await poolArenaUserAPI.deleteUser(customer.id);
             toast.success('Xóa khách hàng thành công');
             fetchCustomers();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Xóa khách hàng thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Xóa khách hàng thất bại');
         }
     };
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Product Form Modal — create/edit product with category, menu, pricing, image selection.
  * Sub-components extracted to ProductFormFields.tsx for maintainability.
@@ -72,8 +73,9 @@ export const DEFAULT_TIME_PRICING: TimePricingData = {
 async function resolveInventoryCategoryId(name: string): Promise<number> {
     const response = await categoryAPI.getAll();
     const normalized = name.trim().toLowerCase();
-    const categoriesList = Array.isArray(response.data) ? response.data : (response.data as any).data || [];
-    const existing = categoriesList.find((cat: any) => cat.name.trim().toLowerCase() === normalized);
+    const rawData = response.data as unknown as { data?: { id: number; name: string }[] };
+    const categoriesList: { id: number; name: string }[] = Array.isArray(response.data) ? response.data as { id: number; name: string }[] : rawData.data || [];
+    const existing = categoriesList.find((cat) => cat.name.trim().toLowerCase() === normalized);
     if (existing) return existing.id;
     const created = await categoryAPI.create({ name });
     return created.data.id;
@@ -92,8 +94,8 @@ interface ProductFormModalProps {
     inventoryCategoryId: number | null;
     onInventoryCategoryChange: (id: number | null) => void;
     onSaved: () => void;
-    addProduct: (payload: any) => Promise<Product>;
-    updateProduct: (id: number, payload: any) => Promise<void>;
+    addProduct: (payload: Record<string, unknown>) => Promise<Product>;
+    updateProduct: (id: number, payload: Record<string, unknown>) => Promise<void>;
     deleteProduct: (id: number) => void;
 }
 
@@ -193,6 +195,7 @@ const ProductFormModal = ({
             setWarehouseUnitPrice(0);
             setUseUnitPriceForCost(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, editingProduct]);
 
     // --- Sync cost price with unit price ---
@@ -254,7 +257,7 @@ const ProductFormModal = ({
                     min_quantity: warehouseMinQuantity,
                     category_id: categoryId,
                     base_unit_id: selectedUnitId,
-                } as any);
+                });
                 inventoryId = inventoryRes.data?.id;
             }
 
@@ -292,8 +295,8 @@ const ProductFormModal = ({
             toast.success(editingProduct ? 'Cập nhật mặt hàng thành công' : 'Tạo mặt hàng thành công');
             onSaved();
             onClose();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Thao tác thất bại');
         }
     };
 
@@ -307,8 +310,8 @@ const ProductFormModal = ({
                     await inventoryAPI.deleteInventory(editingProduct.inventoryId);
                 } else {
                     const res = await inventoryAPI.getInventories({ search: editingProduct.name });
-                    const matches = (res.data || []).filter((inv: any) => inv.product_name === editingProduct.name);
-                    await Promise.all(matches.map((inv: any) => inventoryAPI.deleteInventory(inv.id)));
+                    const matches = (res.data || []).filter((inv: { product_name?: string; id: number }) => inv.product_name === editingProduct.name);
+                    await Promise.all(matches.map((inv: { id: number }) => inventoryAPI.deleteInventory(inv.id)));
                 }
             }
 
@@ -322,8 +325,9 @@ const ProductFormModal = ({
             toast.success('Đã xóa mặt hàng');
             onClose();
             setDeleteConfirmOpen(false);
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Xóa mặt hàng thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Xóa mặt hàng thất bại');
         }
     };
 

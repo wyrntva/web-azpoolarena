@@ -9,7 +9,7 @@ interface CreateSafeData {
     note?: string;
 }
 
-interface UpdateSafeData extends Partial<CreateSafeData> { }
+type UpdateSafeData = Partial<CreateSafeData>;
 
 export const safeAPI = {
     getAll: (params?: { month?: number; year?: number; skip?: number; limit?: number }): Promise<AxiosResponse<PaginatedResponse<Safe>>> => {

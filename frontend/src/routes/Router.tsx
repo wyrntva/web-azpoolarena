@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router";
-import { RequireAuth, AdminRoute, ManagerRoute } from '../auth/RequireAuth';
+import { RequireAuth, AdminRoute } from '../auth/RequireAuth';
 
 /* ***Layouts**** */
 const FullLayout = lazy(() => import('../layouts/full/FullLayout'));

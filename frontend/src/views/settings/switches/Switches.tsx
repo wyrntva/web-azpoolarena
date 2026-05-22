@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Modal, Label, TextInput, Select, Textarea, Spinner, ToggleSwitch } from 'flowbite-react';
+import { Card, Button, Modal, Label, TextInput, Textarea, Spinner, ToggleSwitch } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import { switchAPI, type SwitchItem, type CreateSwitchRequest } from '../../../api/switch.api';
@@ -68,7 +68,7 @@ const Switches: React.FC = () => {
             setLoading(true);
             const response = await switchAPI.getAll();
             setSwitches(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách công tắc');
         } finally {
             setLoading(false);
@@ -131,7 +131,7 @@ const Switches: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            const payload: any = {
+            const payload: CreateSwitchRequest = {
                 name: formData.name.trim(),
                 switch_type: formData.switch_type,
                 description: formData.description?.trim() || null,
@@ -153,8 +153,8 @@ const Switches: React.FC = () => {
 
             handleCloseModal();
             await loadSwitches();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể lưu công tắc');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể lưu công tắc');
         } finally {
             setIsSubmitting(false);
         }
@@ -173,7 +173,7 @@ const Switches: React.FC = () => {
             // 2. Gọi API ngầm
             await switchAPI.update(sw.id, { is_active: newStatus });
             toast.success(newStatus ? 'Đã bật' : 'Đã tắt');
-        } catch (error) {
+        } catch (_error) {
             // 3. Nếu lỗi thì hoàn tác lại trạng thái cũ
             setSwitches((prev) =>
                 prev.map((s) => (s.id === sw.id ? { ...s, is_active: oldStatus } : s)),
@@ -189,7 +189,7 @@ const Switches: React.FC = () => {
             await switchAPI.delete(sw.id);
             toast.success('Đã xóa công tắc');
             await loadSwitches();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể xóa công tắc');
         }
     };

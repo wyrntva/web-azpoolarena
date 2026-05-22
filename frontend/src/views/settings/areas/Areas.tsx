@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 import { Link } from 'react-router';
 import toast from 'react-hot-toast';
 import BaseDialog from '../../../components/shared/BaseDialog';
-import { areaAPI, AreaListItem, Area } from '../../../api/area.api';
+import { areaAPI, AreaListItem } from '../../../api/area.api';
 
 const Areas = () => {
     const [areas, setAreas] = useState<AreaListItem[]>([]);
@@ -32,7 +32,7 @@ const Areas = () => {
                 return a.id - b.id;
             });
             setAreas(sorted);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách khu vực');
         } finally {
             setLoading(false);
@@ -66,7 +66,7 @@ const Areas = () => {
             }
             setModalOpen(false);
             loadAreas();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Có lỗi xảy ra khi lưu khu vực');
         }
     };
@@ -78,7 +78,7 @@ const Areas = () => {
             await areaAPI.delete(id);
             toast.success('Xóa khu vực thành công');
             loadAreas();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Có lỗi xảy ra khi xóa khu vực');
         }
     };

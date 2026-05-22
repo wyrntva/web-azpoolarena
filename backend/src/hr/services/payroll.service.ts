@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, In } from 'typeorm';
+import { DataSource, Repository, Between, In } from 'typeorm';
 import {
   AdvancePaymentEntity,
   BonusEntity,
@@ -28,6 +28,7 @@ import moment from 'moment';
 @Injectable()
 export class PayrollService {
   constructor(
+    private readonly dataSource: DataSource,
     @InjectRepository(AdvancePaymentEntity)
     private readonly advanceRepo: Repository<AdvancePaymentEntity>,
     @InjectRepository(BonusEntity)
@@ -287,14 +288,14 @@ export class PayrollService {
       settings = this.settingsRepo.create({
         allowed_late_minutes: 5,
         penalty_tiers: JSON.stringify([
-          { max_minutes: 15, penalty_amount: 50000 },
-          { max_minutes: 30, penalty_amount: 100000 },
-          { max_minutes: null, penalty_amount: 200000 },
+          { max_minutes: 15, penalty_amount: 30000 },
+          { max_minutes: 30, penalty_amount: 50000 },
+          { max_minutes: null, penalty_amount: 100000 },
         ]),
         early_checkout_grace_minutes: 10,
-        early_checkout_penalty: 50000,
+        early_checkout_penalty: 30000,
         missing_checkout_penalty: 30000,
-        absent_penalty: 100000,
+        absent_penalty: 150000,
         auto_absent_enabled: true,
         is_active: true,
       });
@@ -332,32 +333,42 @@ export class PayrollService {
       ] = a;
     }
 
+    const now = moment();
     const created: any[] = [];
     for (const sch of schedules) {
-      const key = `${sch.user_id}-${typeof sch.work_date === 'string' ? sch.work_date : moment(sch.work_date).format('YYYY-MM-DD')}`;
+      const workDateStr = typeof sch.work_date === 'string' ? sch.work_date : moment(sch.work_date).format('YYYY-MM-DD');
+      const key = `${sch.user_id}-${workDateStr}`;
       const att = attMap[key];
+
+      const effectiveLateMinutes = sch.allowed_late_minutes ?? settings.allowed_late_minutes ?? 0;
+      const shiftStartDt = moment(`${workDateStr} ${sch.start_time}`, 'YYYY-MM-DD HH:mm');
+      const shiftEndDt = moment(`${workDateStr} ${sch.end_time}`, 'YYYY-MM-DD HH:mm');
+      if (shiftEndDt.isBefore(shiftStartDt)) shiftEndDt.add(1, 'days');
 
       let amount = 0;
       let reason = '';
       let type = '';
 
       if (!att || !att.check_in_time) {
-        type = 'ABSENT';
-        amount = settings.absent_penalty;
-        reason = 'Vắng mặt không phép';
+        // Only penalize ABSENT after the check-in grace window has passed
+        const latestCheckInDt = shiftStartDt.clone().add(effectiveLateMinutes, 'minutes');
+        if (settings.auto_absent_enabled && now.isAfter(latestCheckInDt)) {
+          type = 'ABSENT';
+          amount = settings.absent_penalty;
+          reason = 'Vắng mặt không phép';
+        }
       } else if (!att.check_out_time) {
-        type = 'MISSING_CHECKOUT';
-        amount = settings.missing_checkout_penalty;
-        reason = 'Quên chấm ca ra';
+        // Only penalize MISSING_CHECKOUT 2+ hours after shift ends
+        if (now.isAfter(shiftEndDt.clone().add(2, 'hours'))) {
+          type = 'MISSING_CHECKOUT';
+          amount = settings.missing_checkout_penalty;
+          reason = 'Quên chấm ca ra';
+        }
       } else if (att.status === AttendanceStatus.LATE) {
-        const checkInDt = moment(att.check_in_time);
-        const startDt = moment(
-          `${typeof sch.work_date === 'string' ? sch.work_date : moment(sch.work_date).format('YYYY-MM-DD')} ${sch.start_time}`,
-          'YYYY-MM-DD HH:mm',
-        );
-        const lateMins = Math.max(0, checkInDt.diff(startDt, 'minutes'));
+        const lateSeconds = Math.max(0, moment(att.check_in_time).diff(shiftStartDt, 'seconds'));
+        const lateMins = Math.floor(lateSeconds / 60);
 
-        if (lateMins > (settings.allowed_late_minutes || 0)) {
+        if (lateSeconds > effectiveLateMinutes * 60) {
           for (const t of tiers) {
             if (t.max_minutes === null || lateMins <= t.max_minutes) {
               amount = t.penalty_amount;
@@ -424,15 +435,6 @@ export class PayrollService {
       where: { user_id: userId, date: dateStr },
     });
 
-    // Always wipe auto-penalties first so re-evaluation is clean
-    await this.penaltyRepo
-      .createQueryBuilder()
-      .delete()
-      .where('user_id = :userId', { userId })
-      .andWhere('date = :dateStr', { dateStr })
-      .andWhere("notes LIKE '%Tự động%'")
-      .execute();
-
     if (!sch) return null;
 
     const workDate =
@@ -441,24 +443,25 @@ export class PayrollService {
         : moment(sch.work_date).format('YYYY-MM-DD');
     const shiftStartDt = moment(`${workDate} ${sch.start_time}`, 'YYYY-MM-DD HH:mm');
     const shiftEndDt = moment(`${workDate} ${sch.end_time}`, 'YYYY-MM-DD HH:mm');
+    if (shiftEndDt.isBefore(shiftStartDt)) shiftEndDt.add(1, 'days');
     const now = moment();
 
     const toCreate: Array<{ amount: number; reason: string }> = [];
 
+    // Use per-schedule grace period (matches how LATE status is determined)
+    const effectiveLateMinutes = sch.allowed_late_minutes ?? settings.allowed_late_minutes ?? 0;
+
     if (!att?.check_in_time) {
       // ABSENT — once the check-in window has closed (start + grace period)
-      const latestCheckInDt = shiftStartDt.clone().add(settings.allowed_late_minutes || 0, 'minutes');
+      const latestCheckInDt = shiftStartDt.clone().add(effectiveLateMinutes, 'minutes');
       if (settings.auto_absent_enabled && now.isAfter(latestCheckInDt)) {
         toCreate.push({ amount: settings.absent_penalty, reason: 'Vắng mặt không phép' });
       }
     } else {
-      // LATE — use settings.allowed_late_minutes as the real penalty threshold
       if (att.status === AttendanceStatus.LATE) {
-        const lateMins = Math.max(
-          0,
-          moment(att.check_in_time).diff(shiftStartDt, 'minutes'),
-        );
-        if (lateMins > (settings.allowed_late_minutes || 0)) {
+        const lateSeconds = Math.max(0, moment(att.check_in_time).diff(shiftStartDt, 'seconds'));
+        const lateMins = Math.floor(lateSeconds / 60);
+        if (lateSeconds > effectiveLateMinutes * 60) {
           for (const t of tiers) {
             if (t.max_minutes === null || lateMins <= t.max_minutes) {
               if (t.penalty_amount > 0) {
@@ -470,9 +473,11 @@ export class PayrollService {
         }
       }
 
-      // EARLY_CHECKOUT — only when checked out
-      if (att.check_out_time && att.status === AttendanceStatus.EARLY_CHECKOUT) {
-        if (settings.early_checkout_penalty > 0) {
+      // EARLY_CHECKOUT — check independently so LATE+EARLY_CHECKOUT both get penalized
+      if (att.check_out_time) {
+        const checkOutMom = moment(att.check_out_time);
+        const earliestCheckout = shiftEndDt.clone().subtract(10, 'minutes');
+        if (checkOutMom.isBefore(earliestCheckout) && settings.early_checkout_penalty > 0) {
           toCreate.push({ amount: settings.early_checkout_penalty, reason: 'Về sớm' });
         }
       }
@@ -499,18 +504,29 @@ export class PayrollService {
       creatorId = adminUser?.id ?? userId;
     }
 
-    const saved: PenaltyEntity[] = [];
-    for (const p of toCreate) {
-      const pen = this.penaltyRepo.create({
-        user_id: sch.user_id,
-        date: sch.work_date,
-        amount: p.amount,
-        notes: `${p.reason} (Tự động)`,
-        created_by: creatorId,
-      });
-      await this.penaltyRepo.save(pen);
-      saved.push(pen);
-    }
+    const saved = await this.dataSource.transaction(async (tx) => {
+      await tx
+        .createQueryBuilder()
+        .delete()
+        .from(PenaltyEntity)
+        .where('user_id = :userId', { userId })
+        .andWhere('date = :dateStr', { dateStr })
+        .andWhere("notes LIKE '%Tự động%'")
+        .execute();
+
+      const results: PenaltyEntity[] = [];
+      for (const p of toCreate) {
+        const pen = tx.create(PenaltyEntity, {
+          user_id: sch.user_id,
+          date: sch.work_date,
+          amount: p.amount,
+          notes: `${p.reason} (Tự động)`,
+          created_by: creatorId,
+        });
+        results.push(await tx.save(PenaltyEntity, pen));
+      }
+      return results;
+    });
 
     return saved;
   }

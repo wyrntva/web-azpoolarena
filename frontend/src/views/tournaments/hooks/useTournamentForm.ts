@@ -5,7 +5,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { tournamentSettingsAPI } from '../../../api/tournamentSettings.api';
 import { tournamentAPI } from '../../../api/tournament.api';
-import type { TournamentCreate, TournamentUpdate } from '../../../api/tournament.api';
+import type { Tournament, TournamentCreate, TournamentUpdate } from '../../../api/tournament.api';
 import type { TournamentRank } from '../../../types/api';
 import type { TournamentFormData } from '../types';
 import { buildTournamentSlug } from '../utils/slugUtils';
@@ -72,7 +72,7 @@ export const useTournamentForm = () => {
     const [formData, setFormData] = useState<TournamentFormData>(initialFormData);
     const [ranks, setRanks] = useState<TournamentRank[]>([]);
     const [editingTournamentId, setEditingTournamentId] = useState<number | null>(null);
-    const [loadedTournament, setLoadedTournament] = useState<any>(null);
+    const [loadedTournament, setLoadedTournament] = useState<Tournament | null>(null);
 
     // --- Fetch ranks on mount ---
 
@@ -81,7 +81,8 @@ export const useTournamentForm = () => {
             try {
                 const response = await tournamentSettingsAPI.getRanks();
                 setRanks(response.data || []);
-            } catch (error: any) {
+            } catch {
+                // ignore
             }
         })();
     }, []);
@@ -150,91 +151,84 @@ export const useTournamentForm = () => {
 
     // --- Submit ---
 
-    const handleSubmit = async (e: React.FormEvent, tournamentId?: number, existingTournament?: any) => {
+    const handleSubmit = async (e: React.FormEvent, tournamentId?: number, existingTournament?: Tournament | Record<string, unknown>) => {
         e.preventDefault();
-        try {
-            // Upload any File objects → get URLs
-            const { banner, organizer_logo, sponsor_logos } = await uploadFormImages(formData, existingTournament);
+        // Upload any File objects → get URLs
+        const existing = existingTournament as Record<string, unknown> | undefined;
+        const { banner, organizer_logo, sponsor_logos } = await uploadFormImages(formData, existing);
 
-            const formDataWithUrls = {
-                ...formData,
-                banner,
-                organizer_logo,
-                sponsor_logos,
-            };
+        const formDataWithUrls = {
+            ...formData,
+            banner,
+            organizer_logo,
+            sponsor_logos,
+        };
 
-            const apiData = convertFormDataToAPI(formDataWithUrls, !!tournamentId, existingTournament);
+        const apiData = convertFormDataToAPI(formDataWithUrls, !!tournamentId, existing);
 
-            if (tournamentId) {
-                await tournamentAPI.updateTournament(tournamentId, apiData as TournamentUpdate);
-            } else {
-                await tournamentAPI.createTournament(apiData as TournamentCreate);
-            }
-            resetForm();
-        } catch (error: any) {
-            throw error;
+        if (tournamentId) {
+            await tournamentAPI.updateTournament(tournamentId, apiData as TournamentUpdate);
+        } else {
+            await tournamentAPI.createTournament(apiData as unknown as TournamentCreate);
         }
+        resetForm();
     };
 
     // --- Load existing tournament ---
 
     const loadTournament = async (tournamentId: number) => {
-        try {
-            const response = await tournamentAPI.getTournament(tournamentId);
-            const tournament = response.data;
-            setEditingTournamentId(tournamentId);
-            setLoadedTournament(tournament);
+        const response = await tournamentAPI.getTournament(tournamentId);
+        const tournament = response.data;
+        setEditingTournamentId(tournamentId);
+        setLoadedTournament(tournament);
 
-            setFormData({
-                name: tournament.name,
-                slug: tournament.slug,
-                banner: tournament.banner ? (tournament.banner as string) : null,
-                organizer_logo: tournament.organizer_logo ? (tournament.organizer_logo as string) : null,
-                sponsor_logos: tournament.sponsor_logos ? (tournament.sponsor_logos as string[]) : [],
-                ranks: tournament.ranks || [],
-                display: tournament.display || 'public',
-                public_date: formatDateForInput(tournament.public_date),
-                status: tournament.status || 'upcoming',
-                tournament_type: tournament.tournament_type || 'knockout',
-                knockout_from_round: tournament.knockout_from_round || '',
-                competition_format: tournament.competition_format || '',
-                number_of_players: tournament.number_of_players?.toString() || '32',
-                start_date: formatDateForInput(tournament.start_date),
-                registration_start_date: formatDateForInput(tournament.registration_start_date),
-                registration_end_date: formatDateForInput(tournament.registration_end_date),
-                location: tournament.location || '',
-                organizer: tournament.organizer || '',
-                support_phone: tournament.support_phone || '',
-                can_register: tournament.can_register ?? true,
-                free_table_fee: tournament.free_table_fee ?? false,
-                pre_payment: tournament.pre_payment ?? false,
-                registration_fee: tournament.registration_fee?.toString() || '',
-                total_prize: tournament.total_prize?.toString() || '',
-                first_prize: tournament.first_prize?.toString() || '',
-                second_prize: tournament.second_prize?.toString() || '',
-                third_prize: tournament.third_prize?.toString() || '',
-                top_5_8_prize: tournament.top_5_8_prize?.toString() || '',
-                top_9_16_prize: tournament.top_9_16_prize?.toString() || '',
-                top_17_32_prize: tournament.top_17_32_prize?.toString() || '',
-                top_33_64_prize: tournament.top_33_64_prize?.toString() || '',
-                top_65_128_prize: tournament.top_65_128_prize?.toString() || '',
-                top_129_256_prize: tournament.top_129_256_prize?.toString() || '',
-                has_draw: tournament.has_draw ?? false,
-                draw_touch: tournament.draw_touch || '',
-                handicap_1_touch: tournament.handicap_1_touch || '',
-                handicap_2_touch: tournament.handicap_2_touch || '',
-                round_1_64: tournament.round_1_64 ?? false,
-                round_1_16: tournament.round_1_16 ?? false,
-                round_1_32: tournament.round_1_32 ?? false,
-                round_1_8: tournament.round_1_8 ?? false,
-                quarter_final: (tournament as any).quarter_final || '',
-                semi_final: tournament.semi_final || '',
-                final: tournament.final || '',
-                draw_from_round: (tournament as any).draw_from_round || '',
-            });
-        } catch (error: any) {
-            throw error;
-        }
+        setFormData({
+            name: tournament.name,
+            slug: tournament.slug,
+            banner: tournament.banner ? (tournament.banner as string) : null,
+            organizer_logo: tournament.organizer_logo ? (tournament.organizer_logo as string) : null,
+            sponsor_logos: tournament.sponsor_logos ? (tournament.sponsor_logos as string[]) : [],
+            ranks: tournament.ranks || [],
+            display: tournament.display || 'public',
+            public_date: formatDateForInput(tournament.public_date),
+            status: tournament.status || 'upcoming',
+            tournament_type: tournament.tournament_type || 'knockout',
+            knockout_from_round: tournament.knockout_from_round || '',
+            competition_format: tournament.competition_format || '',
+            number_of_players: tournament.number_of_players?.toString() || '32',
+            start_date: formatDateForInput(tournament.start_date),
+            registration_start_date: formatDateForInput(tournament.registration_start_date),
+            registration_end_date: formatDateForInput(tournament.registration_end_date),
+            location: tournament.location || '',
+            organizer: tournament.organizer || '',
+            support_phone: tournament.support_phone || '',
+            can_register: tournament.can_register ?? true,
+            free_table_fee: tournament.free_table_fee ?? false,
+            pre_payment: tournament.pre_payment ?? false,
+            registration_fee: tournament.registration_fee?.toString() || '',
+            total_prize: tournament.total_prize?.toString() || '',
+            first_prize: tournament.first_prize?.toString() || '',
+            second_prize: tournament.second_prize?.toString() || '',
+            third_prize: tournament.third_prize?.toString() || '',
+            top_5_8_prize: tournament.top_5_8_prize?.toString() || '',
+            top_9_16_prize: tournament.top_9_16_prize?.toString() || '',
+            top_17_32_prize: tournament.top_17_32_prize?.toString() || '',
+            top_33_64_prize: tournament.top_33_64_prize?.toString() || '',
+            top_65_128_prize: tournament.top_65_128_prize?.toString() || '',
+            top_129_256_prize: tournament.top_129_256_prize?.toString() || '',
+            has_draw: tournament.has_draw ?? false,
+            draw_touch: tournament.draw_touch || '',
+            handicap_1_touch: tournament.handicap_1_touch || '',
+            handicap_2_touch: tournament.handicap_2_touch || '',
+            round_1_64: tournament.round_1_64 ?? false,
+            round_1_16: tournament.round_1_16 ?? false,
+            round_1_32: tournament.round_1_32 ?? false,
+            round_1_8: tournament.round_1_8 ?? false,
+            quarter_final: (tournament.quarter_final as string) || '',
+            semi_final: tournament.semi_final || '',
+            final: tournament.final || '',
+            draw_from_round: (tournament.draw_from_round as string) || '',
+        });
     };
 
     // --- Reset ---

@@ -39,12 +39,19 @@ interface ManualAttendanceData {
     notes?: string;
 }
 
+interface CheckAttendanceResponse {
+    action: 'check_in' | 'check_out';
+    message: string;
+    check_in_time?: string;
+    attendance_id?: number;
+}
+
 export const attendanceAPI = {
-    checkAttendance: (data: CheckAttendanceData): Promise<AxiosResponse<any>> => {
+    checkAttendance: (data: CheckAttendanceData): Promise<AxiosResponse<CheckAttendanceResponse>> => {
         return axiosClient.post('/api/attendance/check', data);
     },
 
-    publicCheckAttendance: (data: CheckAttendanceData): Promise<AxiosResponse<any>> => {
+    publicCheckAttendance: (data: CheckAttendanceData): Promise<AxiosResponse<CheckAttendanceResponse>> => {
         // Public API - no auth required
         return axiosClient.post('/api/attendance/public-check', data);
     },
@@ -146,14 +153,14 @@ export const workScheduleAPI = {
 
 export const attendanceSettingsAPI = {
     get: (): Promise<AxiosResponse<AttendanceSettings>> => {
-        return axiosClient.get('/api/attendance-settings/');
+        return axiosClient.get('/api/attendance-settings');
     },
 
     update: (data: Partial<AttendanceSettings>): Promise<AxiosResponse<AttendanceSettings>> => {
-        return axiosClient.put('/api/attendance-settings/', data);
+        return axiosClient.put('/api/attendance-settings', data);
     },
 
     create: (data: Omit<AttendanceSettings, 'id' | 'is_active'>): Promise<AxiosResponse<AttendanceSettings>> => {
-        return axiosClient.post('/api/attendance-settings/', data);
+        return axiosClient.post('/api/attendance-settings', data);
     },
 };

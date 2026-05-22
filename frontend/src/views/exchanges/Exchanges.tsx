@@ -31,6 +31,7 @@ const Exchanges = () => {
 
     useEffect(() => {
         fetchExchanges();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateRange]);
 
     const fetchExchanges = async () => {
@@ -41,7 +42,7 @@ const Exchanges = () => {
                 end_date: dateRange.end,
             });
             setExchanges(response.data.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách chuyển tiền');
         } finally {
             setLoading(false);
@@ -78,8 +79,9 @@ const Exchanges = () => {
                 await exchangeAPI.delete(id);
                 toast.success('Xóa giao dịch thành công');
                 fetchExchanges();
-            } catch (error: any) {
-                toast.error(error.response?.data?.detail || 'Xóa giao dịch thất bại');
+            } catch (error) {
+                const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+                toast.error(detail || 'Xóa giao dịch thất bại');
             }
         }
     };
@@ -107,8 +109,9 @@ const Exchanges = () => {
             }
             setModalOpen(false);
             fetchExchanges();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Thao tác thất bại');
         }
     };
 
@@ -198,7 +201,7 @@ const Exchanges = () => {
                                             <strong>{formatDate(exchange.exchange_date)}</strong>
                                         </Table.Cell>
                                         <Table.Cell>
-                                            <Badge color={ACCOUNT_TYPES[exchange.from_account].color as any}>
+                                            <Badge color={ACCOUNT_TYPES[exchange.from_account].color}>
                                                 {ACCOUNT_TYPES[exchange.from_account].icon} {ACCOUNT_TYPES[exchange.from_account].label}
                                             </Badge>
                                         </Table.Cell>
@@ -206,7 +209,7 @@ const Exchanges = () => {
                                             →
                                         </Table.Cell>
                                         <Table.Cell>
-                                            <Badge color={ACCOUNT_TYPES[exchange.to_account].color as any}>
+                                            <Badge color={ACCOUNT_TYPES[exchange.to_account].color}>
                                                 {ACCOUNT_TYPES[exchange.to_account].icon} {ACCOUNT_TYPES[exchange.to_account].label}
                                             </Badge>
                                         </Table.Cell>

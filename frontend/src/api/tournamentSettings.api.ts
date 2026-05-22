@@ -10,7 +10,7 @@ export interface RankPayload {
     default_score: number;
 }
 
-export interface RankUpdatePayload extends Partial<RankPayload> { }
+export type RankUpdatePayload = Partial<RankPayload>;
 
 export interface RoundPayload {
     name: string;
@@ -22,7 +22,7 @@ export interface RoundPayload {
     is_active: boolean;
 }
 
-export interface RoundUpdatePayload extends Partial<RoundPayload> { }
+export type RoundUpdatePayload = Partial<RoundPayload>;
 
 export interface ScoringRulePayload {
     name: string;
@@ -32,7 +32,7 @@ export interface ScoringRulePayload {
     rule_type: ScoringRule['rule_type'];
 }
 
-export interface ScoringRuleUpdatePayload extends Partial<ScoringRulePayload> { }
+export type ScoringRuleUpdatePayload = Partial<ScoringRulePayload>;
 
 export const tournamentSettingsAPI = {
     // Ranks

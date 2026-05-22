@@ -5,11 +5,21 @@ import { userAPI } from '../../../api/user.api';
 import { useAuth } from '../../../auth/AuthContext';
 import { isAdmin as checkIsAdmin } from '../../../auth/roles';
 
+interface PayrollItemRecord {
+    id: number;
+    user_id?: number;
+    date?: string;
+    amount?: number;
+    notes?: string;
+    employee_name?: string;
+    created_by_name?: string;
+}
+
 interface PayrollItemAPI {
-    getAll: (params?: any) => Promise<{ data: any[] }>;
-    create: (data: any) => Promise<any>;
-    update: (id: number, data: any) => Promise<any>;
-    delete: (id: number) => Promise<any>;
+    getAll: (params?: Record<string, string>) => Promise<{ data: PayrollItemRecord[] }>;
+    create: (data: Record<string, unknown>) => Promise<unknown>;
+    update: (id: number, data: Record<string, unknown>) => Promise<unknown>;
+    delete: (id: number) => Promise<unknown>;
 }
 
 interface UsePayrollItemOptions {
@@ -21,10 +31,10 @@ interface UsePayrollItemOptions {
 export const usePayrollItem = ({ api, itemName, selectedDate }: UsePayrollItemOptions) => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
-    const [items, setItems] = useState<any[]>([]);
-    const [employees, setEmployees] = useState<any[]>([]);
+    const [items, setItems] = useState<PayrollItemRecord[]>([]);
+    const [employees, setEmployees] = useState<{ id: number; full_name: string; is_active: boolean }[]>([]);
     const [modalOpen, setModalOpen] = useState(false);
-    const [editingRecord, setEditingRecord] = useState<any>(null);
+    const [editingRecord, setEditingRecord] = useState<PayrollItemRecord | null>(null);
 
     const [formData, setFormData] = useState({
         user_id: '',
@@ -38,10 +48,8 @@ export const usePayrollItem = ({ api, itemName, selectedDate }: UsePayrollItemOp
     const fetchEmployees = useCallback(async () => {
         try {
             const res = await userAPI.getUsers();
-            setEmployees(res.data.filter((u: any) => u.is_active));
-        } catch (error) {
-            // Silently fail
-        }
+            setEmployees(res.data.filter((u) => u.is_active));
+        } catch { /* Silently fail */ }
     }, []);
 
     const fetchData = useCallback(async () => {
@@ -53,7 +61,7 @@ export const usePayrollItem = ({ api, itemName, selectedDate }: UsePayrollItemOp
             } : undefined;
             const res = await api.getAll(params);
             setItems(res.data || []);
-        } catch (error) {
+        } catch (_error) {
             toast.error(`Không thể tải danh sách ${itemName}`);
         } finally {
             setLoading(false);
@@ -65,7 +73,7 @@ export const usePayrollItem = ({ api, itemName, selectedDate }: UsePayrollItemOp
         if (isAdmin) fetchEmployees();
     }, [fetchData, fetchEmployees, isAdmin]);
 
-    const handleOpenModal = useCallback((record: any = null) => {
+    const handleOpenModal = useCallback((record: PayrollItemRecord | null = null) => {
         if (record) {
             setEditingRecord(record);
             setFormData({
@@ -104,7 +112,7 @@ export const usePayrollItem = ({ api, itemName, selectedDate }: UsePayrollItemOp
             }
             setModalOpen(false);
             fetchData();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Lỗi khi lưu dữ liệu');
         }
     }, [api, editingRecord, fetchData, formData]);
@@ -115,7 +123,7 @@ export const usePayrollItem = ({ api, itemName, selectedDate }: UsePayrollItemOp
                 await api.delete(id);
                 toast.success('Đã xóa');
                 fetchData();
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Xóa thất bại');
             }
         }

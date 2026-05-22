@@ -5,10 +5,10 @@ const uniqueId = (prefix = '') => `${prefix}${++_idCounter}`;
 export interface ChildItem {
   id?: number | string;
   name?: string;
-  icon?: any;
+  icon?: string;
   children?: ChildItem[];
-  item?: any;
-  url?: any;
+  item?: string;
+  url?: string;
   color?: string;
   isPro?: boolean;
 }
@@ -16,12 +16,12 @@ export interface ChildItem {
 export interface MenuItem {
   heading?: string;
   name?: string;
-  icon?: any;
+  icon?: string;
   id?: number;
   to?: string;
   items?: MenuItem[];
   children?: ChildItem[];
-  url?: any;
+  url?: string;
   isPro?: boolean;
 }
 

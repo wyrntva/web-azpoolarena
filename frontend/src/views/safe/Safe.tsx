@@ -27,6 +27,7 @@ const Safe = () => {
     useEffect(() => {
         fetchSafes();
         fetchBalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedMonth]);
 
     const fetchSafes = async () => {
@@ -39,7 +40,7 @@ const Safe = () => {
             };
             const response = await safeAPI.getAll(params);
             setSafes(response.data.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách cân két');
         } finally {
             setLoading(false);
@@ -55,7 +56,7 @@ const Safe = () => {
             };
             const response = await safeAPI.getBalance(params);
             setBalance(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải số dư két');
         }
     };
@@ -87,8 +88,9 @@ const Safe = () => {
                 toast.success('Xóa phiếu cân két thành công');
                 fetchSafes();
                 fetchBalance();
-            } catch (error: any) {
-                toast.error(error.response?.data?.detail || 'Xóa phiếu cân két thất bại');
+            } catch (error) {
+                const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+                toast.error(detail || 'Xóa phiếu cân két thất bại');
             }
         }
     };
@@ -107,8 +109,9 @@ const Safe = () => {
             setModalOpen(false);
             fetchSafes();
             fetchBalance();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Thao tác thất bại');
         }
     };
 

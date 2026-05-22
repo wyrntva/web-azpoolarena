@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { WorkScheduleEntity } from '../entities';
+import { LessThan, Repository } from 'typeorm';
+import { QRSessionEntity, QRAccessTokenEntity, WorkScheduleEntity } from '../entities';
 import { PayrollService } from '../services/payroll.service';
 import moment from 'moment';
 
@@ -13,32 +13,44 @@ export class AttendanceSchedulerService {
   constructor(
     @InjectRepository(WorkScheduleEntity)
     private readonly scheduleRepo: Repository<WorkScheduleEntity>,
+    @InjectRepository(QRSessionEntity)
+    private readonly qrSessionRepo: Repository<QRSessionEntity>,
+    @InjectRepository(QRAccessTokenEntity)
+    private readonly qrAccessTokenRepo: Repository<QRAccessTokenEntity>,
     private readonly payrollService: PayrollService,
   ) {}
 
-  // Runs every 30 minutes — re-evaluates all penalties for today's schedules.
-  // Handles LATE (respecting allowed_late_minutes grace), MISSING_CHECKOUT
-  // (only 2h+ after shift end), and ABSENT (only after shift ends).
-  // When attendance is edited, autoGeneratePenaltyForAttendance is also called
-  // directly from AttendancesService, so penalties always stay in sync.
+  // Every 30 min — re-evaluate penalties for today AND yesterday (catch-up after downtime).
   @Cron('0 */30 * * * *')
   async dailyPenaltyCheck() {
     const today = moment().format('YYYY-MM-DD');
-    const schedules = await this.scheduleRepo.find({
-      where: { work_date: today, is_active: true },
-    });
+    const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
 
-    for (const sch of schedules) {
-      try {
-        await this.payrollService.autoGeneratePenaltyForAttendance(
-          sch.user_id,
-          today,
-        );
-      } catch (e: any) {
-        this.logger.error(
-          `Penalty check failed for user_id=${sch.user_id}: ${e.message}`,
-        );
+    for (const dateStr of [today, yesterday]) {
+      const schedules = await this.scheduleRepo.find({
+        where: { work_date: dateStr, is_active: true },
+      });
+
+      for (const sch of schedules) {
+        try {
+          await this.payrollService.autoGeneratePenaltyForAttendance(sch.user_id, dateStr);
+        } catch (e: any) {
+          this.logger.error(`Penalty check failed user_id=${sch.user_id} date=${dateStr}: ${e.message}`);
+        }
       }
     }
+  }
+
+  // 2:00 AM daily — delete expired QR tokens to prevent table bloat.
+  @Cron('0 0 2 * * *')
+  async cleanupExpiredQrTokens() {
+    const now = new Date();
+    const [sessions, oneTime] = await Promise.all([
+      this.qrSessionRepo.delete({ expires_at: LessThan(now) }),
+      this.qrAccessTokenRepo.delete({ expires_at: LessThan(now) }),
+    ]);
+    this.logger.log(
+      `QR cleanup: removed ${sessions.affected} sessions, ${oneTime.affected} one-time tokens`,
+    );
   }
 }

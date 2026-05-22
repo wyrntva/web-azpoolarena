@@ -44,6 +44,8 @@ export interface Tournament {
     round_1_16: boolean;
     round_1_32: boolean;
     round_1_8: boolean;
+    quarter_final: string | null;
+    draw_from_round: string | null;
     semi_final: string | null;
     final: string | null;
     registration_count?: number;
@@ -97,7 +99,7 @@ export interface TournamentCreate {
     final?: string | null;
 }
 
-export interface TournamentUpdate extends Partial<TournamentCreate> { }
+export type TournamentUpdate = Partial<TournamentCreate>;
 
 export interface PaginatedResponse<T> {
     data: T;
@@ -188,7 +190,7 @@ export const tournamentAPI = {
     },
 
     deleteImage: (tournamentId: number, imageType: 'banner' | 'organizer_logo' | 'sponsor_logo', sponsorIndex?: number): Promise<AxiosResponse<void>> => {
-        const params: Record<string, any> = { image_type: imageType };
+        const params: Record<string, string | number> = { image_type: imageType };
         if (typeof sponsorIndex === 'number') {
             params.sponsor_index = sponsorIndex;
         }

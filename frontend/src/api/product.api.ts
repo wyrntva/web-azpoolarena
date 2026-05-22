@@ -47,7 +47,7 @@ export interface CreateProductData {
     showOnScoreboard?: boolean | null;
 }
 
-export interface UpdateProductData extends Partial<CreateProductData> { }
+export type UpdateProductData = Partial<CreateProductData>;
 
 export const productAPI = {
     getAll: (): Promise<AxiosResponse<ProductApiResponse[]>> => {

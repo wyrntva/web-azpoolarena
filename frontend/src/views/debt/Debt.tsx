@@ -51,7 +51,7 @@ const Debt = () => {
     const handleDelete = async (id: number) => {
         if (!window.confirm('Bạn có chắc muốn xóa công nợ này?')) return;
         try { await debtAPI.delete(id); toast.success('Xóa công nợ thành công'); fetchDebts(); }
-        catch (e: any) { toast.error(e.response?.data?.detail || 'Xóa công nợ thất bại'); }
+        catch (e) { toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Xóa công nợ thất bại'); }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ const Debt = () => {
             if (editingId) { await debtAPI.update(editingId, formData); toast.success('Cập nhật công nợ thành công'); }
             else { await debtAPI.create(formData); toast.success('Thêm công nợ thành công'); }
             setModalOpen(false); fetchDebts();
-        } catch (e: any) { toast.error(e.response?.data?.detail || 'Thao tác thất bại'); }
+        } catch (e) { toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Thao tác thất bại'); }
     };
 
     const handlePayDebt = (d: DebtType) => { setPayingDebt(d); setPaymentMethod('cash'); setPaymentModalOpen(true); };
@@ -72,7 +72,7 @@ const Debt = () => {
             await debtAPI.update(payingDebt!.id, { is_paid: true });
             toast.success('Thu nợ thành công. Đã tự động tạo phiếu thu trong hệ thống.');
             setPaymentModalOpen(false); fetchDebts();
-        } catch (e: any) { toast.error(e.response?.data?.detail || 'Thu nợ thất bại'); }
+        } catch (e) { toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Thu nợ thất bại'); }
     };
 
     const totalDebt = debts.reduce((sum, d) => sum + d.amount, 0);

@@ -72,8 +72,8 @@ const BannerSettingsModal = ({
             const response = await storeSettingsAPI.deleteBanner(type, index);
             onSettingsChange(response.data);
             toast.success('Đã xóa banner');
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể xóa banner');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể xóa banner');
         } finally {
             setLoading(false);
         }
@@ -85,8 +85,8 @@ const BannerSettingsModal = ({
             const response = await storeSettingsAPI.deleteSingleBanner(type);
             onSettingsChange(response.data);
             toast.success('Đã xóa banner');
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể xóa banner');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể xóa banner');
         } finally {
             setLoading(false);
         }
@@ -99,8 +99,8 @@ const BannerSettingsModal = ({
             const response = await storeSettingsAPI.uploadBanner(type, croppedFile);
             onSettingsChange(response.data);
             toast.success('Tải banner lên thành công');
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể tải banner lên');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tải banner lên');
         } finally {
             setUploadingBanners(prev => ({ ...prev, [type]: false }));
         }
@@ -115,7 +115,8 @@ const BannerSettingsModal = ({
                 try {
                     const cropped = await cropImageForBannerType(type, file);
                     croppedFiles.push(cropped);
-                } catch (e) {
+                } catch {
+                    // ignore
                 }
             }
             if (croppedFiles.length === 0) {
@@ -146,8 +147,8 @@ const BannerSettingsModal = ({
             } else {
                 toast.error('Không thể tải banner lên');
             }
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể tải banner lên');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tải banner lên');
         } finally {
             setUploadingBanners(prev => ({ ...prev, [type]: false }));
         }

@@ -80,7 +80,7 @@ export function createImageHandlers(
             try {
                 const croppedFile = await cropImageToSize(file, 1920, 450);
                 setFormData(prev => ({ ...prev, banner: croppedFile }));
-            } catch (error) {
+            } catch (_error) {
                 alert(`Lỗi khi xử lý ảnh banner "${file.name}"`);
             }
         }
@@ -92,7 +92,7 @@ export function createImageHandlers(
             try {
                 const croppedFile = await cropImageToSize(file, 300, 100);
                 setFormData(prev => ({ ...prev, organizer_logo: croppedFile }));
-            } catch (error) {
+            } catch (_error) {
                 alert(`Lỗi khi xử lý ảnh logo "${file.name}"`);
             }
         }
@@ -108,7 +108,7 @@ export function createImageHandlers(
                 try {
                     const croppedFile = await cropImageToSize(file, 220, 100);
                     processedFiles.push(croppedFile);
-                } catch (error) {
+                } catch (_error) {
                     alert(`Lỗi khi xử lý ảnh "${file.name}"`);
                 }
             }
@@ -124,7 +124,7 @@ export function createImageHandlers(
             const removed = prev.sponsor_logos[index];
             const editingId = getEditingId();
             if (editingId !== null && typeof removed === 'string') {
-                tournamentAPI.deleteImage(editingId, 'sponsor_logo', index).catch((error) => {
+                tournamentAPI.deleteImage(editingId, 'sponsor_logo', index).catch((_error) => {
                     alert('Không thể xóa logo nhà tài trợ');
                 });
             }
@@ -135,7 +135,7 @@ export function createImageHandlers(
     const handleRemoveBanner = () => {
         const editingId = getEditingId();
         if (editingId !== null) {
-            tournamentAPI.deleteImage(editingId, 'banner').catch((error) => {
+            tournamentAPI.deleteImage(editingId, 'banner').catch((_error) => {
                 alert('Không thể xóa banner');
             });
         }
@@ -145,7 +145,7 @@ export function createImageHandlers(
     const handleRemoveOrganizerLogo = () => {
         const editingId = getEditingId();
         if (editingId !== null) {
-            tournamentAPI.deleteImage(editingId, 'organizer_logo').catch((error) => {
+            tournamentAPI.deleteImage(editingId, 'organizer_logo').catch((_error) => {
                 alert('Không thể xóa logo giải đấu');
             });
         }
@@ -169,22 +169,22 @@ export function createImageHandlers(
 /** Upload all File objects in formData and return a copy with URLs instead */
 export async function uploadFormImages(
     formData: TournamentFormData,
-    existingTournament?: any,
-): Promise<{ banner: any; organizer_logo: any; sponsor_logos: any[] }> {
+    existingTournament?: Record<string, unknown>,
+): Promise<{ banner: string | null; organizer_logo: string | null; sponsor_logos: string[] }> {
     // Banner
-    let bannerUrl: any;
+    let bannerUrl: string | null;
     if (formData.banner instanceof File) {
         bannerUrl = await tournamentAPI.uploadImage('banner', formData.banner);
     } else if (typeof formData.banner === 'string' && formData.banner.trim() !== '') {
         bannerUrl = formData.banner;
     } else if (existingTournament?.banner) {
-        bannerUrl = existingTournament.banner;
+        bannerUrl = existingTournament.banner as string;
     } else {
         bannerUrl = null;
     }
 
     // Organizer logo
-    let organizerLogoUrl: any;
+    let organizerLogoUrl: string | null;
     if (formData.organizer_logo instanceof File) {
         try {
             organizerLogoUrl = await tournamentAPI.uploadImage('organizer_logo', formData.organizer_logo);
@@ -194,7 +194,7 @@ export async function uploadFormImages(
     } else if (typeof formData.organizer_logo === 'string' && formData.organizer_logo.trim() !== '') {
         organizerLogoUrl = formData.organizer_logo;
     } else if (existingTournament?.organizer_logo) {
-        organizerLogoUrl = existingTournament.organizer_logo;
+        organizerLogoUrl = existingTournament.organizer_logo as string;
     } else {
         organizerLogoUrl = null;
     }

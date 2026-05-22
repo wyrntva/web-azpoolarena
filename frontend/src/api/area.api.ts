@@ -47,7 +47,7 @@ export interface AreaCreate {
     table_count: number;
 }
 
-export interface AreaUpdate extends Partial<AreaCreate> { }
+export type AreaUpdate = Partial<AreaCreate>;
 
 export interface TablePositionUpdate {
     id: number;

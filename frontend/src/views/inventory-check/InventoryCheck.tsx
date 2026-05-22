@@ -53,8 +53,8 @@ const InventoryCheck = () => {
                 inventoryAPI.getInventoryChecks(),
             ]);
             setInventories(invRes.data);
-            setReports(reportRes.data || []);
-        } catch (error) {
+            setReports((reportRes.data || []) as CheckReport[]);
+        } catch (_error) {
             toast.error('Không thể tải dữ liệu kiểm kê');
         } finally {
             setLoading(false);
@@ -93,7 +93,7 @@ const InventoryCheck = () => {
                 await inventoryAPI.deleteInventoryCheck(id);
                 toast.success('Xóa phiếu thành công');
                 fetchData();
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Xóa phiếu thất bại');
             }
         }
@@ -117,7 +117,7 @@ const InventoryCheck = () => {
             toast.success('Tạo phiếu kiểm kê thành công');
             setModalOpen(false);
             fetchData();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Tạo phiếu thất bại');
         }
     };

@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import axiosRetry from 'axios-retry';
 
 // Use empty string for dev with proxy, or explicit URL
@@ -30,7 +30,7 @@ axiosRetry(axiosClient, {
         return axiosRetry.isNetworkOrIdempotentRequestError(error)
             || (error.response?.status !== undefined && error.response.status >= 500 && error.response.status < 600);
     },
-    onRetry: (_retryCount: number, _error: AxiosError, _requestConfig: AxiosRequestConfig) => {
+    onRetry: () => {
         // Retry silently in production
     },
 });

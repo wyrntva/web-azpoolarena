@@ -30,8 +30,8 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32 }: Tour
             setLoading(true);
             const res = await tournamentAPI.getRegistrations(tournamentId);
             setPlayers(Array.isArray(res.data) ? res.data : []);
-        } catch (e: any) {
-            toast.error(e?.response?.data?.detail || 'Không thể tải danh sách đăng kí');
+        } catch (e) {
+            toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tải danh sách đăng kí');
         } finally {
             setLoading(false);
         }
@@ -42,8 +42,8 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32 }: Tour
             setLoadingEligible(true);
             const res = await tournamentAPI.getEligibleUsers(tournamentId, searchTerm || undefined);
             setEligibleUsers(Array.isArray(res.data) ? res.data : []);
-        } catch (e: any) {
-            toast.error(e?.response?.data?.detail || 'Không thể tải danh sách khách hàng');
+        } catch (e) {
+            toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tải danh sách khách hàng');
         } finally {
             setLoadingEligible(false);
         }
@@ -90,8 +90,8 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32 }: Tour
             setShowUserList(false);
             await fetchRegistrations();
             await fetchEligibleUsers();
-        } catch (e: any) {
-            toast.error(e?.response?.data?.detail || 'Không thể đăng kí');
+        } catch (e) {
+            toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể đăng kí');
         } finally {
             setAdding(false);
         }
@@ -124,8 +124,8 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32 }: Tour
             setPlayerToRemove(null);
             await fetchRegistrations();
             await fetchEligibleUsers();
-        } catch (e: any) {
-            toast.error(e?.response?.data?.detail || 'Không thể hủy đăng kí');
+        } catch (e) {
+            toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể hủy đăng kí');
         } finally {
             setRemovingId(null);
         }

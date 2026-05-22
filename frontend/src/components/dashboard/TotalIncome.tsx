@@ -5,7 +5,7 @@ import { Badge } from "flowbite-react";
 
 const TotalIncome = () => {
 
-  const ChartData: any = {
+  const ChartData: Record<string, unknown> = {
     series: [
       {
         name: "monthly earnings",
@@ -72,7 +72,7 @@ const TotalIncome = () => {
           <div className="rounded-bars flex-1 md:ps-7">
             <Chart
               options={ChartData}
-              series={ChartData.series}
+              series={ChartData.series as ApexAxisChartSeries}
               type="area"
               height="60px"
               width="100%"

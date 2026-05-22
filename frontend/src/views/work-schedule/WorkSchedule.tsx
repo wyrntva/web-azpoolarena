@@ -7,17 +7,23 @@ import { userAPI } from '../../api/user.api';
 import { useAuth } from '../../auth/AuthContext';
 import { isShiftLeaderOrAdmin } from '../../auth/roles';
 import { formatDate } from '../../utils/formatters';
+import type { WorkSchedule as WorkScheduleType, User } from '../../types/api';
 
 const WorkSchedule = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
-    const [schedules, setSchedules] = useState<any[]>([]);
-    const [employees, setEmployees] = useState<any[]>([]);
+    const [schedules, setSchedules] = useState<WorkScheduleType[]>([]);
+    const [employees, setEmployees] = useState<User[]>([]);
     const [selectedDate, setSelectedDate] = useState(dayjs());
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedCell, setSelectedCell] = useState<any>(null);
+    const [selectedCell, setSelectedCell] = useState<{ employee: User; date: dayjs.Dayjs; dateStr: string } | null>(null);
     const [copying, setCopying] = useState(false);
     const [targetDates, setTargetDates] = useState<string[]>([]);
+    const [confirmModal, setConfirmModal] = useState<{ open: boolean; message: string; onConfirm: () => void }>({
+        open: false,
+        message: '',
+        onConfirm: () => {},
+    });
 
     const [formData, setFormData] = useState({
         off_day: false,
@@ -27,12 +33,16 @@ const WorkSchedule = () => {
 
     const canEdit = isShiftLeaderOrAdmin(user);
 
+    const openConfirm = (message: string, onConfirm: () => void) => {
+        setConfirmModal({ open: true, message, onConfirm });
+    };
+
     const mondayDate = useMemo(() => {
         return selectedDate.subtract((selectedDate.day() + 6) % 7, 'days').startOf('day');
     }, [selectedDate]);
 
     const scheduleMap = useMemo(() => {
-        const map: any = {};
+        const map: Record<string, WorkScheduleType> = {};
         schedules.forEach((s) => {
             map[`${s.user_id}_${s.work_date}`] = s;
         });
@@ -41,6 +51,7 @@ const WorkSchedule = () => {
 
     useEffect(() => {
         fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDate]);
 
     const fetchData = async () => {
@@ -54,28 +65,27 @@ const WorkSchedule = () => {
                 workScheduleAPI.getAll({ start_date: start, end_date: end }),
             ]);
             const schedulesData = schedRes.data || [];
-            setEmployees(empRes.data.filter((u: any) => {
+            setEmployees(empRes.data.filter((u: User) => {
                 if (u.role?.requires_timekeeping === false) return false;
-                const hasData = schedulesData.some((s: any) => s.user_id === u.id);
+                const hasData = schedulesData.some((s: WorkScheduleType) => s.user_id === u.id);
                 if (hasData) return true;
 
                 return u.is_active;
             }));
             setSchedules(schedulesData);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải dữ liệu lịch làm việc');
         } finally {
             setLoading(false);
         }
     };
 
-    const getWeekDates = () => {
-        return Array.from({ length: 7 }, (_, i) => mondayDate.add(i, 'day'));
-    };
+    const weekDates = useMemo(
+        () => Array.from({ length: 7 }, (_, i) => mondayDate.add(i, 'day')),
+        [mondayDate]
+    );
 
-    const weekDates = getWeekDates();
-
-    const handleCellClick = (employee: any, date: dayjs.Dayjs) => {
+    const handleCellClick = (employee: User, date: dayjs.Dayjs) => {
         if (!canEdit) return; // Prevent edit modal for readonly staff
         const dateStr = date.format('YYYY-MM-DD');
         const existing = scheduleMap[`${employee.id}_${dateStr}`];
@@ -133,77 +143,79 @@ const WorkSchedule = () => {
             toast.success(targetDates.length > 0 ? 'Đã lưu và sao chép lịch làm việc' : 'Đã cập nhật lịch làm việc');
             setModalOpen(false);
             fetchData();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể lưu lịch làm việc');
         }
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!selectedCell) return;
         const existing = scheduleMap[`${selectedCell.employee.id}_${selectedCell.dateStr}`];
-        if (existing && window.confirm('Bạn có chắc muốn xóa lịch này?')) {
+        if (!existing) return;
+        openConfirm('Bạn có chắc muốn xóa lịch này?', async () => {
             try {
                 await workScheduleAPI.delete(existing.id);
                 toast.success('Đã xóa lịch làm việc');
                 setModalOpen(false);
                 fetchData();
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Xóa lịch thất bại');
             }
-        }
+        });
     };
 
-    const handleCopyLastWeek = async () => {
-        if (!window.confirm('Bạn có muốn sao chép toàn bộ lịch từ tuần trước sang tuần này không?')) {
-            return;
-        }
+    const handleCopyLastWeek = () => {
+        openConfirm('Bạn có muốn sao chép toàn bộ lịch từ tuần trước sang tuần này không?', async () => {
+            setCopying(true);
+            try {
+                const fromStart = mondayDate.subtract(7, 'days').format('YYYY-MM-DD');
+                const toStart = mondayDate.format('YYYY-MM-DD');
 
-        setCopying(true);
-        try {
-            const fromStart = mondayDate.subtract(7, 'days').format('YYYY-MM-DD');
-            const toStart = mondayDate.format('YYYY-MM-DD');
+                await workScheduleAPI.copyWeekSchedule({
+                    from_week_start: fromStart,
+                    to_week_start: toStart
+                });
 
-            await workScheduleAPI.copyWeekSchedule({
-                from_week_start: fromStart,
-                to_week_start: toStart
-            });
-
-            toast.success('Đã sao chép lịch làm việc từ tuần trước');
-            fetchData();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể sao chép lịch làm việc');
-        } finally {
-            setCopying(false);
-        }
+                toast.success('Đã sao chép lịch làm việc từ tuần trước');
+                fetchData();
+            } catch (error) {
+                const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+                toast.error(detail || 'Không thể sao chép lịch làm việc');
+            } finally {
+                setCopying(false);
+            }
+        });
     };
 
-    const handleCopyEmployeeLastWeek = async (empArg?: any) => {
+    const handleCopyEmployeeLastWeek = (empArg?: User) => {
         const emp = empArg || selectedCell?.employee;
         if (!emp) return;
 
-        if (!window.confirm(`Bạn có muốn sao chép lịch của nhân viên ${emp.full_name} từ tuần trước sang tuần này không?`)) {
-            return;
-        }
+        openConfirm(
+            `Bạn có muốn sao chép lịch của ${emp.full_name} từ tuần trước sang tuần này không?`,
+            async () => {
+                setCopying(true);
+                try {
+                    const fromStart = mondayDate.subtract(7, 'days').format('YYYY-MM-DD');
+                    const toStart = mondayDate.format('YYYY-MM-DD');
 
-        setCopying(true);
-        try {
-            const fromStart = mondayDate.subtract(7, 'days').format('YYYY-MM-DD');
-            const toStart = mondayDate.format('YYYY-MM-DD');
+                    const res = await workScheduleAPI.copyWeekSchedule({
+                        from_week_start: fromStart,
+                        to_week_start: toStart,
+                        user_ids: [emp.id]
+                    });
 
-            const res = await workScheduleAPI.copyWeekSchedule({
-                from_week_start: fromStart,
-                to_week_start: toStart,
-                user_ids: [emp.id]
-            });
-
-            toast.success(`Đã sao chép lịch cho ${emp.full_name}: ${res.data.created} bản ghi được tạo.`);
-            setModalOpen(false);
-            fetchData();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Không thể sao chép lịch làm việc');
-        } finally {
-            setCopying(false);
-        }
+                    toast.success(`Đã sao chép lịch cho ${emp.full_name}: ${res.data.created} bản ghi được tạo.`);
+                    setModalOpen(false);
+                    fetchData();
+                } catch (error) {
+                    const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+                    toast.error(detail || 'Không thể sao chép lịch làm việc');
+                } finally {
+                    setCopying(false);
+                }
+            }
+        );
     };
 
     return (
@@ -325,6 +337,19 @@ const WorkSchedule = () => {
                 )}
             </div>
 
+            <Modal show={confirmModal.open} size="sm" onClose={() => setConfirmModal(m => ({ ...m, open: false }))}>
+                <Modal.Header>Xác nhận</Modal.Header>
+                <Modal.Body>
+                    <p className="text-gray-700">{confirmModal.message}</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button color="blue" onClick={() => { setConfirmModal(m => ({ ...m, open: false })); confirmModal.onConfirm(); }}>
+                        Xác nhận
+                    </Button>
+                    <Button color="gray" onClick={() => setConfirmModal(m => ({ ...m, open: false }))}>Hủy</Button>
+                </Modal.Footer>
+            </Modal>
+
             <Modal show={modalOpen} onClose={() => setModalOpen(false)}>
                 <form onSubmit={handleSubmit}>
                     <Modal.Header>
@@ -373,7 +398,7 @@ const WorkSchedule = () => {
                                 <Label value="Sao chép sang các ngày khác trong tuần" className="font-semibold text-blue-700" />
                                 <Button size="xs" color="success" onClick={() => handleCopyEmployeeLastWeek()} pill>
                                     <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
                                     </svg>
                                     Lấy từ tuần trước
                                 </Button>

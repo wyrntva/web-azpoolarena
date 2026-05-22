@@ -13,6 +13,7 @@ import {
   CopyScheduleRequestDto,
   CopyWeekScheduleRequestDto,
 } from '../dto/hr.dto';
+import { PayrollService } from './payroll.service';
 import moment from 'moment';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class WorkSchedulesService {
     private readonly attendanceRepo: Repository<AttendanceEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    private readonly payrollService: PayrollService,
   ) {}
 
   async create(dto: CreateWorkScheduleDto) {
@@ -46,7 +48,7 @@ export class WorkSchedulesService {
       );
     }
 
-    const settings = await this.scheduleRepo.manager.query('SELECT allowed_late_minutes FROM hr_attendance_settings WHERE is_active = true LIMIT 1');
+    const settings = await this.scheduleRepo.manager.query('SELECT allowed_late_minutes FROM attendance_settings WHERE is_active = true LIMIT 1');
     const globalLate = settings.length > 0 ? settings[0].allowed_late_minutes : 0;
 
     const schedule = this.scheduleRepo.create({
@@ -166,6 +168,10 @@ export class WorkSchedulesService {
     if (dto.is_active !== undefined) ws.is_active = dto.is_active;
 
     await this.scheduleRepo.save(ws);
+
+    // Tính lại phạt ngay khi lịch thay đổi, bất kể ngày nào
+    await this.payrollService.autoGeneratePenaltyForAttendance(ws.user_id, ws.work_date);
+
     return ws;
   }
 

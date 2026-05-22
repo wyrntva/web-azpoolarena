@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { areaAPI, type Table } from '../../../api/area.api';
-import toast from 'react-hot-toast';
 
 export const useAllTables = () => {
     const [tables, setTables] = useState<Table[]>([]);

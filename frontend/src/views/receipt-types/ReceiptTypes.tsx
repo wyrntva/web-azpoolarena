@@ -37,7 +37,7 @@ const ReceiptTypes = () => {
             });
             setReceiptTypes(response.data.data);
             setTotalItems(response.data.meta.total);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách loại phiếu');
         } finally {
             setLoading(false);
@@ -67,8 +67,9 @@ const ReceiptTypes = () => {
                 await receiptTypeAPI.delete(id);
                 toast.success('Xóa loại phiếu thành công');
                 fetchReceiptTypes(currentPage);
-            } catch (error: any) {
-                toast.error(error.response?.data?.detail || 'Xóa loại phiếu thất bại');
+            } catch (error) {
+                const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+                toast.error(detail || 'Xóa loại phiếu thất bại');
             }
         }
     };
@@ -92,8 +93,9 @@ const ReceiptTypes = () => {
             setModalOpen(false);
             setFormData({ name: '', description: '', is_active: true, is_inventory: false });
             fetchReceiptTypes(currentPage);
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Thao tác thất bại');
         }
     };
 

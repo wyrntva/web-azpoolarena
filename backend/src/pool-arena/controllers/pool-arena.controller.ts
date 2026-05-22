@@ -34,11 +34,13 @@ export class PoolArenaController {
     @Query('skip') skipStr?: string,
     @Query('limit') limitStr?: string,
     @Query('search') search?: string,
+    @Query('rank') rank?: string,
+    @Query('gender') gender?: string,
   ) {
     const skip = skipStr ? parseInt(skipStr, 10) : 0;
     const limit = limitStr ? parseInt(limitStr, 10) : 50;
-    const [data, total] = await this.service.findAll(skip, limit, search);
-    return { data, meta: { total, skip, limit } };
+    const [data, total] = await this.service.findAll(skip, limit, search, rank, gender);
+    return { data, total, meta: { total, skip, limit } };
   }
 
   @Get('rankings')

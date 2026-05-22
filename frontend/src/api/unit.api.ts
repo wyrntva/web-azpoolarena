@@ -8,7 +8,7 @@ interface CreateUnitData {
     abbreviation?: string;
 }
 
-interface UpdateUnitData extends Partial<CreateUnitData> { }
+type UpdateUnitData = Partial<CreateUnitData>;
 
 export const unitAPI = {
     getAll: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<PaginatedResponse<Unit>>> => {

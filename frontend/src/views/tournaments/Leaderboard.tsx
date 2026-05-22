@@ -23,7 +23,7 @@ const Leaderboard = () => {
                     (a, b) => (b.points ?? 0) - (a.points ?? 0)
                 );
                 setCustomers(sortedData);
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Không thể tải bảng xếp hạng');
             } finally {
                 setLoading(false);

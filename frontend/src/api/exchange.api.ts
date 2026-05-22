@@ -3,13 +3,6 @@ import type { AxiosResponse } from 'axios';
 import type { Exchange } from '../types/api';
 import type { PaginatedResponse } from '../types/pagination';
 
-interface ExchangeQueryParams {
-    start_date?: string;
-    end_date?: string;
-    page?: number;
-    page_size?: number;
-}
-
 interface CreateExchangeData {
     exchange_date: string;
     amount: number;
@@ -18,7 +11,7 @@ interface CreateExchangeData {
     note?: string;
 }
 
-interface UpdateExchangeData extends Partial<CreateExchangeData> { }
+type UpdateExchangeData = Partial<CreateExchangeData>;
 
 export const exchangeAPI = {
     getAll: (params?: { start_date?: string; end_date?: string; skip?: number; limit?: number }): Promise<AxiosResponse<PaginatedResponse<Exchange>>> => {

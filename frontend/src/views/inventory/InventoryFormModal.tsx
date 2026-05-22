@@ -37,7 +37,7 @@ interface Props {
 }
 
 export default function InventoryFormModal({ open, onClose, isEditing, formData, onFormChange, onSubmit, units = [], categories = [] }: Props) {
-    const set = (field: keyof InventoryFormData, value: any) =>
+    const set = (field: keyof InventoryFormData, value: InventoryFormData[keyof InventoryFormData]) =>
         onFormChange({ ...formData, [field]: value });
 
     return (

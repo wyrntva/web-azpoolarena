@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Modal, Label, TextInput, Select, Badge, Tabs } from 'flowbite-react';
 import toast from 'react-hot-toast';
 import { inventoryAPI } from '../../api/inventory.api';
@@ -44,7 +44,7 @@ const InventoryTransaction = () => {
         try {
             const response = await inventoryAPI.getInventories({ page: 1, page_size: 1000 });
             setInventories(response.data.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách sản phẩm');
         } finally {
             setLoading(false);
@@ -86,7 +86,7 @@ const InventoryTransaction = () => {
         setFormData({ ...formData, items: newItems });
     };
 
-    const updateItem = (index: number, field: keyof TransactionItem, value: any) => {
+    const updateItem = (index: number, field: keyof TransactionItem, value: TransactionItem[keyof TransactionItem]) => {
         const newItems = [...formData.items];
         newItems[index] = { ...newItems[index], [field]: value };
         setFormData({ ...formData, items: newItems });
@@ -130,8 +130,9 @@ const InventoryTransaction = () => {
             }
             setModalOpen(false);
             fetchInventories();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Thao tác thất bại');
         }
     };
 
@@ -271,7 +272,7 @@ const InventoryTransaction = () => {
                                             <Label value="Đơn vị" />
                                             <Select
                                                 value={item.unit_type}
-                                                onChange={(e) => updateItem(index, 'unit_type', e.target.value)}
+                                                onChange={(e) => updateItem(index, 'unit_type', e.target.value as 'base' | 'large')}
                                                 required
                                             >
                                                 <option value="base">{product?.base_unit?.name || 'Cơ bản'}</option>
@@ -295,7 +296,7 @@ const InventoryTransaction = () => {
                                                     <Label value="P.Thức" />
                                                     <Select
                                                         value={item.payment_method}
-                                                        onChange={(e) => updateItem(index, 'payment_method', e.target.value)}
+                                                        onChange={(e) => updateItem(index, 'payment_method', e.target.value as 'cash' | 'bank')}
                                                         required
                                                     >
                                                         <option value="cash">Tiền mặt</option>
@@ -343,7 +344,7 @@ const InventoryTransaction = () => {
     );
 };
 
-const InventoryTable = ({ loading, inventories, columns }: { loading: boolean, inventories: Inventory[], columns: any[] }) => (
+const InventoryTable = ({ loading, inventories, columns }: { loading: boolean, inventories: Inventory[], columns: { title: string; render: (item: Inventory) => React.ReactNode }[] }) => (
     <div className="overflow-x-auto">
         <Table hoverable>
             <Table.Head>

@@ -53,7 +53,7 @@ const TableEditModal = ({ open, onClose, areaId, table, onSaved }: TableEditModa
             toast.success('Đã cập nhật thông tin bàn');
             onClose();
             onSaved();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể cập nhật thông tin bàn');
         } finally {
             setSaving(false);
@@ -77,7 +77,7 @@ const TableEditModal = ({ open, onClose, areaId, table, onSaved }: TableEditModa
             await areaAPI.updateTable(areaId, table.id, { device_code: newCode });
             toast.success('Đã tạo mã thiết bị mới');
             onSaved();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tạo mã mới');
             setFormData(prev => ({ ...prev, device_code: table.device_code || '' }));
         } finally {

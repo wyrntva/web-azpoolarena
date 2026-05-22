@@ -64,6 +64,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
     useEffect(() => {
         setRound1(round1Nos.map(n => toVM(createEmptyMatch(n, 'winners', 1))));
         setRound2(round2Nos.map(n => toVM(createEmptyMatch(n, 'winners', 2))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [size]);
 
     useEffect(() => {
@@ -86,6 +87,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             if (next[i].winner_id !== winner) { next[i] = { ...next[i], winner_id: winner }; changed = true; }
         }
         if (changed) setRound2(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round1]);
 
     // Auto-complete BYE matches when all available players have been assigned
@@ -128,6 +130,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             }
         }
         if (changed) setRound1(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round1, players.length]);
 
     const onChange = (round: 1 | 2, idx: number, field: keyof MatchVM, value: string) => {

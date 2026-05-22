@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Bracket Utilities — shared logic for Winners & Losers bracket tabs.
  *
@@ -377,7 +378,7 @@ export function MatchRowCommonCells({ match, round, idx, onFieldChange, players,
             </td>
             <td className="p-2">
                 <TextInput type="datetime-local" value={match.match_time}
-                    color={Boolean(match.match_time && tournament?.start_date && match.match_time.substring(0, 16).replace(' ', 'T') < tournament.start_date.substring(0, 16).replace(' ', 'T')) ? 'failure' : 'gray'}
+                    color={(match.match_time && tournament?.start_date && match.match_time.substring(0, 16).replace(' ', 'T') < tournament.start_date.substring(0, 16).replace(' ', 'T')) ? 'failure' : 'gray'}
                     min={getMinDatetimeLocal(tournament.start_date)}
                     onChange={(e) => onFieldChange(round, idx, 'match_time', e.target.value)}
                     sizing="sm" className="w-full" />

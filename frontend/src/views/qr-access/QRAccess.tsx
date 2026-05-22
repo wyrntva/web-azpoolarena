@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, Alert, Spinner } from 'flowbite-react';
 import { useSearchParams, useNavigate } from 'react-router';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+import axiosClient from '../../api/axiosClient.ts';
 
 const QRAccess = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [validating, setValidating] = useState(true);
-    const [validationResult, setValidationResult] = useState<any>(null);
+    const [validationResult, setValidationResult] = useState<{ valid: boolean; message?: string; error_code?: string; expires_in_seconds?: number } | null>(null);
     const [expiresIn, setExpiresIn] = useState<number | null>(null);
 
     const accessToken = searchParams.get('token');
@@ -27,13 +25,16 @@ const QRAccess = () => {
 
         validateToken();
 
-        const handleCopy = (e: any) => e.preventDefault();
+        const handleCopy = (e: Event) => e.preventDefault();
+        const handleContextMenu = (e: Event) => e.preventDefault();
         document.addEventListener('copy', handleCopy);
-        document.addEventListener('contextmenu', (e) => e.preventDefault());
+        document.addEventListener('contextmenu', handleContextMenu);
 
         return () => {
             document.removeEventListener('copy', handleCopy);
+            document.removeEventListener('contextmenu', handleContextMenu);
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [accessToken]);
 
     useEffect(() => {
@@ -59,8 +60,8 @@ const QRAccess = () => {
     const validateToken = async () => {
         setValidating(true);
         try {
-            const response = await axios.post(
-                `${API_BASE_URL}/api/qr-access/validate`,
+            const response = await axiosClient.post(
+                '/api/qr-access/validate',
                 { access_token: accessToken },
                 { timeout: 10000 }
             );
@@ -72,18 +73,19 @@ const QRAccess = () => {
                 setExpiresIn(result.expires_in_seconds);
 
                 try {
-                    await axios.post(`${API_BASE_URL}/api/qr-access/consume`, { access_token: accessToken });
-                } catch (e) { }
+                    await axiosClient.post('/api/qr-access/consume', { access_token: accessToken });
+                } catch { /* ignore */ }
 
                 setTimeout(() => {
                     navigate(`/mobile-attendance?token=${accessToken}&type=attendance`);
                 }, 2000);
             }
-        } catch (error: any) {
+        } catch (error) {
+            const err = error as { response?: { data?: { message?: string; error_code?: string } } };
             setValidationResult({
                 valid: false,
-                message: error.response?.data?.message || 'Không thể xác thực mã QR',
-                error_code: error.response?.data?.error_code || 'VALIDATION_ERROR',
+                message: err.response?.data?.message || 'Không thể xác thực mã QR',
+                error_code: err.response?.data?.error_code || 'VALIDATION_ERROR',
             });
         } finally {
             setValidating(false);

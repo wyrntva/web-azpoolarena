@@ -19,7 +19,7 @@ const AttendanceSettings = () => {
             setFetching(true);
             const response = await attendanceSettingsAPI.get();
             setSettings(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải thiết lập chấm công');
         } finally {
             setFetching(false);
@@ -28,13 +28,12 @@ const AttendanceSettings = () => {
 
     const handleSave = async () => {
         if (!settings) return;
+        if (settings.penalty_tiers.length === 0) {
+            toast.error('Phải có ít nhất 1 mức phạt');
+            return;
+        }
         setLoading(true);
         try {
-            // Basic validation
-            if (settings.penalty_tiers.length === 0) {
-                toast.error('Phải có ít nhất 1 mức phạt');
-                return;
-            }
 
             // Clean up empty strings to 0
             const sanitizedSettings = {
@@ -45,7 +44,7 @@ const AttendanceSettings = () => {
                 missing_checkout_penalty: Number(settings.missing_checkout_penalty) || 0,
                 absent_penalty: Number(settings.absent_penalty) || 0,
                 penalty_tiers: settings.penalty_tiers.map(tier => ({
-                    max_minutes: tier.max_minutes === null || tier.max_minutes as any === '' ? null : Number(tier.max_minutes) || 0,
+                    max_minutes: tier.max_minutes === null || (tier.max_minutes as unknown) === '' ? null : Number(tier.max_minutes) || 0,
                     penalty_amount: Number(tier.penalty_amount) || 0
                 }))
             };
@@ -53,8 +52,9 @@ const AttendanceSettings = () => {
             await attendanceSettingsAPI.update(sanitizedSettings);
             toast.success('Cập nhật thành công');
             fetchSettings();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Lỗi khi lưu thiết lập');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Lỗi khi lưu thiết lập');
         } finally {
             setLoading(false);
         }
@@ -72,7 +72,7 @@ const AttendanceSettings = () => {
         setSettings({ ...settings, penalty_tiers: newTiers });
     };
 
-    const updateTier = (index: number, field: keyof PenaltyTier, value: any) => {
+    const updateTier = (index: number, field: keyof PenaltyTier, value: number | null | string) => {
         if (!settings) return;
         const newTiers = [...settings.penalty_tiers];
         newTiers[index] = { ...newTiers[index], [field]: value };
@@ -110,7 +110,7 @@ const AttendanceSettings = () => {
                                         type="number"
                                         className="flex-1"
                                         value={settings?.allowed_late_minutes ?? ''}
-                                        onChange={(e) => setSettings({ ...settings!, allowed_late_minutes: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                        onChange={(e) => setSettings({ ...settings!, allowed_late_minutes: (e.target.value === '' ? '' : parseInt(e.target.value)) as unknown as number })}
                                     />
                                     <span className="text-sm text-gray-500">phút</span>
                                 </div>
@@ -181,7 +181,7 @@ const AttendanceSettings = () => {
                                         <TextInput
                                             type="number"
                                             value={settings?.early_checkout_grace_minutes ?? ''}
-                                            onChange={(e) => setSettings({ ...settings!, early_checkout_grace_minutes: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                            onChange={(e) => setSettings({ ...settings!, early_checkout_grace_minutes: (e.target.value === '' ? '' : parseInt(e.target.value)) as unknown as number })}
                                         />
                                     </div>
                                     <div>
@@ -191,7 +191,7 @@ const AttendanceSettings = () => {
                                                 type="number"
                                                 className="flex-1"
                                                 value={settings?.early_checkout_penalty ?? ''}
-                                                onChange={(e) => setSettings({ ...settings!, early_checkout_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                                onChange={(e) => setSettings({ ...settings!, early_checkout_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as unknown as number })}
                                             />
                                             <span className="text-sm text-gray-500">đ</span>
                                         </div>
@@ -208,7 +208,7 @@ const AttendanceSettings = () => {
                                                 type="number"
                                                 className="flex-1"
                                                 value={settings?.absent_penalty ?? ''}
-                                                onChange={(e) => setSettings({ ...settings!, absent_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                                onChange={(e) => setSettings({ ...settings!, absent_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as unknown as number })}
                                             />
                                             <span className="text-sm text-gray-500">đ</span>
                                         </div>
@@ -220,7 +220,7 @@ const AttendanceSettings = () => {
                                                 type="number"
                                                 className="flex-1"
                                                 value={settings?.missing_checkout_penalty ?? ''}
-                                                onChange={(e) => setSettings({ ...settings!, missing_checkout_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as any })}
+                                                onChange={(e) => setSettings({ ...settings!, missing_checkout_penalty: (e.target.value === '' ? '' : parseInt(e.target.value)) as unknown as number })}
                                             />
                                             <span className="text-sm text-gray-500">đ</span>
                                         </div>
@@ -249,10 +249,15 @@ const AttendanceSettings = () => {
                             <div className="space-y-1">
                                 <span className="text-xs text-gray-500">Mức phạt đi muộn:</span>
                                 {settings?.penalty_tiers.map((t, i) => {
-                                    const prevMax = i === 0 ? (settings.allowed_late_minutes || 0) : (settings.penalty_tiers[i-1].max_minutes || 0);
-                                    const text = t.max_minutes 
-                                        ? `Từ ${prevMax + 1} đến ${t.max_minutes} phút:`
-                                        : `Trên ${prevMax} phút:`;
+                                    const prevTierMax = i === 0 ? null : settings.penalty_tiers[i - 1].max_minutes;
+                                    const prevMax = i === 0
+                                        ? (settings.allowed_late_minutes || 0)
+                                        : (prevTierMax ?? null);
+                                    const text = prevMax === null
+                                        ? `Mức ${i + 1} (không giới hạn):`
+                                        : t.max_minutes
+                                            ? `Từ ${prevMax + 1} đến ${t.max_minutes} phút:`
+                                            : `Trên ${prevMax} phút:`;
                                     return (
                                         <div key={i} className="flex justify-between pl-2">
                                             <span>{text}</span>

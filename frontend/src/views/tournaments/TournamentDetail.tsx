@@ -46,8 +46,8 @@ const TournamentDetail = () => {
             if (!dirtyRef.current) { // Double-check after async call
                 setBracketMatches(Array.isArray(res.data) ? res.data : []);
             }
-        } catch (error) {
-            // silent error on poll
+        } catch {
+            /* silent error on poll */
         }
     };
 
@@ -55,6 +55,7 @@ const TournamentDetail = () => {
         if (id) {
             fetchTournament();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const fetchTournament = async () => {
@@ -70,7 +71,7 @@ const TournamentDetail = () => {
             }
 
             await Promise.all([fetchRegisteredPlayers(response.data.id), fetchBracket(response.data.id)]);
-        } catch (error: any) {
+        } catch (_error) {
             toast.error('Không thể tải thông tin giải đấu');
         } finally {
             setLoading(false);
@@ -82,7 +83,7 @@ const TournamentDetail = () => {
             setPlayersLoading(true);
             const res = await tournamentAPI.getRegistrations(tournamentId);
             setRegisteredPlayers(Array.isArray(res.data) ? res.data : []);
-        } catch (error: any) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách đăng kí');
             setRegisteredPlayers([]);
         } finally {
@@ -95,7 +96,7 @@ const TournamentDetail = () => {
             setBracketLoading(true);
             const res = await tournamentAPI.getBracket(tournamentId);
             setBracketMatches(Array.isArray(res.data) ? res.data : []);
-        } catch (error: any) {
+        } catch (_error) {
             toast.error('Không thể tải bảng đấu');
             setBracketMatches([]);
         } finally {

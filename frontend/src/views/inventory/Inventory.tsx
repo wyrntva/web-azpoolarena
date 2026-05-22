@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import { inventoryAPI } from '../../api/inventory.api';
 import { unitAPI } from '../../api/unit.api';
 import { receiptTypeAPI } from '../../api/receiptType.api';
-import CustomPagination from '../../components/shared/CustomPagination';
 import InventoryFormModal, { type InventoryFormData } from './InventoryFormModal';
 
 interface Unit { id: number; name: string; }
@@ -44,12 +43,17 @@ const Inventory = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [filters, setFilters] = useState({ search: '', status: '' });
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, _setCurrentPage] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [formData, setFormData] = useState<InventoryFormData>(INITIAL_FORM);
     const itemsPerPage = 50;
 
-    useEffect(() => { fetchInventories(); fetchUnits(); fetchCategories(); }, [filters, currentPage]);
+    useEffect(() => {
+        fetchInventories();
+        fetchUnits();
+        fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters, currentPage]);
 
     const fetchInventories = async () => {
         setLoading(true);
@@ -70,7 +74,7 @@ const Inventory = () => {
     };
 
     const fetchCategories = async () => {
-        try { setCategories((await receiptTypeAPI.getAll()).data.data.filter((c: any) => c.is_inventory)); }
+        try { setCategories((await receiptTypeAPI.getAll()).data.data.filter((c: { is_inventory?: boolean }) => c.is_inventory)); }
         catch { toast.error('Không thể tải danh sách danh mục'); }
     };
 
@@ -94,7 +98,7 @@ const Inventory = () => {
     const handleDelete = async (id: number) => {
         if (!window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
         try { await inventoryAPI.deleteInventory(id); toast.success('Xóa sản phẩm thành công'); fetchInventories(); }
-        catch (e: any) { toast.error(e.response?.data?.detail || 'Xóa sản phẩm thất bại'); }
+        catch (e) { toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Xóa sản phẩm thất bại'); }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -106,7 +110,7 @@ const Inventory = () => {
             if (editingId) { await inventoryAPI.updateInventory(editingId, formData); toast.success('Cập nhật sản phẩm thành công'); }
             else { await inventoryAPI.createInventory(formData); toast.success('Thêm sản phẩm thành công'); }
             setModalOpen(false); fetchInventories();
-        } catch (e: any) { toast.error(e.response?.data?.detail || 'Thao tác thất bại'); }
+        } catch (e) { toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Thao tác thất bại'); }
     };
 
     const stats = {
@@ -216,7 +220,7 @@ function InventoryRow({ item, onEdit, onDelete }: { item: InventoryItem; onEdit:
                 )}
             </Table.Cell>
             <Table.Cell>
-                <Badge color={badge.color as any}>{badge.label}</Badge>
+                <Badge color={badge.color as 'success' | 'warning' | 'failure'}>{badge.label}</Badge>
             </Table.Cell>
             <Table.Cell>
                 <div className="flex gap-2">

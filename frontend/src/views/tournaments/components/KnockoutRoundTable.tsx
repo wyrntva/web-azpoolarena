@@ -1,6 +1,4 @@
 import React from 'react';
-import { Select, TextInput } from 'flowbite-react';
-import { TournamentRegisteredPlayer } from '../../../api/tournament.api';
 import { MatchVM } from './knockoutHelpers';
 
 export interface Column {

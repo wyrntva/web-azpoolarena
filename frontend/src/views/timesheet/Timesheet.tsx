@@ -7,15 +7,16 @@ import { userAPI } from '../../api/user.api';
 import { useAuth } from '../../auth/AuthContext';
 import { isAdmin } from '../../auth/roles';
 import { formatDate } from '../../utils/formatters';
+import type { Attendance, WorkSchedule, User } from '../../types/api';
 
 const Timesheet = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
-    const [attendances, setAttendances] = useState<any[]>([]);
-    const [schedules, setSchedules] = useState<any[]>([]);
-    const [employees, setEmployees] = useState<any[]>([]);
+    const [attendances, setAttendances] = useState<Attendance[]>([]);
+    const [schedules, setSchedules] = useState<WorkSchedule[]>([]);
+    const [employees, setEmployees] = useState<User[]>([]);
     const [selectedDate, setSelectedDate] = useState(dayjs());
-    const [selectedCell, setSelectedCell] = useState<{ attendance: any, employee: any, date: string, schedule: any } | null>(null);
+    const [selectedCell, setSelectedCell] = useState<{ attendance: Attendance | undefined, employee: User, date: string, schedule: WorkSchedule | undefined } | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [editForm, setEditForm] = useState({
@@ -31,7 +32,7 @@ const Timesheet = () => {
     }, [selectedDate]);
 
     const attendanceMap = useMemo(() => {
-        const map: any = {};
+        const map: Record<string, Attendance> = {};
         attendances.forEach((a) => {
             map[`${a.user_id}_${a.date}`] = a;
         });
@@ -39,7 +40,7 @@ const Timesheet = () => {
     }, [attendances]);
 
     const scheduleMap = useMemo(() => {
-        const map: any = {};
+        const map: Record<string, WorkSchedule> = {};
         schedules.forEach((s) => {
             map[`${s.user_id}_${s.work_date}`] = s;
         });
@@ -48,14 +49,18 @@ const Timesheet = () => {
 
     useEffect(() => {
         fetchEmployees();
+    }, []);
+
+    useEffect(() => {
         fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDate]);
 
     const fetchEmployees = async () => {
         try {
             const response = await userAPI.getUsers();
             setEmployees(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách nhân viên');
         }
     };
@@ -72,20 +77,20 @@ const Timesheet = () => {
             ]);
             setAttendances(attRes.data.items || []);
             setSchedules(schedRes.data || []);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải dữ liệu chấm công');
         } finally {
             setLoading(false);
         }
     };
 
-    const getWeekDates = () => {
-        return Array.from({ length: 7 }, (_, i) => mondayDate.add(i, 'day'));
-    };
+    const weekDates = useMemo(
+        () => Array.from({ length: 7 }, (_, i) => mondayDate.add(i, 'day')),
+        [mondayDate]
+    );
 
-    const weekDates = getWeekDates();
     const displayEmployees = useMemo(() => {
-        return employees.filter((u: any) => {
+        return employees.filter((u) => {
             if (u.role?.requires_timekeeping === false) return false;
 
             const hasData = attendances.some(a => a.user_id === u.id) || schedules.some(s => s.user_id === u.id);
@@ -93,10 +98,10 @@ const Timesheet = () => {
 
             return u.is_active;
         });
-    }, [employees, attendances, schedules, mondayDate]);
+    }, [employees, attendances, schedules]);
 
 
-    const handleCellClick = (employee: any, date: dayjs.Dayjs) => {
+    const handleCellClick = (employee: User, date: dayjs.Dayjs) => {
         if (!isManager) return; // Only managers can edit attendances
         const dateStr = date.format('YYYY-MM-DD');
         const attendance = attendanceMap[`${employee.id}_${dateStr}`];
@@ -122,30 +127,35 @@ const Timesheet = () => {
             toast.error('Vui lòng nhập giờ vào hoặc giờ ra');
             return;
         }
-
-        const payload = {
-            check_in_time: buildDateTime(selectedCell.date, editForm.check_in_time),
-            check_out_time: buildDateTime(selectedCell.date, editForm.check_out_time),
-            notes: editForm.notes?.trim() || null,
-        };
+        if (!selectedCell.attendance && !editForm.check_in_time) {
+            toast.error('Vui lòng nhập giờ vào khi tạo mới chấm công');
+            return;
+        }
 
         setSaving(true);
         try {
             if (selectedCell.attendance) {
-                await attendanceAPI.updateAttendance(selectedCell.attendance.id, payload);
+                await attendanceAPI.updateAttendance(selectedCell.attendance.id, {
+                    check_in_time: buildDateTime(selectedCell.date, editForm.check_in_time) ?? undefined,
+                    check_out_time: buildDateTime(selectedCell.date, editForm.check_out_time) ?? undefined,
+                    notes: editForm.notes?.trim() || undefined,
+                });
                 toast.success('Cập nhật chấm công thành công');
             } else {
                 await attendanceAPI.createManualAttendance({
                     user_id: selectedCell.employee.id,
                     date: selectedCell.date,
-                    ...payload,
+                    check_in_time: buildDateTime(selectedCell.date, editForm.check_in_time)!,
+                    check_out_time: buildDateTime(selectedCell.date, editForm.check_out_time) ?? undefined,
+                    notes: editForm.notes?.trim() || undefined,
                 });
                 toast.success('Tạo chấm công thành công');
             }
             setModalOpen(false);
             fetchData();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Cập nhật chấm công thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Cập nhật chấm công thất bại');
         } finally {
             setSaving(false);
         }

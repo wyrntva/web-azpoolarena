@@ -19,7 +19,7 @@ const MobileSidebar = () => {
 
   // Filter menu items based on roles
   const filteredSidebarContent = SidebarContent.map(group => {
-    if (!user || (user as any).role_id === 1) return group; // Admin sees all
+    if (!user || (user as unknown as { role_id?: number }).role_id === 1) return group; // Admin sees all
 
     // Others (Shift Leader, Employee) only see specific routes
     const allowedUrls = ['/timesheet', '/work-schedule', '/payroll'];
@@ -45,13 +45,14 @@ const MobileSidebar = () => {
     filteredSidebarContent.forEach((group) => {
       group.children?.forEach((child) => {
         if (child.children) {
-          const isActive = child.children.some((subChild: any) => subChild.url === pathname);
+          const isActive = child.children.some((subChild) => subChild.url === pathname);
           if (isActive) {
             setOpenItem(child.name || null);
           }
         }
       });
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   const handleToggle = (name: string) => {

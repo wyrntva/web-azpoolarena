@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Product Form sub-components — field sections used by ProductFormModal.
  * Extracted to reduce ProductFormModal.tsx line count and improve reusability.
@@ -325,7 +326,7 @@ export function AvatarSection({ showColorPicker, setShowColorPicker, selectedCol
     );
 }
 
-export function CategoryField({ categories, formData, setFormData }: { categories: any[] } & FormProps) {
+export function CategoryField({ categories, formData, setFormData }: { categories: { id: number; name: string }[] } & FormProps) {
     return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
             <div className="mb-2 block"><Label htmlFor="category" value="Danh mục" className="font-semibold" /></div>
@@ -338,7 +339,7 @@ export function CategoryField({ categories, formData, setFormData }: { categorie
     );
 }
 
-export function MenuField({ menus, formData, setFormData }: { menus: any[] } & FormProps) {
+export function MenuField({ menus, formData, setFormData }: { menus: { id: number; name: string }[] } & FormProps) {
     return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
             <div className="mb-2 block"><Label htmlFor="menu" value="Thực đơn" className="font-semibold" /></div>

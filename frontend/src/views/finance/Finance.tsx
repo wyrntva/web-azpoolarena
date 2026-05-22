@@ -26,7 +26,11 @@ const Finance = () => {
     end: dayjs().endOf('month').format('YYYY-MM-DD'),
   });
 
-  useEffect(() => { fetchReceiptTypes(); fetchReceipts(); }, [dateRange]);
+  useEffect(() => {
+    fetchReceiptTypes();
+    fetchReceipts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange]);
 
   const fetchReceiptTypes = async () => {
     try { setReceiptTypes((await receiptTypeAPI.getAll({ limit: 1000, skip: 0 })).data.data); }
@@ -58,7 +62,7 @@ const Finance = () => {
   const handleDelete = async (id: number) => {
     if (!window.confirm('Bạn có chắc muốn xóa phiếu này?')) return;
     try { await receiptAPI.delete(id); toast.success('Xóa phiếu thành công'); fetchReceipts(); }
-    catch (e: any) { toast.error(e.response?.data?.detail || 'Xóa phiếu thất bại'); }
+    catch (e) { toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Xóa phiếu thất bại'); }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +72,7 @@ const Finance = () => {
       if (editingId) { await receiptAPI.update(editingId, formData); toast.success('Cập nhật phiếu thành công'); }
       else { await receiptAPI.create(formData); toast.success('Thêm phiếu thành công'); }
       setModalOpen(false); fetchReceipts();
-    } catch (e: any) { toast.error(e.response?.data?.detail || 'Thao tác thất bại'); }
+    } catch (e) { toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Thao tác thất bại'); }
   };
 
   const totals = receipts.reduce(

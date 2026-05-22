@@ -49,9 +49,9 @@ export function formatDateForInput(dateString: string | null | undefined): strin
 export function convertFormDataToAPI(
     data: TournamentFormData,
     isUpdate = false,
-    existingTournament?: any,
-): Record<string, any> {
-    const apiData: any = {
+    existingTournament?: Record<string, unknown>,
+): Record<string, unknown> {
+    const apiData: Record<string, unknown> = {
         name: data.name,
         slug: data.slug,
         display: data.display,
@@ -98,21 +98,21 @@ export function convertFormDataToAPI(
 
     // --- Image fields ---
     const resolveImageField = (
-        value: any,
-        fallback: any,
+        value: unknown,
+        fallback: unknown,
     ) => (typeof value === 'string' && value.trim() !== '') ? value : (fallback || null);
 
     if (isUpdate && existingTournament) {
         apiData.banner = resolveImageField(data.banner, existingTournament.banner);
         apiData.organizer_logo = resolveImageField(data.organizer_logo, null);
         apiData.sponsor_logos = (data.sponsor_logos?.length > 0)
-            ? data.sponsor_logos.filter((l: any) => typeof l === 'string' && l.trim() !== '')
+            ? data.sponsor_logos.filter((l: unknown) => typeof l === 'string' && (l as string).trim() !== '')
             : [];
     } else {
         apiData.banner = resolveImageField(data.banner, null);
         apiData.organizer_logo = resolveImageField(data.organizer_logo, null);
         apiData.sponsor_logos = (data.sponsor_logos?.length > 0)
-            ? data.sponsor_logos.filter((l: any) => typeof l === 'string' && l.trim() !== '')
+            ? data.sponsor_logos.filter((l: unknown) => typeof l === 'string' && (l as string).trim() !== '')
             : [];
     }
 
@@ -123,7 +123,7 @@ export function convertFormDataToAPI(
             'banner', 'organizer_logo', 'sponsor_logos',
         ];
 
-        const updateData: any = {};
+        const updateData: Record<string, unknown> = {};
         Object.keys(apiData).forEach(key => {
             if (apiData[key] !== undefined) updateData[key] = apiData[key];
         });

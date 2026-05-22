@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { menuAPI, MenuApiResponse } from '../api/menu.api';
 import toast from 'react-hot-toast';
@@ -40,7 +41,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(true);
             const response = await menuAPI.getAll();
             setMenus(response.data.map(mapApiResponseToMenu));
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách thực đơn');
         } finally {
             setLoading(false);
@@ -118,9 +119,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ? menu.productIds
                 : [...menu.productIds, productId];
             await updateMenu(menuId, { productIds: updatedProductIds });
-        } catch (error) {
-            // Error handled in updateMenu
-        }
+        } catch { /* Error handled in updateMenu */ }
     };
 
     const removeProductFromMenu = async (menuId: number, productId: number) => {
@@ -130,9 +129,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const updatedProductIds = menu.productIds.filter(id => id !== productId);
             await updateMenu(menuId, { productIds: updatedProductIds });
-        } catch (error) {
-            // Error handled in updateMenu
-        }
+        } catch { /* Error handled in updateMenu */ }
     };
 
     const reorderMenus = async (sourceIndex: number, destinationIndex: number) => {
@@ -152,7 +149,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         try {
             await menuAPI.reorder(reorderData);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể lưu thứ tự thực đơn');
             setMenus(originalMenus); // Rollback on failure
         }

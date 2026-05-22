@@ -53,7 +53,7 @@ export const AdminRoute = ({ children }: { children: ReactNode }) => {
     if (!isAuthenticated) return <Navigate to="/auth/login" replace />;
     
     // Only Admin (role_id 1)
-    if (user && (user as any).role_id !== 1 && !user.is_admin) {
+    if (user && (user as unknown as { role_id?: number }).role_id !== 1 && !user.is_admin) {
         return <Navigate to="/timesheet" replace />;
     }
     return <>{children}</>;
@@ -65,7 +65,7 @@ export const ManagerRoute = ({ children }: { children: ReactNode }) => {
     if (!isAuthenticated) return <Navigate to="/auth/login" replace />;
     
     // Admin (1) or Shift Leader (2)
-    if (user && !user.is_admin && ![1, 2].includes((user as any).role_id)) {
+    if (user && !user.is_admin && ![1, 2].includes((user as unknown as { role_id?: number }).role_id ?? -1)) {
         return <Navigate to="/timesheet" replace />;
     }
     return <>{children}</>;

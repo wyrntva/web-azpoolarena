@@ -34,7 +34,7 @@ const Settings = () => {
     const [storeInfoModalOpen, setStoreInfoModalOpen] = useState(false);
     const [socialMediaModalOpen, setSocialMediaModalOpen] = useState(false);
     const [bannerModalOpen, setBannerModalOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [_loading, setLoading] = useState(false);
     const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
     const [storeInfo, setStoreInfo] = useState<StoreInfo>(DEFAULT_STORE_INFO);
     const [socialMediaInfo, setSocialMediaInfo] = useState<SocialMediaInfo>(DEFAULT_SOCIAL_MEDIA);
@@ -72,7 +72,7 @@ const Settings = () => {
                 gmail: settings.gmail || '',
                 address: settings.social_address || '',
             });
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải thông tin cửa hàng');
         } finally {
             setLoading(false);
@@ -97,7 +97,7 @@ const Settings = () => {
             toast.success('Đã lưu thông tin cửa hàng');
             setStoreInfoModalOpen(false);
             await loadStoreSettings();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể lưu thông tin cửa hàng');
         } finally {
             setLoading(false);
@@ -118,7 +118,7 @@ const Settings = () => {
             toast.success('Đã lưu thông tin mạng xã hội');
             setSocialMediaModalOpen(false);
             await loadStoreSettings();
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể lưu thông tin mạng xã hội');
         } finally {
             setLoading(false);

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * Tournament Round Form Modal — create/edit tournament round settings.
  * Extracted from TournamentsTab.tsx for maintainability.

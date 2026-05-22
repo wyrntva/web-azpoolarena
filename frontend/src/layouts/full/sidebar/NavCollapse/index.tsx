@@ -13,7 +13,7 @@ interface NavCollapseProps {
   isChild?: boolean;
 }
 
-const NavCollapse: React.FC<NavCollapseProps> = ({ item, isOpen: controlledOpen, onToggle, isChild }: any) => {
+const NavCollapse: React.FC<NavCollapseProps> = ({ item, isOpen: controlledOpen, onToggle, isChild }: NavCollapseProps) => {
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -47,7 +47,7 @@ const NavCollapse: React.FC<NavCollapseProps> = ({ item, isOpen: controlledOpen,
     <CustomCollapse
       label={`${item.name}`}
       open={isOpen}
-      onClick={(e: any) => handleToggle(e)}
+      onClick={(e: React.MouseEvent) => handleToggle(e)}
       icon={item.icon}
       isPro={item.isPro}
       isChild={isChild}
@@ -60,7 +60,7 @@ const NavCollapse: React.FC<NavCollapseProps> = ({ item, isOpen: controlledOpen,
       {/* Render child items */}
       {item.children && (
         <div className="sidebar-dropdown">
-          {item.children.map((child: any) => (
+          {item.children.map((child) => (
             <React.Fragment key={child.id}>
               {child.children ? (
                 <NavCollapse item={child} isChild={true} /> // Nested collapses don't get onToggle, so they use internal state

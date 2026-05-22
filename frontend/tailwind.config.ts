@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const flowbite = require("flowbite-react/tailwind");
 
 const config: Config = {
@@ -120,6 +121,7 @@ const config: Config = {
   },
   plugins: [
     //Add Flowbite Plugin
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require("flowbite/plugin"),
   ],
 };

@@ -6,24 +6,11 @@ import CustomPagination from '../../../components/shared/CustomPagination';
 import { tournamentSettingsAPI } from '../../../api/tournamentSettings.api';
 import type { TournamentRound } from '../../../types/api';
 import RoundFormModal, { type RoundFormData, DEFAULT_ROUND_FORM } from '../components/RoundFormModal';
-import { TOURNAMENT_TYPE_MAP as SHARED_TYPE_MAP } from '../../../constants/shared';
 
 // ============================================
 // HELPERS
 // ============================================
 
-// Extend shared map with settings-specific types
-const SETTINGS_TYPE_MAP: Record<string, string> = {
-    ...SHARED_TYPE_MAP,
-    'round_robin': 'Vòng tròn',
-    'swiss': 'Thụy Sĩ',
-    'single_elimination': 'Loại trực tiếp đơn',
-};
-
-function getTournamentTypeLabel(type: string | null | undefined): string {
-    if (!type) return '-';
-    return SETTINGS_TYPE_MAP[type] || type;
-}
 
 // ============================================
 // COMPONENT
@@ -51,8 +38,8 @@ const TournamentsTab = () => {
             const response = await tournamentSettingsAPI.getRounds();
             setTournamentRounds(response.data || []);
             setCurrentPage(1);
-        } catch (error: any) {
-            toast.error(error?.response?.data?.detail || 'Không thể tải danh sách giải đấu');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tải danh sách giải đấu');
         } finally {
             setLoading(false);
         }
@@ -85,8 +72,8 @@ const TournamentsTab = () => {
                 await tournamentSettingsAPI.deleteRound(id);
                 toast.success('Xóa giải đấu thành công');
                 fetchRounds();
-            } catch (error: any) {
-                toast.error(error?.response?.data?.detail || 'Không thể xóa giải đấu');
+            } catch (error) {
+                toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể xóa giải đấu');
             }
         }
     };
@@ -107,8 +94,8 @@ const TournamentsTab = () => {
             }
             setModalOpen(false);
             fetchRounds();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.detail || 'Không thể lưu giải đấu');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể lưu giải đấu');
         }
     };
 

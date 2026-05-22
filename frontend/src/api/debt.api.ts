@@ -17,7 +17,7 @@ interface CreateDebtData {
     is_paid?: boolean;
 }
 
-interface UpdateDebtData extends Partial<CreateDebtData> { }
+type UpdateDebtData = Partial<CreateDebtData>;
 
 export const debtAPI = {
     getDebts: (params?: DebtQueryParams): Promise<AxiosResponse<PaginatedResponse<Debt>>> => {

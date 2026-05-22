@@ -33,8 +33,9 @@ const ChangePassword = () => {
             await userAPI.changeMyPassword(oldPassword, password);
             toast.success('Đổi mật khẩu thành công!');
             navigate('/');
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Lỗi khi đổi mật khẩu!');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+            toast.error(detail || 'Lỗi khi đổi mật khẩu!');
         } finally {
             setLoading(false);
         }

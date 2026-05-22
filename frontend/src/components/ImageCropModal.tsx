@@ -108,7 +108,8 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
             );
             onCropComplete(croppedImage);
             onClose();
-        } catch (e) {
+        } catch {
+            // ignore
         }
     };
 

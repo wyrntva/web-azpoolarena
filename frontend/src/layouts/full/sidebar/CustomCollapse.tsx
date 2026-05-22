@@ -7,7 +7,7 @@ import React from "react";
 const CustomCollapse: React.FC<{
   label: string;
   open: boolean;
-  children: any;
+  children: React.ReactNode;
   onClick: (e: React.MouseEvent) => void;
   icon: string;
   className?: string;

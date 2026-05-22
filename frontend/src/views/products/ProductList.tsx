@@ -36,7 +36,7 @@ const ProductList = () => {
             try {
                 const response = await unitAPI.getAll({ skip: 0, limit: 100 });
                 setUnits(response.data.data);
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Không thể tải danh sách đơn vị');
             }
         };
@@ -50,7 +50,7 @@ const ProductList = () => {
                 const inventoryCats = response.data.data.filter((cat) => cat.is_inventory);
                 setInventoryCategories(inventoryCats);
                 if (inventoryCats.length > 0) setInventoryCategoryId(inventoryCats[0].id);
-            } catch (error) {
+            } catch (_error) {
                 toast.error('Không thể tải danh mục kho hàng');
             }
         };

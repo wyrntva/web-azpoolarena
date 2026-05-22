@@ -5,11 +5,23 @@ import dayjs from 'dayjs';
 
 type ColorType = 'blue' | 'green' | 'failure' | 'warning';
 
+interface PayrollItemRecord {
+    id: number;
+    user_id?: number;
+    date?: string;
+    amount?: number;
+    notes?: string;
+    employee_name?: string;
+    created_by_name?: string;
+}
+
 interface PayrollItemAPI {
-    getAll: (params?: any) => Promise<{ data: any[] }>;
-    create: (data: any) => Promise<any>;
-    update: (id: number, data: any) => Promise<any>;
-    delete: (id: number) => Promise<any>;
+    getAll: (params?: Record<string, string>) => Promise<{ data: PayrollItemRecord[] }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    create: (data: any) => Promise<unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    update: (id: number, data: any) => Promise<unknown>;
+    delete: (id: number) => Promise<unknown>;
 }
 
 interface PayrollItemManagerProps {

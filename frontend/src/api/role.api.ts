@@ -8,10 +8,10 @@ interface CreateRoleData {
     requires_timekeeping?: boolean;
 }
 
-interface UpdateRoleData extends Partial<CreateRoleData> { }
+type UpdateRoleData = Partial<CreateRoleData>;
 
 export const roleAPI = {
-    getRoles: (params?: Record<string, any>): Promise<AxiosResponse<Role[]>> => {
+    getRoles: (params?: Record<string, unknown>): Promise<AxiosResponse<Role[]>> => {
         return axiosClient.get('/api/roles', { params });
     },
 

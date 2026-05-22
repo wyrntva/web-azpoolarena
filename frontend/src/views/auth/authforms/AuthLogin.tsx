@@ -28,7 +28,7 @@ const AuthLogin = () => {
         // Login failed, show error
         setError(result.error || "Đăng nhập thất bại!");
       }
-    } catch (err) {
+    } catch {
       setError("Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại!");
     } finally {
       setLoading(false);

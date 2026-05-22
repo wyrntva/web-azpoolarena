@@ -129,19 +129,19 @@ export class AttendanceEntity {
   check_out_time: Date | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  check_in_qr_token: string;
+  check_in_qr_token: string | null;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  check_out_qr_token: string;
+  check_out_qr_token: string | null;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
-  wifi_ssid: string;
+  wifi_ssid: string | null;
 
   @Column({ type: 'varchar', length: 17, nullable: true })
-  wifi_bssid: string;
+  wifi_bssid: string | null;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
-  ip_address: string;
+  ip_address: string | null;
 
   @Column({
     type: 'enum',

@@ -33,9 +33,9 @@ const WarehouseSetup = () => {
         try {
             const response = await receiptTypeAPI.getAll();
             // receiptTypeAPI.getAll returns PaginatedResponse<ReceiptType>
-            const inventoryCategories = response.data.data.filter((cat: any) => cat.is_inventory === true);
+            const inventoryCategories = response.data.data.filter((cat: Category) => cat.is_inventory === true);
             setCategories(inventoryCategories);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách danh mục');
         } finally {
             setLoading(false);
@@ -65,8 +65,8 @@ const WarehouseSetup = () => {
                 await receiptTypeAPI.delete(id);
                 toast.success('Xóa danh mục thành công');
                 fetchCategories();
-            } catch (error: any) {
-                toast.error(error.response?.data?.detail || 'Xóa danh mục thất bại');
+            } catch (error) {
+                toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Xóa danh mục thất bại');
             }
         }
     };
@@ -89,8 +89,8 @@ const WarehouseSetup = () => {
             }
             setModalOpen(false);
             fetchCategories();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Thao tác thất bại');
         }
     };
 

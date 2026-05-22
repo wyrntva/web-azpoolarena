@@ -46,8 +46,8 @@ const Staff = () => {
         setLoading(true);
         try {
             const response = await userAPI.getUsers();
-            setUsers(response.data as any);
-        } catch (error) {
+            setUsers(response.data as unknown as User[]);
+        } catch (_error) {
             toast.error('Không thể tải danh sách nhân viên');
         } finally {
             setLoading(false);
@@ -58,7 +58,7 @@ const Staff = () => {
         try {
             const response = await roleAPI.getRoles();
             setRoles(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách vai trò');
         }
     };
@@ -86,9 +86,9 @@ const Staff = () => {
     const handleEdit = async (user: User) => {
         try {
             const res = await userAPI.getUser(user.id);
-            setEditingUser(res.data as any);
+            setEditingUser(res.data as unknown as User);
             setModalOpen(true);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải thông tin chi tiết nhân viên');
         }
     };
@@ -99,8 +99,9 @@ const Staff = () => {
             await userAPI.deleteUser(id);
             toast.success('Xóa nhân viên thành công');
             fetchUsers();
-        } catch (error: any) {
-            const errorMsg = error.response?.data?.message || error.response?.data?.detail || 'Xóa nhân viên thất bại';
+        } catch (error) {
+            const errData = (error as { response?: { data?: { message?: string; detail?: string } } })?.response?.data;
+            const errorMsg = errData?.message || errData?.detail || 'Xóa nhân viên thất bại';
             toast.error(errorMsg);
         }
     };

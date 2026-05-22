@@ -23,6 +23,7 @@ const Revenues = () => {
 
     useEffect(() => {
         fetchRevenues();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateRange]);
 
     const fetchRevenues = async () => {
@@ -33,7 +34,7 @@ const Revenues = () => {
                 end_date: dateRange.end,
             });
             setRevenues(response.data.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách doanh thu');
         } finally {
             setLoading(false);
@@ -66,8 +67,9 @@ const Revenues = () => {
                 await revenueAPI.deleteRevenue(id);
                 toast.success('Xóa doanh thu thành công');
                 fetchRevenues();
-            } catch (error: any) {
-                toast.error(error.response?.data?.detail || 'Xóa doanh thu thất bại');
+            } catch (error) {
+                const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+                toast.error(detail || 'Xóa doanh thu thất bại');
             }
         }
     };
@@ -90,8 +92,9 @@ const Revenues = () => {
             }
             setModalOpen(false);
             fetchRevenues();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Thao tác thất bại');
         }
     };
 

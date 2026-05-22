@@ -1,3 +1,5 @@
+import type { ElementType } from 'react';
+
 export interface navItemProps {
   item: {
     icon: string;
@@ -14,8 +16,8 @@ export interface navItemProps {
 }
 
 export interface listItemType {
-  component: any;
+  component: ElementType;
   href?: string;
-  target?: any;
-  to?: any;
+  target?: string;
+  to?: string;
 }

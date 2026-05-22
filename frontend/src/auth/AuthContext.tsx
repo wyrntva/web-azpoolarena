@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authAPI } from '../api/auth.api';
 
@@ -39,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     if (isMounted) {
                         setUser(response.data);
                     }
-                } catch (error) {
+                } catch {
                     if (isMounted) {
                         logout();
                     }
@@ -69,8 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(userResponse.data);
 
             return { success: true };
-        } catch (error: any) {
-            const errorMessage = error.response?.data?.detail || 'Tài khoản không tồn tại hoặc sai mật khẩu!';
+        } catch (error) {
+            const errorMessage = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Tài khoản không tồn tại hoặc sai mật khẩu!';
             return { success: false, error: errorMessage };
         }
     };
@@ -78,8 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const logout = async () => {
         try {
             await authAPI.logout();
-        } catch (error) {
-        } finally {
+        } catch { /* ignore */ } finally {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('user');

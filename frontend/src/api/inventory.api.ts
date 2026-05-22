@@ -21,7 +21,54 @@ interface CreateInventoryData {
     conversion_rate?: number;
 }
 
-interface UpdateInventoryData extends Partial<CreateInventoryData> { }
+type UpdateInventoryData = Partial<CreateInventoryData>;
+
+interface InventoryInData {
+    import_date?: string;
+    note?: string;
+    items: {
+        inventory_id: number;
+        quantity: number;
+        unit_type?: 'base' | 'large';
+        price?: number;
+        payment_method?: 'cash' | 'bank';
+    }[];
+}
+
+interface InventoryOutData {
+    export_date?: string;
+    note?: string;
+    items: {
+        inventory_id: number;
+        quantity: number;
+        unit_type?: 'base' | 'large';
+    }[];
+}
+
+interface InventoryCheckData {
+    items: { inventory_id: number; actual_quantity: number; note?: string }[];
+    note?: string;
+    check_date?: string;
+}
+
+interface InventoryTransactionRecord {
+    id: number;
+    inventory_id: number;
+    transaction_type: 'in' | 'out';
+    quantity: number;
+    price?: number;
+    note?: string;
+    transaction_date: string;
+    created_by?: number;
+}
+
+interface InventoryCheckRecord {
+    id: number;
+    check_date: string;
+    note?: string;
+    items: { inventory_id: number; actual_quantity: number; note?: string }[];
+    created_by?: number;
+}
 
 export const inventoryAPI = {
     getAll: (params?: InventoryQueryParams): Promise<AxiosResponse<PaginatedResponse<Inventory>>> => {
@@ -66,27 +113,27 @@ export const inventoryAPI = {
     },
 
     // Transaction methods
-    createInventoryIn: (data: any): Promise<AxiosResponse<any>> => {
+    createInventoryIn: (data: InventoryInData): Promise<AxiosResponse<InventoryTransactionRecord>> => {
         return axiosClient.post('/api/inventory-in', data);
     },
 
-    createInventoryOut: (data: any): Promise<AxiosResponse<any>> => {
+    createInventoryOut: (data: InventoryOutData): Promise<AxiosResponse<InventoryTransactionRecord>> => {
         return axiosClient.post('/api/inventory-out', data);
     },
 
-    getInventoryIns: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<any[]>> => {
+    getInventoryIns: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<InventoryTransactionRecord[]>> => {
         return axiosClient.get('/api/inventory-in', { params });
     },
 
-    getInventoryOuts: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<any[]>> => {
+    getInventoryOuts: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<InventoryTransactionRecord[]>> => {
         return axiosClient.get('/api/inventory-out', { params });
     },
 
-    getInventoryChecks: (): Promise<AxiosResponse<any[]>> => {
+    getInventoryChecks: (): Promise<AxiosResponse<InventoryCheckRecord[]>> => {
         return axiosClient.get('/api/inventory-checks');
     },
 
-    createInventoryCheck: (data: any): Promise<AxiosResponse<any>> => {
+    createInventoryCheck: (data: InventoryCheckData): Promise<AxiosResponse<InventoryCheckRecord>> => {
         return axiosClient.post('/api/inventory-checks', data);
     },
 

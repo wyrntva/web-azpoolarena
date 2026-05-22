@@ -32,7 +32,7 @@ const ExpenseReport = () => {
         try {
             const response = await expenseReportAPI.getMonthlyExpenseReport(month);
             setReportData(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải báo cáo chi phí');
         } finally {
             setLoading(false);

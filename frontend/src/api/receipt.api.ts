@@ -20,7 +20,7 @@ interface CreateReceiptData {
     note?: string;
 }
 
-interface UpdateReceiptData extends Partial<CreateReceiptData> { }
+type UpdateReceiptData = Partial<CreateReceiptData>;
 
 export const receiptAPI = {
     getAll: (params?: ReceiptQueryParams): Promise<AxiosResponse<PaginatedResponse<Receipt>>> => {

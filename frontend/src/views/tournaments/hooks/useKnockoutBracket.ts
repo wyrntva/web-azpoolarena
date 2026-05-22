@@ -4,11 +4,6 @@ import type { Tournament, TournamentMatch, TournamentMatchUpsert, TournamentRegi
 import { MatchVM, createEmptyMatch, toVM, resolveWinner, PlayerIdStr } from '../components/knockoutHelpers';
 import { validateMatchTimes } from '../utils/bracketUtils';
 
-interface RoundConfig {
-    matchNos: number[];
-    round: number;
-}
-
 interface UseKnockoutBracketProps {
     numberOfPlayers: number;
     players: TournamentRegisteredPlayer[];
@@ -172,6 +167,7 @@ export const useKnockoutBracket = ({
             winnerOf(17), winnerOf(18), winnerOf(19), winnerOf(20),
         ].filter(Boolean) as string[];
         return Array.from(new Set(seedIds));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [matches, isKO8Mode, winnerOf]);
 
     const qualified8Players = useMemo(() => {
@@ -201,6 +197,7 @@ export const useKnockoutBracket = ({
             if (w) ids.push(w);
         }
         return Array.from(new Set(ids));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [matches, isKO8Mode, winnerOf]);
 
     const qualifiedPlayers = useMemo(() => {
@@ -230,6 +227,7 @@ export const useKnockoutBracket = ({
             if (w) ids.push(w);
         }
         return Array.from(new Set(ids));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [matches, isKO32Mode, winnerOf]);
 
     const qualified32Players = useMemo(() => {
@@ -332,48 +330,57 @@ export const useKnockoutBracket = ({
     useEffect(() => {
         if (!isKO8Mode || ko8Round2.length !== 2) return;
         propagateWinners(ko8Round1, ko8Round2, setKo8Round2);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko8Round1, isKO8Mode, propagateWinners]);
 
     useEffect(() => {
         if (!isKO8Mode || ko8Final.length !== 1) return;
         propagateWinners(ko8Round2, ko8Final, setKo8Final);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko8Round2, isKO8Mode, propagateWinners]);
 
     // KO16 propagation
     useEffect(() => {
         if (isKO8Mode || isKO32Mode || ko16QF.length !== 4) return;
         propagateWinners(ko16R16, ko16QF, setKo16QF);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko16R16, isKO8Mode, isKO32Mode, propagateWinners]);
 
     useEffect(() => {
         if (isKO8Mode || isKO32Mode || ko16SF.length !== 2) return;
         propagateWinners(ko16QF, ko16SF, setKo16SF);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko16QF, isKO8Mode, isKO32Mode, propagateWinners]);
 
     useEffect(() => {
         if (isKO8Mode || isKO32Mode || ko16Final.length !== 1) return;
         propagateWinners(ko16SF, ko16Final, setKo16Final);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko16SF, isKO8Mode, isKO32Mode, propagateWinners]);
 
     // KO32 propagation
     useEffect(() => {
         if (!isKO32Mode || ko32R16.length !== 8) return;
         propagateWinners(ko32R32, ko32R16, setKo32R16);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko32R32, isKO32Mode, propagateWinners]);
 
     useEffect(() => {
         if (!isKO32Mode || ko32QF.length !== 4) return;
         propagateWinners(ko32R16, ko32QF, setKo32QF);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko32R16, isKO32Mode, propagateWinners]);
 
     useEffect(() => {
         if (!isKO32Mode || ko32SF.length !== 2) return;
         propagateWinners(ko32QF, ko32SF, setKo32SF);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko32QF, isKO32Mode, propagateWinners]);
 
     useEffect(() => {
         if (!isKO32Mode || ko32Final.length !== 1) return;
         propagateWinners(ko32SF, ko32Final, setKo32Final);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko32SF, isKO32Mode, propagateWinners]);
 
     // =====================
@@ -399,6 +406,7 @@ export const useKnockoutBracket = ({
             next[index] = m;
             setter(next);
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [ko8Round1, ko8Round2, ko8Final]
     );
 
@@ -429,6 +437,7 @@ export const useKnockoutBracket = ({
             next[index] = m;
             setter(next);
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [ko16R16, ko16QF, ko16SF, ko16Final]
     );
 
@@ -461,6 +470,7 @@ export const useKnockoutBracket = ({
             next[index] = m;
             setter(next);
         },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [ko32R32, ko32R16, ko32QF, ko32SF, ko32Final]
     );
 
@@ -532,11 +542,12 @@ export const useKnockoutBracket = ({
 
             toast.success('Đã lưu bảng loại trực tiếp');
             onClean?.();
-        } catch (e: any) {
-            toast.error(e?.response?.data?.detail || 'Lỗi khi lưu dữ liệu');
+        } catch (e) {
+            toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Lỗi khi lưu dữ liệu');
         } finally {
             setSaving(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isKO8Mode, isKO32Mode, ko8Round1, ko8Round2, ko8Final, ko16R16, ko16QF, ko16SF, ko16Final, ko32R32, ko32R16, ko32QF, ko32SF, ko32Final, onUpsertMatch]);
 
     // Per-match save for KO8

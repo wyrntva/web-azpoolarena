@@ -9,7 +9,7 @@ const MobileAttendance = () => {
     const [pin, setPin] = useState('');
     const [loading, setLoading] = useState(false);
     const [actionType, setActionType] = useState<string | null>(null);
-    const [checkedInInfo, setCheckedInInfo] = useState<any>(null);
+    const [checkedInInfo, setCheckedInInfo] = useState<{ pin: string; checkInTime: string; deviceId: string } | null>(null);
 
     const qrToken = searchParams.get('token');
     const initialType = searchParams.get('type'); // check_in, check_out, or attendance
@@ -21,6 +21,13 @@ const MobileAttendance = () => {
         }
         setActionType(initialType);
         loadCheckedInStatus();
+
+        const handleContextMenu = (e: Event) => e.preventDefault();
+        document.addEventListener('contextmenu', handleContextMenu);
+        return () => {
+            document.removeEventListener('contextmenu', handleContextMenu);
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [qrToken, initialType]);
 
     const getDeviceFingerprint = () => {
@@ -49,7 +56,7 @@ const MobileAttendance = () => {
                     setCheckedInInfo(data);
                 }
             }
-        } catch (error) { }
+        } catch { /* ignore */ }
     };
 
     const saveCheckedInStatus = (pin: string, checkInTime: string) => {
@@ -59,7 +66,7 @@ const MobileAttendance = () => {
             const data = { pin, checkInTime, deviceId };
             localStorage.setItem(storageKey, JSON.stringify(data));
             setCheckedInInfo(data);
-        } catch (error) { }
+        } catch { /* ignore */ }
     };
 
     const handleCheckAttendance = async () => {
@@ -94,8 +101,9 @@ const MobileAttendance = () => {
                 setCheckedInInfo(null);
             }
             setPin('');
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Chấm công thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Chấm công thất bại');
         } finally {
             setLoading(false);
         }

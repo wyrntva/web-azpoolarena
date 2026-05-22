@@ -130,16 +130,17 @@ export class AttendancesService {
     return { isValid: false, tokenType: QRTokenType.ATTENDANCE };
   }
 
-  private async consumeQrAccessToken(token: string, userPin: string) {
-    const qrAccess = await this.qrAccessTokenRepo.findOne({
-      where: { access_token: token, is_used: false },
-    });
-    if (qrAccess) {
-      qrAccess.is_used = true;
-      qrAccess.used_at = new Date();
-      qrAccess.used_by_pin = userPin;
-      await this.qrAccessTokenRepo.save(qrAccess);
-    }
+  // Atomic consume: UPDATE ... WHERE is_used=false → returns true if this caller won the race
+  private async consumeQrAccessToken(token: string, userPin: string): Promise<boolean> {
+    const result = await this.qrAccessTokenRepo
+      .createQueryBuilder()
+      .update()
+      .set({ is_used: true, used_at: new Date(), used_by_pin: userPin })
+      .where('access_token = :token', { token })
+      .andWhere('is_used = false')
+      .andWhere('expires_at > :now', { now: new Date() })
+      .execute();
+    return (result.affected ?? 0) > 0;
   }
 
   // ==================== Actions ====================
@@ -257,7 +258,13 @@ export class AttendancesService {
       });
 
       await this.attendanceRepo.save(newAttendance);
-      await this.consumeQrAccessToken(dto.qr_token, user.pin);
+
+      const consumed = await this.consumeQrAccessToken(dto.qr_token, user.pin);
+      if (!consumed) {
+        // One-time token was claimed by another concurrent request — roll back
+        await this.attendanceRepo.remove(newAttendance);
+        throw new BadRequestException('Mã QR đã được sử dụng bởi người khác, vui lòng thử lại');
+      }
 
       const dateStr = typeof newAttendance.date === 'string'
         ? newAttendance.date
@@ -293,21 +300,21 @@ export class AttendancesService {
         );
       }
 
-      const earliestAllowedCheckout = moment(windows.endDt)
-        .subtract(10, 'minutes')
-        .toDate();
-      if (
-        now < earliestAllowedCheckout &&
-        attendance.status === AttendanceStatus.PRESENT
-      ) {
-        attendance.status = AttendanceStatus.EARLY_CHECKOUT;
-      }
-
       attendance.check_out_time = now;
       attendance.check_out_qr_token = dto.qr_token;
+      recalculateStatus(attendance, workSchedule);
 
       await this.attendanceRepo.save(attendance);
-      await this.consumeQrAccessToken(dto.qr_token, user.pin);
+
+      const consumed = await this.consumeQrAccessToken(dto.qr_token, user.pin);
+      if (!consumed) {
+        // Roll back check_out
+        attendance.check_out_time = null;
+        attendance.check_out_qr_token = null;
+        recalculateStatus(attendance, workSchedule);
+        await this.attendanceRepo.save(attendance);
+        throw new BadRequestException('Mã QR đã được sử dụng bởi người khác, vui lòng thử lại');
+      }
 
       const dateStr = typeof attendance.date === 'string'
         ? attendance.date
@@ -332,12 +339,8 @@ export class AttendancesService {
     ipAddress: string,
   ) {
     // Authenticated check (essentially the same logic, but with Wifi validation added)
-    if (
-      user.role?.name !== 'Nhân viên' &&
-      user.role?.name !== 'Thu ngân' &&
-      !user.is_admin
-    ) {
-      throw new ForbiddenException('Chỉ nhân viên mới có thể chấm công');
+    if (user.is_admin) {
+      throw new ForbiddenException('Quản trị viên không chấm công qua endpoint này');
     }
 
     if (!user.pin) {
@@ -375,7 +378,12 @@ export class AttendancesService {
     pageSize: number = 20,
     currentUser: any = null,
   ) {
+    // Non-admins can only view their own records
+    const isAdmin = currentUser?.is_admin || currentUser?.role?.name === 'Trưởng ca';
     let targetUserId = userId;
+    if (!isAdmin) {
+      targetUserId = currentUser?.id ?? null;
+    }
 
     const qb = this.attendanceRepo
       .createQueryBuilder('att')
@@ -465,6 +473,10 @@ export class AttendancesService {
     }
 
     if (dto.notes !== undefined) attendance.notes = dto.notes;
+
+    if (!attendance.check_in_time && attendance.check_out_time) {
+      throw new BadRequestException('Không thể có giờ tan ca mà không có giờ vào ca');
+    }
 
     if (attendance.work_schedule) {
       recalculateStatus(attendance, attendance.work_schedule);

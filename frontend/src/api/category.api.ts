@@ -9,7 +9,7 @@ interface CreateCategoryData {
     parent_id?: number;
 }
 
-interface UpdateCategoryData extends Partial<CreateCategoryData> { }
+type UpdateCategoryData = Partial<CreateCategoryData>;
 
 export const categoryAPI = {
     getAll: (params?: { skip?: number; limit?: number; is_active?: boolean }): Promise<AxiosResponse<PaginatedResponse<Category>>> => {

@@ -29,7 +29,7 @@ const StaffRole = () => {
         try {
             const response = await roleAPI.getRoles();
             setRoles(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách vai trò');
         } finally {
             setLoading(false);
@@ -58,8 +58,9 @@ const StaffRole = () => {
                 await roleAPI.deleteRole(id);
                 toast.success('Xóa vai trò thành công');
                 fetchRoles();
-            } catch (error: any) {
-                toast.error(error.response?.data?.detail || 'Xóa vai trò thất bại');
+            } catch (error) {
+                const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+                toast.error(detail || 'Xóa vai trò thất bại');
             }
         }
     };
@@ -79,7 +80,7 @@ const StaffRole = () => {
             // "Property 'permissions' is missing... but required in type 'CreateRoleData'"
             // I'll add a dummy permissions array to satisfy the type if needed, or cast it.
             // For now, let's just cast or assume the API handles it, consistent with previous state.
-            const dataToSubmit: any = { ...formData, permissions: [] };
+            const dataToSubmit = { ...formData, permissions: [] as string[] };
 
             if (editingRole) {
                 await roleAPI.updateRole(editingRole.id, dataToSubmit);
@@ -90,8 +91,9 @@ const StaffRole = () => {
             }
             setModalOpen(false);
             fetchRoles();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Thao tác thất bại');
         }
     };
 

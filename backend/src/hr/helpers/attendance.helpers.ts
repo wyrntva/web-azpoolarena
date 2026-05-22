@@ -173,7 +173,11 @@ export function recalculateStatus(
       isEarlyCheckout = checkOutMom.isBefore(earliestAllowedCheckoutMom);
     }
 
-    if (isLate) {
+    if (isLate && isEarlyCheckout) {
+      // Both violations — keep LATE as primary status; early checkout penalty
+      // is still applied separately by autoGeneratePenaltyForAttendance.
+      attendance.status = AttendanceStatus.LATE;
+    } else if (isLate) {
       attendance.status = AttendanceStatus.LATE;
     } else if (isEarlyCheckout) {
       attendance.status = AttendanceStatus.EARLY_CHECKOUT;

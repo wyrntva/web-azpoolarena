@@ -29,8 +29,8 @@ const RanksTab = () => {
             const response = await tournamentSettingsAPI.getRanks();
             setRanks(response.data || []);
             setCurrentPage(1);
-        } catch (error: any) {
-            toast.error(error?.response?.data?.detail || 'Không thể tải danh sách hạng');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tải danh sách hạng');
         } finally {
             setLoading(false);
         }
@@ -74,8 +74,8 @@ const RanksTab = () => {
                 await tournamentSettingsAPI.deleteRank(id);
                 toast.success('Xóa hạng thành công');
                 fetchRanks();
-            } catch (error: any) {
-                toast.error(error?.response?.data?.detail || 'Không thể xóa hạng');
+            } catch (error) {
+                toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể xóa hạng');
             }
         }
     };
@@ -98,8 +98,8 @@ const RanksTab = () => {
             }
             setModalOpen(false);
             fetchRanks();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.detail || 'Không thể lưu hạng');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể lưu hạng');
         }
     };
 

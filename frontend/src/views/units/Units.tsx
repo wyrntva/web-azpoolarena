@@ -35,7 +35,7 @@ const Units = () => {
             });
             setUnits(response.data.data);
             setTotalItems(response.data.meta.total);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách đơn vị');
         } finally {
             setLoading(false);
@@ -63,8 +63,8 @@ const Units = () => {
                 await unitAPI.delete(id);
                 toast.success('Xóa đơn vị thành công');
                 fetchUnits(currentPage);
-            } catch (error: any) {
-                toast.error(error.response?.data?.detail || 'Xóa đơn vị thất bại');
+            } catch (error) {
+                toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Xóa đơn vị thất bại');
             }
         }
     };
@@ -88,8 +88,8 @@ const Units = () => {
             setModalOpen(false);
             setFormData({ name: '', description: '' });
             fetchUnits(currentPage);
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Thao tác thất bại');
         }
     };
 

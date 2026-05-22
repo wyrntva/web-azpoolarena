@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Button, Spinner, Card } from 'flowbite-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Spinner, Card } from 'flowbite-react';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 import { attendanceAPI, workScheduleAPI } from '../../../api/attendance.api';
@@ -43,13 +43,14 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
         fetchEmployees();
         fetchData();
         fetchDebts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDate]);
 
     const fetchEmployees = async () => {
         try {
             const response = await userAPI.getUsers();
             setEmployees(response.data);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải danh sách nhân viên');
         }
     };
@@ -64,7 +65,7 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
                 end_date: end
             });
             setDebts(response.data.data || []);
-        } catch (error) { }
+        } catch { /* ignore */ }
     };
 
     const fetchData = async () => {
@@ -83,12 +84,12 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
             setAttendances(attRes.data.items || []);
             setSchedules(schedRes.data || []);
 
-            const summary: any = {};
-            (summaryRes.data || []).forEach((item: any) => {
+            const summary: Record<number, PayrollSummary> = {};
+            (summaryRes.data || []).forEach((item: PayrollSummary) => {
                 summary[item.user_id] = item;
             });
             setPayrollSummary(summary);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Lỗi tải dữ liệu bảng lương');
         } finally {
             setLoading(false);
@@ -101,19 +102,26 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
         return Array.from({ length: days }, (_, i) => start.add(i, 'day'));
     }, [selectedDate]);
 
-    const calculateHours = (empId: number, dateStr: string) => {
+    const calculateHours = useCallback((empId: number, dateStr: string) => {
         const att = attendanceMap[`${empId}_${dateStr}`];
         const sched = scheduleMap[`${empId}_${dateStr}`];
 
         if (!sched || !att || !att.check_in_time || !att.check_out_time) return 0;
 
-        // Simplification: use scheduled hours if attended (matching legacy logic)
         const start = dayjs(`2000-01-01 ${sched.start_time}`);
         let end = dayjs(`2000-01-01 ${sched.end_time}`);
         if (end.isBefore(start)) end = end.add(1, 'day');
 
         return end.diff(start, 'hour', true);
-    };
+    }, [attendanceMap, scheduleMap]);
+
+    const calculateEmployeeDebt = useCallback((name: string) => {
+        if (!name) return 0;
+        const normalized = name.toLowerCase().trim().replace(/\s+/g, ' ');
+        return debts
+            .filter(d => d.debtor_name?.toLowerCase().trim().replace(/\s+/g, ' ') === normalized)
+            .reduce((sum, d) => sum + (d.amount || 0), 0);
+    }, [debts]);
 
     const displayEmployees = useMemo(() => {
         const isPastMonth = selectedDate.isBefore(dayjs(), 'month');
@@ -139,12 +147,30 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
         });
     }, [employees, attendances, schedules, payrollSummary, selectedDate, isManager, user]);
 
-    const calculateEmployeeDebt = (name: string) => {
-        if (!name) return 0;
-        return debts
-            .filter(d => d.debtor_name?.toLowerCase().trim() === name.toLowerCase().trim())
-            .reduce((sum, d) => sum + (d.amount || 0), 0);
-    };
+    const employeeStats = useMemo(() => {
+        return displayEmployees.map(emp => {
+            const totalHours = monthDates.reduce((sum, d) => sum + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
+            const summary = payrollSummary[emp.id] || { total_bonuses: 0, total_advances: 0, total_penalties: 0 };
+            const empDebt = calculateEmployeeDebt(emp.full_name);
+            const baseSalary = emp.salary_type === 'fixed'
+                ? (emp.fixed_salary || 0)
+                : (totalHours * (emp.hourly_rate || 20000));
+            const totalReductions = summary.total_advances + summary.total_penalties + empDebt;
+            const netSalary = baseSalary + summary.total_bonuses - totalReductions;
+            return { emp, totalHours, summary, empDebt, baseSalary, totalReductions, netSalary };
+        });
+    }, [displayEmployees, monthDates, payrollSummary, calculateHours, calculateEmployeeDebt]);
+
+    const totals = useMemo(() => employeeStats.reduce((acc, s) => ({
+        hours: acc.hours + s.totalHours,
+        baseSalary: acc.baseSalary + s.baseSalary,
+        bonuses: acc.bonuses + s.summary.total_bonuses,
+        advances: acc.advances + s.summary.total_advances,
+        debt: acc.debt + s.empDebt,
+        penalties: acc.penalties + s.summary.total_penalties,
+        net: acc.net + s.netSalary,
+    }), { hours: 0, baseSalary: 0, bonuses: 0, advances: 0, debt: 0, penalties: 0, net: 0 }),
+    [employeeStats]);
 
     return (
         <div className="space-y-4">
@@ -173,47 +199,34 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
                     <tbody className="divide-y">
                         {loading ? (
                             <tr><td colSpan={monthDates.length + 9} className="p-10 text-center"><Spinner /></td></tr>
-                        ) : displayEmployees.map((emp, idx) => {
-                            const totalHours = monthDates.reduce((sum, d) => sum + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
-                            const summary = payrollSummary[emp.id] || { total_bonuses: 0, total_advances: 0, total_penalties: 0 };
-                            const empDebt = calculateEmployeeDebt(emp.full_name);
-
-                            const baseSalary = emp.salary_type === 'fixed'
-                                ? (emp.fixed_salary || 0)
-                                : (totalHours * (emp.hourly_rate || 20000));
-
-                            const totalReductions = summary.total_advances + summary.total_penalties + empDebt;
-                            const netSalary = baseSalary + summary.total_bonuses - totalReductions;
-
-                            return (
-                                <tr key={emp.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                    <td className="p-2 border sticky left-0 bg-white dark:bg-gray-800 z-10">{idx + 1}</td>
-                                    <td className="p-1 border sticky left-[30px] bg-white dark:bg-gray-800 z-10 text-left">
-                                        <p className="font-bold truncate w-28 uppercase">{emp.full_name}</p>
-                                    </td>
-                                    {monthDates.map((d, i) => {
-                                        const h = calculateHours(emp.id, d.format('YYYY-MM-DD'));
-                                        return (
-                                            <td key={i} className={`p-1 border ${h > 0 ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-300'}`}>
-                                                {h > 0 ? (h % 1 === 0 ? h : h.toFixed(1)) : '·'}
-                                            </td>
-                                        );
-                                    })}
-                                    <td className="p-2 border font-bold text-blue-700 bg-blue-50/30">{totalHours.toFixed(1)}</td>
-                                    <td className="p-2 border font-medium text-center">
-                                        {emp.salary_type === 'fixed' 
-                                            ? <span className="text-gray-500 text-[10px]">Cố định</span> 
-                                            : formatCurrency(emp.hourly_rate || 20000)}
-                                    </td>
-                                    <td className="p-2 border font-medium">{formatCurrency(baseSalary)}</td>
-                                    <td className="p-2 border text-green-600 font-medium">{formatCurrency(summary.total_bonuses)}</td>
-                                    <td className="p-2 border text-orange-600">-{formatCurrency(summary.total_advances)}</td>
-                                    <td className="p-2 border text-yellow-600">-{formatCurrency(empDebt)}</td>
-                                    <td className="p-2 border text-red-600">-{formatCurrency(summary.total_penalties)}</td>
-                                    <td className="p-2 border font-black text-indigo-700 bg-indigo-50">{formatCurrency(netSalary)}</td>
-                                </tr>
-                            );
-                        })}
+                        ) : employeeStats.map(({ emp, totalHours, summary, empDebt, baseSalary, netSalary }, idx) => (
+                            <tr key={emp.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <td className="p-2 border sticky left-0 bg-white dark:bg-gray-800 z-10">{idx + 1}</td>
+                                <td className="p-1 border sticky left-[30px] bg-white dark:bg-gray-800 z-10 text-left">
+                                    <p className="font-bold truncate w-28 uppercase">{emp.full_name}</p>
+                                </td>
+                                {monthDates.map((d, i) => {
+                                    const h = calculateHours(emp.id, d.format('YYYY-MM-DD'));
+                                    return (
+                                        <td key={i} className={`p-1 border ${h > 0 ? 'bg-green-50 text-green-700 font-bold' : 'text-gray-300'}`}>
+                                            {h > 0 ? (h % 1 === 0 ? h : h.toFixed(1)) : '·'}
+                                        </td>
+                                    );
+                                })}
+                                <td className="p-2 border font-bold text-blue-700 bg-blue-50/30">{totalHours.toFixed(1)}</td>
+                                <td className="p-2 border font-medium text-center">
+                                    {emp.salary_type === 'fixed'
+                                        ? <span className="text-gray-500 text-[10px]">Cố định</span>
+                                        : formatCurrency(emp.hourly_rate || 20000)}
+                                </td>
+                                <td className="p-2 border font-medium">{formatCurrency(baseSalary)}</td>
+                                <td className="p-2 border text-green-600 font-medium">{formatCurrency(summary.total_bonuses)}</td>
+                                <td className="p-2 border text-orange-600">-{formatCurrency(summary.total_advances)}</td>
+                                <td className="p-2 border text-yellow-600">-{formatCurrency(empDebt)}</td>
+                                <td className="p-2 border text-red-600">-{formatCurrency(summary.total_penalties)}</td>
+                                <td className="p-2 border font-black text-indigo-700 bg-indigo-50">{formatCurrency(netSalary)}</td>
+                            </tr>
+                        ))}
                     </tbody>
                     <tfoot>
                         <tr className="bg-gray-100 dark:bg-gray-700 font-bold">
@@ -222,55 +235,14 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
                             {monthDates.map((_, i) => (
                                 <td key={i} className="p-1 border"></td>
                             ))}
-                            <td className="p-2 border text-blue-700 bg-blue-50">
-                                {displayEmployees.reduce((sum, emp) => {
-                                    const totalHours = monthDates.reduce((s, d) => s + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
-                                    return sum + totalHours;
-                                }, 0).toFixed(1)}
-                            </td>
+                            <td className="p-2 border text-blue-700 bg-blue-50">{totals.hours.toFixed(1)}</td>
                             <td className="p-2 border"></td>
-                            <td className="p-2 border bg-blue-50">
-                                {formatCurrency(displayEmployees.reduce((sum, emp) => {
-                                    const totalHours = monthDates.reduce((s, d) => s + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
-                                    const baseSalary = emp.salary_type === 'fixed' ? (emp.fixed_salary || 0) : (totalHours * (emp.hourly_rate || 20000));
-                                    return sum + baseSalary;
-                                }, 0))}
-                            </td>
-                            <td className="p-2 border text-green-600 bg-green-50">
-                                {formatCurrency(displayEmployees.reduce((sum, emp) => {
-                                    const summary = payrollSummary[emp.id] || { total_bonuses: 0 };
-                                    return sum + summary.total_bonuses;
-                                }, 0))}
-                            </td>
-                            <td className="p-2 border text-orange-600 bg-orange-50">
-                                -{formatCurrency(displayEmployees.reduce((sum, emp) => {
-                                    const summary = payrollSummary[emp.id] || { total_advances: 0 };
-                                    return sum + summary.total_advances;
-                                }, 0))}
-                            </td>
-                            <td className="p-2 border text-yellow-600 bg-yellow-50">
-                                -{formatCurrency(displayEmployees.reduce((sum, emp) => {
-                                    const empDebt = calculateEmployeeDebt(emp.full_name);
-                                    return sum + empDebt;
-                                }, 0))}
-                            </td>
-                            <td className="p-2 border text-red-600 bg-red-50">
-                                -{formatCurrency(displayEmployees.reduce((sum, emp) => {
-                                    const summary = payrollSummary[emp.id] || { total_penalties: 0 };
-                                    return sum + summary.total_penalties;
-                                }, 0))}
-                            </td>
-                            <td className="p-2 border text-indigo-700 bg-indigo-100 font-black text-lg">
-                                {formatCurrency(displayEmployees.reduce((sum, emp) => {
-                                    const totalHours = monthDates.reduce((s, d) => s + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
-                                    const summary = payrollSummary[emp.id] || { total_bonuses: 0, total_advances: 0, total_penalties: 0 };
-                                    const empDebt = calculateEmployeeDebt(emp.full_name);
-                                    const baseSalary = emp.salary_type === 'fixed' ? (emp.fixed_salary || 0) : (totalHours * (emp.hourly_rate || 20000));
-                                    const totalReductions = summary.total_advances + summary.total_penalties + empDebt;
-                                    const netSalary = baseSalary + summary.total_bonuses - totalReductions;
-                                    return sum + netSalary;
-                                }, 0))}
-                            </td>
+                            <td className="p-2 border bg-blue-50">{formatCurrency(totals.baseSalary)}</td>
+                            <td className="p-2 border text-green-600 bg-green-50">{formatCurrency(totals.bonuses)}</td>
+                            <td className="p-2 border text-orange-600 bg-orange-50">-{formatCurrency(totals.advances)}</td>
+                            <td className="p-2 border text-yellow-600 bg-yellow-50">-{formatCurrency(totals.debt)}</td>
+                            <td className="p-2 border text-red-600 bg-red-50">-{formatCurrency(totals.penalties)}</td>
+                            <td className="p-2 border text-indigo-700 bg-indigo-100 font-black text-lg">{formatCurrency(totals.net)}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -280,19 +252,7 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
             <div className="md:hidden space-y-4 pb-4">
                 {loading ? (
                     <div className="flex justify-center p-10"><Spinner /></div>
-                ) : displayEmployees.map((emp, idx) => {
-                    const totalHours = monthDates.reduce((sum, d) => sum + calculateHours(emp.id, d.format('YYYY-MM-DD')), 0);
-                    const summary = payrollSummary[emp.id] || { total_bonuses: 0, total_advances: 0, total_penalties: 0 };
-                    const empDebt = calculateEmployeeDebt(emp.full_name);
-
-                    const baseSalary = emp.salary_type === 'fixed'
-                        ? (emp.fixed_salary || 0)
-                        : (totalHours * (emp.hourly_rate || 20000));
-
-                    const totalReductions = summary.total_advances + summary.total_penalties + empDebt;
-                    const netSalary = baseSalary + summary.total_bonuses - totalReductions;
-
-                    return (
+                ) : employeeStats.map(({ emp, totalHours, summary, empDebt, baseSalary, netSalary }, idx) => (
                         <Card key={emp.id} className="p-0 overflow-hidden shadow-sm border-gray-200">
                             <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b flex justify-between items-center">
                                 <div className="font-bold text-[15px] uppercase text-gray-900 dark:text-white truncate pr-2">
@@ -333,8 +293,7 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
                                 </div>
                             </div>
                         </Card>
-                    );
-                })}
+                ))}
             </div>
 
         </div>

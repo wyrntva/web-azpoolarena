@@ -115,8 +115,9 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
             const response = await poolArenaUserAPI.uploadAvatar(customer.id, file);
             update('avatar_url', response.data.avatar_url);
             toast.success('Tải ảnh lên thành công');
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Tải ảnh lên thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Tải ảnh lên thất bại');
         } finally {
             setUploadingAvatar(false);
         }
@@ -128,8 +129,9 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
             await poolArenaUserAPI.deleteAvatar(customer.id);
             update('avatar_url', '');
             toast.success('Đã xóa ảnh đại diện');
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Xóa ảnh thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Xóa ảnh thất bại');
         }
     };
 
@@ -159,8 +161,9 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
             toast.success('Cập nhật khách hàng thành công');
             onSaved();
             onClose();
-        } catch (error: any) {
-            toast.error(error.response?.data?.detail || 'Cập nhật thất bại');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || 'Cập nhật thất bại');
         }
     };
 

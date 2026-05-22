@@ -14,7 +14,7 @@ const Tournaments = () => {
     const [currentTournamentId, setCurrentTournamentId] = useState<number | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [_loading, _setLoading] = useState(true);
     
     const {
         formData,
@@ -40,13 +40,13 @@ const Tournaments = () => {
 
     const fetchTournaments = useCallback(async () => {
         try {
-            setLoading(true);
+            _setLoading(true);
             const response = await tournamentAPI.getPublicTournaments({ skip: (currentPage - 1) * 50, limit: 50 });
             setTournaments(response.data?.data || []);
         } catch {
             // Error handled silently
         } finally {
-            setLoading(false);
+            _setLoading(false);
         }
     }, [currentPage]);
 
@@ -60,8 +60,8 @@ const Tournaments = () => {
             await handleSubmit(e);
             setModalOpen(false);
             await fetchTournaments(); // Refresh the list
-        } catch (error) {
-            // Error is already logged in handleSubmit
+        } catch {
+            /* Error is already logged in handleSubmit */
         }
     };
 
@@ -95,7 +95,7 @@ const Tournaments = () => {
             await loadTournament(tournamentId);
             setCurrentTournamentId(tournamentId);
             setUpdateModalOpen(true);
-        } catch (error) {
+        } catch (_error) {
             alert('Không thể tải thông tin giải đấu. Vui lòng thử lại.');
         }
     };

@@ -16,7 +16,7 @@ interface CreateRevenueData {
     date: string;
 }
 
-interface UpdateRevenueData extends Partial<CreateRevenueData> { }
+type UpdateRevenueData = Partial<CreateRevenueData>;
 
 export const revenueAPI = {
     getRevenues: (params?: RevenueQueryParams): Promise<AxiosResponse<PaginatedResponse<Revenue>>> => {

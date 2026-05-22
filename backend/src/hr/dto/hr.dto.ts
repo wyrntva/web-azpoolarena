@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsArray,
   IsEnum,
+  IsDate,
   Matches,
   ValidateNested,
 } from 'class-validator';
@@ -99,16 +100,16 @@ export class AttendanceCheckRequestDto {
 }
 
 export class UpdateAttendanceDto {
-  @IsOptional() check_in_time?: Date | null;
-  @IsOptional() check_out_time?: Date | null;
+  @IsOptional() @IsDate() @Type(() => Date) check_in_time?: Date | null;
+  @IsOptional() @IsDate() @Type(() => Date) check_out_time?: Date | null;
   @IsOptional() @IsString() notes?: string;
 }
 
 export class CreateManualAttendanceDto {
   @IsNumber() user_id: number;
   @IsString() date: string; // YYYY-MM-DD
-  @IsOptional() check_in_time?: Date | null;
-  @IsOptional() check_out_time?: Date | null;
+  @IsOptional() @IsDate() @Type(() => Date) check_in_time?: Date | null;
+  @IsOptional() @IsDate() @Type(() => Date) check_out_time?: Date | null;
   @IsOptional() @IsString() notes?: string;
 }
 

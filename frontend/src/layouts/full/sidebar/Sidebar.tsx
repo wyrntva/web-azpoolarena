@@ -18,7 +18,7 @@ const SidebarLayout = () => {
 
   // Filter menu items based on roles
   const filteredSidebarContent = SidebarContent.map(group => {
-    if (!user || (user as any).role_id === 1) return group; // Admin sees all
+    if (!user || (user as unknown as { role_id?: number }).role_id === 1) return group; // Admin sees all
 
     // Others (Shift Leader, Employee) only see specific routes
     const allowedUrls = ['/timesheet', '/work-schedule', '/payroll'];
@@ -44,13 +44,14 @@ const SidebarLayout = () => {
     filteredSidebarContent.forEach((group) => {
       group.children?.forEach((child) => {
         if (child.children) {
-          const isActive = child.children.some((subChild: any) => subChild.url === pathname);
+          const isActive = child.children.some((subChild) => subChild.url === pathname);
           if (isActive) {
             setOpenItem(child.name || null);
           }
         }
       });
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   const handleToggle = (name: string) => {
@@ -105,7 +106,7 @@ const SidebarLayout = () => {
           </div>
 
           {/* Settings Area (Fixed at bottom) */}
-          {(!user || (user as any).role_id === 1) && (
+          {(!user || (user as unknown as { role_id?: number }).role_id === 1) && (
             <div className="shrink-0 px-5 pb-0 h-[50px] flex flex-col justify-end">
               <div className="border-t border-border dark:border-darkborder mb-2"></div>
               <Sidebar aria-label="Settings Content" className="bg-transparent [&>div]:bg-transparent [&>div]:p-0">

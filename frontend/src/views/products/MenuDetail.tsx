@@ -5,12 +5,6 @@ import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router';
 import { useMenus } from '../../contexts/MenuContext';
 import { useProducts } from '../../contexts/ProductContext';
-import {
-    GiCoffeeCup, GiBeerStein, GiWineGlass, GiHotMeal, GiCakeSlice,
-    GiIceCreamCone, GiPizzaSlice, GiHamburger, GiNoodles, GiFishCooked,
-    GiChickenOven, GiBreadSlice, GiCarrot, GiFruitBowl, GiCupcake,
-    GiForkKnifeSpoon, GiCoffeePot, GiWaterBottle, GiSandwich, GiGamepad
-} from 'react-icons/gi';
 
 const TrashIcon = () => (
     <svg viewBox="0 0 1024 1024" className="icon" xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="1em" height="1em">

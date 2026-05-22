@@ -77,7 +77,7 @@ const StaffFormModal = ({ open, onClose, editingUser, roles, onSaved }: StaffFor
             return;
         }
         try {
-            const data: any = { ...formData };
+            const data: Partial<StaffFormData & { password?: string }> & Record<string, unknown> = { ...formData };
             if (data.salary_type === 'hourly') delete data.fixed_salary;
             else delete data.hourly_rate;
             
@@ -89,13 +89,14 @@ const StaffFormModal = ({ open, onClose, editingUser, roles, onSaved }: StaffFor
                 await userAPI.updateUser(editingUser!.id, data);
                 toast.success('Cập nhật nhân viên thành công');
             } else {
-                await userAPI.createUser(data);
+                await userAPI.createUser(data as Parameters<typeof userAPI.createUser>[0]);
                 toast.success('Thêm nhân viên thành công');
             }
             onClose();
             onSaved();
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || error.response?.data?.detail || 'Thao tác thất bại');
+        } catch (error) {
+            const errData = (error as { response?: { data?: { message?: string; detail?: string } } })?.response?.data;
+            toast.error(errData?.message || errData?.detail || 'Thao tác thất bại');
         }
     };
 

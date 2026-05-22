@@ -16,7 +16,7 @@ interface Transaction {
     transaction_type: 'in' | 'out';
     note?: string;
     created_by_user?: { full_name: string };
-    details: any[];
+    details: { inventory?: { product_name?: string }; quantity?: number; unit_type?: string; price?: number }[];
 }
 
 const InventoryHistory = () => {
@@ -33,6 +33,7 @@ const InventoryHistory = () => {
 
     useEffect(() => {
         fetchTransactions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateRange, transactionType]);
 
     const fetchTransactions = async () => {
@@ -44,8 +45,8 @@ const InventoryHistory = () => {
             ]);
 
             let all: Transaction[] = [
-                ...inResponse.data.map((t: any) => ({ ...t, transaction_type: 'in', transaction_date: t.transaction_date })),
-                ...outResponse.data.map((t: any) => ({ ...t, transaction_type: 'out', transaction_date: t.transaction_date })),
+                ...(inResponse.data as unknown as Transaction[]).map((t) => ({ ...t, transaction_type: 'in' as const })),
+                ...(outResponse.data as unknown as Transaction[]).map((t) => ({ ...t, transaction_type: 'out' as const })),
             ];
 
             // Filter by type
@@ -63,7 +64,7 @@ const InventoryHistory = () => {
             all.sort((a, b) => dayjs(b.transaction_date).unix() - dayjs(a.transaction_date).unix());
 
             setTransactions(all);
-        } catch (error) {
+        } catch (_error) {
             toast.error('Không thể tải lịch sử kho');
         } finally {
             setLoading(false);

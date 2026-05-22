@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { productAPI, type ProductApiResponse } from '../api/product.api';
@@ -71,7 +72,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setLoading(true);
             const res = await productAPI.getAll();
             setProducts(res.data.map(mapApiToProduct));
-        } catch (err) {
+        } catch (_err) {
             toast.error('Không thể tải danh sách mặt hàng');
         } finally {
             setLoading(false);

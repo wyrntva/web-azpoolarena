@@ -30,7 +30,7 @@ const STATUS_DOT: Record<string, string> = {
 const MatchManagementDialog: React.FC<Props> = ({
     isOpen, onClose, match, players, tables, tournament,
     onChange, onSave,
-    isPlayerSelectable = false, availablePlayers = [], selectedIds = [],
+    isPlayerSelectable: _isPlayerSelectable = false, availablePlayers: _availablePlayers = [], selectedIds: _selectedIds = [],
 }) => {
     const [saving, setSaving] = useState(false);
     const [statusOpen, setStatusOpen] = useState(false);

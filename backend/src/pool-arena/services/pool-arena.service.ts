@@ -38,7 +38,7 @@ export class PoolArenaService {
     return this.repo.save(user);
   }
 
-  async findAll(skip = 0, limit = 50, search?: string) {
+  async findAll(skip = 0, limit = 50, search?: string, rank?: string, gender?: string) {
     const qb = this.repo
       .createQueryBuilder('u')
       .skip(skip)
@@ -46,10 +46,24 @@ export class PoolArenaService {
       .orderBy('u.points', 'DESC')
       .addOrderBy('u.created_at', 'DESC');
 
+    const conditions: string[] = [];
+    const params: Record<string, any> = {};
+
     if (search) {
-      qb.where('u.full_name ILIKE :s OR u.phone_number ILIKE :s', {
-        s: `%${search}%`,
-      });
+      conditions.push('(u.full_name ILIKE :s OR u.phone_number ILIKE :s)');
+      params.s = `%${search}%`;
+    }
+    if (rank) {
+      conditions.push('u.rank = :rank');
+      params.rank = rank;
+    }
+    if (gender) {
+      conditions.push('u.gender = :gender');
+      params.gender = gender;
+    }
+
+    if (conditions.length > 0) {
+      qb.where(conditions.join(' AND '), params);
     }
 
     return qb.getManyAndCount();
