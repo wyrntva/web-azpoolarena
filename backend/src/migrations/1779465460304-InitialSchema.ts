@@ -263,6 +263,8 @@ export class InitialSchema1779465460304 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" SET DEFAULT 'hourly'`);
         await queryRunner.query(`DROP TYPE "public"."salarytype_old"`);
         await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" SET DEFAULT 'hourly'`);
+        await queryRunner.query(`UPDATE "users" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+        await queryRunner.query(`UPDATE "users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
         await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "created_at" SET NOT NULL`);
         await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "created_at" SET DEFAULT now()`);
         await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "updated_at" SET NOT NULL`);
