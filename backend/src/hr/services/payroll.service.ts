@@ -333,7 +333,7 @@ export class PayrollService {
       ] = a;
     }
 
-    const now = moment();
+    const now = moment().utcOffset(7);
     const created: any[] = [];
     for (const sch of schedules) {
       const workDateStr = typeof sch.work_date === 'string' ? sch.work_date : moment(sch.work_date).format('YYYY-MM-DD');
@@ -341,8 +341,8 @@ export class PayrollService {
       const att = attMap[key];
 
       const effectiveLateMinutes = sch.allowed_late_minutes ?? settings.allowed_late_minutes ?? 0;
-      const shiftStartDt = moment(`${workDateStr} ${sch.start_time}`, 'YYYY-MM-DD HH:mm');
-      const shiftEndDt = moment(`${workDateStr} ${sch.end_time}`, 'YYYY-MM-DD HH:mm');
+      const shiftStartDt = moment(`${workDateStr} ${sch.start_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
+      const shiftEndDt = moment(`${workDateStr} ${sch.end_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
       if (shiftEndDt.isBefore(shiftStartDt)) shiftEndDt.add(1, 'days');
 
       let amount = 0;
@@ -365,7 +365,9 @@ export class PayrollService {
           reason = 'Quên chấm ca ra';
         }
       } else if (att.status === AttendanceStatus.LATE) {
-        const lateSeconds = Math.max(0, moment(att.check_in_time).diff(shiftStartDt, 'seconds'));
+        // Normalize seconds/milliseconds to 0 to be consistent with recalculateStatus
+        const checkInMom = moment(att.check_in_time).utcOffset(7).second(0).millisecond(0);
+        const lateSeconds = Math.max(0, checkInMom.diff(shiftStartDt, 'seconds'));
         const lateMins = Math.floor(lateSeconds / 60);
 
         if (lateSeconds > effectiveLateMinutes * 60) {
@@ -441,10 +443,10 @@ export class PayrollService {
       typeof sch.work_date === 'string'
         ? sch.work_date
         : moment(sch.work_date).format('YYYY-MM-DD');
-    const shiftStartDt = moment(`${workDate} ${sch.start_time}`, 'YYYY-MM-DD HH:mm');
-    const shiftEndDt = moment(`${workDate} ${sch.end_time}`, 'YYYY-MM-DD HH:mm');
+    const shiftStartDt = moment(`${workDate} ${sch.start_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
+    const shiftEndDt = moment(`${workDate} ${sch.end_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
     if (shiftEndDt.isBefore(shiftStartDt)) shiftEndDt.add(1, 'days');
-    const now = moment();
+    const now = moment().utcOffset(7);
 
     const toCreate: Array<{ amount: number; reason: string }> = [];
 
@@ -459,7 +461,9 @@ export class PayrollService {
       }
     } else {
       if (att.status === AttendanceStatus.LATE) {
-        const lateSeconds = Math.max(0, moment(att.check_in_time).diff(shiftStartDt, 'seconds'));
+        // Normalize seconds/milliseconds to 0 to be consistent with recalculateStatus
+        const checkInMom = moment(att.check_in_time).utcOffset(7).second(0).millisecond(0);
+        const lateSeconds = Math.max(0, checkInMom.diff(shiftStartDt, 'seconds'));
         const lateMins = Math.floor(lateSeconds / 60);
         if (lateSeconds > effectiveLateMinutes * 60) {
           for (const t of tiers) {
@@ -475,7 +479,7 @@ export class PayrollService {
 
       // EARLY_CHECKOUT — check independently so LATE+EARLY_CHECKOUT both get penalized
       if (att.check_out_time) {
-        const checkOutMom = moment(att.check_out_time);
+        const checkOutMom = moment(att.check_out_time).utcOffset(7);
         const earliestCheckout = shiftEndDt.clone().subtract(10, 'minutes');
         if (checkOutMom.isBefore(earliestCheckout) && settings.early_checkout_penalty > 0) {
           toCreate.push({ amount: settings.early_checkout_penalty, reason: 'Về sớm' });
@@ -493,10 +497,8 @@ export class PayrollService {
       }
     }
 
-    if (toCreate.length === 0) return null;
-
     let creatorId = currentUserId;
-    if (!creatorId) {
+    if (toCreate.length > 0 && !creatorId) {
       const adminUser = await this.userRepo.findOne({
         where: { role_id: 1 },
         order: { id: 'ASC' },

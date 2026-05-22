@@ -125,16 +125,17 @@ export function recalculateStatus(
   workSchedule: WorkScheduleEntity,
 ) {
   if (attendance.check_in_time) {
-    const checkInMom = moment(attendance.check_in_time);
+    // Clear seconds/milliseconds for lateness check to avoid seconds (like :47s) causing on-minute check-ins to show as late
+    const checkInMom = moment(attendance.check_in_time).utcOffset(7).second(0).millisecond(0);
     const dateStr =
       typeof attendance.date === 'string'
         ? attendance.date
         : moment(attendance.date).format('YYYY-MM-DD');
 
     const startMom = moment(
-      `${dateStr} ${workSchedule.start_time}`,
-      'YYYY-MM-DD HH:mm',
-    );
+      `${dateStr} ${workSchedule.start_time} +07:00`,
+      'YYYY-MM-DD HH:mm Z',
+    ).utcOffset(7);
     const latestCheckInMom = startMom
       .clone()
       .add(workSchedule.allowed_late_minutes, 'minutes');
@@ -144,12 +145,12 @@ export function recalculateStatus(
 
     if (attendance.check_out_time) {
       const endMom = moment(
-        `${dateStr} ${workSchedule.end_time}`,
-        'YYYY-MM-DD HH:mm',
-      );
+        `${dateStr} ${workSchedule.end_time} +07:00`,
+        'YYYY-MM-DD HH:mm Z',
+      ).utcOffset(7);
       const isOvernightShift = endMom.isBefore(startMom);
 
-      const checkOutMom = moment(attendance.check_out_time);
+      const checkOutMom = moment(attendance.check_out_time).utcOffset(7);
 
       if (isOvernightShift) {
         if (checkOutMom.isBefore(checkInMom)) {

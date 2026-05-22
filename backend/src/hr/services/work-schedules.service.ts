@@ -14,6 +14,7 @@ import {
   CopyWeekScheduleRequestDto,
 } from '../dto/hr.dto';
 import { PayrollService } from './payroll.service';
+import { recalculateStatus } from '../helpers/attendance.helpers';
 import moment from 'moment';
 
 @Injectable()
@@ -168,6 +169,15 @@ export class WorkSchedulesService {
     if (dto.is_active !== undefined) ws.is_active = dto.is_active;
 
     await this.scheduleRepo.save(ws);
+
+    // Tính toán lại trạng thái chấm công của ngày này nếu có bản ghi chấm công
+    const att = await this.attendanceRepo.findOne({
+      where: { user_id: ws.user_id, date: ws.work_date },
+    });
+    if (att) {
+      recalculateStatus(att, ws);
+      await this.attendanceRepo.save(att);
+    }
 
     // Tính lại phạt ngay khi lịch thay đổi, bất kể ngày nào
     await this.payrollService.autoGeneratePenaltyForAttendance(ws.user_id, ws.work_date);
