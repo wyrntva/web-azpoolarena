@@ -23,14 +23,16 @@ echo "⏳ Waiting for database to be ready..."
 sleep 10
 
 echo "📊 Running database migrations..."
-docker-compose exec backend alembic upgrade head
+docker-compose exec backend npm run migration:run
 
-echo "🌱 Seeding database (optional)..."
-read -p "Do you want to seed the database with sample data? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    docker-compose exec backend python seed.py
-fi
+# Note: In the NestJS version, database initialization can be done via azpoolarena_export.sql.
+# Seeding is not implemented in NestJS code yet.
+# echo "🌱 Seeding database (optional)..."
+# read -p "Do you want to seed the database with sample data? (y/n) " -n 1 -r
+# echo
+# if [[ $REPLY =~ ^[Yy]$ ]]; then
+#     docker-compose exec backend npm run seed
+# fi
 
 echo ""
 echo "✅ Development environment is ready!"

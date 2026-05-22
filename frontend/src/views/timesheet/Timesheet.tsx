@@ -232,7 +232,7 @@ const Timesheet = () => {
                                                 >
                                                     {attendance ? (
                                                         (() => {
-                                                            const checkIn = dayjs(attendance.check_in_time);
+                                                            const checkIn = dayjs(attendance.check_in_time).startOf('minute');
                                                             const checkOut = attendance.check_out_time ? dayjs(attendance.check_out_time) : null;
                                                             let checkInClass = "text-gray-900 dark:text-gray-100";
                                                             let checkOutClass = "text-gray-900 dark:text-gray-100";

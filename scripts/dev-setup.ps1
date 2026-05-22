@@ -22,13 +22,15 @@ Write-Host "Waiting for database to be ready..." -ForegroundColor Yellow
 Start-Sleep -Seconds 10
 
 Write-Host "Running database migrations..." -ForegroundColor Cyan
-docker-compose exec backend alembic upgrade head
+docker-compose exec backend npm run migration:run
 
-Write-Host ""
-$seed = Read-Host "Do you want to seed the database with sample data? (y/n)"
-if ($seed -eq "y") {
-    docker-compose exec backend python seed.py
-}
+# Note: In the NestJS version, database initialization can be done via azpoolarena_export.sql.
+# Seeding is not implemented in NestJS code yet.
+# Write-Host ""
+# $seed = Read-Host "Do you want to seed the database with sample data? (y/n)"
+# if ($seed -eq "y") {
+#     docker-compose exec backend npm run seed
+# }
 
 Write-Host ""
 Write-Host "Development environment is ready!" -ForegroundColor Green
