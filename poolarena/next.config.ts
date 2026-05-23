@@ -3,8 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: 'standalone',
   images: {
-    loader: 'custom',
-    loaderFile: './src/imageLoader.ts',
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -50,9 +49,6 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-    // Tối ưu images
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
   // Tối ưu performance
   experimental: {
