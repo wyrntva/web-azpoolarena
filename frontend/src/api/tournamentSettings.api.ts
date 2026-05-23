@@ -1,6 +1,6 @@
 import axiosClient from './axiosClient';
 import type { AxiosResponse } from 'axios';
-import type { ScoringRule, TournamentRank, TournamentRound } from '../types/api';
+import type { ScoringRule, TournamentRank } from '../types/api';
 
 export interface RankPayload {
     order: number;
@@ -11,18 +11,6 @@ export interface RankPayload {
 }
 
 export type RankUpdatePayload = Partial<RankPayload>;
-
-export interface RoundPayload {
-    name: string;
-    description?: string;
-    order: number;
-    tournament_type?: string | null;
-    number_of_players?: number | null;
-    multiplier?: number | null;
-    is_active: boolean;
-}
-
-export type RoundUpdatePayload = Partial<RoundPayload>;
 
 export interface ScoringRulePayload {
     name: string;
@@ -54,27 +42,6 @@ export const tournamentSettingsAPI = {
 
     deleteRank: (id: number): Promise<AxiosResponse<void>> => {
         return axiosClient.delete(`/api/tournament-settings/ranks/${id}`);
-    },
-
-    // Rounds
-    getRounds: (): Promise<AxiosResponse<TournamentRound[]>> => {
-        return axiosClient.get('/api/tournament-settings/rounds');
-    },
-
-    getRound: (id: number): Promise<AxiosResponse<TournamentRound>> => {
-        return axiosClient.get(`/api/tournament-settings/rounds/${id}`);
-    },
-
-    createRound: (data: RoundPayload): Promise<AxiosResponse<TournamentRound>> => {
-        return axiosClient.post('/api/tournament-settings/rounds', data);
-    },
-
-    updateRound: (id: number, data: RoundUpdatePayload): Promise<AxiosResponse<TournamentRound>> => {
-        return axiosClient.put(`/api/tournament-settings/rounds/${id}`, data);
-    },
-
-    deleteRound: (id: number): Promise<AxiosResponse<void>> => {
-        return axiosClient.delete(`/api/tournament-settings/rounds/${id}`);
     },
 
     // Scoring rules

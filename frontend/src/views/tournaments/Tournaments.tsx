@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import { Link } from 'react-router';
+import toast from 'react-hot-toast';
 import BaseDialog from '../../components/shared/BaseDialog';
 import TournamentTable from './components/TournamentTable';
 import { useTournamentForm } from './hooks/useTournamentForm';
@@ -41,7 +42,7 @@ const Tournaments = () => {
     const fetchTournaments = useCallback(async () => {
         try {
             _setLoading(true);
-            const response = await tournamentAPI.getPublicTournaments({ skip: (currentPage - 1) * 50, limit: 50 });
+            const response = await tournamentAPI.getTournaments({ skip: (currentPage - 1) * 50, limit: 50 });
             setTournaments(response.data?.data || []);
         } catch {
             // Error handled silently
@@ -55,13 +56,13 @@ const Tournaments = () => {
     }, [fetchTournaments]);
 
     const handleFormSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Ngăn chặn form submit mặc định (reload trang)
+        e.preventDefault();
         try {
             await handleSubmit(e);
             setModalOpen(false);
-            await fetchTournaments(); // Refresh the list
+            await fetchTournaments();
         } catch {
-            /* Error is already logged in handleSubmit */
+            toast.error('Không thể thêm giải đấu. Vui lòng thử lại.');
         }
     };
 
@@ -75,7 +76,7 @@ const Tournaments = () => {
                 await fetchTournaments();
             }
         } catch {
-            // Error handled in handleSubmit
+            toast.error('Không thể cập nhật giải đấu. Vui lòng thử lại.');
         }
     };
 
@@ -96,7 +97,7 @@ const Tournaments = () => {
             setCurrentTournamentId(tournamentId);
             setUpdateModalOpen(true);
         } catch (_error) {
-            alert('Không thể tải thông tin giải đấu. Vui lòng thử lại.');
+            toast.error('Không thể tải thông tin giải đấu. Vui lòng thử lại.');
         }
     };
 

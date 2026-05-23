@@ -102,7 +102,7 @@ const MobileAttendance = () => {
             }
             setPin('');
         } catch (error) {
-            const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            const detail = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
             toast.error(detail || 'Chấm công thất bại');
         } finally {
             setLoading(false);

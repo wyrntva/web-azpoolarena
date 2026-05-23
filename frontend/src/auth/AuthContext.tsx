@@ -41,8 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                         setUser(response.data);
                     }
                 } catch {
+                    // Axios interceptor already handles 401 cleanup (clears storage + redirects).
+                    // Calling logout() here would fire POST /api/auth/logout without a token → extra 401.
                     if (isMounted) {
-                        logout();
+                        setUser(null);
                     }
                 }
             }

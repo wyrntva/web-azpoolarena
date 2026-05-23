@@ -1,7 +1,8 @@
 import { Card, Table, TextInput, Button } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import { useNavigate } from 'react-router';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import CustomPagination from '../../../components/shared/CustomPagination';
 import { tournamentAPI, type Tournament } from '../../../api/tournament.api';
 import BaseDialog from '../../../components/shared/BaseDialog';
@@ -24,6 +25,11 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
     const [deleting, setDeleting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
+    useEffect(() => {
+        if (searchTerm) onPageChange(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm]);
+
     const handleDeleteClick = useCallback((tournament: Tournament) => {
         setTournamentToDelete(tournament);
         setDeleteModalOpen(true);
@@ -39,7 +45,7 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
             setTournamentToDelete(null);
             onRefresh?.();
         } catch {
-            alert('Không thể xóa giải đấu. Vui lòng thử lại.');
+            toast.error('Không thể xóa giải đấu. Vui lòng thử lại.');
         } finally {
             setDeleting(false);
         }

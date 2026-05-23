@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import CustomPagination from '../../components/shared/CustomPagination';
 import { poolArenaUserAPI } from '../../api/poolArenaUser.api';
 import type { PoolArenaUser } from '../../types/api';
-import { defaultAvatar, GENDER_LABELS } from '../../constants/shared';
+import { defaultAvatar, GENDER_LABELS, getAvatarUrl } from '../../constants/shared';
 
 const Leaderboard = () => {
     const [customers, setCustomers] = useState<PoolArenaUser[]>([]);
@@ -19,7 +19,7 @@ const Leaderboard = () => {
             setLoading(true);
             try {
                 const response = await poolArenaUserAPI.getUsers({ limit: 10000 });
-                const sortedData = (response.data || []).sort(
+                const sortedData = (response.data?.data || []).sort(
                     (a, b) => (b.points ?? 0) - (a.points ?? 0)
                 );
                 setCustomers(sortedData);
@@ -127,7 +127,7 @@ const Leaderboard = () => {
                                             <Table.Cell>
                                                 <div className="w-[60px] h-[75px] rounded overflow-hidden flex items-center justify-center">
                                                     <img
-                                                        src={customer.avatar_url || defaultAvatar}
+                                                        src={getAvatarUrl(customer.avatar_url)}
                                                         alt={customer.full_name}
                                                         className="w-full h-full object-cover"
                                                         onError={(e) => {

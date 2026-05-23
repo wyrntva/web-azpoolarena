@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { PoolArenaUserEntity } from '../entities';
 import {
   CreatePoolArenaUserDto,
@@ -79,6 +81,36 @@ export class PoolArenaService {
     const user = await this.findOne(id);
     Object.assign(user, dto);
     return this.repo.save(user);
+  }
+
+  async delete(id: number) {
+    const user = await this.findOne(id);
+    this.deleteLocalFile(user.avatar_url);
+    await this.repo.remove(user);
+  }
+
+  async updateAvatar(id: number, avatarUrl: string) {
+    const user = await this.findOne(id);
+    this.deleteLocalFile(user.avatar_url);
+    user.avatar_url = avatarUrl;
+    return this.repo.save(user);
+  }
+
+  async deleteAvatar(id: number) {
+    const user = await this.findOne(id);
+    this.deleteLocalFile(user.avatar_url);
+    (user as any).avatar_url = null;
+    return this.repo.save(user);
+  }
+
+  private deleteLocalFile(url: string | null | undefined) {
+    if (!url || !url.startsWith('/uploads/')) return;
+    const uploadsDir = path.join(__dirname, '..', '..', '..', 'uploads');
+    const relativePath = url.replace(/^\/uploads\//, '');
+    const fullPath = path.join(uploadsDir, relativePath);
+    try {
+      if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+    } catch { /* ignore */ }
   }
 
   async getRankings(limit = 100) {

@@ -5,6 +5,15 @@ import type { PoolArenaUser } from '../types/api';
 interface PoolArenaUserQueryParams {
     skip?: number;
     limit?: number;
+    search?: string;
+    rank?: string;
+    gender?: string;
+}
+
+interface PoolArenaUserListResponse {
+    data: PoolArenaUser[];
+    total: number;
+    meta: { total: number; skip: number; limit: number };
 }
 
 interface PoolArenaUserUpdateData {
@@ -24,7 +33,7 @@ interface PoolArenaUserUpdateData {
 }
 
 export const poolArenaUserAPI = {
-    getUsers: (params?: PoolArenaUserQueryParams): Promise<AxiosResponse<PoolArenaUser[]>> => {
+    getUsers: (params?: PoolArenaUserQueryParams): Promise<AxiosResponse<PoolArenaUserListResponse>> => {
         return axiosClient.get('/api/pool-arena/users', { params });
     },
 

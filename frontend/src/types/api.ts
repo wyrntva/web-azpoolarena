@@ -295,18 +295,6 @@ export interface TournamentRank {
     updated_at?: string;
 }
 
-export interface TournamentRound {
-    id: number;
-    name: string;
-    description?: string;
-    order: number;
-    tournament_type?: string | null;  // Loại giải đấu
-    number_of_players?: number | null;  // Số lượng cơ thủ
-    multiplier?: number | null;  // Hệ số nhân
-    is_active: boolean;
-    created_at?: string;
-    updated_at?: string;
-}
 
 export interface ScoringRule {
     id: number;

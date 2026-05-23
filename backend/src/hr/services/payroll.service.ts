@@ -437,7 +437,18 @@ export class PayrollService {
       where: { user_id: userId, date: dateStr },
     });
 
-    if (!sch) return null;
+    if (!sch) {
+      // Schedule không còn active (đã đổi sang OFF) → xóa hết auto-penalties ngày này
+      await this.dataSource
+        .createQueryBuilder()
+        .delete()
+        .from(PenaltyEntity)
+        .where('user_id = :userId', { userId })
+        .andWhere('date = :dateStr', { dateStr })
+        .andWhere("notes LIKE '%Tự động%'")
+        .execute();
+      return null;
+    }
 
     const workDate =
       typeof sch.work_date === 'string'

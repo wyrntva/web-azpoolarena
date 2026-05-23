@@ -130,8 +130,34 @@ export class AttendancesService {
     return { isValid: false, tokenType: QRTokenType.ATTENDANCE };
   }
 
-  // Atomic consume: UPDATE ... WHERE is_used=false → returns true if this caller won the race
+  // Consume a one-time QR access token. Returns true if attendance should proceed.
+  // Handles the case where QRAccess page already pre-consumed the token (is_used=true)
+  // before the user entered their PIN — still valid within the 60s grace period.
   private async consumeQrAccessToken(token: string, userPin: string): Promise<boolean> {
+    const existing = await this.qrAccessTokenRepo.findOne({
+      where: { access_token: token },
+    });
+
+    // Not a one-time access token (permanent session token) — no consume needed
+    if (!existing) return true;
+
+    // Already consumed within grace period (QRAccess page pre-consumed it before PIN entry)
+    if (existing.is_used && existing.used_at) {
+      const gracePeriod = moment(existing.used_at).add(60, 'seconds').toDate();
+      if (new Date() <= gracePeriod) {
+        // Record the PIN now that we know who used it
+        if (!existing.used_by_pin) {
+          await this.qrAccessTokenRepo.update(
+            { access_token: token },
+            { used_by_pin: userPin },
+          );
+        }
+        return true;
+      }
+      return false; // Grace period expired after pre-consume
+    }
+
+    // Token not yet consumed — atomic consume to prevent race conditions
     const result = await this.qrAccessTokenRepo
       .createQueryBuilder()
       .update()

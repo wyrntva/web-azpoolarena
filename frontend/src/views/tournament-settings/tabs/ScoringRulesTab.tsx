@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Button } from 'flowbite-react';
+import { Button, Badge } from 'flowbite-react';
 import { Icon } from '@iconify/react';
-import toast from 'react-hot-toast';
 
 const ScoringRulesTab = () => {
     const [ratingMatrix, setRatingMatrix] = useState([
@@ -9,11 +8,6 @@ const ScoringRulesTab = () => {
         { diff: 1, winFav: 10, winUnd: 25, loseFav: -25, loseUnd: -10 },
         { diff: 2, winFav: 5, winUnd: 30, loseFav: -30, loseUnd: -5 },
     ]);
-
-    const handleSaveMatrix = () => {
-        // Placeholder for API call
-        toast.success('Đã lưu cấu hình Rating Matrix');
-    };
 
     return (
         <div className="space-y-8">
@@ -24,6 +18,7 @@ const ScoringRulesTab = () => {
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <Icon icon="solar:chart-square-outline" className="text-blue-500" />
                             Quy tắc điểm (Rating Matrix)
+                            <Badge color="warning" className="ml-2 text-xs">Chưa tích hợp API</Badge>
                         </h2>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             Cấu hình điểm cộng/trừ dựa trên chênh lệch cấp độ (Rating Difference)
@@ -37,7 +32,7 @@ const ScoringRulesTab = () => {
                             <Icon icon="solar:add-circle-outline" className="mr-2" />
                             Thêm mức chênh lệch
                         </Button>
-                        <Button color="blue" size="sm" onClick={handleSaveMatrix}>
+                        <Button color="blue" size="sm" disabled title="Chức năng đang phát triển">
                             <Icon icon="solar:diskette-outline" className="mr-2" />
                             Lưu cấu hình
                         </Button>

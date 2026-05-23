@@ -95,6 +95,8 @@ export interface TournamentCreate {
     round_1_16?: boolean;
     round_1_32?: boolean;
     round_1_8?: boolean;
+    quarter_final?: string | null;
+    draw_from_round?: string | null;
     semi_final?: string | null;
     final?: string | null;
 }
@@ -146,7 +148,7 @@ export interface TournamentMatchUpsert {
 }
 
 export const tournamentAPI = {
-    getTournaments: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<Tournament[]>> => {
+    getTournaments: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<PaginatedResponse<Tournament[]>>> => {
         return axiosClient.get('/api/tournaments', { params });
     },
 

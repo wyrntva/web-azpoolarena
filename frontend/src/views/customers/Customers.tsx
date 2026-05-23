@@ -34,9 +34,7 @@ const Customers = () => {
         setLoading(true);
         try {
             const response = await poolArenaUserAPI.getUsers({ limit: 10000 });
-            const responseData = response.data as PoolArenaUser[] | { data?: PoolArenaUser[] };
-            const rawData = Array.isArray(responseData) ? responseData : (responseData as { data?: PoolArenaUser[] })?.data;
-            setCustomers(Array.isArray(rawData) ? rawData : []);
+            setCustomers(response.data?.data || []);
         } catch (_error) {
             toast.error('Không thể tải danh sách khách hàng');
         } finally {

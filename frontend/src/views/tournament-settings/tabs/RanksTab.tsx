@@ -161,14 +161,6 @@ const RanksTab = () => {
                                         <div className="flex items-center gap-2">
                                             <Button
                                                 size="xs"
-                                                color="info"
-                                                onClick={() => handleEdit(rank)}
-                                            >
-                                                <Icon icon="solar:eye-outline" className="mr-1" />
-                                                Xem trước
-                                            </Button>
-                                            <Button
-                                                size="xs"
                                                 color="blue"
                                                 onClick={() => handleEdit(rank)}
                                             >

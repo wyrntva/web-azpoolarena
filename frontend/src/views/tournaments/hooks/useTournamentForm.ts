@@ -3,6 +3,7 @@
  * Heavy logic (slug, images, API conversion) is delegated to utility modules.
  */
 import { useState, useEffect, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { tournamentSettingsAPI } from '../../../api/tournamentSettings.api';
 import { tournamentAPI } from '../../../api/tournament.api';
 import type { Tournament, TournamentCreate, TournamentUpdate } from '../../../api/tournament.api';
@@ -168,8 +169,10 @@ export const useTournamentForm = () => {
 
         if (tournamentId) {
             await tournamentAPI.updateTournament(tournamentId, apiData as TournamentUpdate);
+            toast.success('Cập nhật giải đấu thành công');
         } else {
             await tournamentAPI.createTournament(apiData as unknown as TournamentCreate);
+            toast.success('Thêm giải đấu thành công');
         }
         resetForm();
     };

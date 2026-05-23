@@ -52,8 +52,9 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
   logout() {
+    // Stateless JWT — nothing to invalidate server-side; guard removed so
+    // logout works even when the access token is already expired.
     return { message: 'Successfully logged out' };
   }
 }

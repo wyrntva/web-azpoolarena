@@ -9,9 +9,16 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { TournamentsService } from '../services/tournaments.service';
 import {
+  CreateTournamentDto,
   UpdateTournamentDto,
   CreateMatchDto,
   UpdateMatchDto,
@@ -23,6 +30,38 @@ import { Roles } from '../../auth/decorators/auth.decorators';
 @Controller('api/tournaments')
 export class TournamentsController {
   constructor(private readonly service: TournamentsService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async create(@Body() dto: CreateTournamentDto) {
+    return this.service.create(dto);
+  }
+
+  @Post('upload-image')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/tournaments',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          const imageType = (req.query.image_type as string) || 'image';
+          cb(null, `tournament-${imageType}-${uniqueSuffix}${ext}`);
+        },
+      }),
+    }),
+  )
+  async uploadImage(
+    @Query('image_type') imageType: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const url = `/uploads/tournaments/${file.filename}`;
+    return { url };
+  }
 
   @Get()
   async findAll(
@@ -49,6 +88,36 @@ export class TournamentsController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.service.findOne(id);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateTournamentDto,
+  ) {
+    return this.service.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    await this.service.delete(id);
+    return { success: true };
+  }
+
+  @Delete(':id/image')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async removeImage(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('image_type') imageType: string,
+    @Query('sponsor_index') sponsorIndex?: string,
+  ) {
+    const idx = sponsorIndex !== undefined ? parseInt(sponsorIndex, 10) : undefined;
+    return this.service.removeImage(id, imageType, idx);
   }
 
   @Get('slug/:slug')
@@ -79,6 +148,11 @@ export class TournamentsController {
     @Body() body: { matches: CreateMatchDto[] },
   ) {
     return this.service.generateMatches(id, body.matches);
+  }
+
+  @Get('slug/:slug/registrations')
+  async getRegistrationsBySlug(@Param('slug') slug: string) {
+    return this.service.getRegistrationsBySlug(slug);
   }
 
   @Get(':id/registrations')

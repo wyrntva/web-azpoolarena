@@ -237,6 +237,12 @@ export class TournamentEntity {
   round_1_8: boolean;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
+  quarter_final: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  draw_from_round: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
   semi_final: string;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
