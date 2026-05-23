@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { Form, Input, Button, Card, Typography, Space, Divider, notification } from "antd";
 import {
   UserOutlined,
@@ -21,7 +21,7 @@ interface LoginFormData {
   password: string;
 }
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
@@ -171,5 +171,17 @@ export default function LoginPage() {
         <Footer />
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen relative overflow-hidden bg-[url('/images/auth_img.png')] bg-cover bg-center flex items-center justify-center">
+        <div className="text-white text-lg font-medium">Đang tải...</div>
+      </div>
+    }>
+      <LoginFormContent />
+    </Suspense>
   );
 }
