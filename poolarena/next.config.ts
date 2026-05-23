@@ -31,6 +31,21 @@ const nextConfig: NextConfig = {
         hostname: '*.azpoolarena.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cms.poolarena.vn',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.poolarena.vn',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '*.poolarena.vn',
+        pathname: '/**',
+      },
     ],
     // Tối ưu images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
