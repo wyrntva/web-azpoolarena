@@ -9,7 +9,7 @@ import defaultAvatarImage from '../assets/images/generic-profile_mini_dcryfs.web
 // API BASE URL
 // ============================================
 
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://192.168.1.188:8000';
+export const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // ============================================
 // LABELS & MAPS

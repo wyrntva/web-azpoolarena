@@ -43,6 +43,8 @@ services:
       FORCE_HTTPS: ${FORCE_HTTPS:-true}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
+    volumes:
+      - uploads_prod:/app/uploads
     networks:
       - azpool-network
 

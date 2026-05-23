@@ -1,0 +1,191 @@
+"use client";
+
+import React, { memo } from "react";
+import Image from "next/image";
+import { LuCalendarRange } from "react-icons/lu";
+
+export interface Tournament {
+  id: number;
+  slug: string;
+  img: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  rank: string;
+  date: string;
+  time: string;
+  participants: { current: number; max: number };
+  isRegistered: boolean;
+}
+
+interface TournamentCardProps {
+  tournament: Tournament;
+  variant: "upcoming" | "completed";
+  onCardClick: (tournament: Tournament) => void;
+  onRegister?: (tournamentId: number) => void;
+  onViewResults?: (tournamentId: number) => void;
+}
+
+// Memoize component để tránh re-render không cần thiết
+const TournamentCard = memo(function TournamentCard({
+  tournament,
+  variant,
+  onCardClick,
+  onRegister,
+  onViewResults,
+}: TournamentCardProps) {
+  const isFull = tournament.participants.current >= tournament.participants.max;
+
+  return (
+    <div
+      className={`
+        w-[439px] h-[452px] flex flex-col
+        group rounded-2xl border-none shadow-lg overflow-hidden cursor-pointer 
+        transition-all duration-300
+        hover:shadow-2xl
+        bg-white
+      `}
+      onClick={() => onCardClick(tournament)}
+    >
+      {/* Header (Image + Overlay) */}
+      <div className="relative h-[400px] w-full overflow-hidden">
+        <Image
+          src={tournament.img || "/images/tournament.png"}
+          alt={tournament.title}
+          fill
+          sizes="439px"
+          className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
+          priority
+        />
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/40"></div>
+
+        {/* Content Overlay */}
+        <div className="absolute inset-0 flex flex-col items-center justify-between py-6">
+
+          {/* Top: Logo giải đấu */}
+          <div className="flex flex-col items-center">
+            {tournament.category && (tournament.category.startsWith('http') || tournament.category.startsWith('/')) ? (
+              <div className="mb-2">
+                <img
+                  src={tournament.category}
+                  alt="Logo giải đấu"
+                  className="w-auto object-contain max-w-[200px]"
+                  style={{ height: '80px' }}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+              </div>
+            ) : tournament.category ? (
+              <h4 className="text-[#FFC107] font-bold text-xl uppercase tracking-wider">
+                {tournament.category}
+              </h4>
+            ) : null}
+          </div>
+
+          {/* Middle: Title */}
+          <div className="text-center px-4">
+            <h3
+              className="mb-2"
+              style={{
+                color: '#FFF',
+                textAlign: 'center',
+                fontFamily: 'Montserrat',
+                fontSize: '20px',
+                fontStyle: 'italic',
+                fontWeight: 700,
+                lineHeight: '28px',
+              }}
+            >
+              {tournament.title}
+            </h3>
+            <p className="text-2xl text-white font-bold italic uppercase">
+              {tournament.subtitle}
+            </p>
+          </div>
+
+          {/* Bottom: Rank */}
+          <div className="mb-4 text-white text-lg font-normal">
+            Hạng {tournament.rank}
+          </div>
+        </div>
+
+        {/* Participant Badge (Bottom Right) */}
+        <div className="absolute bottom-0" style={{ right: '16px' }}>
+          <div
+            className="rounded-tl-xl rounded-tr-xl flex items-center justify-center"
+            style={{
+              width: '92px',
+              height: '32px',
+              backgroundColor: tournament.participants.current >= tournament.participants.max ? '#C6010B' : '#1B03DC',
+              color: '#FFF',
+              fontFamily: 'Montserrat',
+              fontSize: '12px',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              lineHeight: '16px',
+            }}
+          >
+            {tournament.participants.current}/{tournament.participants.max} người
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="h-[52px] flex items-center justify-between px-5 bg-white group-hover:bg-[#172339] transition-colors duration-500">
+        {/* Date/Time */}
+        <div className="flex items-center gap-2">
+          <LuCalendarRange className="text-[#37393E] group-hover:text-white w-5 h-5 transition-colors duration-500" />
+          <span className="text-[#37393E] group-hover:text-white text-base font-normal transition-colors duration-500">
+            {tournament.time} - {tournament.date}
+          </span>
+        </div>
+
+        {/* Action Button */}
+        <div>
+          {variant === "upcoming" ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRegister?.(tournament.id);
+              }}
+              disabled={isFull}
+              className={`rounded-full shadow-none flex items-center justify-center transition-all duration-300
+                ${isFull
+                  ? "bg-[#808996] cursor-not-allowed"
+                  : "bg-[#37393E] hover:bg-[#37393E]/90 hover:scale-105 hover:shadow-lg active:scale-95 cursor-pointer"}`}
+              style={{
+                width: '138px',
+                height: '28px',
+                color: '#FFF',
+                fontFamily: 'Montserrat',
+                fontSize: '14px',
+                fontStyle: 'normal',
+                fontWeight: 500,
+                lineHeight: '20px',
+                letterSpacing: '0.28px',
+              }}
+            >
+              {isFull ? "Đã đầy" : "Đăng ký ngay"}
+            </button>
+          ) : (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewResults?.(tournament.id);
+              }}
+              className="px-4 py-1.5 rounded-full text-sm font-bold text-white bg-[#37393E] hover:bg-[#37393E]/90 transition-all shadow-none"
+            >
+              Kết quả
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+export default TournamentCard;

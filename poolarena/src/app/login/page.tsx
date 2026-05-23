@@ -1,0 +1,175 @@
+"use client";
+
+import React from "react";
+import { Form, Input, Button, Card, Typography, Space, Divider, notification } from "antd";
+import {
+  UserOutlined,
+  LockOutlined,
+  PhoneOutlined,
+  FacebookOutlined,
+} from "@ant-design/icons";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Footer } from "@/components/Footer";
+import { LogoSection } from "@/components/LogoSection";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
+import { loginThunk } from "@/stores/auth.slice";
+
+const { Title, Text, Link } = Typography;
+
+interface LoginFormData {
+  emailOrPhone: string;
+  password: string;
+}
+
+export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [form] = Form.useForm();
+  const [api, contextHolder] = notification.useNotification();
+  const dispatch = useAppDispatch();
+  const authState = useAppSelector((state) => state.auth);
+
+  const handleLogin = async (values: LoginFormData) => {
+    const resultAction = await dispatch(loginThunk(values));
+    // Check if fulfilled or rejected
+    if (loginThunk.fulfilled.match(resultAction)) {
+      // Redirect to the page user wanted to visit or home
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
+    } else {
+      api.error({
+        message: "Đăng nhập thất bại!",
+        placement: "top"
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen relative overflow-hidden">
+      {contextHolder}
+      <div className="relative z-10 flex flex-col min-h-screen bg-[url('/images/auth_img.png')] bg-cover bg-center">
+        {/* Header */}
+        <div className="flex-1 flex items-center justify-center px-4 py-8">
+          <div className="w-full max-w-md">
+            {/* Logo and Welcome Text */}
+            <div className="text-center mb-8">
+              <LogoSection />
+              <div className="text-white text-base mb-2">
+                Chào mừng bạn đến với{" "}
+                <span className="font-bold">Pool Arena</span>!
+              </div>
+            </div>
+
+            {/* Login Form */}
+            <Card className="shadow-2xl border-0 rounded-2xl">
+              <div className="text-gray-800 text-lg italic font-bold mb-4">
+                Đăng nhập
+              </div>
+
+              <Form
+                form={form}
+                name="login"
+                onFinish={handleLogin}
+                layout="vertical"
+                size="large"
+                requiredMark={false}
+              >
+                <Form.Item
+                  name="emailOrPhone"
+                  label={
+                    <div className="text-gray-800 text-base font-semibold">
+                      Email hoặc số điện thoại
+                    </div>
+                  }
+                  rules={[
+                    { required: true, message: "Vui lòng nhập email hoặc số điện thoại!" },
+                    {
+                      validator: (_, value) => {
+                        if (!value) return Promise.resolve();
+                        
+                        // Check if it's a valid email
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        // Check if it's a valid phone number
+                        const phoneRegex = /^[0-9]{10,11}$/;
+                        
+                        if (emailRegex.test(value) || phoneRegex.test(value)) {
+                          return Promise.resolve();
+                        }
+                        
+                        return Promise.reject(new Error("Vui lòng nhập email hoặc số điện thoại hợp lệ!"));
+                      },
+                    },
+                  ]}
+                >
+                  <Input
+                    placeholder="Nhập email hoặc số điện thoại"
+                    className="rounded-lg"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="password"
+                  label={
+                    <div className="text-gray-800 text-base font-semibold">
+                      Mật khẩu
+                    </div>
+                  }
+                  rules={[
+                    { required: true, message: "Vui lòng nhập mật khẩu!" },
+                    { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
+                  ]}
+                >
+                  <Input.Password
+                    placeholder="Nhập mật khẩu"
+                    className="rounded-lg"
+                  />
+                </Form.Item>
+
+                <div className="text-right mb-4">
+                  <Link
+                    href="/forgot-password"
+                    className="!text-[#1B03DC] !hover:text-[#1B03DC]/80"
+                  >
+                    Quên mật khẩu
+                  </Link>
+                </div>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    className="w-1/3 h-12 !bg-[#37393E] border-none font-medium !rounded-full"
+                    loading={authState.loading}
+                  >
+                    Đăng nhập
+                  </Button>
+                </Form.Item>
+              </Form>
+
+              <Divider className="!my-4" />
+
+              {/* Register Section */}
+              <div className="text-start">
+                <div className="text-gray-800 text-lg font-bold italic">
+                  Bạn chưa có tài khoản?
+                </div>
+                <div className="mt-3">
+                  <Button
+                    type="default"
+                    className="w-1/3 h-10 !rounded-full !border-[#37393E] hover:!border-[#37393E]/80"
+                    onClick={() => router.push("/register")}
+                  >
+                    Đăng ký ngay
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <Footer />
+      </div>
+    </div>
+  );
+}
