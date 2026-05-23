@@ -63,6 +63,21 @@ services:
     networks:
       - azpool-network
 
+  # PoolArena Service (Customer-Facing Next.js App)
+  poolarena:
+    build:
+      context: ./poolarena
+      dockerfile: Dockerfile
+      target: production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: azpool-poolarena-prod
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - azpool-network
+
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -71,6 +86,7 @@ services:
     depends_on:
       - backend
       - frontend
+      - poolarena
     ports:
       - "80:80"
       - "443:443"
