@@ -53,6 +53,7 @@ const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, i
                             }
                             alt={data.player.name}
                             fill
+                            unoptimized
                             sizes="60px"
                             className="object-contain"
                             onError={(e) => {

@@ -179,6 +179,8 @@ export default function TournamentsPage() {
                   src={url}
                   alt={`Tournament Banner ${index + 1}`}
                   fill
+                  unoptimized
+                  sizes="100vw"
                   className="object-cover rounded-xl"
                   priority={index === 0}
                 />

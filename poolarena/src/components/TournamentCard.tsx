@@ -53,6 +53,7 @@ const TournamentCard = memo(function TournamentCard({
           src={tournament.img || "/images/tournament.png"}
           alt={tournament.title}
           fill
+          unoptimized
           sizes="439px"
           className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
           priority

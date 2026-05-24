@@ -59,6 +59,7 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
                   }
                   alt={player.name}
                   fill
+                  unoptimized
                   sizes="80px"
                   className="object-contain"
                   onError={(e) => {

@@ -75,6 +75,7 @@ const PlayerRow = memo(function PlayerRow({
                 src={imgSrc}
                 alt={player.full_name}
                 fill
+                unoptimized
                 className="object-contain"
                 sizes="60px"
                 onError={() => setImgSrc('/images/imageprofile.png')}
@@ -109,6 +110,7 @@ const PlayerRow = memo(function PlayerRow({
             src={imgSrc}
             alt={player.full_name}
             fill
+            unoptimized
             sizes="40px"
             className="object-cover"
             onError={() => setImgSrc('/images/imageprofile.png')}
@@ -261,6 +263,7 @@ export default function LeaderboardPage() {
           src={bannerSrc}
           alt="Leaderboard banner"
           fill
+          unoptimized
           sizes="100vw"
           className="object-cover"
           priority
