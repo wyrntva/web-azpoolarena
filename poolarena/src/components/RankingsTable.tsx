@@ -44,13 +44,7 @@ const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, i
                 <div className={`${isTop1 ? "scale-125 mx-2" : ""}`}>
                     <div className="w-[60px] h-[75px] flex-shrink-0 relative transition-transform duration-300">
                         <Image
-                            src={
-                                data.player.avatar
-                                    ? data.player.avatar.startsWith('http')
-                                        ? data.player.avatar
-                                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${data.player.avatar}`
-                                    : '/images/imageprofile.png'
-                            }
+                            src={data.player.avatar || '/images/imageprofile.png'}
                             alt={data.player.name}
                             fill
                             unoptimized

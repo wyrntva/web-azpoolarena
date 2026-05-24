@@ -10,7 +10,7 @@ import TournamentList from "@/components/TournamentList";
 import { Tournament } from "@/components/TournamentCard";
 import { tournamentAPI } from "@/api/tournament.api";
 import { storeSettingsAPI } from "@/api/storeSettings.api";
-import { sortRanks, generateSlug, resolveImageUrl, getApiBase } from "@/lib/tournament-utils";
+import { sortRanks, generateSlug, resolveImageUrl } from "@/lib/tournament-utils";
 
 interface TournamentData {
   id: number;
@@ -29,7 +29,6 @@ interface TournamentData {
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
-  const API_BASE = getApiBase();
   let urls: string[] = [];
   try {
     const parsed = JSON.parse(bannerTournament);
@@ -38,7 +37,8 @@ function parseBannerUrls(bannerTournament: string | null | undefined): string[] 
   } catch {
     urls = [bannerTournament];
   }
-  return urls.map(u => u.startsWith('http') ? u : `${API_BASE}${u}`);
+  // Relative paths (e.g. /uploads/...) are served from same domain via nginx proxy
+  return urls.filter(Boolean);
 }
 
 export default function TournamentsPage() {
@@ -69,7 +69,6 @@ export default function TournamentsPage() {
         return;
       }
 
-      const API_BASE = getApiBase();
       const now = new Date();
       const upcoming: Tournament[] = [];
       const completed: Tournament[] = [];

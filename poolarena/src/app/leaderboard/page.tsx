@@ -7,7 +7,7 @@ import NavBar from "@/components/NavBar";
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/config/axios";
-import { resolveImageUrl, getApiBase } from "@/lib/tournament-utils";
+import { resolveImageUrl } from "@/lib/tournament-utils";
 
 const { Option } = Select;
 
@@ -152,7 +152,6 @@ export default function LeaderboardPage() {
   const bannerSrc = (() => {
     const raw = storeSettings?.banner_ranking;
     if (!raw) return "/images/tour_banner.png";
-    const API_BASE = getApiBase();
     let urls: string[] = [];
     try {
       const parsed = JSON.parse(raw);
@@ -161,7 +160,8 @@ export default function LeaderboardPage() {
     } catch { urls = [raw]; }
     const first = urls[0];
     if (!first) return "/images/tour_banner.png";
-    return first.startsWith('http') ? first : `${API_BASE}${first}`;
+    // Relative paths (e.g. /uploads/...) are served from same domain via nginx proxy
+    return first;
   })();
 
   const isInitialLoad = useRef(true);

@@ -50,13 +50,7 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
               {/* Player Avatar - Left Side */}
               <div className="mr-4 w-[80px] h-[80px] flex-shrink-0 relative">
                 <Image
-                  src={
-                    player.avatar
-                      ? player.avatar.startsWith('http')
-                        ? player.avatar
-                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${player.avatar}`
-                      : defaultAvatar
-                  }
+                  src={player.avatar || defaultAvatar}
                   alt={player.name}
                   fill
                   unoptimized

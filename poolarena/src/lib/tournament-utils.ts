@@ -1,11 +1,12 @@
 export const getApiBase = (): string =>
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Resolve a possibly-relative image path to a full URL
+// Resolve a possibly-relative image path. Relative paths (e.g. /uploads/...)
+// are served from the same domain via nginx proxy, so no domain prefix needed.
 export const resolveImageUrl = (path: string | null | undefined, fallback: string): string => {
   if (!path) return fallback;
   if (path.startsWith('http')) return path;
-  return `${getApiBase()}${path}`;
+  return path;
 };
 
 const RANK_ORDER = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
