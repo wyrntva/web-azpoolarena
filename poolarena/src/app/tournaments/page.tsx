@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Spin } from "antd";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -26,35 +27,35 @@ interface TournamentData {
   status: string;
 }
 
+function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
+  if (!bannerTournament) return [];
+  const API_BASE = getApiBase();
+  let urls: string[] = [];
+  try {
+    const parsed = JSON.parse(bannerTournament);
+    if (Array.isArray(parsed)) urls = parsed.filter(Boolean);
+    else if (typeof parsed === 'string' && parsed.length > 0) urls = [parsed];
+  } catch {
+    urls = [bannerTournament];
+  }
+  return urls.map(u => u.startsWith('http') ? u : `${API_BASE}${u}`);
+}
+
 export default function TournamentsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [upcomingTournaments, setUpcomingTournaments] = useState<Tournament[]>([]);
   const [completedTournaments, setCompletedTournaments] = useState<Tournament[]>([]);
-  const [bannerUrls, setBannerUrls] = useState<string[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
-  const fetchBannerSettings = useCallback(async () => {
-    try {
-      const response = await storeSettingsAPI.get();
-      const settings = response.data;
-      if (!settings?.banner_tournament) return;
+  // React Query caches store-settings across navigations (staleTime: 5 min from QueryClientProvider)
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings-public'],
+    queryFn: () => storeSettingsAPI.get().then(r => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
 
-      let urls: string[] = [];
-      try {
-        const parsed = JSON.parse(settings.banner_tournament);
-        if (Array.isArray(parsed)) urls = parsed.filter(Boolean);
-        else if (typeof parsed === 'string' && parsed.length > 0) urls = [parsed];
-      } catch {
-        urls = [settings.banner_tournament];
-      }
-
-      const API_BASE = getApiBase();
-      setBannerUrls(urls.map(u => u.startsWith('http') ? u : `${API_BASE}${u}`));
-    } catch (error) {
-      console.error("Failed to fetch banner settings:", error);
-    }
-  }, []);
+  const bannerUrls = parseBannerUrls(storeSettings?.banner_tournament);
 
   const fetchTournaments = useCallback(async () => {
     try {
@@ -127,8 +128,7 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     fetchTournaments();
-    fetchBannerSettings();
-  }, [fetchTournaments, fetchBannerSettings]);
+  }, [fetchTournaments]);
 
   // Auto-rotate banners every 15 seconds
   useEffect(() => {

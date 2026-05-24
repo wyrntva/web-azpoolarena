@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef, memo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Select, Pagination } from "antd";
 import NavBar from "@/components/NavBar";
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/config/axios";
-import { resolveImageUrl } from "@/lib/tournament-utils";
+import { resolveImageUrl, getApiBase } from "@/lib/tournament-utils";
 
 const { Option } = Select;
 
@@ -139,7 +140,27 @@ export default function LeaderboardPage() {
   const [selectedRank, setSelectedRank] = useState<string>("all");
   const [activeTab, setActiveTab] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [bannerSrc, setBannerSrc] = useState<string>("/images/tour_banner.png");
+
+  const { data: storeSettings } = useQuery({
+    queryKey: ['store-settings-public'],
+    queryFn: () => api.get('/api/store-settings/public').then(r => r.data),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const bannerSrc = (() => {
+    const raw = storeSettings?.banner_ranking;
+    if (!raw) return "/images/tour_banner.png";
+    const API_BASE = getApiBase();
+    let urls: string[] = [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) urls = parsed.filter(Boolean);
+      else if (typeof parsed === 'string' && parsed.length > 0) urls = [parsed];
+    } catch { urls = [raw]; }
+    const first = urls[0];
+    if (!first) return "/images/tour_banner.png";
+    return first.startsWith('http') ? first : `${API_BASE}${first}`;
+  })();
 
   const isInitialLoad = useRef(true);
 
@@ -162,30 +183,15 @@ export default function LeaderboardPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [leaderboardRes, ranksRes, settingsRes] = await Promise.all([
+        const [leaderboardRes, ranksRes] = await Promise.all([
           api.get('/api/pool-arena/users', { params: buildLeaderboardParams(1, 'all', 0) }),
           api.get('/api/tournament-settings/ranks'),
-          api.get('/api/store-settings/public'),
         ]);
 
         const { players: initialPlayers, total } = parseLeaderboardResponse(leaderboardRes.data);
         setPlayers(initialPlayers);
         setTotalPlayers(total);
         setRanks(ranksRes.data);
-
-        const rawBanner = settingsRes.data?.banner_ranking;
-        if (rawBanner) {
-          let urls: string[] = [];
-          try {
-            const parsed = JSON.parse(rawBanner);
-            if (Array.isArray(parsed)) urls = parsed.filter(Boolean);
-            else if (typeof parsed === 'string' && parsed.length > 0) urls = [parsed];
-          } catch {
-            urls = [rawBanner];
-          }
-          const first = urls[0];
-          if (first) setBannerSrc(resolveImageUrl(first, '/images/tour_banner.png'));
-        }
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {

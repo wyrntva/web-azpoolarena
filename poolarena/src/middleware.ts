@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Các route công khai không cần đăng nhập
-const publicRoutes = ['/login', '/register', '/forgot-password'];
+const publicRoutes = ['/login', '/register', '/forgot-password', '/tournaments', '/leaderboard', '/players', '/player'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,9 +14,7 @@ export function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   if (!token && !isPublicRoute) {
     const url = new URL('/login', request.url);
-    if (pathname !== '/' && pathname !== '/tournaments') {
-      url.searchParams.set('redirect', pathname);
-    }
+    url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
 
