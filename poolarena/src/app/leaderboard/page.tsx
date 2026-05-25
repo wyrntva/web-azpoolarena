@@ -160,8 +160,7 @@ export default function LeaderboardPage() {
     } catch { urls = [raw]; }
     const first = urls[0];
     if (!first) return "/images/tour_banner.png";
-    // Relative paths (e.g. /uploads/...) are served from same domain via nginx proxy
-    return first;
+    return resolveImageUrl(first, "/images/tour_banner.png");
   })();
 
   const isInitialLoad = useRef(true);

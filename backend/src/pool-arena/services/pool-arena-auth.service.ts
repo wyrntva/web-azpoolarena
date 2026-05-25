@@ -50,10 +50,19 @@ export class PoolArenaAuthService {
     return parseInt(payload.sub, 10);
   }
 
+  private normalizePhone(value: string): string {
+    const trimmed = value.trim();
+    if (/^0[0-9]{9,10}$/.test(trimmed)) {
+      return '+84' + trimmed.slice(1);
+    }
+    return trimmed;
+  }
+
   async login(emailOrPhone: string, password: string) {
+    const normalized = this.normalizePhone(emailOrPhone);
     const user = await this.userRepo
       .createQueryBuilder('u')
-      .where('u.phone_number = :val OR u.email = :val', { val: emailOrPhone })
+      .where('u.phone_number = :val OR u.email = :val', { val: normalized })
       .getOne();
 
     if (!user || !(await bcrypt.compare(password, user.hashed_password))) {
@@ -76,7 +85,7 @@ export class PoolArenaAuthService {
     address?: string;
     rank?: string;
   }) {
-    const conditions: any[] = [{ phone_number: data.phone_number }];
+    const conditions: any[] = [{ phone_number: this.normalizePhone(data.phone_number) }];
     if (data.email) conditions.push({ email: data.email });
 
     const existing = await this.userRepo.findOne({ where: conditions });
@@ -86,7 +95,7 @@ export class PoolArenaAuthService {
 
     const user = this.userRepo.create({
       full_name: data.full_name,
-      phone_number: data.phone_number,
+      phone_number: this.normalizePhone(data.phone_number),
       email: data.email || undefined,
       hashed_password: await bcrypt.hash(data.password, 10),
       gender: (data.gender as any) || undefined,

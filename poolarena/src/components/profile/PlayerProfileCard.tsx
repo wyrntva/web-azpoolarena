@@ -59,6 +59,7 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                                     src={imgSrc}
                                     alt={user.fullName || user.full_name || "User Avatar"}
                                     fill
+                                    unoptimized
                                     sizes="(max-width: 1024px) 100vw, 50vw"
                                     className="object-contain bg-transparent object-bottom"
                                     priority

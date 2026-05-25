@@ -17,7 +17,7 @@ import { loginThunk } from "@/stores/auth.slice";
 const { Title, Text, Link } = Typography;
 
 interface LoginFormData {
-  emailOrPhone: string;
+  phone: string;
   password: string;
 }
 
@@ -30,7 +30,7 @@ function LoginFormContent() {
   const authState = useAppSelector((state) => state.auth);
 
   const handleLogin = async (values: LoginFormData) => {
-    const resultAction = await dispatch(loginThunk(values));
+    const resultAction = await dispatch(loginThunk({ emailOrPhone: values.phone, password: values.password }));
     // Check if fulfilled or rejected
     if (loginThunk.fulfilled.match(resultAction)) {
       // Redirect to the page user wanted to visit or home
@@ -75,34 +75,22 @@ function LoginFormContent() {
                 requiredMark={false}
               >
                 <Form.Item
-                  name="emailOrPhone"
+                  name="phone"
                   label={
                     <div className="text-gray-800 text-base font-semibold">
-                      Email hoặc số điện thoại
+                      Số điện thoại
                     </div>
                   }
                   rules={[
-                    { required: true, message: "Vui lòng nhập email hoặc số điện thoại!" },
+                    { required: true, message: "Vui lòng nhập số điện thoại!" },
                     {
-                      validator: (_, value) => {
-                        if (!value) return Promise.resolve();
-                        
-                        // Check if it's a valid email
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        // Check if it's a valid phone number
-                        const phoneRegex = /^[0-9]{10,11}$/;
-                        
-                        if (emailRegex.test(value) || phoneRegex.test(value)) {
-                          return Promise.resolve();
-                        }
-                        
-                        return Promise.reject(new Error("Vui lòng nhập email hoặc số điện thoại hợp lệ!"));
-                      },
+                      pattern: /^(0|\+84)[0-9]{9,10}$/,
+                      message: "Số điện thoại không hợp lệ! (VD: 0999888777 hoặc +84999888777)",
                     },
                   ]}
                 >
                   <Input
-                    placeholder="Nhập email hoặc số điện thoại"
+                    placeholder="VD: 0999888777"
                     className="rounded-lg"
                   />
                 </Form.Item>

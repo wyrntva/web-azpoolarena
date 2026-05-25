@@ -37,8 +37,7 @@ function parseBannerUrls(bannerTournament: string | null | undefined): string[] 
   } catch {
     urls = [bannerTournament];
   }
-  // Relative paths (e.g. /uploads/...) are served from same domain via nginx proxy
-  return urls.filter(Boolean);
+  return urls.filter(Boolean).map(url => resolveImageUrl(url, ''));
 }
 
 export default function TournamentsPage() {

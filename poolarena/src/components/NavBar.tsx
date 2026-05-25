@@ -61,6 +61,13 @@ export default function NavBar() {
         >
           BẢNG XẾP HẠNG
         </Link>
+        <Link
+          href="/achievements"
+          className="text-base text-gray-700 font-medium hover:text-[#D22E39] transition-colors"
+          prefetch
+        >
+          THÀNH TÍCH
+        </Link>
       </div>
 
       {/* Right Menu (Desktop) */}
@@ -156,10 +163,17 @@ export default function NavBar() {
             </Link>
             <Link
               href="/leaderboard"
-              className="block text-gray-700 hover:text-[#D22E39]"
+              className="block text-gray-700 hover:text-[#D22E39] mb-3"
               onClick={() => setOpenLeft(false)}
             >
               BẢNG XẾP HẠNG
+            </Link>
+            <Link
+              href="/achievements"
+              className="block text-gray-700 hover:text-[#D22E39]"
+              onClick={() => setOpenLeft(false)}
+            >
+              THÀNH TÍCH
             </Link>
           </motion.div>
         )}

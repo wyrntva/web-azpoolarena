@@ -4,6 +4,9 @@ import type { NextRequest } from 'next/server';
 // Các route công khai không cần đăng nhập
 const publicRoutes = ['/login', '/register', '/forgot-password', '/tournaments', '/leaderboard', '/players', '/player'];
 
+// Các trang auth — khi đã đăng nhập thì redirect ra ngoài
+const authRoutes = ['/login', '/register', '/forgot-password'];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -18,13 +21,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect từ trang chủ "/" sang "/tournaments" (chỉ khi đã đăng nhập)
+  // Redirect từ trang chủ "/" sang "/tournaments"
   if (pathname === '/') {
     return NextResponse.redirect(new URL('/tournaments', request.url));
   }
 
-  // Nếu đang ở trang public và đã đăng nhập -> redirect về tournaments
-  if (token && publicRoutes.includes(pathname)) {
+  // Nếu đã đăng nhập mà vào trang auth (login/register/...) -> redirect về tournaments
+  if (token && authRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.redirect(new URL('/tournaments', request.url));
   }
 

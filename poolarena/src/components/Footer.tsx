@@ -1,22 +1,32 @@
 import { Divider, Space } from "antd";
 import Link from "next/link";
 import React from "react";
-import { LogoSection } from "./LogoSection";
+import Image from "next/image";
 import { FaFacebookF } from "react-icons/fa6";
 import { CiGlobe, CiMail } from "react-icons/ci";
 import { IoCallOutline} from "react-icons/io5";
 
 export const Footer = () => {
   return (
-    <footer className="bg-[#172339] text-white py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-[#172339] text-white w-full min-h-[340px]">
+      <div className="max-w-[1360px] mx-auto pt-[48px] pb-[48px] px-4 2xl:px-0">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-[48px]">
           {/* Logo Section */}
-          <LogoSection />
+          <div className="relative w-[280px] h-16">
+            <Image
+              src="/images/logo.png"
+              alt="Pool Arena Logo"
+              fill
+              unoptimized
+              sizes="280px"
+              className="object-contain"
+              priority
+            />
+          </div>
 
           {/* Menu Section */}
           <div>
-            <div className="text-white font-semibold text-base mb-4">Menu</div>
+            <div className="text-white font-semibold text-base mb-4">Tin tức</div>
             <Space direction="vertical" size="small">
               <Link href="/about" className="!text-gray-300 !hover:text-white">
                 Giới thiệu
@@ -44,7 +54,7 @@ export const Footer = () => {
 
           <div>
             <div className="text-white font-semibold text-base mb-4">
-              Social
+              Mạng xã hội
             </div>
             <Space direction="vertical" size="small">
               <div className="flex items-center space-x-2">

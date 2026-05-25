@@ -25,12 +25,14 @@ export default function PlayerProfile({
       <div className="mr-4">
         {avatarUrl ? (
           <div className="relative w-16 h-16 rounded-full overflow-hidden">
-            <Image 
-              src={avatarUrl} 
-              alt={name} 
-              fill 
+            <Image
+              src={avatarUrl}
+              alt={name}
+              fill
+              unoptimized
               style={{ objectFit: 'cover' }}
               className="rounded-full"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           </div>
         ) : (

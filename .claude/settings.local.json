@@ -98,7 +98,11 @@
       "Bash(ffmpeg:*)",
       "Bash(pkill:*)",
       "Bash(kill:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(pm2 list *)"
     ]
   }
 }
