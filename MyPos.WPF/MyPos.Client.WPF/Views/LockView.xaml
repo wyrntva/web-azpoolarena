@@ -1,0 +1,81 @@
+<UserControl x:Class="MyPos.Client.WPF.Views.LockView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        LockView - Màn hình đăng nhập PIN
+        Tương đương LockScreen.tsx
+        Background tối + PIN pad keyboard layout
+    -->
+    <Grid Background="#030033">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="320">
+
+            <!-- Logo -->
+            <Image Source="/Assets/logo-main.png" Height="80" Margin="0,0,0,32" />
+
+            <!-- Title -->
+            <TextBlock Text="NHẬP MÃ PIN" FontSize="20" FontWeight="Bold"
+                       Foreground="White" TextAlignment="Center" Margin="0,0,0,8" />
+            <TextBlock Text="Đăng nhập để sử dụng POS" FontSize="13"
+                       Foreground="#8888BB" TextAlignment="Center" Margin="0,0,0,32" />
+
+            <!-- PIN Display -->
+            <Border Background="#1A1A4E" CornerRadius="12" Padding="20,16" Margin="0,0,0,24">
+                <TextBlock Text="{Binding PinDisplay}" FontSize="32" FontWeight="Bold"
+                           Foreground="White" TextAlignment="Center"
+                           FontFamily="Courier New" LetterSpacing="8" />
+            </Border>
+
+            <!-- Error message -->
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#FF7051"
+                       TextAlignment="Center" Margin="0,0,0,16"
+                       Visibility="{Binding HasError, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+            <!-- PIN Pad Grid (3x4) -->
+            <UniformGrid Columns="3" Rows="4">
+                <Button Content="1" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="1" />
+                <Button Content="2" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="2" />
+                <Button Content="3" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="3" />
+                <Button Content="4" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="4" />
+                <Button Content="5" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="5" />
+                <Button Content="6" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="6" />
+                <Button Content="7" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="7" />
+                <Button Content="8" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="8" />
+                <Button Content="9" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="9" />
+                <Button Content="⌫" Height="72" FontSize="22"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding DeleteDigitCommand}" />
+                <Button Content="0" Height="72" FontSize="24" FontWeight="Bold"
+                        Style="{StaticResource PinButtonStyle}"
+                        Command="{Binding AppendDigitCommand}" CommandParameter="0" />
+                <Button Content="✓" Height="72" FontSize="22"
+                        Background="#0091FF" Foreground="White" BorderThickness="0"
+                        Command="{Binding LoginCommand}"
+                        IsEnabled="{Binding CanLogin}" />
+            </UniformGrid>
+
+            <!-- Loading indicator -->
+            <ProgressBar IsIndeterminate="True" Height="3" Margin="0,16,0,0"
+                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

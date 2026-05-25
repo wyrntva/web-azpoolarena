@@ -1,0 +1,64 @@
+# Environment files
+.env
+.env.local
+.env.prod
+.env.*.local
+desktop-qr-app/.env
+
+# Docker volumes data
+postgres_data/
+nginx/logs/
+nginx/ssl/*.pem
+
+# Backups
+backups/
+*.sql
+backup_*.sql
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.cache/
+backend/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Desktop QR App (Windows only - không dùng trên server)
+# desktop-qr-app/
+desktop-qr-app/build/
+desktop-qr-app/dist/
+
+# Core dumps
+core
+core.*
+
+# Scoreboard runtime
+scoreboard/runtime/
+
+# POS App Releases
+pos-app/release*/
+pos-app/dist/

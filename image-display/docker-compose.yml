@@ -1,0 +1,24 @@
+services:
+  display-app:
+    build: .
+    container_name: azpoolarena-display
+    # Chia sẻ DISPLAY và XAUTHORITY để hiển thị giao diện GUI từ container
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - POOLARENA_API_BASE_URL=${POOLARENA_API_BASE_URL:-http://backend:8000}
+    volumes:
+      # Mount X11 socket
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      # Mount XAuthority cho phép kết nối
+      - ${XAUTHORITY:-/root/.Xauthority}:/root/.Xauthority
+      # Mount source code để dev (tùy chọn)
+      - .:/app
+    networks:
+      - azpool-network
+    restart: always
+    profiles:
+      - displaynetworks:
+  azpool-network:
+    external: true
+    name: azpool-dev-network

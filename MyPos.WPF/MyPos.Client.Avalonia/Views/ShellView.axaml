@@ -1,0 +1,91 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:MyPos.Client.Avalonia.ViewModels"
+        x:Class="MyPos.Client.Avalonia.Views.ShellView"
+        Title="POS Thu Ngân - AZ POOLARENA"
+        Width="1280" Height="800"
+        WindowState="Maximized"
+        Background="#030033"
+        x:DataType="vm:ShellViewModel">
+
+    <!--
+        ShellView — Window container chính.
+        ContentControl với DataContext=CurrentViewModel sẽ tự chọn View
+        đúng thông qua DataTemplates đã khai báo trong App.axaml.
+    -->
+    <Panel>
+        <!-- Main content -->
+        <ContentControl Content="{Binding CurrentViewModel}"
+                         HorizontalContentAlignment="Stretch"
+                         VerticalContentAlignment="Stretch" />
+
+        <!-- Scoreboard Modal Overlay -->
+        <Panel IsVisible="{Binding ShowScoreboardModal}"
+               Background="#AA000000">
+            <Border Background="#1A1A4E"
+                    CornerRadius="16"
+                    Padding="32"
+                    MaxWidth="480"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BoxShadow="0 8 32 0 #88000000">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="🎱 Order từ Scoreboard!"
+                               FontSize="22" FontWeight="Bold"
+                               Foreground="White"
+                               HorizontalAlignment="Center" />
+
+                    <TextBlock FontSize="14" Foreground="#8888BB"
+                               TextAlignment="Center">
+                        <Run Text="{Binding CurrentPendingScoreboardOrder.TableName}" />
+                        <Run Text=" — " />
+                        <Run Text="{Binding CurrentPendingScoreboardOrder.Items.Count}" />
+                        <Run Text=" món" />
+                    </TextBlock>
+
+                    <Border Background="#0A0A2E" CornerRadius="8" Padding="12">
+                        <ItemsControl ItemsSource="{Binding CurrentPendingScoreboardOrder.Items}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Foreground="White" FontSize="13" Margin="0,2">
+                                        <Run Text="• " />
+                                        <Run Text="{Binding Qty}" />
+                                        <Run Text="x " />
+                                        <Run Text="{Binding ProductName}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,12,*">
+                        <Button Grid.Column="0"
+                                Content="✕ Từ chối"
+                                Background="#FF4444"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                Padding="0,14"
+                                CornerRadius="8"
+                                Command="{Binding RejectScoreboardOrderCommand}" />
+                        <Button Grid.Column="2"
+                                Content="✓ Xác nhận"
+                                Background="#0BBE5C"
+                                Foreground="White"
+                                HorizontalAlignment="Stretch"
+                                Padding="0,14"
+                                CornerRadius="8"
+                                Command="{Binding ConfirmScoreboardOrderCommand}" />
+                    </Grid>
+
+                    <!-- Pending count badge -->
+                    <TextBlock IsVisible="{Binding PendingScoreboardCount}"
+                               TextAlignment="Center"
+                               FontSize="12"
+                               Foreground="#FFA500">
+                        <Run Text="+ " /><Run Text="{Binding PendingScoreboardCount}" /><Run Text=" order khác đang chờ" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Panel>
+    </Panel>
+</Window>

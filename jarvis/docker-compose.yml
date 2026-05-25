@@ -1,0 +1,22 @@
+services:
+  jarvis:
+    build: .
+    container_name: azpoolarena-jarvis
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
+      - MQTT_HOST=${MQTT_HOST:-mqtt}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - JARVIS_PORT=8899
+    ports:
+      - "${JARVIS_PORT:-8899}:8899"
+    networks:
+      - azpool-network
+    restart: unless-stopped
+    depends_on:
+      - mqtt
+
+networks:
+  azpool-network:
+    external: true
+    name: azpool-dev-network

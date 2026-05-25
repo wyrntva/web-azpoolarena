@@ -1,0 +1,182 @@
+/* ATTENDANCE SCREEN - QR in Sidebar + Table */
+
+.attSidebarQrWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.attSidebarQrImage {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: opacity 0.4s ease, border-color 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.attSidebarCountdown {
+    font-size: 32px;
+    font-weight: 800;
+    padding: 8px 24px;
+    border-radius: 8px;
+    border: 2px solid;
+    text-align: center;
+    width: 100%;
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+
+.attSidebarExpired {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    font-weight: 500;
+}
+
+.attSidebarLoading {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    padding: 20px 0;
+}
+
+.attScanStatus {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    text-align: center;
+    width: 100%;
+    transition: color 0.3s ease;
+}
+
+/* ---- Attendance Table ---- */
+
+.attTableHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.attTableTitle {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.attTableCount {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    background: var(--bg-secondary);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.attTableWrap {
+    flex: 1;
+    overflow-y: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+}
+
+.attTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.attTable thead {
+    flex-shrink: 0;
+}
+
+.attTable tbody {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.attTable thead tr,
+.attTable tbody tr {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.attTable tbody tr {
+    flex: 1;
+    align-items: center;
+}
+
+.attTable tbody tr:last-child {
+    border-bottom: none;
+}
+
+.attTable th,
+.attTable td {
+    flex: 1;
+}
+
+.attTable th:first-child,
+.attTable td:first-child {
+    flex: 0 0 50px;
+}
+
+.attTable th:last-child,
+.attTable td:last-child {
+    flex: 0 0 140px;
+}
+
+/* thead sticky handled above */
+
+.attTable th {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    text-align: center;
+}
+
+.attTable td {
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 16px;
+    text-align: center;
+}
+
+.attTable tbody tr:hover {
+    background: var(--bg-secondary);
+}
+
+.attEmployeeName {
+    font-weight: 600;
+}
+
+.attStatusBadge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}

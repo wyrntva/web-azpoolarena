@@ -1,0 +1,228 @@
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: azpool-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-azpoolarena}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "${DB_PORT:-5432}:5432"  # Cho phép kết nối từ mạng LAN
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-azpoolarena}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - azpool-network
+
+  # MQTT Broker (Mosquitto)
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: azpool-mqtt-dev
+    restart: unless-stopped
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_WS_PORT:-9001}:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - azpool-network
+
+  # Backend Service (NestJS)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: azpool-backend-dev
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-azpoolarena}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
+      MQTT_URL: mqtt://mqtt:1883
+      PORT: 8000
+      ENV: development
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app:delegated
+      - /app/node_modules
+    networks:
+      - azpool-network
+
+  # Frontend Service (Admin/Management Interface)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: azpool-frontend-dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend:/app:delegated
+      - /app/node_modules
+    networks:
+      - azpool-network
+
+  # Pool Arena Service (Customer-Facing App)
+  poolarena:
+    build:
+      context: ./poolarena
+      dockerfile: Dockerfile
+      target: development
+    container_name: azpool-poolarena-dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NODE_ENV: development
+    ports:
+      - "${POOLARENA_PORT:-5174}:3000"
+    volumes:
+      # Mount source code for hot reload
+      - ./poolarena:/app:delegated
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - azpool-network
+
+  # Member Service (Client/Membership Interface)
+  member:
+    build:
+      context: ./member
+      dockerfile: Dockerfile
+      target: development
+    container_name: azpool-member-dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ""
+    ports:
+      - "${MEMBER_PORT:-5176}:5173"
+    volumes:
+      # Mount source code for hot reload
+      - ./member:/app:delegated
+    networks:
+      - azpool-network
+
+  # POS Desktop Application (Electron)
+  pos-app:
+    build:
+      context: ./pos-app
+      dockerfile: Dockerfile
+      target: development
+    container_name: azpool-pos-app-dev
+    restart: "no"
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE_URL: ${POS_API_URL:-http://backend:8000}
+      VITE_DEVICE_ID: ${POS_DEVICE_ID:-POS01}
+      DISPLAY: ${DISPLAY:-:0}
+      XAUTHORITY: /root/.Xauthority
+      ELECTRON_DISABLE_SANDBOX: 1
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    volumes:
+      - ./pos-app:/app:delegated
+      - /app/node_modules
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY_HOST:-/dev/null}:/root/.Xauthority:ro
+    ports:
+      - "${POS_PORT:-5175}:5173"
+    networks:
+      - azpool-network
+    profiles:
+      - pos-app
+
+  # Scoreboard Desktop Application (PySide6/Qt)
+  # NOTE: This is a GUI application that requires X11 forwarding
+  # Run with: ./scoreboard/docker-run.sh
+  scoreboard:
+    build:
+      context: ./scoreboard
+      dockerfile: Dockerfile
+    container_name: azpool-scoreboard-dev
+    restart: "no"
+    depends_on:
+      - backend
+    environment:
+      # Display configuration (set at runtime)
+      DISPLAY: ${DISPLAY:-:0}
+      # Use container-local XAUTHORITY path
+      XAUTHORITY: /home/appuser/.Xauthority
+      # API endpoint for Docker network
+      POOLARENA_API_BASE_URL: ${POOLARENA_API_BASE_URL:-http://backend:8000}
+      # Qt configuration
+      QT_QPA_PLATFORM: ${QT_QPA_PLATFORM:-xcb}
+      QT_X11_NO_MITSHM: 1
+      QT_MEDIA_BACKEND: ffmpeg
+      QSG_RENDER_LOOP: threaded
+      QT_QUICK_CONTROLS_STYLE: Material
+      QT_ENABLE_HIGHDPI_SCALING: 1
+      QT_AUTO_SCREEN_SCALE_FACTOR: 1
+      # Software rendering fallback (set to 1 if no GPU)
+      LIBGL_ALWAYS_SOFTWARE: ${LIBGL_ALWAYS_SOFTWARE:-0}
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    volumes:
+      # X11 socket for display
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # X11 auth cookie (optional but preferred)
+      - ${XAUTHORITY_HOST:-/dev/null}:/home/appuser/.Xauthority:ro
+      # Mount source code for development
+      - ./scoreboard:/app:delegated
+      # DRI for GPU acceleration (optional)
+      - /dev/dri:/dev/dri
+    # Connect to custom bridge network
+    networks:
+      - azpool-network
+    # GPU access (if available)
+    devices:
+      - /dev/dri:/dev/dri
+    # Security options for X11
+    security_opt:
+      - seccomp:unconfined
+    profiles:
+      - scoreboard
+
+volumes:
+  postgres_data_dev:
+    name: azpool_postgres_dev
+  mosquitto_data:
+    name: azpool_mosquitto_data
+  mosquitto_log:
+    name: azpool_mosquitto_log
+
+networks:
+  azpool-network:
+    name: azpool-dev-network
+    driver: bridge

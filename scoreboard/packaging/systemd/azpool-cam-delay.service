@@ -1,0 +1,39 @@
+[Unit]
+Description=AZ Pool Arena - Camera Delay Relay (GStreamer RTSP to HLS)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=azscoreboard
+Group=azscoreboard
+WorkingDirectory=/opt/azpool-scoreboard
+
+# Configuration
+EnvironmentFile=-/opt/azpool-scoreboard/config/camera.env
+
+# PID file for tracking
+PIDFile=/opt/azpool-scoreboard/runtime/cam_relay.pid
+
+# Commands
+ExecStart=/opt/azpool-scoreboard/scripts/cam_delay_relay.sh start
+ExecStop=/opt/azpool-scoreboard/scripts/cam_delay_relay.sh stop
+ExecReload=/opt/azpool-scoreboard/scripts/cam_delay_relay.sh restart
+
+# Restart policy
+Restart=on-failure
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=azpool-cam-delay
+
+# Security - relaxed to allow GStreamer codec detection tools (gst-discoverer, ffprobe)
+# need access to /tmp and dconf cache
+NoNewPrivileges=true
+ReadWritePaths=/opt/azpool-scoreboard/runtime /tmp
+PrivateTmp=false
+
+[Install]
+WantedBy=multi-user.target

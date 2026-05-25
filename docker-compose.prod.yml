@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: azpool-db-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - azpool-network
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: azpool-backend-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      ENV: ${ENV:-production}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-${API_DOMAIN}}
+      FORCE_HTTPS: ${FORCE_HTTPS:-true}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
+    volumes:
+      - uploads_prod:/app/uploads
+    networks:
+      - azpool-network
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: azpool-frontend-prod
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - azpool-network
+
+  # PoolArena Service (Customer-Facing Next.js App)
+  poolarena:
+    build:
+      context: ./poolarena
+      dockerfile: Dockerfile
+      target: production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: azpool-poolarena-prod
+    restart: always
+    depends_on:
+      - backend
+    networks:
+      - azpool-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: azpool-nginx-prod
+    restart: always
+    depends_on:
+      - backend
+      - frontend
+      - poolarena
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+      - uploads_prod:/var/www/uploads:ro
+    networks:
+      - azpool-network
+
+volumes:
+  postgres_data_prod:
+    name: azpool_postgres_prod
+  uploads_prod:
+    name: azpool_uploads_prod
+
+networks:
+  azpool-network:
+    name: azpool-prod-network
+    driver: bridge

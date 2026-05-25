@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "backfill.ts", "test-att.ts", "update_permissions.ts"]
+}

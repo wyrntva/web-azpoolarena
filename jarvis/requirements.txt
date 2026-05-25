@@ -1,0 +1,7 @@
+PySide6
+requests
+google-genai
+fastapi
+uvicorn[standard]
+paho-mqtt
+python-dotenv

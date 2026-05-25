@@ -1,0 +1,66 @@
+Package: azpool-scoreboard
+Version: 1.0.0
+Section: misc
+Priority: optional
+Architecture: amd64
+Maintainer: AZ Team <dev@azpoolarena.com>
+Depends: python3 (>= 3.10),
+         python3-venv,
+         python3-pip,
+         xserver-xorg,
+         xserver-xorg-video-all,
+         xinit,
+         x11-xserver-utils,
+         openbox,
+         unclutter,
+         jq,
+         gstreamer1.0-tools,
+         gstreamer1.0-plugins-base,
+         gstreamer1.0-plugins-good,
+         gstreamer1.0-plugins-bad,
+         gstreamer1.0-plugins-ugly,
+         gstreamer1.0-libav,
+         libgl1,
+         libglib2.0-0t64 | libglib2.0-0,
+         libdbus-1-3,
+         libx11-6,
+         libx11-xcb1,
+         libxkbcommon0,
+         libxkbcommon-x11-0,
+         libxcb1,
+         libxcb-icccm4,
+         libxcb-image0,
+         libxcb-keysyms1,
+         libxcb-randr0,
+         libxcb-render-util0,
+         libxcb-render0,
+         libxcb-shape0,
+         libxcb-shm0,
+         libxcb-sync1,
+         libxcb-xfixes0,
+         libxcb-xinerama0,
+         libxcb-xinput0,
+         libxcb-xkb1,
+         libxrender1,
+         libxext6,
+         libxi6,
+         libxrandr2,
+         libxss1,
+         libxtst6,
+         libfontconfig1,
+         libfreetype6,
+         libnss3,
+         libasound2t64 | libasound2,
+         libxcb-cursor0,
+         libegl1,
+         gstreamer1.0-vaapi,
+         openssh-server,
+         ffmpeg
+Recommends: intel-media-va-driver-non-free | intel-media-va-driver, vainfo
+Description: AZ Pool Arena Scoreboard - Kiosk Application
+ Full-screen kiosk scoreboard application for billiards/pool arenas.
+ Features real-time scoring, camera streaming with delay, DVR recording,
+ tournament brackets, and menu ordering integration.
+ .
+ After installation, the machine will auto-boot into kiosk mode
+ displaying the scoreboard application in full-screen.

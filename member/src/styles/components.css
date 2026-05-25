@@ -1,0 +1,60 @@
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #635BFF;
+  color: #ffffff;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  color: #1f2a44;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(31, 63, 123, 0.08);
+}
+
+.card-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.card-body {
+  color: #4b5b75;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-info {
+  background: #eef3ff;
+  color: #3b5bdb;
+}
+
+.badge-success {
+  background: #e6fcf5;
+  color: #0ca678;
+}
+
+.badge-warning {
+  background: #fff4e6;
+  color: #d9480f;
+}

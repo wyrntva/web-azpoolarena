@@ -1,0 +1,260 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="MyPos.Client.Avalonia.Views.CashierView"
+             Background="#e8e8e8">
+  <!--
+    CashierView.axaml — Ported from CashierScreen.tsx + cashier.css
+    Layout: Header, Footer like Home, Center divided into Menu (Left), Grid (Center), Cart (Right, 360px wide)
+  -->
+
+  <Grid RowDefinitions="55,*,55">
+
+    <!-- ===== SYSTEM HEADER ===== -->
+    <Border Grid.Row="0"
+            Background="#030033"
+            Padding="24,0">
+      <Grid ColumnDefinitions="*,Auto">
+        <!-- Left: Logo -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Width="50" Height="50">
+            <TextBlock Text="🎱" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+        </StackPanel>
+
+        <!-- Right: Actions -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+          <Button Classes="iconBtn" Content="—"/>
+          <Button Classes="iconBtn" Content="✕" Foreground="#FF7051" Command="{Binding ExitCommand}"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ===== CONTENT BODY ===== -->
+    <Grid Grid.Row="1" ColumnDefinitions="*,360" Background="#030033">
+
+      <!-- LEFT & CENTER: Menu Sidebar + Product Grid -->
+      <Grid Grid.Column="0" RowDefinitions="50,*">
+        
+        <!-- TOOLBAR (Search, Customer Bar) -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*" Background="#030033" Margin="4,0,4,0">
+          <!-- Scroll buttons -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="1">
+            <Button Content="▲" Width="70" Height="50" Background="White" Foreground="#333" CornerRadius="8,0,0,0"/>
+            <Button Content="▼" Width="70" Height="50" Background="White" Foreground="#333" CornerRadius="0"/>
+          </StackPanel>
+
+          <!-- Customer Bar -->
+          <Border Grid.Column="1" Background="White" BorderBrush="#d9d9d9" BorderThickness="1" 
+                  Width="400" Height="50" Padding="8,0">
+            <Grid ColumnDefinitions="Auto,Auto,1,Auto,Auto">
+              <TextBlock Grid.Column="0" Text="👤" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <TextBlock Grid.Column="1" Text="Khách lẻ" FontWeight="SemiBold" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+              <Border Grid.Column="2" Background="#ccc" Width="1" Margin="10,8"/>
+              <TextBlock Grid.Column="3" Text="1 Khách" FontSize="13" Foreground="#333" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <!-- Custom up/down arrows would go here in full implementation -->
+            </Grid>
+          </Border>
+
+          <!-- Search Bar -->
+          <Border Grid.Column="2" Background="White" BorderBrush="#d9d9d9" BorderThickness="1" Height="50">
+            <Grid ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Column="0" Text="🔍" Foreground="#666" VerticalAlignment="Center" Margin="10,0"/>
+              <TextBox Grid.Column="1" Watermark="Nhập tên mặt hàng (F4)" Text="{Binding SearchQuery, Mode=TwoWay}"
+                       Background="Transparent" BorderThickness="0" VerticalAlignment="Center" Foreground="#333"/>
+            </Grid>
+          </Border>
+        </Grid>
+
+        <!-- Menu Categories + Products -->
+        <Grid Grid.Row="1" ColumnDefinitions="141,*" Margin="4">
+          <!-- Menu Category Sidebar -->
+          <ItemsControl Grid.Column="0" ItemsSource="{Binding Categories}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Button Content="{Binding Name}" 
+                        Background="#FFF"
+                        Foreground="#333"
+                        Height="50"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        BorderThickness="0"
+                        CornerRadius="0"
+                        Command="{Binding $parent[ItemsControl].DataContext.FilterCategoryCommand}"
+                        CommandParameter="{Binding}"/>
+                <!-- Would add style trigger for active background #0091ff, but runtime bindings used by project -->
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <!-- Product Grid -->
+          <ScrollViewer Grid.Column="1" Background="#030033">
+            <ItemsControl ItemsSource="{Binding FilteredProducts}" Margin="4,0,0,0">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <!-- 4/3 aspect ratio card approx 140x105 -->
+                  <Button Width="140" Height="105" Margin="1" Padding="0" Cursor="Hand"
+                          Command="{Binding $parent[ItemsControl].DataContext.AddToCartCommand}"
+                          CommandParameter="{Binding}">
+                    <Button.Template>
+                      <ControlTemplate>
+                        <Border Background="#8893a5" CornerRadius="0">
+                          <Panel>
+                            <!-- Price tag -->
+                            <Border Background="#007acc" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="6,2" ZIndex="2">
+                              <TextBlock Text="{Binding Price}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                            </Border>
+
+                            <!-- Name label -->
+                            <Border Background="#D928323C" VerticalAlignment="Bottom" Padding="6" ZIndex="2">
+                              <TextBlock Text="{Binding Name}" Foreground="White" FontSize="12" TextAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                            </Border>
+                          </Panel>
+                        </Border>
+                      </ControlTemplate>
+                    </Button.Template>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+
+      </Grid>
+
+
+      <!-- ===== RIGHT: Cart Panel ==== -->
+      <Grid Grid.Column="1" RowDefinitions="Auto,*,60,50,110" Background="White" Margin="0,0,4,4">
+        
+        <!-- Cart Header (Order Type + Table) -->
+        <Border Grid.Row="0" BorderBrush="#e0e0e0" BorderThickness="0,0,0,1" Height="60">
+          <Grid ColumnDefinitions="*,Auto" Margin="12,0">
+            <!-- Table picker -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="🍽 Tại bàn" FontSize="14" FontWeight="SemiBold" Foreground="#333" VerticalAlignment="Center"/>
+              <Border Background="#f0f2f5" CornerRadius="4" Padding="8,4">
+                <TextBlock Text="Bàn 1" Foreground="#0091ff" FontWeight="Bold"/>
+              </Border>
+            </StackPanel>
+            
+            <Button Grid.Column="1" Content="⋮" Background="Transparent" BorderThickness="0" Foreground="#333" FontSize="20"/>
+          </Grid>
+        </Border>
+
+        <!-- Cart Items -->
+        <ScrollViewer Grid.Row="1" Background="White">
+          <ItemsControl ItemsSource="{Binding CartItems}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border BorderBrush="#f0f0f0" BorderThickness="0,0,0,1" Padding="12,8">
+                  <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                    <!-- Index -->
+                    <TextBlock Grid.Column="0" Text="{Binding Index}" Width="24" Foreground="#999" VerticalAlignment="Center"/>
+                    
+                    <!-- Info -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Product.Name}" FontSize="14" FontWeight="SemiBold" Foreground="#333"/>
+                      <TextBlock Text="{Binding Product.Price}" FontSize="12" Foreground="#666"/>
+                    </StackPanel>
+
+                    <!-- Quantity Controls -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="12,0">
+                      <Button Content="-" Classes="qtyBtn" Command="{Binding $parent[ItemsControl].DataContext.DecreaseQtyCommand}" CommandParameter="{Binding Product}"/>
+                      <TextBlock Text="{Binding Qty}" FontSize="14" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center"/>
+                      <Button Content="+" Classes="qtyBtn" Command="{Binding $parent[ItemsControl].DataContext.IncreaseQtyCommand}" CommandParameter="{Binding Product}"/>
+                    </StackPanel>
+
+                    <!-- Total Price -->
+                    <TextBlock Grid.Column="3" Text="{Binding TotalPrice}" FontSize="14" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center" Width="80" TextAlignment="Right"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+
+        <!-- Cart Tools Bar -->
+        <Border Grid.Row="2" Background="#e9eaed" BorderBrush="#aaa" BorderThickness="0,1,0,0">
+          <Grid ColumnDefinitions="*,*,*,*,10*,*,*">
+            <Button Grid.Column="0" Content="🎁" Classes="toolBtn"/>
+            <Button Grid.Column="1" Content="%" Classes="toolBtn"/>
+            <Button Grid.Column="2" Content="🏷️" Classes="toolBtn"/>
+            <Button Grid.Column="3" Content="✏️" Classes="toolBtn"/>
+            <Button Grid.Column="5" Content="▲" Classes="toolBtn"/>
+            <Button Grid.Column="6" Content="▼" Classes="toolBtn"/>
+          </Grid>
+        </Border>
+
+        <!-- Cart Total Row -->
+        <Border Grid.Row="3" Background="#e9eaed" BorderBrush="#aaa" BorderThickness="0,1,0,0" Padding="12,0">
+          <Grid ColumnDefinitions="*,*">
+            <TextBlock Grid.Column="0" Text="Tổng tiền" FontSize="14" Foreground="#666" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{Binding CartTotalDisplay, FallbackValue='0đ'}" FontSize="18" FontWeight="Bold" Foreground="#000" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+          </Grid>
+        </Border>
+
+        <!-- Action Row -->
+        <Border Grid.Row="4" Background="#666" BorderBrush="#666" BorderThickness="0,1,0,0">
+          <Grid ColumnDefinitions="80,80,80,*">
+            <Button Grid.Column="0" Background="#ff7875" Foreground="White" BorderThickness="0" CornerRadius="0" Margin="0,0,1,1" Command="{Binding ExitCommand}">
+              <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                <TextBlock Text="Thoát" FontSize="13" TextAlignment="Center"/>
+                <TextBlock Text="(ESC)" FontSize="11" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Grid.Column="1" Background="#e9eaed" Foreground="#333" BorderThickness="0" CornerRadius="0" Margin="0,0,1,1" Command="{Binding SaveOrderCommand}">
+              <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                <TextBlock Text="Lưu đơn" FontSize="13" TextAlignment="Center"/>
+                <TextBlock Text="(F3)" FontSize="11" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Grid.Column="2" Background="#e9eaed" Foreground="#333" BorderThickness="0" CornerRadius="0" Margin="0,0,1,1">
+              <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                <TextBlock Text="Lưu &amp; Tính" FontSize="12" TextAlignment="Center" TextWrapping="Wrap"/>
+                <TextBlock Text="(F2)" FontSize="11" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+            <Button Grid.Column="3" Background="#0086ff" Foreground="White" BorderThickness="0" CornerRadius="0" Margin="0,0,0,1" Command="{Binding CheckoutCommand}">
+              <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                <TextBlock Text="Thanh toán" FontSize="13" TextAlignment="Center" FontWeight="Bold"/>
+                <TextBlock Text="(F1)" FontSize="11" TextAlignment="Center"/>
+              </StackPanel>
+            </Button>
+          </Grid>
+        </Border>
+      </Grid>
+    </Grid>
+
+    <!-- ===== SYSTEM FOOTER ===== -->
+    <Border Grid.Row="2" Background="#030033" Padding="24,0">
+      <Grid ColumnDefinitions="*,*,*">
+        <!-- Left: User -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Border Width="32" Height="32" CornerRadius="16" Background="#1AFFFFFF">
+            <TextBlock Text="👤" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <TextBlock Text="{Binding UserName, FallbackValue='Nhân viên POS'}"
+                     FontSize="14" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Center: Brand -->
+        <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="0">
+          <TextBlock Text="AZ POOLARENA" FontSize="16" FontWeight="Bold"
+                     Foreground="White" TextAlignment="Center" LetterSpacing="0.5"/>
+        </StackPanel>
+
+        <!-- Right: Time + Date -->
+        <!-- Cashier screen doesn't explicitly need time exactly here based on design, but good to keep consistency with HomeView -->
+        <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+          <TextBlock Text="{Binding TimeDisplay}" FontSize="13" Foreground="White" TextAlignment="Right"/>
+          <TextBlock Text="{Binding DateDisplay}" FontSize="13" Foreground="White" TextAlignment="Right"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+  </Grid>
+</UserControl>

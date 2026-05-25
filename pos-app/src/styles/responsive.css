@@ -1,0 +1,1422 @@
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================
+   - xs: < 480px (small mobile)
+   - sm: 480px - 767px (mobile)
+   - md: 768px - 1023px (tablet)
+   - lg: 1024px - 1279px (small desktop)
+   - xl: 1280px - 1439px (desktop)
+   - 2xl: >= 1440px (large desktop)
+   ============================================ */
+
+/* ============================================
+   LARGE DESKTOP (< 1440px)
+   ============================================ */
+@media (max-width: 1439px) {
+  :root {
+    --sidebar-width: 280px;
+    --cart-width: 380px;
+  }
+
+  .posCartSidebar {
+    width: var(--cart-width);
+  }
+}
+
+/* ============================================
+   DESKTOP (< 1280px)
+   ============================================ */
+@media (max-width: 1279px) {
+  :root {
+    --sidebar-width: 260px;
+    --cart-width: 360px;
+  }
+
+  /* Home Grid */
+  .homeGrid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+
+  .orderCard {
+    width: 100%;
+    min-width: 220px;
+    height: auto;
+    min-height: 180px;
+    padding: 0;
+  }
+
+  /* Cashier */
+  .posProductsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+
+  .posProductCard {
+    min-height: 180px;
+  }
+
+  .posProductImage {
+    font-size: 56px;
+  }
+
+  .posCashierBottom {
+    flex-wrap: wrap;
+    height: auto;
+    padding: var(--spacing-4);
+    gap: var(--spacing-4);
+  }
+
+  .posBottomRight {
+    min-width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .posKeypad {
+    max-width: 280px;
+  }
+
+  .keypadBtn {
+    width: 56px;
+    height: 48px;
+    font-size: var(--font-size-base);
+  }
+
+  /* Table Layout */
+  .tableGrid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 180px));
+    gap: var(--spacing-4);
+  }
+
+  .tableCard {
+    width: 180px;
+    height: 180px;
+    min-height: 180px;
+  }
+}
+
+/* ============================================
+   SMALL DESKTOP (< 1024px)
+   ============================================ */
+@media (max-width: 1023px) {
+  :root {
+    --sidebar-width: 240px;
+    --cart-width: 320px;
+    --header-height: 50px;
+    --footer-height: 50px;
+  }
+
+  /* Lock Screen */
+  .lockScreen {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: var(--spacing-4);
+  }
+
+  .lockLeft {
+    display: none;
+  }
+
+  .lockRight {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .pinPanel {
+    padding: var(--spacing-5);
+  }
+
+  .pinDots {
+    height: 80px;
+  }
+
+  .keyBtn {
+    height: 64px;
+    font-size: var(--font-size-2xl);
+  }
+
+  /* Home Screen */
+  .homeHeader,
+  .homeFooter {
+    height: var(--header-height);
+    padding: 0 var(--spacing-4);
+  }
+
+  .homeTabs {
+    display: none;
+  }
+
+  .homeGrid {
+    padding: var(--spacing-4);
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-4);
+  }
+
+  .homeSidebar {
+    width: var(--sidebar-width);
+    padding: var(--spacing-4);
+  }
+
+  /* Cashier Screen */
+  .posCashierTop {
+    height: var(--header-height);
+    padding: 0 var(--spacing-4);
+    gap: var(--spacing-3);
+  }
+
+  .posSearchBox {
+    max-width: 300px;
+  }
+
+  .posCategories {
+    width: var(--sidebar-width-collapsed);
+    padding: var(--spacing-3);
+  }
+
+  .categoryBtn {
+    padding: var(--spacing-3);
+    font-size: var(--font-size-xs);
+  }
+
+  .posProductsArea {
+    padding: var(--spacing-4);
+  }
+
+  .posCartSidebar {
+    width: var(--cart-width);
+    padding: var(--spacing-4);
+  }
+
+  .posCartItem {
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-3);
+  }
+
+  .posCartItemQty {
+    grid-column: span 2;
+    justify-self: end;
+  }
+
+  .posBottomLeft {
+    min-width: auto;
+  }
+
+  .posActionBtn {
+    height: 50px;
+    padding: 0 var(--spacing-4);
+    font-size: var(--font-size-xs);
+  }
+
+  /* Menu Screen */
+  .menuScreenSidebar {
+    width: var(--sidebar-width);
+  }
+
+  .menuScreenContent {
+    padding: var(--spacing-6);
+  }
+
+  .workShiftContent {
+    max-width: 100%;
+  }
+
+  .workShiftTitle {
+    font-size: var(--font-size-3xl);
+  }
+
+  .workShiftInput {
+    height: 60px;
+    font-size: var(--font-size-xl);
+  }
+
+  .workShiftStartBtn {
+    height: 60px;
+    font-size: var(--font-size-lg);
+  }
+
+  /* Table Layout */
+  .tableLayoutSidebar {
+    width: var(--sidebar-width);
+    padding: var(--spacing-4);
+  }
+
+  /* Book Table */
+  .bookTableSidebar {
+    width: var(--sidebar-width);
+    padding: var(--spacing-4);
+  }
+
+  .bookTableContent {
+    margin: var(--spacing-4);
+    padding: var(--spacing-8);
+  }
+
+  .emptyStateIcon {
+    font-size: 100px;
+  }
+
+  .emptyStateTitle {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+/* ============================================
+   TABLET (< 768px)
+   ============================================ */
+@media (max-width: 767px) {
+  :root {
+    --sidebar-width: 100%;
+    --cart-width: 100%;
+    --header-height: 48px;
+    --footer-height: 48px;
+  }
+
+  /* Lock Screen */
+  .lockScreen {
+    padding: var(--spacing-3);
+  }
+
+  .lockRight {
+    max-width: 360px;
+  }
+
+  .pinPanel {
+    padding: var(--spacing-4);
+  }
+
+  .pinDots {
+    height: 70px;
+    gap: var(--spacing-4);
+  }
+
+  .dot {
+    width: 16px;
+    height: 16px;
+  }
+
+  .pinPad {
+    gap: var(--spacing-2);
+  }
+
+  .keyBtn {
+    height: 56px;
+    font-size: var(--font-size-xl);
+  }
+
+  .loginBtn {
+    height: 56px;
+    font-size: var(--font-size-base);
+  }
+
+  .actionsRow {
+    gap: var(--spacing-2);
+  }
+
+  .warnBtn,
+  .dangerBtn {
+    height: 48px;
+    font-size: var(--font-size-sm);
+  }
+
+  /* Home Screen - Stack Layout */
+  .homeMain {
+    flex-direction: column;
+  }
+
+  .homeHeader {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+  }
+
+  .homeHeaderLeft {
+    gap: var(--spacing-2);
+  }
+
+  .menuBtn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .sapoLogo {
+    height: 24px;
+  }
+
+  .sapoLogo img {
+    height: 24px;
+  }
+
+  .homeHeaderRight {
+    gap: var(--spacing-1);
+  }
+
+  .iconBtn {
+    width: 36px;
+    height: 36px;
+    font-size: var(--font-size-base);
+  }
+
+  .homeGrid {
+    flex: 1;
+    padding: var(--spacing-3);
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--spacing-3);
+  }
+
+  .orderCard {
+    padding: 0;
+    min-height: 160px;
+  }
+
+  .orderFlag {
+    font-size: 10px;
+    padding: 2px var(--spacing-2);
+  }
+
+  .orderTitle {
+    font-size: 18px;
+    height: 50px;
+    line-height: 50px;
+  }
+
+  .orderMeta {
+    font-size: var(--font-size-sm);
+    gap: var(--spacing-3);
+  }
+
+  .orderCardFooter {
+    margin-top: var(--spacing-2);
+  }
+
+  .orderMenuBtn,
+  .orderPayBtn {
+    height: 38px;
+  }
+
+  .orderMenuBtn {
+    width: 38px;
+    font-size: var(--font-size-xl);
+  }
+
+  .orderPayBtn {
+    font-size: var(--font-size-xs);
+  }
+
+  .homeSidebar {
+    position: fixed;
+    top: var(--header-height);
+    right: -100%;
+    bottom: var(--footer-height);
+    width: 280px;
+    z-index: var(--z-modal);
+    transition: right var(--transition-slow);
+    border-left: none;
+    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  }
+
+  .homeSidebar.open {
+    right: 0;
+  }
+
+  .filterBtn {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-xs);
+  }
+
+  .createOrderBtn {
+    height: 56px;
+    font-size: var(--font-size-base);
+  }
+
+  .homeFooter {
+    position: sticky;
+    bottom: 0;
+    z-index: var(--z-sticky);
+  }
+
+  .homeFooterLeft,
+  .homeFooterCenter,
+  .homeFooterRight {
+    font-size: var(--font-size-xs);
+    gap: var(--spacing-1);
+  }
+
+  .userIcon {
+    width: 28px;
+    height: 28px;
+    font-size: var(--font-size-base);
+  }
+
+  /* Cashier Screen - Reorganized Layout */
+  .posCashierMain {
+    flex-direction: column;
+  }
+
+  .posCashierTop {
+    flex-wrap: wrap;
+    height: auto;
+    padding: var(--spacing-3);
+    gap: var(--spacing-2);
+  }
+
+  .posCashierTopLeft {
+    order: 1;
+    flex: none;
+    width: auto;
+  }
+
+  .posSearchBox {
+    order: 3;
+    flex: none;
+    width: 100%;
+    max-width: none;
+  }
+
+  .posCashierTopRight {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .iconBtnSmall {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-xs);
+  }
+
+  .posCategories {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: var(--spacing-2);
+    gap: var(--spacing-2);
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .categoryBtn {
+    flex-shrink: 0;
+    padding: var(--spacing-2) var(--spacing-4);
+  }
+
+  .posProductsArea {
+    flex: 1;
+    padding: var(--spacing-3);
+  }
+
+  .posProductsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--spacing-3);
+  }
+
+  .posProductCard {
+    padding: var(--spacing-3);
+    min-height: 140px;
+    gap: var(--spacing-2);
+  }
+
+  .posProductImage {
+    font-size: 40px;
+    margin-bottom: var(--spacing-1);
+  }
+
+  .posProductName {
+    font-size: var(--font-size-sm);
+  }
+
+  .posProductPrice {
+    font-size: var(--font-size-xs);
+  }
+
+  .posCartSidebar {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    bottom: 0;
+    width: 100%;
+    max-width: 360px;
+    z-index: var(--z-modal);
+    transition: right var(--transition-slow);
+  }
+
+  .posCartSidebar.open {
+    right: 0;
+  }
+
+  .posCartItem {
+    padding: var(--spacing-3);
+  }
+
+  .posQtyBtn {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-base);
+  }
+
+  .posCartRemoveBtn {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-lg);
+  }
+
+  .posCashierBottom {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--spacing-3);
+    gap: var(--spacing-3);
+  }
+
+  .posBottomLeft {
+    display: none;
+  }
+
+  .posBottomCenter {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .posKeypad {
+    display: none;
+  }
+
+  .posLocation {
+    font-size: var(--font-size-xs);
+  }
+
+  .posBottomRight {
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-3);
+  }
+
+  .posTotalInfo {
+    font-size: var(--font-size-base);
+    justify-content: center;
+  }
+
+  .posTotalInfo strong {
+    font-size: var(--font-size-xl);
+  }
+
+  .posActionButtons {
+    width: 100%;
+  }
+
+  .posActionBtn {
+    flex: 1;
+    height: 48px;
+    padding: 0 var(--spacing-3);
+    font-size: var(--font-size-xs);
+  }
+
+  /* Menu Screen - Stack Layout */
+  .menuScreenMain {
+    flex-direction: column;
+  }
+
+  .menuScreenSidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    max-height: 200px;
+  }
+
+  .menuScreenSidebarContent {
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-x: auto;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+  }
+
+  .menuCategory {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+  }
+
+  .menuCategoryTitle {
+    width: 100%;
+    padding: var(--spacing-1) var(--spacing-2);
+    margin-bottom: 0;
+  }
+
+  .menuScreenItem {
+    width: auto;
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-xs);
+  }
+
+  .menuLogoutBtn {
+    margin: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-sm);
+    height: 48px;
+  }
+
+  .menuScreenContent {
+    padding: var(--spacing-4);
+  }
+
+  .workShiftTitle {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-6);
+  }
+
+  .workShiftLabel {
+    font-size: var(--font-size-base);
+  }
+
+  .workShiftInput {
+    height: 52px;
+    padding: 0 var(--spacing-4);
+    font-size: var(--font-size-lg);
+  }
+
+  .workShiftStartBtn {
+    height: 52px;
+    font-size: var(--font-size-base);
+  }
+
+  .workShiftNote {
+    padding: var(--spacing-4);
+  }
+
+  .workShiftNoteTitle {
+    font-size: var(--font-size-base);
+  }
+
+  .workShiftNoteText {
+    font-size: var(--font-size-sm);
+  }
+
+  .menuPlaceholder {
+    padding: var(--spacing-4);
+    min-height: 300px;
+  }
+
+  .menuPlaceholderIcon {
+    font-size: 80px;
+  }
+
+  .menuPlaceholderTitle {
+    font-size: var(--font-size-2xl);
+  }
+
+  .menuPlaceholderText {
+    font-size: var(--font-size-base);
+  }
+
+  /* Table Layout - Stack Layout */
+  .tableLayoutMain {
+    padding: var(--spacing-4);
+    gap: var(--spacing-4);
+  }
+
+  .tableGrid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 140px));
+    justify-content: center;
+    gap: var(--spacing-3);
+  }
+
+  .tableCard {
+    padding: var(--spacing-2);
+    width: 140px;
+    height: 140px;
+    min-height: 140px;
+  }
+
+  .tableNumber {
+    font-size: var(--font-size-lg);
+    margin-top: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+  }
+
+  .tableDuration {
+    font-size: var(--font-size-xl);
+  }
+
+  .tableStatusBadge {
+    font-size: 10px;
+    padding: 2px var(--spacing-2);
+  }
+
+  .tableEmptyLabel {
+    font-size: var(--font-size-sm);
+  }
+
+  .tableLayoutSidebar {
+    position: fixed;
+    top: var(--header-height);
+    right: -100%;
+    bottom: var(--footer-height);
+    width: 280px;
+    z-index: var(--z-modal);
+    transition: right var(--transition-slow);
+  }
+
+  .tableLayoutSidebar.open {
+    right: 0;
+  }
+
+  .locationBtn {
+    height: 52px;
+    font-size: var(--font-size-base);
+  }
+
+  /* Book Table - Stack Layout */
+  .bookTableMain {
+    flex-direction: column;
+  }
+
+  .bookTableContent {
+    margin: var(--spacing-3);
+    padding: var(--spacing-6);
+  }
+
+  .emptyStateIcon {
+    font-size: 80px;
+    margin-bottom: var(--spacing-4);
+  }
+
+  .emptyStateTitle {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-2);
+  }
+
+  .emptyStateSubtitle {
+    font-size: var(--font-size-sm);
+  }
+
+  .bookTableSidebar {
+    position: fixed;
+    top: var(--header-height);
+    right: -100%;
+    bottom: var(--footer-height);
+    width: 280px;
+    z-index: var(--z-modal);
+    transition: right var(--transition-slow);
+  }
+
+  .bookTableSidebar.open {
+    right: 0;
+  }
+
+  .bookTableFilterBtn {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-xs);
+  }
+
+  .bookTableDateBtn {
+    padding: var(--spacing-3);
+  }
+
+  .dateBtnLabel {
+    font-size: var(--font-size-xs);
+  }
+
+  .dateBtnDate {
+    font-size: 10px;
+  }
+
+  .createBookTableBtn {
+    height: 56px;
+    font-size: var(--font-size-base);
+  }
+}
+
+/* ============================================
+   MOBILE (< 480px)
+   ============================================ */
+@media (max-width: 479px) {
+  :root {
+    --header-height: 44px;
+    --footer-height: 44px;
+  }
+
+  /* Lock Screen */
+  .lockScreen {
+    padding: var(--spacing-2);
+  }
+
+  .lockRight {
+    max-width: 320px;
+  }
+
+  .pinPanel {
+    padding: var(--spacing-3);
+    border-radius: var(--radius-2xl);
+  }
+
+  .pinDots {
+    height: 60px;
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .keyBtn {
+    height: 50px;
+    font-size: var(--font-size-lg);
+    border-radius: var(--radius-lg);
+  }
+
+  .loginBtn {
+    height: 50px;
+    font-size: var(--font-size-sm);
+  }
+
+  .warnBtn,
+  .dangerBtn {
+    height: 44px;
+    font-size: var(--font-size-xs);
+  }
+
+  /* Home Screen */
+  .homeHeader,
+  .homeFooter {
+    padding: 0 var(--spacing-3);
+  }
+
+  .menuBtn {
+    width: 32px;
+    height: 32px;
+    padding: var(--spacing-1);
+  }
+
+  .menuIcon {
+    width: 20px;
+    gap: 4px;
+  }
+
+  .sapoLogo {
+    height: 20px;
+    margin-right: var(--spacing-1);
+  }
+
+  .sapoLogo img {
+    height: 20px;
+  }
+
+  .iconBtn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .homeGrid {
+    padding: var(--spacing-2);
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-2);
+  }
+
+  .orderCard {
+    padding: 0;
+    min-height: 160px;
+    border-radius: var(--radius-md);
+  }
+
+  .orderCardHeader {
+    padding: 0 8px;
+  }
+
+  .orderFlag {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .orderGuestCount,
+  .orderTableLabel {
+    font-size: var(--font-size-xs);
+    padding: 2px var(--spacing-2);
+  }
+
+  .orderTitle {
+    font-size: 16px;
+    height: 40px;
+    line-height: 40px;
+  }
+
+  .orderMeta {
+    font-size: var(--font-size-xs);
+    gap: var(--spacing-2);
+    flex-wrap: wrap;
+  }
+
+  .orderCardFooter {
+    padding: 0 8px;
+  }
+
+  .orderMenuBtn {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-lg);
+  }
+
+  .orderPayBtn {
+    height: 32px;
+    font-size: 10px;
+  }
+
+  .homeSidebar {
+    width: 260px;
+    padding: var(--spacing-3);
+  }
+
+  .filterBtn {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: 11px;
+  }
+
+  .filterCount {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+
+  .scrollBtn {
+    height: 44px;
+    font-size: var(--font-size-base);
+  }
+
+  .createOrderBtn {
+    height: 50px;
+    font-size: var(--font-size-sm);
+  }
+
+  .homeFooterLeft,
+  .homeFooterCenter,
+  .homeFooterRight {
+    font-size: 10px;
+  }
+
+  .userIcon {
+    width: 24px;
+    height: 24px;
+    font-size: var(--font-size-sm);
+  }
+
+  /* Cashier Screen */
+  .posCashierTop {
+    padding: var(--spacing-2);
+    gap: var(--spacing-2);
+  }
+
+  .iconBtnSmall {
+    width: 28px;
+    height: 28px;
+  }
+
+  .posSearchBox {
+    padding: var(--spacing-1) var(--spacing-3);
+  }
+
+  .posSearchInput {
+    font-size: var(--font-size-xs);
+  }
+
+  .posCategories {
+    padding: var(--spacing-2);
+  }
+
+  .categoryBtn {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: 10px;
+  }
+
+  .posProductsArea {
+    padding: var(--spacing-2);
+  }
+
+  .posProductsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-2);
+  }
+
+  .posProductCard {
+    padding: var(--spacing-2);
+    min-height: 120px;
+    border-radius: var(--radius-lg);
+  }
+
+  .posProductImage {
+    font-size: 32px;
+    margin-bottom: 0;
+  }
+
+  .posProductName {
+    font-size: var(--font-size-xs);
+  }
+
+  .posProductPrice {
+    font-size: 10px;
+  }
+
+  .posCartSidebar {
+    max-width: 100%;
+    padding: var(--spacing-3);
+  }
+
+  .posCartItem {
+    padding: var(--spacing-2);
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+  }
+
+  .posCartItemName {
+    font-size: var(--font-size-xs);
+  }
+
+  .posCartItemPrice {
+    font-size: 10px;
+  }
+
+  .posCartItemQty {
+    grid-column: 1;
+  }
+
+  .posQtyBtn {
+    width: 28px;
+    height: 28px;
+    font-size: var(--font-size-sm);
+  }
+
+  .posCartRemoveBtn {
+    width: 28px;
+    height: 28px;
+    font-size: var(--font-size-base);
+  }
+
+  .posCartItemTotal {
+    font-size: var(--font-size-xs);
+    min-width: auto;
+  }
+
+  .posCashierBottom {
+    padding: var(--spacing-2);
+    gap: var(--spacing-2);
+  }
+
+  .posLocation {
+    font-size: 10px;
+  }
+
+  .posBottomTime {
+    font-size: 10px;
+  }
+
+  .posTotalInfo {
+    font-size: var(--font-size-sm);
+  }
+
+  .posTotalInfo strong {
+    font-size: var(--font-size-lg);
+  }
+
+  .posActionButtons {
+    gap: var(--spacing-2);
+  }
+
+  .posActionBtn {
+    height: 44px;
+    padding: 0 var(--spacing-2);
+    font-size: 10px;
+  }
+
+  /* Menu Screen */
+  .menuScreenSidebar {
+    max-height: 160px;
+  }
+
+  .menuScreenSidebarContent {
+    padding: var(--spacing-2);
+  }
+
+  .menuCategoryTitle {
+    font-size: 10px;
+  }
+
+  .menuScreenItem {
+    padding: var(--spacing-2);
+    font-size: 10px;
+  }
+
+  .menuItemIcon {
+    font-size: var(--font-size-sm);
+    width: 20px;
+  }
+
+  .menuLogoutBtn {
+    margin: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: var(--font-size-xs);
+    height: 44px;
+  }
+
+  .menuScreenContent {
+    padding: var(--spacing-3);
+  }
+
+  .workShiftTitle {
+    font-size: var(--font-size-xl);
+    margin-bottom: var(--spacing-4);
+  }
+
+  .workShiftForm {
+    gap: var(--spacing-4);
+  }
+
+  .workShiftLabel {
+    font-size: var(--font-size-sm);
+  }
+
+  .workShiftInput {
+    height: 48px;
+    padding: 0 var(--spacing-3);
+    font-size: var(--font-size-base);
+  }
+
+  .workShiftStartBtn {
+    height: 48px;
+    font-size: var(--font-size-sm);
+  }
+
+  .workShiftNote {
+    padding: var(--spacing-3);
+    gap: var(--spacing-2);
+  }
+
+  .workShiftNoteTitle {
+    font-size: var(--font-size-sm);
+  }
+
+  .workShiftNoteText {
+    font-size: var(--font-size-xs);
+  }
+
+  .menuPlaceholderIcon {
+    font-size: 60px;
+    margin-bottom: var(--spacing-4);
+  }
+
+  .menuPlaceholderTitle {
+    font-size: var(--font-size-xl);
+  }
+
+  .menuPlaceholderText {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Table Layout */
+  .tableLayoutMain {
+    padding: var(--spacing-3);
+    gap: var(--spacing-3);
+  }
+
+  .tableGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-2);
+  }
+
+  .tableCard {
+    padding: var(--spacing-2);
+    min-height: 100px;
+    border-radius: var(--radius-lg);
+  }
+
+  .tableNumber {
+    font-size: var(--font-size-base);
+  }
+
+  .tableDuration {
+    font-size: var(--font-size-lg);
+  }
+
+  .tableStatusBadge {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .tableEmptyLabel {
+    font-size: var(--font-size-xs);
+  }
+
+  .tableLayoutSidebar {
+    width: 260px;
+    padding: var(--spacing-3);
+  }
+
+  .locationBtn {
+    height: 48px;
+    font-size: var(--font-size-sm);
+  }
+
+  /* Book Table */
+  .bookTableContent {
+    margin: var(--spacing-2);
+    padding: var(--spacing-4);
+    border-radius: var(--radius-xl);
+  }
+
+  .emptyStateIcon {
+    font-size: 60px;
+    margin-bottom: var(--spacing-3);
+  }
+
+  .emptyStateTitle {
+    font-size: var(--font-size-lg);
+  }
+
+  .emptyStateSubtitle {
+    font-size: var(--font-size-xs);
+  }
+
+  .bookTableSidebar {
+    width: 260px;
+    padding: var(--spacing-3);
+  }
+
+  .bookTableFilterBtn {
+    padding: var(--spacing-2) var(--spacing-3);
+    font-size: 10px;
+  }
+
+  .bookTableDateBtn {
+    padding: var(--spacing-2);
+  }
+
+  .createBookTableBtn {
+    height: 50px;
+    font-size: var(--font-size-sm);
+  }
+
+  .manageBookTableBtn {
+    padding: var(--spacing-3) var(--spacing-4);
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ============================================
+   SIDEBAR OVERLAY BACKDROP
+   ============================================ */
+.sidebarOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: calc(var(--z-modal) - 1);
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+}
+
+.sidebarOverlay.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* ============================================
+   TOUCH FRIENDLY ADJUSTMENTS
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+
+  /* Increase touch targets */
+  .iconBtn,
+  .iconBtnSmall,
+  .menuBtn,
+  .keyBtn,
+  .filterBtn,
+  .categoryBtn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .orderCard:hover,
+  .posProductCard:hover,
+  .tableCard:hover,
+  .filterBtn:hover,
+  .categoryBtn:hover {
+    transform: none;
+  }
+
+  /* Add active states instead */
+  .orderCard:active,
+  .posProductCard:active,
+  .tableCard:active {
+    transform: scale(0.98);
+  }
+
+  .filterBtn:active,
+  .categoryBtn:active,
+  .keyBtn:active {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* ============================================
+   LANDSCAPE ORIENTATION ADJUSTMENTS
+   ============================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .lockScreen {
+    padding: var(--spacing-2);
+  }
+
+  .pinDots {
+    height: 50px;
+    margin-bottom: var(--spacing-3);
+  }
+
+  .keyBtn {
+    height: 44px;
+    font-size: var(--font-size-base);
+  }
+
+  .loginBtn {
+    height: 44px;
+  }
+
+  .actionsRow {
+    margin-top: var(--spacing-2);
+  }
+
+  .warnBtn,
+  .dangerBtn {
+    height: 40px;
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+@media print {
+
+  .homeSidebar,
+  .bookTableSidebar,
+  .tableLayoutSidebar,
+  .menuScreenSidebar,
+  .posCategories,
+  .posCartSidebar,
+  .homeHeader,
+  .homeFooter,
+  .posCashierTop,
+  .posCashierBottom {
+    display: none !important;
+  }
+
+  .homeGrid,
+  .posProductsArea,
+  .tableLayoutMain,
+  .bookTableContent,
+  .menuScreenContent {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}

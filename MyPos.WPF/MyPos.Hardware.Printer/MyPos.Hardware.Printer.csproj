@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>MyPos.Hardware.Printer</AssemblyName>
+    <RootNamespace>MyPos.Hardware.Printer</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MyPos.Core.Business\MyPos.Core.Business.csproj" />
+    <PackageReference Include="Serilog" Version="4.1.0" />
+  </ItemGroup>
+</Project>

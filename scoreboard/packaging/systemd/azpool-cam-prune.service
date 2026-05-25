@@ -1,0 +1,10 @@
+[Unit]
+Description=AZ Pool Arena - Prune old camera recordings
+
+[Service]
+Type=oneshot
+User=azscoreboard
+Group=azscoreboard
+WorkingDirectory=/opt/azpool-scoreboard
+EnvironmentFile=-/opt/azpool-scoreboard/config/camera.env
+ExecStart=/opt/azpool-scoreboard/scripts/prune_recordings.sh

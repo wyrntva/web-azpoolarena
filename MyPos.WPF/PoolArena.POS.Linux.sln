@@ -1,0 +1,31 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Avalonia Linux Solution — dành cho phát triển trên Ubuntu
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPos.Client.Avalonia", "MyPos.Client.Avalonia\MyPos.Client.Avalonia.csproj", "{A1B2C3D4-0000-7890-ABCD-EF1234567890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPos.Core.Business", "MyPos.Core.Business\MyPos.Core.Business.csproj", "{C3D4E5F6-A7B8-9012-CDEF-123456789012}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPos.Data.Repository", "MyPos.Data.Repository\MyPos.Data.Repository.csproj", "{D4E5F6A7-B8C9-0123-DEF0-234567890123}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPos.SyncService", "MyPos.SyncService\MyPos.SyncService.csproj", "{E5F6A7B8-C9D0-1234-EF01-345678901234}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPos.Tests", "MyPos.Tests\MyPos.Tests.csproj", "{F1F2F3F4-1234-5678-90AB-CDEF01234567}"
+EndProject
+Global
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+        {A1B2C3D4-0000-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {A1B2C3D4-0000-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {C3D4E5F6-A7B8-9012-CDEF-123456789012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {C3D4E5F6-A7B8-9012-CDEF-123456789012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {D4E5F6A7-B8C9-0123-DEF0-234567890123}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {D4E5F6A7-B8C9-0123-DEF0-234567890123}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {E5F6A7B8-C9D0-1234-EF01-345678901234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {E5F6A7B8-C9D0-1234-EF01-345678901234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {F1F2F3F4-1234-5678-90AB-CDEF01234567}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {F1F2F3F4-1234-5678-90AB-CDEF01234567}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    EndGlobalSection
+EndGlobal

@@ -1,0 +1,21 @@
+[Unit]
+Description=AZ Pool Arena - Camera DVR Indexer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=azscoreboard
+Group=azscoreboard
+WorkingDirectory=/opt/azpool-scoreboard
+EnvironmentFile=-/opt/azpool-scoreboard/config/camera.env
+ExecStart=/opt/azpool-scoreboard/venv/bin/python /opt/azpool-scoreboard/scripts/dvr_indexer.py
+Restart=always
+RestartSec=2
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=azpool-cam-index
+
+[Install]
+WantedBy=multi-user.target
