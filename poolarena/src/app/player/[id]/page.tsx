@@ -61,17 +61,15 @@ export default function PlayerDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#e8e8e8] flex flex-col">
+        <div className="min-h-screen bg-[#e8e8e8]">
             {/* Top Navigation Bar */}
             <NavBar />
 
             {/* Main Content */}
-            <main className="flex-grow flex items-center justify-center p-4">
-                <div className="w-full max-w-7xl -translate-y-[40px]">
-                    <PlayerProfileCard user={user} />
-                </div>
+            <main className="max-w-7xl mx-auto px-4 pt-8 pb-24 lg:py-8 flex flex-col gap-3 lg:gap-8">
+                {/* Player Profile Card */}
+                <PlayerProfileCard user={user} />
             </main>
-
         </div>
     );
 }

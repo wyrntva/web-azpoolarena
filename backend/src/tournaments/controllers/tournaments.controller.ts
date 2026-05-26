@@ -155,6 +155,11 @@ export class TournamentsController {
     return this.service.getRegistrationsBySlug(slug);
   }
 
+  @Get('slug/:slug/matches')
+  async getMatchesBySlug(@Param('slug') slug: string) {
+    return this.service.getMatchesBySlug(slug);
+  }
+
   @Get(':id/registrations')
   async getRegistrations(@Param('id', ParseIntPipe) id: number) {
     return this.service.getRegistrations(id);

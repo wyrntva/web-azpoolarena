@@ -21,6 +21,16 @@ interface CreateUserData {
     fixed_salary?: number;
 }
 
+interface PromoteFromCustomerData {
+    pool_arena_user_id: number;
+    role_id: number;
+    pin: string;
+    salary_type: 'hourly' | 'fixed';
+    hourly_rate?: number;
+    fixed_salary?: number;
+    is_active?: boolean;
+}
+
 interface UpdateUserData extends Partial<CreateUserData> {
     password?: string;
 }
@@ -59,6 +69,10 @@ export const userAPI = {
         return axiosClient.post('/api/users/update-display-order', {
             user_orders: userOrders
         });
+    },
+
+    promoteFromCustomer: (data: PromoteFromCustomerData): Promise<AxiosResponse<User>> => {
+        return axiosClient.post('/api/users/promote-from-customer', data);
     },
 
     changeMyPassword: (oldPassword: string, password: string): Promise<AxiosResponse<void>> => {

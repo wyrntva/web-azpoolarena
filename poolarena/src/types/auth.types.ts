@@ -1,4 +1,4 @@
-import { UserGender, UserRank, UsersResponse } from "./user.types";
+import { UserGender, UserRank, User } from "./user.types";
 export interface RegisterFormData {
   fullName: string;
   gender?: UserGender;
@@ -10,9 +10,8 @@ export interface RegisterFormData {
   confirmPassword?: string;
 }
 export interface LoginResponse {
-    access_token: string;
-    users: UsersResponse;
-  }
-  
-  
+  access_token: string;
+  users: User;
+}
+
   

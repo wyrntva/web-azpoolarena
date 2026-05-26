@@ -10,6 +10,7 @@ import { UserEntity } from './entities/user.entity';
 import { RoleEntity } from '../roles/entities/role.entity';
 import { AuthService } from '../auth/auth.service';
 import { ALL_PERMISSIONS } from '../auth/constants/permissions';
+import { SalaryType } from '../common/enums';
 
 @Injectable()
 export class UsersService {
@@ -68,6 +69,7 @@ export class UsersService {
     if (!role) throw new NotFoundException('Role not found');
 
     const user = this.userRepo.create({
+      user_type: 'staff',
       username: dto.username,
       email: dto.email && dto.email.trim() !== '' ? dto.email : null,
       full_name: dto.full_name,
@@ -90,6 +92,7 @@ export class UsersService {
 
   async findAll(skip = 0, limit = 100) {
     const users = await this.userRepo.find({
+      where: [{ user_type: 'staff' }, { user_type: 'both' }],
       relations: ['role'],
       order: { display_order: { direction: 'ASC', nulls: 'LAST' }, id: 'ASC' },
       skip,
@@ -176,6 +179,50 @@ export class UsersService {
       user.is_active = false;
       await this.userRepo.save(user);
     }
+  }
+
+  async promoteFromCustomer(dto: {
+    pool_arena_user_id: number;
+    role_id: number;
+    pin: string;
+    salary_type: 'hourly' | 'fixed';
+    hourly_rate?: number;
+    fixed_salary?: number;
+    is_active?: boolean;
+  }) {
+    const user = await this.userRepo.findOne({ where: { id: dto.pool_arena_user_id } });
+    if (!user) throw new NotFoundException('Khách hàng không tồn tại');
+    if (!['player', 'both'].includes(user.user_type))
+      throw new BadRequestException('Người dùng không phải khách hàng');
+    if (user.user_type === 'both' || user.username)
+      throw new BadRequestException('Người dùng này đã là nhân viên');
+
+    if (!user.phone_number?.startsWith('+84'))
+      throw new BadRequestException('Khách hàng không có số điện thoại hợp lệ');
+
+    const username = '0' + user.phone_number.slice(3);
+    const existing = await this.userRepo.findOne({ where: { username } });
+    if (existing && existing.id !== user.id)
+      throw new BadRequestException('Số điện thoại này đã được đăng ký làm nhân viên');
+
+    const role = await this.roleRepo.findOne({ where: { id: dto.role_id } });
+    if (!role) throw new NotFoundException('Vai trò không tồn tại');
+
+    user.user_type = 'both';
+    user.username = username;
+    user.role_id = dto.role_id;
+    user.pin = dto.pin;
+    user.salary_type = dto.salary_type as SalaryType;
+    user.hourly_rate = dto.salary_type === 'hourly' ? (dto.hourly_rate ?? 20000) : (null as any);
+    user.fixed_salary = dto.salary_type === 'fixed' ? (dto.fixed_salary ?? 0) : (null as any);
+    user.is_active = dto.is_active !== undefined ? dto.is_active : true;
+
+    const saved = await this.userRepo.save(user);
+    const full = await this.userRepo.findOne({
+      where: { id: saved.id },
+      relations: ['role'],
+    });
+    return this.parseUserPermissions(full!);
   }
 
   async updateDisplayOrder(

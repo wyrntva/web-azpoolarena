@@ -2,115 +2,47 @@
 
 import React from "react";
 import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { Spin } from "antd";
 import {
     TournamentNavbar,
-    ChampionshipBanner,
 } from "@/components";
 import NavBar from "@/components/NavBar";
-import { RankingsTable } from "@/components/RankingsTable";
+import { RankingsTable, RankingData } from "@/components/RankingsTable";
+import { tournamentAPI } from "@/api/tournament.api";
+import { resolveImageUrl } from "@/lib/tournament-utils";
 
-const SAMPLE_RANKINGS = [
-    {
-        key: "1",
-        rank: 1,
-        rankLabel: "#1",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "2",
-        rank: 2,
-        rankLabel: "# 2",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "3",
-        rank: 3,
-        rankLabel: "# 3-4",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "4",
-        rank: 4,
-        rankLabel: "# 3-4",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "5",
-        rank: 5,
-        rankLabel: "# 5-8",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "6",
-        rank: 6,
-        rankLabel: "# 5-8",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "7",
-        rank: 7,
-        rankLabel: "# 5-8",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "8",
-        rank: 8,
-        rankLabel: "# 5-8",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "9",
-        rank: 9,
-        rankLabel: "# 9-12",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "10",
-        rank: 10,
-        rankLabel: "# 9-12",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "11",
-        rank: 11,
-        rankLabel: "# 9-12",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "12",
-        rank: 12,
-        rankLabel: "# 9-12",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "13",
-        rank: 13,
-        rankLabel: "# 13-16",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-    {
-        key: "14",
-        rank: 14,
-        rankLabel: "# 13-16",
-        player: { name: "Quốc Huy", avatar: "", tier: "Hạng G+" },
-        points: 700,
-    },
-];
+interface RegistrationItem {
+    id: number;
+    full_name: string;
+    rank?: string | null;
+    avatar_url?: string | null;
+    registered_at?: string | null;
+}
 
 export default function TournamentRankingsPage() {
+    const params = useParams();
+    const slug = params?.slug as string;
+
+    const { data: registrations, isLoading } = useQuery({
+        queryKey: ['tournament-registrations', slug],
+        queryFn: () => tournamentAPI.getTournamentRegistrationsBySlug(slug).then(r => r.data as RegistrationItem[]),
+        enabled: !!slug,
+    });
+
+    const rankings: RankingData[] = (registrations ?? []).map((reg, index) => ({
+        key: String(reg.id),
+        rank: index + 1,
+        rankLabel: index === 0 ? '#1' : index === 1 ? '#2' : index === 2 ? '#3' : `#${index + 1}`,
+        player: {
+            id: reg.id,
+            name: reg.full_name,
+            avatar: reg.avatar_url ? resolveImageUrl(reg.avatar_url, '') : '',
+            tier: reg.rank ? `Hạng ${reg.rank}` : undefined,
+        },
+        points: 0,
+    }));
+
     return (
         <div className="min-h-screen bg-[#e8e8e8] pb-24 font-sans">
             <NavBar />
@@ -118,9 +50,18 @@ export default function TournamentRankingsPage() {
             <div className="flex flex-col bg-[url('/images/tour_banner.png')] bg-[length:1920px_450px] bg-no-repeat">
                 <main className="w-full max-w-[1360px] mx-auto mt-[288px] flex flex-col items-center">
 
-                    {/* Rankings Container - Overlapping the Banner */}
                     <div className="w-full z-10 flex flex-col gap-2">
-                        <RankingsTable data={SAMPLE_RANKINGS as any} />
+                        {isLoading ? (
+                            <div className="flex justify-center py-12">
+                                <Spin size="large" />
+                            </div>
+                        ) : rankings.length === 0 ? (
+                            <div className="bg-white rounded-2xl p-10 text-center text-gray-500">
+                                Chưa có người đăng ký giải đấu này
+                            </div>
+                        ) : (
+                            <RankingsTable data={rankings} />
+                        )}
                     </div>
 
                 </main>

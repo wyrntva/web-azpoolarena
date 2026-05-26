@@ -65,6 +65,13 @@ export class UsersController {
     return this.usersService.remove(id, user.id);
   }
 
+  @Post('promote-from-customer')
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.CREATED)
+  promoteFromCustomer(@Body() dto: any) {
+    return this.usersService.promoteFromCustomer(dto);
+  }
+
   @Post('update-display-order')
   @UseGuards(AdminGuard)
   updateDisplayOrder(

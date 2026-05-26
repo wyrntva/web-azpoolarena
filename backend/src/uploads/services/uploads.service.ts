@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PoolArenaUserEntity } from '../../pool-arena/entities';
+import { UserEntity } from '../../users/entities/user.entity';
 import { TournamentEntity } from '../../tournaments/entities';
 import { StoreSettingsEntity } from '../../store-settings/entities';
 import * as fs from 'fs';
@@ -10,8 +10,8 @@ import * as path from 'path';
 @Injectable()
 export class UploadsService {
   constructor(
-    @InjectRepository(PoolArenaUserEntity)
-    private userRepo: Repository<PoolArenaUserEntity>,
+    @InjectRepository(UserEntity)
+    private userRepo: Repository<UserEntity>,
     @InjectRepository(TournamentEntity)
     private tourRepo: Repository<TournamentEntity>,
     @InjectRepository(StoreSettingsEntity)

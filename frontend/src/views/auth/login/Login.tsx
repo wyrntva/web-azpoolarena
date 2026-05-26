@@ -65,12 +65,12 @@ const Login = () => {
           {/* Username field */}
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="username" value="Tên đăng nhập" />
+              <Label htmlFor="username" value="Tên đăng nhập / SĐT / Email" />
             </div>
             <TextInput
               id="username"
               type="text"
-              placeholder="Nhập tên đăng nhập"
+              placeholder="Nhập tên đăng nhập, số điện thoại hoặc email"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}

@@ -24,13 +24,13 @@ export default function PlayersPage() {
     if (!users) return [];
     return users.filter((u) => {
       const matchesSearch = search
-        ? u.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-        u.phoneNumber?.toLowerCase().includes(search.toLowerCase()) ||
+        ? u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+        u.phone_number?.toLowerCase().includes(search.toLowerCase()) ||
         u.email?.toLowerCase().includes(search.toLowerCase())
         : true;
       const matchesRank = rank ? (u.rank === rank) : true;
       const matchesOnline = online
-        ? online === 'online' ? !!u.isActive : !u.isActive
+        ? online === 'online' ? !!u.is_active : !u.is_active
         : true;
       return matchesSearch && matchesRank && matchesOnline;
     });
@@ -161,22 +161,22 @@ export default function PlayersPage() {
             <>
               <Row gutter={[16, 16]}>
                 {paginatedUsers.map((u) => (
-                  <Col xs={24} sm={12} md={8} lg={6} key={u._id}>
+                  <Col xs={24} sm={12} md={8} lg={6} key={u.id}>
                     <PlayerCard
-                      id={u._id}
-                      name={u.fullName}
+                      id={String(u.id)}
+                      name={u.full_name}
                       rank={u.rank ? `Hạng ${u.rank}` : 'Hạng E'}
                       avatarUrl={undefined}
                       stats={{
                         wins: u.wins ?? 0,
                         losses: u.losses ?? 0,
-                        winRate: u.winRate ?? 0,
-                        points: u.totalGames ?? 0,
+                        winRate: u.win_rate ?? 0,
+                        points: u.total_games ?? 0,
                         streak: 0,
                       }}
-                      isOnline={u.isActive}
-                      onAddFriend={() => handleAddFriend(u._id)}
-                      onViewProfile={() => handleViewProfile(u._id)}
+                      isOnline={u.is_active}
+                      onAddFriend={() => handleAddFriend(String(u.id))}
+                      onViewProfile={() => handleViewProfile(String(u.id))}
                     />
                   </Col>
                 ))}

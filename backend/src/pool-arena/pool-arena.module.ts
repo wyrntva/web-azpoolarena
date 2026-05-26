@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PoolArenaUserEntity } from './entities';
+import { UserEntity } from '../users/entities/user.entity';
 import { PoolArenaService } from './services/pool-arena.service';
 import { PoolArenaAuthService } from './services/pool-arena-auth.service';
 import { PoolArenaController } from './controllers/pool-arena.controller';
@@ -9,7 +9,7 @@ import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PoolArenaUserEntity]),
+    TypeOrmModule.forFeature([UserEntity]),
     AuthModule,
   ],
   controllers: [PoolArenaController, PoolArenaAuthController],

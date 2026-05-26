@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PoolArenaUserEntity } from '../entities';
+import { UserEntity } from '../../users/entities/user.entity';
 import {
   CreatePoolArenaUserDto,
   UpdatePoolArenaUserDto,
@@ -17,8 +17,8 @@ import * as bcrypt from 'bcryptjs';
 @Injectable()
 export class PoolArenaService {
   constructor(
-    @InjectRepository(PoolArenaUserEntity)
-    private readonly repo: Repository<PoolArenaUserEntity>,
+    @InjectRepository(UserEntity)
+    private readonly repo: Repository<UserEntity>,
   ) {}
 
   async create(dto: CreatePoolArenaUserDto) {
@@ -34,45 +34,42 @@ export class PoolArenaService {
     );
     const user = this.repo.create({
       ...dto,
+      user_type: 'player' as const,
       hashed_password: hashedPassword,
       rank: 'K',
-    }); // Default rank 'K'
+    });
     return this.repo.save(user);
   }
 
   async findAll(skip = 0, limit = 50, search?: string, rank?: string, gender?: string) {
     const qb = this.repo
       .createQueryBuilder('u')
+      .where('u.user_type IN (:...types)', { types: ['player', 'both'] })
       .skip(skip)
       .take(limit)
       .orderBy('u.points', 'DESC')
       .addOrderBy('u.created_at', 'DESC');
 
-    const conditions: string[] = [];
-    const params: Record<string, any> = {};
-
     if (search) {
-      conditions.push('(u.full_name ILIKE :s OR u.phone_number ILIKE :s)');
-      params.s = `%${search}%`;
+      qb.andWhere('(u.full_name ILIKE :s OR u.phone_number ILIKE :s)', {
+        s: `%${search}%`,
+      });
     }
     if (rank) {
-      conditions.push('u.rank = :rank');
-      params.rank = rank;
+      qb.andWhere('u.rank = :rank', { rank });
     }
     if (gender) {
-      conditions.push('u.gender = :gender');
-      params.gender = gender;
-    }
-
-    if (conditions.length > 0) {
-      qb.where(conditions.join(' AND '), params);
+      qb.andWhere('u.gender = :gender', { gender });
     }
 
     return qb.getManyAndCount();
   }
 
   async findOne(id: number) {
-    const user = await this.repo.findOne({ where: { id } });
+    const user = await this.repo
+      .createQueryBuilder('u')
+      .where('u.id = :id AND u.user_type IN (:...types)', { id, types: ['player', 'both'] })
+      .getOne();
     if (!user) throw new NotFoundException('PoolArena user not found');
     return user;
   }
@@ -116,7 +113,8 @@ export class PoolArenaService {
   async getRankings(limit = 100) {
     return this.repo
       .createQueryBuilder('u')
-      .where('u.is_active = true')
+      .where('u.user_type IN (:...rtypes)', { rtypes: ['player', 'both'] })
+      .andWhere('u.is_active = true')
       .select([
         'u.id',
         'u.full_name',

@@ -8,15 +8,15 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { PoolArenaUserEntity } from '../entities';
+import { UserEntity } from '../../users/entities/user.entity';
 
 const TOKEN_EXPIRY = '30d';
 
 @Injectable()
 export class PoolArenaAuthService {
   constructor(
-    @InjectRepository(PoolArenaUserEntity)
-    private readonly userRepo: Repository<PoolArenaUserEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -32,8 +32,18 @@ export class PoolArenaAuthService {
     );
   }
 
-  private strip(user: PoolArenaUserEntity) {
-    const { hashed_password, ...safe } = user as any;
+  private strip(user: UserEntity) {
+    const {
+      hashed_password,
+      pin,
+      salary_type,
+      hourly_rate,
+      fixed_salary,
+      display_order,
+      role_id,
+      role,
+      ...safe
+    } = user as any;
     return safe;
   }
 
@@ -85,7 +95,8 @@ export class PoolArenaAuthService {
     address?: string;
     rank?: string;
   }) {
-    const conditions: any[] = [{ phone_number: this.normalizePhone(data.phone_number) }];
+    const normalizedPhone = this.normalizePhone(data.phone_number);
+    const conditions: any[] = [{ phone_number: normalizedPhone }];
     if (data.email) conditions.push({ email: data.email });
 
     const existing = await this.userRepo.findOne({ where: conditions });
@@ -94,14 +105,14 @@ export class PoolArenaAuthService {
     }
 
     const user = this.userRepo.create({
+      user_type: 'player',
       full_name: data.full_name,
-      phone_number: this.normalizePhone(data.phone_number),
+      phone_number: normalizedPhone,
       email: data.email || undefined,
       hashed_password: await bcrypt.hash(data.password, 10),
-      gender: (data.gender as any) || undefined,
+      gender: data.gender || undefined,
       address: data.address || undefined,
       rank: data.rank || 'K',
-      role: 'player',
     });
 
     const saved = await this.userRepo.save(user);

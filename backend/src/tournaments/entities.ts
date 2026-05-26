@@ -7,7 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { PoolArenaUserEntity } from '../pool-arena/entities';
+import { UserEntity } from '../users/entities/user.entity';
 
 // ================ TOURNAMENT SETTINGS MODELS ================
 
@@ -273,9 +273,9 @@ export class TournamentRegistrationEntity {
   @JoinColumn({ name: 'tournament_id' })
   tournament: TournamentEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id' })
-  user: PoolArenaUserEntity;
+  user: UserEntity;
 }
 
 export enum TournamentMatchStatus {
@@ -351,15 +351,15 @@ export class TournamentMatchEntity {
   @JoinColumn({ name: 'tournament_id' })
   tournament: TournamentEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'player1_id' })
-  player1: PoolArenaUserEntity;
+  player1: UserEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'player2_id' })
-  player2: PoolArenaUserEntity;
+  player2: UserEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'winner_id' })
-  winner: PoolArenaUserEntity;
+  winner: UserEntity;
 }

@@ -43,7 +43,6 @@ interface TournamentRank {
   created_at: string;
   updated_at: string;
 }
-
 const PlayerRow = memo(function PlayerRow({
   player,
   index,
@@ -65,12 +64,31 @@ const PlayerRow = memo(function PlayerRow({
     return (
       <div className="group">
         <Link href={`/player/${player.id}`} className="block">
-          <div className="flex items-center py-[11px] px-4 rounded-xl hover:bg-blue-50/30 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent">
-            <div className="w-16 flex-shrink-0 flex items-baseline gap-[4px]">
-              <span className="font-bold italic text-[#575E70]" style={{ fontSize: '24px', lineHeight: '32px' }}>#</span>
-              <span className="font-bold italic text-[#575E70]" style={{ fontSize: '30px', lineHeight: '48px' }}>{index + 1}</span>
+          <div className="flex items-center py-[11px] px-2 sm:px-4 rounded-xl hover:bg-blue-50/30 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent">
+            {/* Mobile Rank Column */}
+            <div className="flex md:hidden w-[52px] flex-shrink-0 flex-row items-baseline gap-[4px] justify-center">
+              <span 
+                className="font-bold italic text-[#575E70] text-[24px] leading-[32px] text-center" 
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                #
+              </span>
+              <span 
+                className="font-bold italic text-[#575E70] text-[30px] leading-[48px] text-center" 
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                {index + 1}
+              </span>
             </div>
-            <div className="w-[60px] h-[75px] flex-shrink-0 relative mr-8 ml-4 transition-transform duration-300 group-hover:scale-110">
+
+            {/* Desktop Rank Column */}
+            <div className="hidden md:flex w-16 flex-shrink-0 items-baseline gap-[4px]">
+              <span className="font-bold italic text-[#575E70] text-2xl" style={{ fontFamily: 'Montserrat, sans-serif' }}>#</span>
+              <span className="font-bold italic text-[#575E70] text-3xl" style={{ fontFamily: 'Montserrat, sans-serif' }}>{index + 1}</span>
+            </div>
+
+            {/* Avatar Column */}
+            <div className="w-[56px] h-[70px] sm:w-[60px] sm:h-[75px] flex-shrink-0 relative mr-4 sm:mr-8 ml-1 sm:ml-4 transition-transform duration-300 group-hover:scale-110">
               <Image
                 src={imgSrc}
                 alt={player.full_name}
@@ -81,16 +99,31 @@ const PlayerRow = memo(function PlayerRow({
                 onError={() => setImgSrc('/images/imageprofile.png')}
               />
             </div>
-            <div className="flex-1 flex flex-col justify-center">
-              <h3 className="text-xl font-bold text-gray-800 m-0 leading-tight">{player.full_name}</h3>
-              <span className="text-base font-medium text-gray-400 mt-1">
+
+            {/* Mobile: Stacked Details */}
+            <div className="flex md:hidden flex-1 flex-col justify-start min-w-0">
+              <h3 className="text-base font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
+              <span className="text-xs font-medium text-gray-400 mt-0.5">
                 {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
               </span>
-            </div>
-            <div className="text-right">
-              <span className="text-2xl font-black italic text-gray-500 transform group-hover:scale-110 inline-block transition-transform duration-300">
+              <span className="text-base font-black italic text-gray-700 mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 {player.points ?? 0}
               </span>
+            </div>
+
+            {/* Desktop: Standard Layout */}
+            <div className="hidden md:flex flex-1 items-center justify-between min-w-0">
+              <div className="flex flex-col justify-center min-w-0">
+                <h3 className="text-xl font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
+                <span className="text-base font-medium text-gray-400 mt-1">
+                  {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
+                </span>
+              </div>
+              <div className="text-right pl-2">
+                <span className="text-2xl font-black italic text-gray-500 transform group-hover:scale-110 inline-block transition-transform duration-300" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                  {player.points ?? 0}
+                </span>
+              </div>
             </div>
           </div>
         </Link>
@@ -100,10 +133,35 @@ const PlayerRow = memo(function PlayerRow({
 
   return (
     <Link href={`/player/${player.id}`} className="block">
-      <div className="bg-white rounded-[16px] shadow-sm w-full h-[72px] flex items-center px-12 hover:bg-blue-50/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer border border-transparent group">
+      {/* Mobile View */}
+      <div className="flex md:hidden bg-white rounded-[16px] shadow-sm w-full py-3 px-6 items-center justify-between hover:bg-blue-50/10 transition-all duration-300 cursor-pointer border border-transparent group">
+        <div className="flex items-center gap-6 flex-1 min-w-0">
+          {/* Rank Column */}
+          <div className="flex-shrink-0 flex items-baseline gap-[4px]">
+            <span className="font-bold italic text-[#575E70] text-[18px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>#</span>
+            <span className="font-bold italic text-[#575E70] text-[18px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>{index + 1}</span>
+          </div>
+          {/* Name & Rank Stacked */}
+          <div className="flex-1 flex flex-col justify-center min-w-0">
+            <h3 className="text-[18px] font-bold text-gray-800 m-0 truncate leading-snug">{player.full_name}</h3>
+            <span className="text-sm font-medium text-gray-400 mt-0.5">
+              {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
+            </span>
+          </div>
+        </div>
+        {/* Points Column */}
+        <div className="text-right pl-6 flex-shrink-0">
+          <span className="text-[18px] font-black italic text-gray-700 group-hover:scale-110 inline-block transition-transform duration-300" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            {player.points ?? 0}
+          </span>
+        </div>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden md:flex bg-white rounded-[16px] shadow-sm w-full h-[72px] flex items-center px-12 hover:bg-blue-50/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer border border-transparent group">
         <div className="w-16 flex-shrink-0 flex items-baseline gap-[4px]">
-          <span className="font-bold italic text-[#575E70]" style={{ fontSize: '16px', lineHeight: '24px' }}>#</span>
-          <span className="font-bold italic text-[#575E70]" style={{ fontSize: '18px', lineHeight: '24px' }}>{index + 1}</span>
+          <span className="font-bold italic text-[#575E70] text-base" style={{ fontFamily: 'Montserrat, sans-serif' }}>#</span>
+          <span className="font-bold italic text-[#575E70] text-[18px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>{index + 1}</span>
         </div>
         <div className="w-10 h-10 flex-shrink-0 relative rounded-full overflow-hidden ml-4 border border-gray-100">
           <Image
@@ -116,14 +174,14 @@ const PlayerRow = memo(function PlayerRow({
             onError={() => setImgSrc('/images/imageprofile.png')}
           />
         </div>
-        <div className="flex-1 flex flex-col justify-center ml-3">
-          <h3 className="text-base font-bold text-gray-800 m-0">{player.full_name}</h3>
+        <div className="flex-1 flex flex-col justify-center ml-3 min-w-0">
+          <h3 className="text-base font-bold text-gray-800 m-0 truncate">{player.full_name}</h3>
           <span className="text-xs text-gray-400">
             {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
           </span>
         </div>
-        <div className="text-right">
-          <span className="text-xl font-black italic text-gray-500 group-hover:scale-110 inline-block transition-transform duration-300">
+        <div className="text-right pl-2">
+          <span className="text-xl font-black italic text-gray-500 group-hover:scale-110 inline-block transition-transform duration-300" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             {player.points ?? 0}
           </span>
         </div>
@@ -257,7 +315,7 @@ export default function LeaderboardPage() {
       <NavBar />
 
       {/* Banner */}
-      <div className="relative h-[400px] w-full bg-gray-200 overflow-hidden">
+      <div className="relative h-[200px] sm:h-[300px] md:h-[400px] w-full bg-gray-200 overflow-hidden">
         <Image
           src={bannerSrc}
           alt="Leaderboard banner"
@@ -267,24 +325,22 @@ export default function LeaderboardPage() {
           className="object-cover"
           priority
         />
-      </div>
-
-      <main className="max-w-[1360px] mx-auto px-0 -mt-[126px] relative z-10 flex flex-col gap-[12px]">
+      </div>      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 -mt-12 sm:-mt-20 md:-mt-[126px] relative z-10 flex flex-col gap-[12px]">
 
         {/* Tabs */}
-        <div className="absolute -top-[48px] left-8 flex space-x-0 z-0">
+        <div className="absolute -top-[25px] min-[360px]:-top-[30px] sm:-top-[48px] left-[32px] min-[360px]:left-[48px] min-[400px]:left-[60px] sm:left-8 flex space-x-0 z-10">
           {['logo', 'Woman', 'Man'].map((item, i) => (
             <div
               key={i}
               onClick={() => handleTabChange(i)}
-              className={`w-[140px] py-3 rounded-t-xl font-bold text-lg cursor-pointer transition-colors backdrop-blur-sm shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center ${activeTab === i ? 'bg-white text-[#282A2F]' : 'bg-white/40 text-[#282A2F] hover:bg-white/50'}`}
+              className={`${i === 0 ? 'w-[72px] min-[360px]:w-[84px]' : 'w-[52px] min-[360px]:w-[62px]'} sm:w-[140px] py-1 min-[360px]:py-1.5 sm:py-3 rounded-t-xl font-bold text-xs min-[360px]:text-sm sm:text-lg cursor-pointer transition-colors backdrop-blur-sm shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center ${activeTab === i ? 'bg-white text-[#282A2F]' : 'bg-white/40 text-[#282A2F] hover:bg-white/50'}`}
             >
               {i === 0 ? (
-                <div className="relative w-[110px] h-[34px]">
+                <div className="relative w-[45px] min-[360px]:w-[55px] sm:w-[110px] h-[16px] min-[360px]:h-[20px] sm:h-[34px]">
                   <Image src="/images/logo-dark.png" alt="Pool Arena" fill sizes="110px" className="object-contain" />
                 </div>
               ) : (
-                item
+                item === 'Woman' ? 'Nữ' : 'Nam'
               )}
             </div>
           ))}
@@ -292,20 +348,25 @@ export default function LeaderboardPage() {
 
         {/* Top 5 Card */}
         {currentPage === 1 && (
-          <div className="bg-white rounded-[16px] shadow-sm w-full min-h-[400px] relative flex flex-col">
-            <div className="flex justify-between items-start px-8 pt-6 mb-2">
+          <div className="bg-white rounded-[16px] shadow-sm w-full min-h-[360px] sm:min-h-[400px] relative flex flex-col">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 px-4 sm:px-8 pt-6 mb-4">
               <div className="w-[200px] hidden md:block" />
-              <div className="bg-[#111C44] text-white w-[648px] h-[56px] flex items-center justify-center rounded-b-[32px] -mt-6 shadow-md z-20">
-                <h1 className="text-2xl font-bold uppercase tracking-wide m-0">Bảng Xếp Hạng</h1>
+              <div className="bg-[#111C44] text-white w-full max-w-[313px] md:w-[648px] h-[56px] flex items-center justify-center rounded-b-[24px] md:rounded-b-[32px] -mt-6 shadow-md z-20 px-6 py-3">
+                <h1 
+                  className="text-[24px] font-bold uppercase tracking-wide m-0 leading-[32px]"
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                >
+                  Bảng Xếp Hạng
+                </h1>
               </div>
-              <div className="flex items-center gap-2 w-[200px] justify-end">
-                <span className="text-gray-500 font-medium">Hạng</span>
+              <div className="flex items-center w-full max-w-[313px] md:w-[200px] justify-end">
+                <span className="hidden md:inline text-gray-500 text-sm sm:text-base font-medium mr-2">Hạng</span>
                 <Select
                   value={selectedRank}
-                  style={{ width: 120 }}
+                  style={{ width: 110 }}
                   onChange={handleFilterChange}
                   variant="borderless"
-                  className="bg-gray-100 rounded-md"
+                  className="bg-gray-100 rounded-md text-sm sm:text-base"
                   popupMatchSelectWidth={false}
                 >
                   <Option value="all">Tất cả</Option>
@@ -315,15 +376,14 @@ export default function LeaderboardPage() {
                 </Select>
               </div>
             </div>
-            <div className="px-8 mt-2 flex-1">
+            <div className="px-6 sm:px-8 mt-2 flex-1">
               {top5Players.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-400">Chưa có dữ liệu người chơi</div>
+                <div className="flex items-center justify-center h-full text-gray-400 py-8">Chưa có dữ liệu người chơi</div>
               ) : (
                 <div className="flex flex-col gap-0">
                   {top5Players.map((player, index) => (
                     <React.Fragment key={player.id}>
                       <PlayerRow player={player} index={index} isTop5 />
-                      {index !== top5Players.length - 1 && <div className="h-px bg-gray-100 mx-4" />}
                     </React.Fragment>
                   ))}
                 </div>

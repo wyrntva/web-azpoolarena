@@ -14,8 +14,7 @@ export default function MyProfilePage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(true);
-  // Cast user to any to access properties safely
-  const { user, token } = useAppSelector((state) => state.auth) as any;
+  const { user, token } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -60,7 +59,7 @@ export default function MyProfilePage() {
       <NavBar />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 pt-8 pb-24 lg:py-8 flex flex-col gap-3 lg:gap-8">
 
         {/* Change Password Form */}
         <ChangePasswordForm />

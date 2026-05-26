@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
+
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -58,17 +59,29 @@ export class AuthService {
 
   // ==================== Login ====================
   async login(username: string, password: string) {
-    const user = await this.userRepo.findOne({
-      where: { username },
-      relations: ['role'],
-    });
+    const normalizedPhone = username.trim().match(/^0[0-9]{9,10}$/)
+      ? '+84' + username.trim().slice(1)
+      : username.trim();
+
+    const user = await this.userRepo
+      .createQueryBuilder('u')
+      .leftJoinAndSelect('u.role', 'role')
+      .where(
+        'u.username = :username OR u.email = :email OR u.phone_number = :phone',
+        { username: username.trim(), email: username.trim(), phone: normalizedPhone },
+      )
+      .getOne();
 
     if (!user || !(await this.verifyPassword(password, user.hashed_password))) {
-      throw new UnauthorizedException('Incorrect username or password');
+      throw new UnauthorizedException('Tài khoản không tồn tại hoặc sai mật khẩu');
     }
 
     if (!user.is_active) {
-      throw new ForbiddenException('Inactive user');
+      throw new ForbiddenException('Tài khoản đã bị vô hiệu hóa');
+    }
+
+    if (user.user_type !== 'staff' && user.user_type !== 'both') {
+      throw new ForbiddenException('Tài khoản này không có quyền truy cập hệ thống quản lý');
     }
 
     return {

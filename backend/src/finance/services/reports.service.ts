@@ -61,7 +61,10 @@ export class ReportsService {
     }
 
     const fixedUsers = await this.userRepo.find({
-      where: { is_active: true, salary_type: SalaryType.FIXED },
+      where: [
+        { is_active: true, salary_type: SalaryType.FIXED, user_type: 'staff' },
+        { is_active: true, salary_type: SalaryType.FIXED, user_type: 'both' },
+      ],
     });
     let totalFixedSalary = 0;
     for (const u of fixedUsers) {

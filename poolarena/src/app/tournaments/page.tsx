@@ -104,14 +104,15 @@ export default function TournamentsPage() {
             max: tournament.number_of_players || 16,
           },
           isRegistered: false,
+          _startDate: startDate,
         };
 
         if (isUpcoming) upcoming.push(formatted);
         else completed.push(formatted);
       });
 
-      upcoming.sort((a, b) => new Date(`${a.date} ${a.time}`).getTime() - new Date(`${b.date} ${b.time}`).getTime());
-      completed.sort((a, b) => new Date(`${b.date} ${b.time}`).getTime() - new Date(`${a.date} ${a.time}`).getTime());
+      upcoming.sort((a, b) => (a._startDate?.getTime() ?? 0) - (b._startDate?.getTime() ?? 0));
+      completed.sort((a, b) => (b._startDate?.getTime() ?? 0) - (a._startDate?.getTime() ?? 0));
 
       setUpcomingTournaments(upcoming);
       setCompletedTournaments(completed);
@@ -164,10 +165,13 @@ export default function TournamentsPage() {
     <div className="min-h-screen bg-[#e8e8e8]">
       <NavBar />
 
-      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0">
-        {/* Tournament Banner */}
+      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pb-20 sm:pb-0">
+        {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
         {bannerUrls.length > 0 && (
-          <div className="mb-12 mt-6 relative h-[280px] w-full animate-fadeIn">
+          <div
+            className="mb-6 sm:mb-12 mt-4 sm:mt-6 relative w-full animate-fadeIn rounded-xl overflow-hidden"
+            style={{ aspectRatio: '361 / 74' }}
+          >
             {bannerUrls.map((url, index) => (
               <div
                 key={index}
@@ -178,20 +182,20 @@ export default function TournamentsPage() {
                   alt={`Tournament Banner ${index + 1}`}
                   fill
                   unoptimized
-                  sizes="100vw"
-                  className="object-cover rounded-xl"
+                  sizes="(max-width: 640px) 361px, (max-width: 1024px) 90vw, 1360px"
+                  className="object-cover"
                   priority={index === 0}
                 />
               </div>
             ))}
 
             {bannerUrls.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+              <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
                 {bannerUrls.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentBannerIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${index === currentBannerIndex ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/75'}`}
+                    className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${index === currentBannerIndex ? 'bg-white w-4 sm:w-6' : 'bg-white/50 hover:bg-white/75'}`}
                     aria-label={`Go to banner ${index + 1}`}
                   />
                 ))}
@@ -201,13 +205,16 @@ export default function TournamentsPage() {
         )}
 
         {/* Tournament Sections */}
-        <div className="space-y-12">
-          <div className="space-y-6">
-            <h2 className="font-bold text-3xl text-gray-800 uppercase tracking-wide italic animate-slideIn">
+        <div className="space-y-6 sm:space-y-12">
+          <div className="space-y-4 sm:space-y-6">
+            <h2
+              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn text-[24px] min-[360px]:text-[28px] min-[400px]:text-[32px] sm:text-[36px] leading-[32px] min-[360px]:leading-[36px] min-[400px]:leading-[42px] sm:leading-[48px]"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
               GIẢI ĐẤU SẮP DIỄN RA
             </h2>
             {upcomingTournaments.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">Chưa có giải đấu sắp diễn ra</div>
+              <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">Chưa có giải đấu sắp diễn ra</div>
             ) : (
               <TournamentList
                 tournaments={upcomingTournaments}
@@ -218,12 +225,15 @@ export default function TournamentsPage() {
             )}
           </div>
 
-          <div className="space-y-6">
-            <h2 className="font-bold text-3xl text-gray-800 uppercase tracking-wide italic animate-slideIn">
+          <div className="space-y-4 sm:space-y-6">
+            <h2
+              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn text-[24px] min-[360px]:text-[28px] min-[400px]:text-[32px] sm:text-[36px] leading-[32px] min-[360px]:leading-[36px] min-[400px]:leading-[42px] sm:leading-[48px]"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
               GIẢI ĐẤU ĐÃ KẾT THÚC
             </h2>
             {completedTournaments.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">Chưa có giải đấu đã kết thúc</div>
+              <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">Chưa có giải đấu đã kết thúc</div>
             ) : (
               <TournamentList
                 tournaments={completedTournaments}

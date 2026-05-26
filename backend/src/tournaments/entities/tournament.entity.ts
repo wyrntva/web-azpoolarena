@@ -7,82 +7,8 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { PoolArenaUserGender, ScoringRuleType } from '../../common/enums';
-
-// ==================== PoolArenaUser ====================
-@Entity('pool_arena_users')
-export class PoolArenaUserEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ type: 'varchar', length: 100 })
-  full_name: string;
-
-  @Column({ type: 'enum', enum: PoolArenaUserGender, nullable: true })
-  gender: PoolArenaUserGender;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  address: string;
-
-  @Column({ type: 'varchar', length: 10, nullable: true })
-  rank: string;
-
-  @Column({ type: 'varchar', length: 20, unique: true })
-  phone_number: string;
-
-  @Column({ type: 'varchar', length: 100, unique: true, nullable: true })
-  email: string;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  avatar_url: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  hashed_password: string;
-
-  @Column({ type: 'varchar', length: 50, default: 'player' })
-  role: string;
-
-  @Column({ type: 'boolean', default: true })
-  is_active: boolean;
-
-  @Column({ type: 'boolean', default: false })
-  is_phone_verified: boolean;
-
-  @Column({ type: 'boolean', default: false })
-  is_email_verified: boolean;
-
-  @Column({ type: 'int', default: 0 })
-  points: number;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  tiktok_url: string;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  facebook_url: string;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  instagram_url: string;
-
-  @Column({ type: 'int', default: 0 })
-  total_games: number;
-
-  @Column({ type: 'int', default: 0 })
-  wins: number;
-
-  @Column({ type: 'int', default: 0 })
-  losses: number;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  get win_rate(): number {
-    if (this.total_games === 0) return 0;
-    return Math.round((this.wins / this.total_games) * 10000) / 100;
-  }
-}
+import { ScoringRuleType } from '../../common/enums';
+import { UserEntity } from '../../users/entities/user.entity';
 
 // ==================== TournamentRank ====================
 @Entity('tournament_ranks')
@@ -341,9 +267,9 @@ export class TournamentRegistrationEntity {
   @JoinColumn({ name: 'tournament_id' })
   tournament: TournamentEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id' })
-  user: PoolArenaUserEntity;
+  user: UserEntity;
 }
 
 // ==================== TournamentMatch ====================
@@ -404,15 +330,15 @@ export class TournamentMatchEntity {
   @JoinColumn({ name: 'tournament_id' })
   tournament: TournamentEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'player1_id' })
-  player1: PoolArenaUserEntity;
+  player1: UserEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'player2_id' })
-  player2: PoolArenaUserEntity;
+  player2: UserEntity;
 
-  @ManyToOne(() => PoolArenaUserEntity)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'winner_id' })
-  winner: PoolArenaUserEntity;
+  winner: UserEntity;
 }

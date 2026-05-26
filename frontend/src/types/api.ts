@@ -54,6 +54,7 @@ export interface User {
 
 export interface PoolArenaUser {
     id: number;
+    user_type?: 'player' | 'both';
     full_name: string;
     gender?: string | null;
     address?: string | null;

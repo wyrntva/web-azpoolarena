@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PoolArenaUserEntity } from '../../pool-arena/entities';
+import { UserEntity } from '../../users/entities/user.entity';
 
 @Injectable()
 export class RankingsService {
   constructor(
-    @InjectRepository(PoolArenaUserEntity)
-    private readonly repo: Repository<PoolArenaUserEntity>,
+    @InjectRepository(UserEntity)
+    private readonly repo: Repository<UserEntity>,
   ) {}
 
   async getRankings(
@@ -17,7 +17,10 @@ export class RankingsService {
     gender?: string,
     sort = '-points',
   ) {
-    const qb = this.repo.createQueryBuilder('u').where('u.is_active = true');
+    const qb = this.repo
+      .createQueryBuilder('u')
+      .where('u.user_type IN (:...types)', { types: ['player', 'both'] })
+      .andWhere('u.is_active = true');
 
     if (rankId && rankId !== 'all') {
       if (rankId === 'gplus') {

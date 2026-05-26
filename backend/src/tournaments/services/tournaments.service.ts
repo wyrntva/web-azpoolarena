@@ -15,7 +15,7 @@ import {
   CreateMatchDto,
   UpdateMatchDto,
 } from '../dto/tournaments.dto';
-import { PoolArenaUserEntity } from '../../pool-arena/entities';
+import { UserEntity } from '../../users/entities/user.entity';
 
 @Injectable()
 export class TournamentsService {
@@ -255,6 +255,12 @@ export class TournamentsService {
     return this.getRegistrations(tour.id);
   }
 
+  async getMatchesBySlug(slug: string) {
+    const tour = await this.tourRepo.findOne({ where: { slug } });
+    if (!tour) throw new NotFoundException('Tournament not found');
+    return this.getMatches(tour.id);
+  }
+
   // ==== DEVICE API ==== //
 
   async getActiveMatchForDevice(tableName: string) {
@@ -350,7 +356,7 @@ export class TournamentsService {
     const registeredUserIds = regs.map((r) => r.user_id);
 
     const qb = this.regRepo.manager
-      .getRepository(PoolArenaUserEntity)
+      .getRepository(UserEntity)
       .createQueryBuilder('u')
       .where('u.is_active = :isActive', { isActive: true });
 

@@ -195,7 +195,7 @@ export class PayrollService {
       throw new BadRequestException('Invalid month format');
     }
 
-    const users = await this.userRepo.find({ where: { is_active: true } });
+    const users = await this.userRepo.find({ where: [{ is_active: true, user_type: 'staff' }, { is_active: true, user_type: 'both' }] });
     const userIds = users.map((u) => u.id);
     if (userIds.length === 0) return [];
 

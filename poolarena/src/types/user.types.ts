@@ -5,35 +5,42 @@ export enum UserGender {
 }
 
 export enum UserRank {
-  K = 'K',
-  I = 'I',
-  H = 'H',
-  G = 'G',
-  F = 'F',
+  S = 'S',
+  A = 'A',
+  B = 'B',
+  C = 'C',
   D = 'D',
   E = 'E',
+  F = 'F',
+  G = 'G',
+  H = 'H',
+  I = 'I',
+  K = 'K',
 }
+
 export interface User {
-  _id: string;
-  fullName: string;
+  id: number;
+  full_name: string;
   gender?: UserGender;
-  rank?: UserRank;
-  phoneNumber?: string;
+  rank?: string;
+  phone_number?: string;
   email?: string;
   address?: string;
   role?: string;
-  isActive?: boolean;
+  is_active?: boolean;
   avatar_url?: string;
   points?: number;
-  totalGames?: number;
+  total_games?: number;
   wins?: number;
   losses?: number;
-  winRate?: number; // 0-100
-  isPhoneVerified?: boolean;
-  isEmailVerified?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  __v?: number;
+  win_rate?: number;
+  is_phone_verified?: boolean;
+  is_email_verified?: boolean;
+  tiktok_url?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type UsersResponse = User[];
