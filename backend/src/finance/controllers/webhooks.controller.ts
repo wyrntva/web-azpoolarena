@@ -3,12 +3,16 @@ import {
   Post,
   Body,
   Headers,
+  RawBodyRequest,
+  Req,
   UnauthorizedException,
   Logger,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Request } from 'express';
+import * as crypto from 'crypto';
 import { TournamentsService } from '../../tournaments/services/tournaments.service';
 import { CassoWebhookPayloadDto } from '../dto/casso-webhook.dto';
 
@@ -26,26 +30,44 @@ export class WebhooksController {
   async handleCassoWebhook(
     @Headers() headers: Record<string, string>,
     @Body() payload: CassoWebhookPayloadDto,
+    @Req() req: RawBodyRequest<Request>,
   ) {
-    const expectedToken = this.configService.get<string>('CASSO_SECURE_TOKEN');
+    const secureToken = this.configService.get<string>('CASSO_SECURE_TOKEN');
     const isDev = this.configService.get<string>('ENV') !== 'production';
 
-    // Case-insensitive lookup for the secure token header
-    const secureToken =
-      headers['secure-token'] ||
-      headers['Secure-Token'] ||
-      headers['secure_token'] ||
-      headers['Secure_token'];
+    // Casso Webhook V2 dùng HMAC-SHA256 signature qua header x-casso-signature
+    const cassoSignature = headers['x-casso-signature'];
+    let isValid = false;
 
-    // 1. Verify Casso secure token from header (with development bypass)
-    if (!expectedToken || secureToken !== expectedToken) {
+    if (cassoSignature && secureToken) {
+      // Parse t=<timestamp>,v1=<signature>
+      const parts: Record<string, string> = {};
+      cassoSignature.split(',').forEach((part) => {
+        const [k, v] = part.split('=');
+        if (k && v) parts[k.trim()] = v.trim();
+      });
+      const timestamp = parts['t'];
+      const v1 = parts['v1'];
+
+      if (timestamp && v1) {
+        const rawBody = req.rawBody
+          ? req.rawBody.toString()
+          : JSON.stringify(payload);
+        const signedPayload = `${timestamp}.${rawBody}`;
+        const expected = crypto
+          .createHmac('sha256', secureToken)
+          .update(signedPayload)
+          .digest('hex');
+        isValid = expected === v1;
+      }
+    }
+
+    if (!isValid) {
       if (isDev) {
-        this.logger.warn(
-          `[DEVELOPMENT BYPASS] Webhook secure token check failed. Expected "${expectedToken}", got "${secureToken}". Bypassing because ENV is "development".`,
-        );
+        this.logger.warn(`[DEV BYPASS] Casso signature check failed. Bypassing.`);
       } else {
         this.logger.warn(
-          `Unauthorized webhook access attempt: expected "${expectedToken}", got "${secureToken}". Incoming headers: ${JSON.stringify(headers)}`,
+          `Unauthorized webhook: invalid Casso signature. Headers: ${JSON.stringify(headers)}`,
         );
         throw new UnauthorizedException('Invalid secure token');
       }
