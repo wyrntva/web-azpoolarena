@@ -24,9 +24,14 @@ import { UserEntity } from '../../users/entities/user.entity';
 @Injectable()
 export class TournamentsService {
   private readonly matchUpdates$ = new Subject<{ tournamentId: number; match: any }>();
+  private readonly paymentSuccess$ = new Subject<{ tournamentId: number; userId: number }>();
 
   getMatchUpdatesStream() {
     return this.matchUpdates$.asObservable();
+  }
+
+  getPaymentStream() {
+    return this.paymentSuccess$.asObservable();
   }
 
   async emitMatchUpdate(matchId: number) {
@@ -102,6 +107,8 @@ export class TournamentsService {
 
     record.used = true;
     await this.paymentCodeRepo.save(record);
+
+    this.paymentSuccess$.next({ tournamentId: record.tournament_id, userId: record.user_id });
   }
 
   private mapTournament(t: TournamentEntity) {

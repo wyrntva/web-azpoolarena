@@ -48,22 +48,18 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
       .finally(() => setCodeLoading(false));
   }, [isOpen, tournament.id, user?.id]);
 
-  // Poll every 3s while dialog is open — switch to success as soon as backend confirms payment
+  // SSE: listen for payment confirmation from backend — switch to success instantly
   useEffect(() => {
     if (!isOpen || !user || showSuccess) return;
 
-    const interval = setInterval(() => {
-      tournamentAPI.createPaymentCode(tournament.id)
-        .catch((err) => {
-          const status = err?.response?.status;
-          const message: string = err?.response?.data?.message || '';
-          if (status === 400 && message.toLowerCase().includes('already registered')) {
-            setShowSuccess(true);
-          }
-        });
-    }, 3000);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const sseUrl = `${API_BASE}/api/tournaments/${tournament.id}/payment/live`;
+    const es = new EventSource(sseUrl, { withCredentials: true });
 
-    return () => clearInterval(interval);
+    es.onmessage = () => setShowSuccess(true);
+    es.onerror = () => es.close();
+
+    return () => es.close();
   }, [isOpen, showSuccess, tournament.id, user?.id]);
 
   if (!isOpen || !user) return null;

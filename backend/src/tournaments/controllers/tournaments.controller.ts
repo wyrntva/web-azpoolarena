@@ -147,6 +147,18 @@ export class TournamentsController {
     );
   }
 
+  @Sse(':id/payment/live')
+  @Header('X-Accel-Buffering', 'no')
+  @Header('Cache-Control', 'no-cache')
+  @UseGuards(JwtAuthGuard)
+  livePayment(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
+    const userId = req.user.id;
+    return this.service.getPaymentStream().pipe(
+      filter((event) => event.tournamentId === id && event.userId === userId),
+      map(() => ({ data: { success: true } } as MessageEvent)),
+    );
+  }
+
   @Put('matches/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
