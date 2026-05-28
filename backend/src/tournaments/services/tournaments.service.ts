@@ -78,12 +78,9 @@ export class TournamentsService {
     if (pending) return pending.code;
 
     let code: string;
-    let isUnique = false;
-    while (!isUnique) {
+    do {
       code = this.generateCode();
-      const dup = await this.paymentCodeRepo.findOne({ where: { code } });
-      if (!dup) isUnique = true;
-    }
+    } while (await this.paymentCodeRepo.findOne({ where: { code } }));
 
     const record = this.paymentCodeRepo.create({
       code,
