@@ -16,24 +16,26 @@ export default function TournamentNavbarItem({
   onClick,
 }: TournamentNavbarItemProps) {
   const baseClasses =
-    'group w-[374px] h-[53px] rounded-[16px] flex flex-col items-center justify-center gap-0.5 select-none transition-all duration-200';
+    'group flex-1 flex flex-col items-center justify-center select-none transition-all duration-200 h-[40px] sm:h-[54px] rounded-[12px] sm:rounded-[14px] px-1 min-[360px]:px-2.5 sm:px-4';
 
   const isDisabled = variant === 'disabled';
   const isActive = variant === 'active';
 
   const containerClasses = [
     baseClasses,
-    isActive ? 'bg-[#172339] text-white shadow-md cursor-pointer hover:bg-[#172339]/90 hover:backdrop-blur-sm hover:shadow-[0_0_10px_rgba(23,35,57,0.1)]' : 'cursor-pointer hover:bg-[#172339]/85 hover:backdrop-blur-sm hover:shadow-[0_0_10px_rgba(23,35,57,0.1)] text-[#A3AED0]',
-    isDisabled ? 'opacity-60 pointer-events-none' : '',
+    isActive
+      ? 'bg-[#172339] text-white shadow-sm cursor-pointer'
+      : 'cursor-pointer text-[#37393E] hover:bg-[#172339]/10 hover:text-[#172339]',
+    isDisabled ? 'opacity-40 pointer-events-none' : '',
   ]
     .filter(Boolean)
     .join(' ');
 
   const labelClasses = isActive
-    ? "text-white font-medium text-[16px] leading-[24px] font-['Montserrat']"
+    ? "text-white font-medium text-[10px] sm:text-[16px] leading-[14px] sm:leading-[20px] font-['Montserrat']"
     : isDisabled
-      ? 'text-gray-400 text-[16px] leading-[24px] font-["Montserrat"]'
-      : "text-[#37393E] group-hover:text-white font-normal group-hover:font-medium text-[16px] leading-[24px] font-['Montserrat']";
+      ? 'text-gray-400 text-[10px] sm:text-[16px] leading-[14px] sm:leading-[20px] font-["Montserrat"]'
+      : "text-[#37393E] font-normal text-[10px] sm:text-[16px] leading-[14px] sm:leading-[20px] font-['Montserrat'] group-hover:text-[#172339]";
 
   return (
     <button
@@ -42,8 +44,8 @@ export default function TournamentNavbarItem({
       onClick={onClick}
       aria-disabled={isDisabled}
     >
-      <div className="w-5 h-5 inline-flex justify-center items-center mb-0.5 translate-y-[3px]">{icon}</div>
-      <div className={`${labelClasses} -translate-y-[3px]`}>{label}</div>
+      <div className="w-5 h-5 sm:w-5 sm:h-5 inline-flex justify-center items-center mb-0.5 sm:mb-1 [&>svg]:sm:w-5 [&>svg]:sm:h-5">{icon}</div>
+      <div className={labelClasses}>{label}</div>
     </button>
   );
 }

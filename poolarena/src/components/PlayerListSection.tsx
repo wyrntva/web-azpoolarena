@@ -32,15 +32,15 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
   };
 
   return (
-    <div className="mb-8 w-full mt-[49px]">
+    <div className="mb-8 w-full mt-0 sm:mt-[49px]">
       {/* Player Cards Grid */}
       <div className="w-full bg-white rounded-[12px] shadow-lg px-6 pb-3">
-        <div className="w-[648px] h-[56px] px-6 bg-slate-800 rounded-bl-[32px] rounded-br-[32px] mx-auto gap-2.5 flex items-center justify-center">
+        <div className="w-full max-w-[648px] h-[56px] px-6 bg-slate-800 rounded-bl-[32px] rounded-br-[32px] mx-auto gap-2.5 flex items-center justify-center">
           <div className="text-center text-white text-2xl font-bold leading-loose">
             POOLARENA.PLAYER
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           {players.map((player) => (
             <div
               key={player.id}

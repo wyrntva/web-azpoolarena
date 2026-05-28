@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { UserEntity } from '../../users/entities/user.entity';
+import { TournamentRankEntity } from '../../tournaments/entities';
 import {
   CreatePoolArenaUserDto,
   UpdatePoolArenaUserDto,
@@ -19,6 +20,8 @@ export class PoolArenaService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly repo: Repository<UserEntity>,
+    @InjectRepository(TournamentRankEntity)
+    private readonly rankRepo: Repository<TournamentRankEntity>,
   ) {}
 
   async create(dto: CreatePoolArenaUserDto) {
@@ -77,6 +80,10 @@ export class PoolArenaService {
   async update(id: number, dto: UpdatePoolArenaUserDto) {
     const user = await this.findOne(id);
     Object.assign(user, dto);
+    if (dto.rank) {
+      const rank = await this.rankRepo.findOne({ where: { name: dto.rank } });
+      if (rank) user.points = rank.default_score;
+    }
     return this.repo.save(user);
   }
 

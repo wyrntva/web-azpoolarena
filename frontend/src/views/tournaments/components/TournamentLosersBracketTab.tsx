@@ -122,7 +122,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                 const seeded = seed[no] ?? ['', ''];
                 const next: MatchVM = { ...base, match_no: no, player1_id: seeded[0] || '', player2_id: seeded[1] || '' };
                 const w = resolveWinner(next, getRaceToNumber(next.player1_id, next.player2_id, players, tournament));
-                if (next.winner_id !== w) next.winner_id = w;
+                if (next.winner_id !== w && (w !== '' || next.status !== 'completed')) next.winner_id = w;
                 return next;
             });
         setRound1(syncRound(round1Nos, 1, losersRound1Seed));

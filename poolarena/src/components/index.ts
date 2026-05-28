@@ -18,3 +18,4 @@ export { PlayerListSection } from './PlayerListSection';
 export { MatchManagementModal } from './MatchManagementModal';
 export { default as MatchRow } from './MatchRow';
 export { RoundSection } from './RoundSection';
+export { RegisterTournamentModal } from './RegisterTournamentModal';

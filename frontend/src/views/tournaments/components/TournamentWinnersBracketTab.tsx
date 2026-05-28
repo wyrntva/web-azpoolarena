@@ -10,7 +10,7 @@ import type { Tournament, TournamentMatch, TournamentMatchUpsert, TournamentRegi
 import {
     type MatchVM,
     createEmptyMatch, toVM, resolveWinner,
-    getRaceToNumber, handleMatchChange, validateMatchTimes
+    getRaceToNumber, getRaceToInfo, handleMatchChange, validateMatchTimes
 } from '../utils/bracketUtils';
 import { useAllTables } from '../hooks/useAllTables';
 import MatchManagementDialog from './MatchManagementDialog';
@@ -84,7 +84,10 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             if (next[i].player1_id !== w1) { next[i] = { ...next[i], player1_id: w1 }; changed = true; }
             if (next[i].player2_id !== w2) { next[i] = { ...next[i], player2_id: w2 }; changed = true; }
             const winner = resolveWinner(next[i], getRaceToNumber(next[i].player1_id, next[i].player2_id, players, tournament));
-            if (next[i].winner_id !== winner) { next[i] = { ...next[i], winner_id: winner }; changed = true; }
+            // Don't clear winner_id for completed matches when resolveWinner can't compute one
+            // (e.g. walkover/absent matches or players without ranks)
+            const shouldUpdate = next[i].winner_id !== winner && (winner !== '' || next[i].status !== 'completed');
+            if (shouldUpdate) { next[i] = { ...next[i], winner_id: winner }; changed = true; }
         }
         if (changed) setRound2(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,6 +141,41 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
         onDirty?.();
         handleMatchChange(round, idx, field, value, round1, round2, setRound1, setRound2, players, tournament);
     };
+
+    // Auto-save when player is assigned directly from dropdown (not via dialog)
+    const onPlayerChange = useCallback((round: 1 | 2, idx: number, field: 'player1_id' | 'player2_id', value: string) => {
+        dirtyRef.current = true;
+        onDirty?.();
+        const arr = round === 1 ? round1 : round2;
+        const match = arr[idx];
+        if (!match) return;
+
+        const p1Id = field === 'player1_id' ? value : match.player1_id;
+        const p2Id = field === 'player2_id' ? value : match.player2_id;
+        const info = getRaceToInfo(p1Id, p2Id, players, tournament);
+        let p1Score = '0', p2Score = '0';
+        if (info.handicap > 0) {
+            if (info.handicappedPlayerId === p1Id) p1Score = String(info.handicap);
+            if (info.handicappedPlayerId === p2Id) p2Score = String(info.handicap);
+        }
+
+        handleMatchChange(round, idx, field, value, round1, round2, setRound1, setRound2, players, tournament);
+
+        onUpsertMatch(match.match_no, {
+            bracket: 'winners',
+            round,
+            player1_id: p1Id ? parseInt(p1Id, 10) : null,
+            player2_id: p2Id ? parseInt(p2Id, 10) : null,
+            player1_score: parseInt(p1Score, 10) || 0,
+            player2_score: parseInt(p2Score, 10) || 0,
+            table_no: match.table_no || null,
+            match_time: match.match_time || null,
+            status: 'pending',
+            player1_check_in: match.player1_check_in || 'unconfirmed',
+            player2_check_in: match.player2_check_in || 'unconfirmed',
+            winner_id: null,
+        }).then(() => onClean?.()).catch(() => toast.error('Không thể lưu trận đấu'));
+    }, [round1, round2, players, tournament, onUpsertMatch, onDirty, onClean]);
 
     // Save single match
     const saveMatch = useCallback(async (round?: 1 | 2, idx?: number) => {
@@ -230,7 +268,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                                     className="match-table-player-select"
                                                     onClick={e => e.stopPropagation()}
                                                     value={match.player1_id}
-                                                    onChange={e => onChange(round, idx, 'player1_id', e.target.value)}
+                                                    onChange={e => onPlayerChange(round, idx, 'player1_id', e.target.value)}
                                                 >
                                                     <option value="">Chọn người chơi</option>
                                                     {available.map(p => <option key={p.id} value={p.id}>{p.full_name} {p.rank ? `(${p.rank})` : ''}</option>)}
@@ -289,7 +327,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                                     className="match-table-player-select"
                                                     onClick={e => e.stopPropagation()}
                                                     value={match.player2_id}
-                                                    onChange={e => onChange(round, idx, 'player2_id', e.target.value)}
+                                                    onChange={e => onPlayerChange(round, idx, 'player2_id', e.target.value)}
                                                 >
                                                     <option value="">Chọn người chơi</option>
                                                     {available.map(p => <option key={p.id} value={p.id}>{p.full_name} {p.rank ? `(${p.rank})` : ''}</option>)}

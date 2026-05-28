@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Spin } from "antd";
@@ -13,12 +13,20 @@ import NavBar from "@/components/NavBar";
 import { tournamentAPI } from "@/api/tournament.api";
 
 // ---------- Types ----------
+interface ApiPlayerNested {
+    id: number;
+    full_name: string | null;
+    avatar_url: string | null;
+    rank: string | null;
+}
+
 interface ApiMatch {
     id: number;
     tournament_id: number;
     match_no: number;
     bracket: string;        // "winners" | "losers" | "knockout"
     round: number;
+    // Flat fields (legacy / placeholder matches)
     player1_id: number | null;
     player1_name: string | null;
     player1_avatar: string | null;
@@ -35,6 +43,10 @@ interface ApiMatch {
     player1_check_in: string;
     player2_check_in: string;
     winner_id: number | null;
+    // Nested objects returned by the backend API
+    player1?: ApiPlayerNested | null;
+    player2?: ApiPlayerNested | null;
+    winner?: ApiPlayerNested | null;
 }
 
 interface FormattedMatch {
@@ -53,6 +65,7 @@ interface FormattedMatch {
 }
 
 interface TournamentInfo {
+    id?: number | null;
     draw_touch?: string | null;
     handicap_1_touch?: string | null;
     handicap_2_touch?: string | null;
@@ -149,12 +162,16 @@ function getPlayerName(
  * Build the score display string from match data.
  */
 function buildScoreString(match: ApiMatch): string {
+    // Resolve player IDs from nested objects or flat fields
+    const p1Id = (match.player1 && match.player1.id) || match.player1_id;
+    const p2Id = (match.player2 && match.player2.id) || match.player2_id;
+
     // Not started yet – no score (leave blank)
     if (match.status === "pending" || match.status === "upcoming") {
-        if (!match.player1_id || !match.player2_id) {
+        if (!p1Id || !p2Id) {
             // One side is empty (BYE) – WO on the present player's side
-            if (match.player1_id && !match.player2_id) return "WO vs -";
-            if (!match.player1_id && match.player2_id) return "- vs WO";
+            if (p1Id && !p2Id) return "WO vs -";
+            if (!p1Id && p2Id) return "- vs WO";
             return " vs ";
         }
         return " vs ";
@@ -190,6 +207,42 @@ function formatMatchTime(matchTime: string | null): { time: string; date: string
 }
 
 /**
+ * Resolve player ID – prefer nested object, fall back to flat field.
+ */
+function resolvePlayerId(match: ApiMatch, side: 'player1' | 'player2'): number | null {
+    const nested = match[side];
+    if (nested && nested.id) return nested.id;
+    return match[`${side}_id` as 'player1_id' | 'player2_id'];
+}
+
+/**
+ * Resolve player name – prefer nested object, fall back to flat field.
+ */
+function resolvePlayerName(match: ApiMatch, side: 'player1' | 'player2'): string | null {
+    const nested = match[side];
+    if (nested && nested.full_name) return nested.full_name;
+    return match[`${side}_name` as 'player1_name' | 'player2_name'];
+}
+
+/**
+ * Resolve player avatar – prefer nested object, fall back to flat field.
+ */
+function resolvePlayerAvatar(match: ApiMatch, side: 'player1' | 'player2'): string | null {
+    const nested = match[side];
+    if (nested && nested.avatar_url) return nested.avatar_url;
+    return match[`${side}_avatar` as 'player1_avatar' | 'player2_avatar'];
+}
+
+/**
+ * Resolve player rank – prefer nested object, fall back to flat field.
+ */
+function resolvePlayerRank(match: ApiMatch, side: 'player1' | 'player2'): string | null {
+    const nested = match[side];
+    if (nested && nested.rank) return nested.rank;
+    return match[`${side}_rank` as 'player1_rank' | 'player2_rank'];
+}
+
+/**
  * Convert a raw API match into a FormattedMatch for the UI.
  * p1Fallback / p2Fallback: text shown when a player slot is empty.
  */
@@ -199,17 +252,30 @@ function formatMatch(
     p1Fallback: string = "Bye",
     p2Fallback: string = "Bye",
 ): FormattedMatch {
+    // Resolve player IDs (support both nested objects and flat fields)
+    const p1Id = resolvePlayerId(match, 'player1');
+    const p2Id = resolvePlayerId(match, 'player2');
+    const p1Name = resolvePlayerName(match, 'player1');
+    const p2Name = resolvePlayerName(match, 'player2');
+    const p1Avatar = resolvePlayerAvatar(match, 'player1');
+    const p2Avatar = resolvePlayerAvatar(match, 'player2');
+    const p1Rank = resolvePlayerRank(match, 'player1');
+    const p2Rank = resolvePlayerRank(match, 'player2');
+
+    // Resolve winner ID (support nested winner object)
+    const winnerId = match.winner_id ?? match.winner?.id ?? null;
+
     const isCompleted = match.status === "completed";
-    let p1Winner = isCompleted && match.winner_id === match.player1_id;
-    let p2Winner = isCompleted && match.winner_id === match.player2_id;
+    let p1Winner = isCompleted && winnerId === p1Id;
+    let p2Winner = isCompleted && winnerId === p2Id;
 
     // WO (walkover): one player present, the other missing
     if (
         (match.status === "pending" || match.status === "upcoming") &&
-        (!match.player1_id || !match.player2_id)
+        (!p1Id || !p2Id)
     ) {
-        if (match.player1_id && !match.player2_id) p1Winner = true;
-        if (!match.player1_id && match.player2_id) p2Winner = true;
+        if (p1Id && !p2Id) p1Winner = true;
+        if (!p1Id && p2Id) p2Winner = true;
     }
 
     // NS (Not Show / absent): the other player wins by default
@@ -223,27 +289,23 @@ function formatMatch(
         : "-";
 
     // Compute race info from player ranks + tournament settings
-    const raceText = computeRaceText(
-        match.player1_rank,
-        match.player2_rank,
-        tournament,
-    );
+    const raceText = computeRaceText(p1Rank, p2Rank, tournament);
 
     return {
         id: match.id,
         tableNumber: tableNumber,
         tableNumberColor: getIndexColor(match),
         player1: {
-            name: getPlayerName(match.player1_id, match.player1_name, match.player1_check_in, p1Fallback),
-            avatar: formatAvatarUrl(match.player1_avatar),
+            name: getPlayerName(p1Id, p1Name, match.player1_check_in, p1Fallback),
+            avatar: formatAvatarUrl(p1Avatar),
             isWinner: p1Winner,
-            isBye: !match.player1_id,
+            isBye: !p1Id,
         },
         player2: {
-            name: getPlayerName(match.player2_id, match.player2_name, match.player2_check_in, p2Fallback),
-            avatar: formatAvatarUrl(match.player2_avatar),
+            name: getPlayerName(p2Id, p2Name, match.player2_check_in, p2Fallback),
+            avatar: formatAvatarUrl(p2Avatar),
             isWinner: p2Winner,
-            isBye: !match.player2_id,
+            isBye: !p2Id,
         },
         score: buildScoreString(match),
         meta: {
@@ -417,6 +479,102 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
     const is64 = numberOfPlayers > 32;
     const is32 = numberOfPlayers > 16 && numberOfPlayers <= 32;
 
+    // Helper to get winner nested object
+    function getWinnerOfMatch(mNo: number): ApiPlayerNested | null {
+        const m = matchByNo.get(mNo);
+        if (!m || m.status !== "completed") return null;
+        const wId = m.winner_id ?? m.winner?.id ?? null;
+        if (!wId) return null;
+        if (m.player1 && m.player1.id === wId) return m.player1;
+        if (m.player2 && m.player2.id === wId) return m.player2;
+        // fallback to flat fields
+        if (m.player1_id === wId) {
+            return { id: m.player1_id, full_name: m.player1_name, avatar_url: m.player1_avatar, rank: m.player1_rank };
+        }
+        if (m.player2_id === wId) {
+            return { id: m.player2_id, full_name: m.player2_name, avatar_url: m.player2_avatar, rank: m.player2_rank };
+        }
+        return null;
+    }
+
+    // Helper to get loser nested object
+    function getLoserOfMatch(mNo: number): ApiPlayerNested | null {
+        const m = matchByNo.get(mNo);
+        if (!m || m.status !== "completed") return null;
+        const wId = m.winner_id ?? m.winner?.id ?? null;
+        if (!wId) return null;
+        const p1Id = m.player1?.id || m.player1_id;
+        const p2Id = m.player2?.id || m.player2_id;
+        if (!p1Id || !p2Id) return null;
+        
+        if (wId === p1Id) {
+            return m.player2 || { id: m.player2_id!, full_name: m.player2_name, avatar_url: m.player2_avatar, rank: m.player2_rank };
+        }
+        if (wId === p2Id) {
+            return m.player1 || { id: m.player1_id!, full_name: m.player1_name, avatar_url: m.player1_avatar, rank: m.player1_rank };
+        }
+        return null;
+    }
+
+    function resolveDynamicPlayers(m: ApiMatch): ApiMatch {
+        const p1Id = m.player1?.id || m.player1_id;
+        const p2Id = m.player2?.id || m.player2_id;
+        
+        // If already has both players in the DB, return as is
+        if (p1Id && p2Id) return m;
+        
+        let p1: ApiPlayerNested | null = m.player1 || null;
+        let p2: ApiPlayerNested | null = m.player2 || null;
+        
+        const size = numberOfPlayers;
+        
+        if (m.bracket === "winners" && m.round === 2) {
+            const idx = m.match_no - layout.wr2.start;
+            const src1 = layout.wr1.start + 2 * idx;
+            const src2 = layout.wr1.start + 2 * idx + 1;
+            if (!p1Id) p1 = getWinnerOfMatch(src1);
+            if (!p2Id) p2 = getWinnerOfMatch(src2);
+        } else if (m.bracket === "losers" && m.round === 1) {
+            const idx = m.match_no - layout.lr1.start;
+            const src1 = layout.wr1.start + 2 * idx;
+            const src2 = layout.wr1.start + 2 * idx + 1;
+            if (!p1Id) p1 = getLoserOfMatch(src1);
+            if (!p2Id) p2 = getLoserOfMatch(src2);
+        } else if (m.bracket === "losers" && m.round === 2) {
+            const idx = m.match_no - layout.lr2.start;
+            let src1 = 0;
+            let src2 = 0;
+            if (size <= 16) {
+                const lr1Sources = [9, 10, 11, 12];
+                const wr2Sources = [16, 15, 14, 13];
+                src1 = lr1Sources[idx];
+                src2 = wr2Sources[idx];
+            } else if (size <= 32) {
+                src1 = 17 + idx;
+                src2 = 32 - idx;
+            } else {
+                src1 = 33 + idx;
+                src2 = 64 - idx;
+            }
+            if (!p1Id) p1 = getWinnerOfMatch(src1);
+            if (!p2Id) p2 = getLoserOfMatch(src2);
+        }
+        
+        return {
+            ...m,
+            player1: p1,
+            player2: p2,
+            player1_id: p1 ? p1.id : m.player1_id,
+            player2_id: p2 ? p2.id : m.player2_id,
+            player1_name: p1 ? p1.full_name : m.player1_name,
+            player2_name: p2 ? p2.full_name : m.player2_name,
+            player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+            player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+            player1_rank: p1 ? p1.rank : m.player1_rank,
+            player2_rank: p2 ? p2.rank : m.player2_rank,
+        };
+    }
+
     /**
      * Compute source labels for losers bracket matches.
      * LR1: both players come from WR1 losers → "Thua trận X"
@@ -517,10 +675,16 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
 
     if (isDoubleElimination) {
         // Generate complete bracket structure from layout
-        const wr1Matches = ensureMatchRange(matchByNo, layout.wr1.start, layout.wr1.count, "winners", 1);
-        const lr1Matches = ensureMatchRange(matchByNo, layout.lr1.start, layout.lr1.count, "losers", 1);
-        const wr2Matches = ensureMatchRange(matchByNo, layout.wr2.start, layout.wr2.count, "winners", 2);
-        const lr2Matches = ensureMatchRange(matchByNo, layout.lr2.start, layout.lr2.count, "losers", 2);
+        let wr1Matches = ensureMatchRange(matchByNo, layout.wr1.start, layout.wr1.count, "winners", 1);
+        let lr1Matches = ensureMatchRange(matchByNo, layout.lr1.start, layout.lr1.count, "losers", 1);
+        let wr2Matches = ensureMatchRange(matchByNo, layout.wr2.start, layout.wr2.count, "winners", 2);
+        let lr2Matches = ensureMatchRange(matchByNo, layout.lr2.start, layout.lr2.count, "losers", 2);
+
+        // Dynamically resolve player information for unsaved matches
+        wr1Matches = wr1Matches.map(resolveDynamicPlayers);
+        lr1Matches = lr1Matches.map(resolveDynamicPlayers);
+        wr2Matches = wr2Matches.map(resolveDynamicPlayers);
+        lr2Matches = lr2Matches.map(resolveDynamicPlayers);
 
         // Interleave: W1, L1, W2, L2 (matching admin QualificationTab display order)
         groupRounds.push({
@@ -625,6 +789,247 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
 
 // ---------- Component ----------
 
+interface MobileMatchCardProps {
+    match: FormattedMatch;
+}
+
+const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
+    const matchHasResult = !!match.player1.isWinner || !!match.player2.isWinner;
+
+    // Table number box color
+    let tableNumBg = "bg-[#2f394e]";
+    let tableTextColor = "#7C8FB5";
+    if (match.tableNumberColor === "green") {
+        tableNumBg = "bg-[#60DB80]";
+        tableTextColor = "#FFFFFF";
+    } else if (match.tableNumberColor === "yellow") {
+        tableNumBg = "bg-[#E5BD4F]";
+        tableTextColor = "#FFFFFF";
+    }
+
+    const displayTableNumber =
+        match.tableNumber != null &&
+        match.tableNumber !== "" &&
+        match.tableNumber !== "-"
+            ? String(match.tableNumber)
+            : "—";
+
+    // Score parts
+    const scoreParts = match.score.includes(" vs ")
+        ? match.score.split(" vs ")
+        : null;
+
+    const p1ScoreVal = scoreParts ? scoreParts[0] : match.score;
+    const p2ScoreVal = scoreParts ? scoreParts[1] : "";
+
+    const [prevP1Score, setPrevP1Score] = useState(p1ScoreVal);
+    const [prevP2Score, setPrevP2Score] = useState(p2ScoreVal);
+    const [p1Flash, setP1Flash] = useState(false);
+    const [p2Flash, setP2Flash] = useState(false);
+
+    useEffect(() => {
+        if (p1ScoreVal !== prevP1Score) {
+            setP1Flash(true);
+            setPrevP1Score(p1ScoreVal);
+            const timer = setTimeout(() => setP1Flash(false), 800);
+            return () => clearTimeout(timer);
+        }
+    }, [p1ScoreVal, prevP1Score]);
+
+    useEffect(() => {
+        if (p2ScoreVal !== prevP2Score) {
+            setP2Flash(true);
+            setPrevP2Score(p2ScoreVal);
+            const timer = setTimeout(() => setP2Flash(false), 800);
+            return () => clearTimeout(timer);
+        }
+    }, [p2ScoreVal, prevP2Score]);
+
+    const getScoreColor = (isWinner?: boolean, opponentWinner?: boolean) => {
+        if (!matchHasResult) return "#FFFFFF";
+        if (isWinner) return "#ED1C1F";
+        if (opponentWinner) return "#ACB3C3";
+        return "#FFFFFF";
+    };
+
+    const getPlayerNameColor = (isWinner?: boolean, opponentWinner?: boolean) => {
+        if (!matchHasResult) return "#FFFFFF";
+        if (matchHasResult && !isWinner && opponentWinner) return "#ACB3C3";
+        return "#FFFFFF";
+    };
+
+    const getPlayerNameWeight = (isWinner?: boolean) => (isWinner ? 700 : 500);
+
+    return (
+        <div className="flex flex-col gap-0 mb-3">
+            {/* Meta row */}
+            <div className="flex items-center justify-between px-1 pb-[4px]">
+                <span
+                    style={{
+                        fontFamily: "Montserrat, sans-serif",
+                        fontSize: "12px",
+                        fontWeight: 400,
+                        color: "#575E70",
+                        lineHeight: "16px",
+                    }}
+                >
+                    {match.meta.matchNo ? `Trận ${match.meta.matchNo}` : ""}
+                </span>
+                <span
+                    style={{
+                        fontFamily: "Montserrat, sans-serif",
+                        fontSize: "12px",
+                        fontWeight: 400,
+                        color: "#575E70",
+                        lineHeight: "16px",
+                    }}
+                >
+                    {match.meta.race ? `Chạm ${match.meta.race.replace("chạm ", "").replace("chấp", "chấp")}` : ""}
+                </span>
+            </div>
+
+            {/* Card */}
+            <div className="w-full bg-[#172339] flex items-stretch rounded-[4px] overflow-hidden shadow-sm">
+                {/* Table number box */}
+                <div
+                    className={`w-[52px] shrink-0 flex items-center justify-center ${tableNumBg}`}
+                    style={{
+                        color: tableTextColor,
+                        fontFamily: "Montserrat, sans-serif",
+                        fontSize: "16px",
+                        fontStyle: "italic",
+                        fontWeight: 700,
+                        lineHeight: "24px",
+                        textAlign: "center",
+                        minHeight: "64px",
+                    }}
+                >
+                    {displayTableNumber}
+                </div>
+
+                {/* Players column */}
+                <div className="flex-1 flex flex-col min-w-0">
+                    {/* Player 1 row */}
+                    <div className="flex items-center justify-between px-3 py-[10px] border-b border-[#2a3650]">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {!match.player1.isBye && (
+                                <img
+                                    src={match.player1.avatar || "/images/generic-profile_mini_dcryfs.webp"}
+                                    alt={match.player1.name}
+                                    className="w-7 h-7 rounded object-cover shrink-0 bg-[#2f394e]"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src =
+                                            "/images/generic-profile_mini_dcryfs.webp";
+                                    }}
+                                />
+                            )}
+                            <span
+                                className="truncate"
+                                style={{
+                                    fontFamily: "Montserrat, sans-serif",
+                                    fontSize: "14px",
+                                    fontWeight: getPlayerNameWeight(match.player1.isWinner),
+                                    color: getPlayerNameColor(match.player1.isWinner, match.player2.isWinner),
+                                    lineHeight: "20px",
+                                    fontStyle: match.player1.isBye ? "italic" : "normal",
+                                    paddingRight: match.player1.isBye ? "4px" : "0px",
+                                }}
+                            >
+                                {match.player1.name}
+                            </span>
+                        </div>
+                        <div style={{
+                            backgroundColor: p1Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
+                            borderRadius: '6px',
+                            padding: '2px 6px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'background-color 0.2s ease-out',
+                            boxShadow: p1Flash ? '0 0 6px rgba(237, 28, 31, 0.4)' : 'none',
+                        }}>
+                            <span
+                                style={{
+                                    fontFamily: "Montserrat, sans-serif",
+                                    fontSize: p1Flash ? "18px" : "16px",
+                                    fontStyle: "italic",
+                                    fontWeight: 700,
+                                    lineHeight: "24px",
+                                    color: p1Flash ? "#FF3B3F" : getScoreColor(match.player1.isWinner, match.player2.isWinner),
+                                    minWidth: "20px",
+                                    textAlign: "right",
+                                    flexShrink: 0,
+                                    transition: "color 0.2s ease-out, font-size 0.2s ease-out",
+                                }}
+                            >
+                                {p1ScoreVal}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Player 2 row */}
+                    <div className="flex items-center justify-between px-3 py-[10px]">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                            {!match.player2.isBye && (
+                                <img
+                                    src={match.player2.avatar || "/images/generic-profile_mini_dcryfs.webp"}
+                                    alt={match.player2.name}
+                                    className="w-7 h-7 rounded object-cover shrink-0 bg-[#2f394e]"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src =
+                                            "/images/generic-profile_mini_dcryfs.webp";
+                                    }}
+                                />
+                            )}
+                            <span
+                                className="truncate"
+                                style={{
+                                    fontFamily: "Montserrat, sans-serif",
+                                    fontSize: "14px",
+                                    fontWeight: getPlayerNameWeight(match.player2.isWinner),
+                                    color: getPlayerNameColor(match.player2.isWinner, match.player1.isWinner),
+                                    lineHeight: "20px",
+                                    fontStyle: match.player2.isBye ? "italic" : "normal",
+                                    paddingRight: match.player2.isBye ? "4px" : "0px",
+                                }}
+                            >
+                                {match.player2.name}
+                            </span>
+                        </div>
+                        <div style={{
+                            backgroundColor: p2Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
+                            borderRadius: '6px',
+                            padding: '2px 6px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'background-color 0.2s ease-out',
+                            boxShadow: p2Flash ? '0 0 6px rgba(237, 28, 31, 0.4)' : 'none',
+                        }}>
+                            <span
+                                style={{
+                                    fontFamily: "Montserrat, sans-serif",
+                                    fontSize: p2Flash ? "18px" : "16px",
+                                    fontStyle: "italic",
+                                    fontWeight: 700,
+                                    lineHeight: "24px",
+                                    color: p2Flash ? "#FF3B3F" : getScoreColor(match.player2.isWinner, match.player1.isWinner),
+                                    minWidth: "20px",
+                                    textAlign: "right",
+                                    flexShrink: 0,
+                                    transition: "color 0.2s ease-out, font-size 0.2s ease-out",
+                                }}
+                            >
+                                {p2ScoreVal}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function TournamentMatchesPage() {
     const params = useParams();
     const slug = typeof params.slug === "string"
@@ -635,8 +1040,12 @@ export default function TournamentMatchesPage() {
 
     const [activeStage, setActiveStage] = useState<"group" | "knockout">("group");
     const [loading, setLoading] = useState(true);
-    const [groupRounds, setGroupRounds] = useState<RoundGroup[]>([]);
-    const [knockoutRounds, setKnockoutRounds] = useState<RoundGroup[]>([]);
+    const [rawMatches, setRawMatches] = useState<ApiMatch[]>([]);
+    const [tournamentData, setTournamentData] = useState<TournamentInfo | null>(null);
+
+    const { groupRounds, knockoutRounds } = useMemo(() => {
+        return groupMatches(rawMatches, tournamentData);
+    }, [rawMatches, tournamentData]);
 
     useEffect(() => {
         if (!slug) return;
@@ -648,12 +1057,12 @@ export default function TournamentMatchesPage() {
             tournamentAPI.getTournamentMatchesBySlug(slug),
         ])
             .then(([tournamentRes, matchesRes]) => {
-                const tournamentData: TournamentInfo | null = tournamentRes.data || null;
+                const tour: TournamentInfo | null = tournamentRes.data || null;
                 const matches: ApiMatch[] = matchesRes.data || [];
-                const { groupRounds: gr, knockoutRounds: kr } = groupMatches(matches, tournamentData);
-                setGroupRounds(gr);
-                setKnockoutRounds(kr);
+                setTournamentData(tour);
+                setRawMatches(matches);
 
+                const { groupRounds: gr, knockoutRounds: kr } = groupMatches(matches, tour);
                 // Auto-select tab: if no group matches but has knockout, switch to knockout
                 if (gr.length === 0 && kr.length > 0) {
                     setActiveStage("knockout");
@@ -661,109 +1070,271 @@ export default function TournamentMatchesPage() {
             })
             .catch((err) => {
                 console.error("Failed to fetch matches:", err);
-                setGroupRounds([]);
-                setKnockoutRounds([]);
+                setRawMatches([]);
+                setTournamentData(null);
             })
             .finally(() => setLoading(false));
     }, [slug]);
 
-    return (
-        <div className="min-h-screen bg-[#e8e8e8] pb-24 font-sans">
-            <NavBar />
+    useEffect(() => {
+        if (!tournamentData?.id) return;
 
-            {/* Matches Header / Tabs */}
-            <div className="w-full sticky top-[60px] z-[60] shadow-md">
-                <div className="flex w-full h-[36px]">
-                    <button
-                        onClick={() => setActiveStage("group")}
-                        className={`flex-1 h-full flex items-center justify-center uppercase tracking-wide transition-colors ${activeStage === "group" ? "bg-[#172339] text-white" : "bg-[#fafafa] text-[#172339] shadow-inner"}`}
-                        style={{
-                            fontFamily: 'Montserrat, sans-serif',
-                            fontSize: '16px',
-                            fontStyle: 'italic',
-                            fontWeight: 700,
-                            lineHeight: '28px',
-                        }}
-                    >
-                        Vòng bảng
-                    </button>
-                    <button
-                        onClick={() => setActiveStage("knockout")}
-                        className={`w-[960px] h-full flex items-center justify-center uppercase tracking-wide transition-colors ${activeStage === "knockout" ? "bg-[#172339] text-white" : "bg-[#fafafa] text-[#172339] shadow-inner"}`}
-                        style={{
-                            fontFamily: 'Montserrat, sans-serif',
-                            fontSize: '16px',
-                            fontStyle: 'italic',
-                            fontWeight: 700,
-                            lineHeight: '28px',
-                        }}
-                    >
-                        Vòng loại trực tiếp
-                    </button>
-                </div>
+        let API_BASE = process.env.NEXT_PUBLIC_API_URL;
+        if (!API_BASE && typeof window !== "undefined") {
+            API_BASE = `http://${window.location.hostname}:8000`;
+        }
+        const sseUrl = `${API_BASE || "http://localhost:8000"}/api/tournaments/${tournamentData.id}/matches/live`;
+        console.log("Connecting to live match updates SSE:", sseUrl);
+
+        const eventSource = new EventSource(sseUrl, { withCredentials: true });
+
+        eventSource.onmessage = (event) => {
+            try {
+                const updatedMatch: ApiMatch = JSON.parse(event.data);
+                console.log("Realtime match update received:", updatedMatch);
+                
+                setRawMatches((prev) => {
+                    const idx = prev.findIndex((m) => m.match_no === updatedMatch.match_no);
+                    if (idx !== -1) {
+                        const next = [...prev];
+                        next[idx] = { ...next[idx], ...updatedMatch };
+                        return next;
+                    } else {
+                        return [...prev, updatedMatch];
+                    }
+                });
+            } catch (e) {
+                console.error("Failed to parse SSE data:", e);
+            }
+        };
+
+        eventSource.onerror = (err) => {
+            console.error("SSE connection error:", err);
+        };
+
+        return () => {
+            console.log("Closing live match updates SSE connection");
+            eventSource.close();
+        };
+    }, [tournamentData?.id]);
+
+
+
+    const renderMobileRoundSection = (round: RoundGroup, keyPrefix: string, index: number) => (
+        <div key={`${keyPrefix}-${index}`} className="flex flex-col gap-0">
+            {/* Round header */}
+            <div
+                className="bg-[#C6010B] flex items-center px-4 mb-[6px]"
+                style={{ height: "40px", borderRadius: "4px" }}
+            >
+                <span
+                    style={{
+                        fontFamily: "Montserrat, sans-serif",
+                        fontSize: "16px",
+                        fontStyle: "italic",
+                        fontWeight: 700,
+                        lineHeight: "24px",
+                        color: "#FFFFFF",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                    }}
+                >
+                    {round.title}
+                </span>
             </div>
 
-            <main className="w-full max-w-[1360px] mx-auto mt-[48px] flex flex-col gap-[48px]">
+            {/* Match list */}
+            <div className="flex flex-col gap-0">
+                {(round.matches as unknown as FormattedMatch[]).map((match) => (
+                    <MobileMatchCard key={match.id} match={match} />
+                ))}
+            </div>
+        </div>
+    );
 
-                {/* Banner */}
-                <div className="rounded-[12px] overflow-hidden shadow-sm h-[146px] relative">
-                    <Image
-                        src="/images/home_banner.png"
-                        alt="Tournament Banner"
-                        fill
-                        sizes="1360px"
-                        className="object-cover"
-                    />
+    const renderMobileContent = () => {
+        if (loading) {
+            return (
+                <div className="flex items-center justify-center py-16">
+                    <div className="text-center">
+                        <Spin size="large" />
+                        <p className="mt-4 text-gray-600" style={{ fontFamily: "Montserrat, sans-serif" }}>
+                            Đang tải trận đấu...
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        const rounds = activeStage === "group" ? groupRounds : knockoutRounds;
+        const emptyMsg =
+            activeStage === "group"
+                ? "Chưa có trận đấu vòng bảng"
+                : "Chưa có trận đấu vòng loại trực tiếp";
+
+        return rounds.length > 0 ? (
+            <div className="flex flex-col gap-5">
+                {rounds.map((round, i) =>
+                    renderMobileRoundSection(round, activeStage, i)
+                )}
+            </div>
+        ) : (
+            <div
+                className="text-center py-12 text-gray-500"
+                style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+                {emptyMsg}
+            </div>
+        );
+    };
+
+    return (
+        <div className="min-h-screen bg-[#e8e8e8] font-sans">
+            <NavBar />
+
+            {/* ===================== DESKTOP ===================== */}
+            <div className="hidden sm:block pb-24">
+                {/* Matches Header / Tabs */}
+                <div className="w-full sticky top-[60px] z-[60] shadow-md">
+                    <div className="flex w-full h-[36px]">
+                        <button
+                            onClick={() => setActiveStage("group")}
+                            className={`flex-1 h-full flex items-center justify-center uppercase tracking-wide transition-colors ${activeStage === "group" ? "bg-[#172339] text-white" : "bg-[#fafafa] text-[#172339] shadow-inner"}`}
+                            style={{
+                                fontFamily: "Montserrat, sans-serif",
+                                fontSize: "16px",
+                                fontStyle: "italic",
+                                fontWeight: 700,
+                                lineHeight: "28px",
+                            }}
+                        >
+                            Vòng bảng
+                        </button>
+                        <button
+                            onClick={() => setActiveStage("knockout")}
+                            className={`w-[960px] h-full flex items-center justify-center uppercase tracking-wide transition-colors ${activeStage === "knockout" ? "bg-[#172339] text-white" : "bg-[#fafafa] text-[#172339] shadow-inner"}`}
+                            style={{
+                                fontFamily: "Montserrat, sans-serif",
+                                fontSize: "16px",
+                                fontStyle: "italic",
+                                fontWeight: 700,
+                                lineHeight: "28px",
+                            }}
+                        >
+                            Vòng loại trực tiếp
+                        </button>
+                    </div>
                 </div>
 
-                {/* Loading State */}
-                {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="text-center">
-                            <Spin size="large" />
-                            <p className="mt-4 text-gray-600">Đang tải trận đấu...</p>
-                        </div>
-                    </div>
-                ) : (
-                    <>
-                        {/* Content Area */}
-                        {activeStage === "group" ? (
-                            <div className="flex flex-col gap-[48px]">
-                                {groupRounds.length > 0 ? (
-                                    groupRounds.map((round, i) => (
-                                        <RoundSection
-                                            key={`group-${i}`}
-                                            title={round.title}
-                                            matches={round.matches as any}
-                                        />
-                                    ))
-                                ) : (
-                                    <div className="text-center py-12 text-gray-500">
-                                        Chưa có trận đấu vòng bảng
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col gap-[48px]">
-                                {knockoutRounds.length > 0 ? (
-                                    knockoutRounds.map((round, i) => (
-                                        <RoundSection
-                                            key={`ko-${i}`}
-                                            title={round.title}
-                                            matches={round.matches as any}
-                                        />
-                                    ))
-                                ) : (
-                                    <div className="text-center py-12 text-gray-500">
-                                        Chưa có trận đấu vòng loại trực tiếp
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </>
-                )}
+                <main className="w-full max-w-[1360px] mx-auto mt-[48px] flex flex-col gap-[48px]">
+                    {/* Banner */}
+                    <ChampionshipBanner className="shadow-sm" />
 
-            </main>
+                    {/* Loading State */}
+                    {loading ? (
+                        <div className="flex items-center justify-center py-16">
+                            <div className="text-center">
+                                <Spin size="large" />
+                                <p className="mt-4 text-gray-600">Đang tải trận đấu...</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {activeStage === "group" ? (
+                                <div className="flex flex-col gap-[48px]">
+                                    {groupRounds.length > 0 ? (
+                                        groupRounds.map((round, i) => (
+                                            <RoundSection
+                                                key={`group-${i}`}
+                                                title={round.title}
+                                                matches={round.matches as any}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-12 text-gray-500">
+                                            Chưa có trận đấu vòng bảng
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-[48px]">
+                                    {knockoutRounds.length > 0 ? (
+                                        knockoutRounds.map((round, i) => (
+                                            <RoundSection
+                                                key={`ko-${i}`}
+                                                title={round.title}
+                                                matches={round.matches as any}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-12 text-gray-500">
+                                            Chưa có trận đấu vòng loại trực tiếp
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </main>
+            </div>
+
+            {/* ===================== MOBILE ===================== */}
+            <div className="block sm:hidden pb-[80px]">
+                {/* Sticky Tab Switcher */}
+                <div className="sticky top-[60px] z-[60] w-full shadow-md">
+                    <div className="flex w-full" style={{ height: "44px" }}>
+                        <button
+                            id="mobile-tab-group"
+                            onClick={() => setActiveStage("group")}
+                            className="flex-1 h-full flex items-center justify-center transition-colors"
+                            style={{
+                                background: activeStage === "group" ? "#172339" : "#F5F5F5",
+                                color: activeStage === "group" ? "#FFFFFF" : "#172339",
+                                fontFamily: "Montserrat, sans-serif",
+                                fontSize: "14px",
+                                fontStyle: "italic",
+                                fontWeight: 700,
+                                lineHeight: "20px",
+                                letterSpacing: "0.3px",
+                                textTransform: "uppercase",
+                                border: "none",
+                                outline: "none",
+                            }}
+                        >
+                            Vòng bảng
+                        </button>
+                        <button
+                            id="mobile-tab-knockout"
+                            onClick={() => setActiveStage("knockout")}
+                            className="flex-1 h-full flex items-center justify-center transition-colors"
+                            style={{
+                                background: activeStage === "knockout" ? "#172339" : "#F5F5F5",
+                                color: activeStage === "knockout" ? "#FFFFFF" : "#172339",
+                                fontFamily: "Montserrat, sans-serif",
+                                fontSize: "14px",
+                                fontStyle: "italic",
+                                fontWeight: 700,
+                                lineHeight: "20px",
+                                letterSpacing: "0.3px",
+                                textTransform: "uppercase",
+                                border: "none",
+                                outline: "none",
+                            }}
+                        >
+                            Vòng loại trực tiếp
+                        </button>
+                    </div>
+                </div>
+
+                {/* Banner */}
+                <ChampionshipBanner />
+
+                {/* Match content */}
+                <div className="px-4 pt-4">
+                    {renderMobileContent()}
+                </div>
+            </div>
 
             <TournamentNavbar activeTab="matches" />
         </div>

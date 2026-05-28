@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import type { Tournament, TournamentMatch, TournamentMatchUpsert, TournamentRegisteredPlayer } from '../../../api/tournament.api';
 import { MatchVM, createEmptyMatch, toVM, resolveWinner, PlayerIdStr } from '../components/knockoutHelpers';
-import { validateMatchTimes } from '../utils/bracketUtils';
+import { validateMatchTimes, getRaceToInfo, getMatchRoundLabel } from '../utils/bracketUtils';
 
 interface UseKnockoutBracketProps {
     numberOfPlayers: number;
@@ -59,6 +59,23 @@ interface UseKnockoutBracketReturn {
 const generateMatchNos = (start: number, count: number): number[] =>
     Array.from({ length: count }, (_, i) => start + i);
 
+// Converts a backend match to VM, deriving winner_id from scores/check-in when the DB field is null
+// Handles legacy data where completed matches were saved without winner_id being persisted
+const withDerivedWinner = (m: TournamentMatch): MatchVM => {
+    const vm = toVM(m);
+    if (!vm.winner_id && vm.status === 'completed') {
+        if (vm.player1_check_in === 'absent' && vm.player2_id) return { ...vm, winner_id: vm.player2_id };
+        if (vm.player2_check_in === 'absent' && vm.player1_id) return { ...vm, winner_id: vm.player1_id };
+        if (vm.player1_id && vm.player2_id) {
+            const s1 = parseInt(vm.player1_score, 10) || 0;
+            const s2 = parseInt(vm.player2_score, 10) || 0;
+            if (s1 > s2) return { ...vm, winner_id: vm.player1_id };
+            if (s2 > s1) return { ...vm, winner_id: vm.player2_id };
+        }
+    }
+    return vm;
+};
+
 export const useKnockoutBracket = ({
     numberOfPlayers,
     players,
@@ -71,6 +88,8 @@ export const useKnockoutBracket = ({
     const [saving, setSaving] = useState(false);
     const isKO8Mode = numberOfPlayers <= 16;
     const isKO32Mode = numberOfPlayers > 32;
+    // Tracks which match_nos have had their handicap scores repaired this session
+    const handicapRepairedRef = useRef<Set<number>>(new Set());
 
     // =====================
     // KO8 Configuration (16 players)
@@ -141,10 +160,20 @@ export const useKnockoutBracket = ({
     );
 
     // Helper: get winner from match number
+    // Falls back to score/check-in derivation when winner_id is null in DB (legacy data)
     const winnerOf = useCallback(
         (matchNo: number): PlayerIdStr => {
             const m = matches.find((x) => x.match_no === matchNo);
-            return m?.winner_id ? String(m.winner_id) : '';
+            if (!m) return '';
+            if (m.winner_id) return String(m.winner_id);
+            if (m.status !== 'completed') return '';
+            if (m.player1_check_in === 'absent' && m.player2_id) return String(m.player2_id);
+            if (m.player2_check_in === 'absent' && m.player1_id) return String(m.player1_id);
+            if (m.player1_id && m.player2_id) {
+                if (m.player1_score > m.player2_score) return String(m.player1_id);
+                if (m.player2_score > m.player1_score) return String(m.player2_id);
+            }
+            return '';
         },
         [matches]
     );
@@ -255,17 +284,17 @@ export const useKnockoutBracket = ({
                 return { ...prev[idx], ...vm };
             })
         );
-        setKo8Round2(ko8Round2Nos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 2))));
-        setKo8Final(ko8FinalNos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 3))));
+        setKo8Round2(ko8Round2Nos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 2))));
+        setKo8Final(ko8FinalNos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 3))));
     }, [matches, ko8Round1Nos, ko8Round2Nos, ko8FinalNos, isKO8Mode]);
 
     useEffect(() => {
         if (isKO8Mode || isKO32Mode) return;
         const map = new Map(matches.map((m) => [m.match_no, m]));
         setKo16R16(ko16R16Nos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 1))));
-        setKo16QF(ko16QFNos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 2))));
-        setKo16SF(ko16SFNos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 3))));
-        setKo16Final(ko16FinalNos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 4))));
+        setKo16QF(ko16QFNos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 2))));
+        setKo16SF(ko16SFNos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 3))));
+        setKo16Final(ko16FinalNos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 4))));
     }, [matches, ko16R16Nos, ko16QFNos, ko16SFNos, ko16FinalNos, isKO8Mode, isKO32Mode]);
 
     // KO32 sync
@@ -281,10 +310,10 @@ export const useKnockoutBracket = ({
                 return { ...prev[idx], ...vm };
             })
         );
-        setKo32R16(ko32R16Nos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 2))));
-        setKo32QF(ko32QFNos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 3))));
-        setKo32SF(ko32SFNos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 4))));
-        setKo32Final(ko32FinalNos.map((no) => toVM(map.get(no) ?? createEmptyMatch(no, 'knockout', 5))));
+        setKo32R16(ko32R16Nos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 2))));
+        setKo32QF(ko32QFNos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 3))));
+        setKo32SF(ko32SFNos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 4))));
+        setKo32Final(ko32FinalNos.map((no) => withDerivedWinner(map.get(no) ?? createEmptyMatch(no, 'knockout', 5))));
     }, [matches, ko32R32Nos, ko32R16Nos, ko32QFNos, ko32SFNos, ko32FinalNos, isKO32Mode]);
 
     // =====================
@@ -315,7 +344,10 @@ export const useKnockoutBracket = ({
                 }
 
                 const w = resolveWinner(next[i], parseInt(next[i].race_to, 10) || 0);
-                if (next[i].winner_id !== w) {
+                // Only update winner_id when resolveWinner gives a positive result.
+                // Never overwrite an existing DB-stored winner_id with '' just because
+                // race_to is unset (0), which would cause resolveWinner to always return ''.
+                if (w && next[i].winner_id !== w) {
                     next[i] = { ...next[i], winner_id: w };
                     changed = true;
                 }
@@ -325,6 +357,95 @@ export const useKnockoutBracket = ({
         },
         []
     );
+
+    // KO8 auto-seed: cross-seed WR2 (13-16) vs LR2 reversed (20,19,18,17)
+    // Only seeds matches that are still empty; saves to backend automatically
+    useEffect(() => {
+        if (!isKO8Mode || qualified8Ids.length < 8) return;
+
+        const wr = [winnerOf(13), winnerOf(14), winnerOf(15), winnerOf(16)];
+        const lr = [winnerOf(20), winnerOf(19), winnerOf(18), winnerOf(17)];
+
+        const seedings = ko8Round1Nos
+            .map((matchNo, i) => ({ matchNo, p1: wr[i], p2: lr[i] }))
+            .filter(({ p1, p2 }) => p1 && p2);
+
+        if (seedings.length === 0) return;
+
+        setKo8Round1(prev => {
+            const next = [...prev];
+            let changed = false;
+            seedings.forEach(({ matchNo, p1, p2 }, i) => {
+                if (next[i] && !next[i].player1_id && !next[i].player2_id) {
+                    const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
+                    const info = getRaceToInfo(p1, p2, players, tournament, rl);
+                    const p1Score = info.handicap > 0 && info.handicappedPlayerId === p1 ? String(info.handicap) : '0';
+                    const p2Score = info.handicap > 0 && info.handicappedPlayerId === p2 ? String(info.handicap) : '0';
+                    next[i] = { ...next[i], player1_id: p1, player2_id: p2, player1_score: p1Score, player2_score: p2Score };
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
+
+        // Save only empty matches to backend (with correct handicap initial scores)
+        // Use `matches` (backend source of truth, same render as qualified8Ids) instead of
+        // ko8Round1[i] which is a stale closure and may not reflect the KO8 sync yet.
+        seedings.forEach(({ matchNo, p1, p2 }) => {
+            const storedMatch = matches.find(m => m.match_no === matchNo);
+            if (storedMatch?.player1_id || storedMatch?.player2_id) return;
+            const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
+            const info = getRaceToInfo(p1, p2, players, tournament, rl);
+            const p1Score = info.handicap > 0 && info.handicappedPlayerId === p1 ? info.handicap : 0;
+            const p2Score = info.handicap > 0 && info.handicappedPlayerId === p2 ? info.handicap : 0;
+            onUpsertMatch(matchNo, {
+                bracket: 'knockout', round: 1,
+                player1_id: parseInt(p1, 10),
+                player2_id: parseInt(p2, 10),
+                player1_score: p1Score,
+                player2_score: p2Score,
+                status: 'pending', winner_id: null,
+            }).catch(() => {});
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [qualified8Ids, isKO8Mode]);
+
+    // KO8 repair: correct initial handicap scores for pending matches saved with 0-0
+    useEffect(() => {
+        if (!isKO8Mode) return;
+        const toRepair: MatchVM[] = [];
+        ko8Round1.forEach(m => {
+            if (m.status !== 'pending' || !m.player1_id || !m.player2_id) return;
+            if (handicapRepairedRef.current.has(m.match_no)) return;
+            const rl = getMatchRoundLabel(m.match_no, numberOfPlayers);
+            const info = getRaceToInfo(m.player1_id, m.player2_id, players, tournament, rl);
+            if (info.handicap === 0) return;
+            const expP1 = info.handicappedPlayerId === m.player1_id ? info.handicap : 0;
+            const expP2 = info.handicappedPlayerId === m.player2_id ? info.handicap : 0;
+            if (parseInt(m.player1_score, 10) === expP1 && parseInt(m.player2_score, 10) === expP2) return;
+            // Only repair if both scores are still 0 (unmodified by admin)
+            if (parseInt(m.player1_score, 10) !== 0 || parseInt(m.player2_score, 10) !== 0) return;
+            toRepair.push({ ...m, player1_score: String(expP1), player2_score: String(expP2) });
+        });
+        if (toRepair.length === 0) return;
+
+        setKo8Round1(prev => {
+            const repairMap = new Map(toRepair.map(m => [m.match_no, m]));
+            return prev.map(m => repairMap.get(m.match_no) ?? m);
+        });
+        toRepair.forEach(m => {
+            handicapRepairedRef.current.add(m.match_no);
+            onUpsertMatch(m.match_no, {
+                bracket: 'knockout', round: 1,
+                player1_id: parseInt(m.player1_id, 10),
+                player2_id: parseInt(m.player2_id, 10),
+                player1_score: parseInt(m.player1_score, 10),
+                player2_score: parseInt(m.player2_score, 10),
+                status: 'pending', winner_id: null,
+            }).catch(() => { handicapRepairedRef.current.delete(m.match_no); });
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ko8Round1, isKO8Mode]);
 
     // KO8 propagation
     useEffect(() => {
@@ -397,10 +518,26 @@ export const useKnockoutBracket = ({
                         : [ko8Final, setKo8Final];
 
             const next = [...arr];
-            const m = { ...next[index], [field]: value } as MatchVM;
+            let m = { ...next[index], [field]: value } as MatchVM;
 
-            if (['player1_score', 'player2_score', 'status'].includes(field)) {
-                m.winner_id = resolveWinner(m, parseInt(m.race_to, 10) || 0);
+            if (field === 'player1_score' || field === 'player2_score') {
+                const raceTo = parseInt(m.race_to, 10) || 0;
+                if (raceTo > 0) m.winner_id = resolveWinner(m, raceTo);
+            } else if (field === 'status' && value !== 'completed') {
+                m.winner_id = '';
+            } else if (field === 'player1_check_in' || field === 'player2_check_in') {
+                const p1ci = field === 'player1_check_in' ? value : m.player1_check_in;
+                const p2ci = field === 'player2_check_in' ? value : m.player2_check_in;
+                if (p1ci === 'absent' && p2ci === 'absent') {
+                    m = { ...m, status: 'completed', winner_id: '' };
+                } else if (p1ci === 'absent' && m.player2_id) {
+                    m = { ...m, status: 'completed', winner_id: m.player2_id };
+                } else if (p2ci === 'absent' && m.player1_id) {
+                    m = { ...m, status: 'completed', winner_id: m.player1_id };
+                } else if (p1ci !== 'absent' && p2ci !== 'absent' && m.winner_id) {
+                    // Both players are no longer absent — clear the absence-triggered completion
+                    m = { ...m, status: 'pending', winner_id: '' };
+                }
             }
 
             next[index] = m;
@@ -428,10 +565,25 @@ export const useKnockoutBracket = ({
             }
 
             const next = [...arr];
-            const m = { ...next[index], [field]: value } as MatchVM;
+            let m = { ...next[index], [field]: value } as MatchVM;
 
-            if (['player1_score', 'player2_score', 'status'].includes(field)) {
-                m.winner_id = resolveWinner(m, parseInt(m.race_to, 10) || 0);
+            if (field === 'player1_score' || field === 'player2_score') {
+                const raceTo = parseInt(m.race_to, 10) || 0;
+                if (raceTo > 0) m.winner_id = resolveWinner(m, raceTo);
+            } else if (field === 'status' && value !== 'completed') {
+                m.winner_id = '';
+            } else if (field === 'player1_check_in' || field === 'player2_check_in') {
+                const p1ci = field === 'player1_check_in' ? value : m.player1_check_in;
+                const p2ci = field === 'player2_check_in' ? value : m.player2_check_in;
+                if (p1ci === 'absent' && p2ci === 'absent') {
+                    m = { ...m, status: 'completed', winner_id: '' };
+                } else if (p1ci === 'absent' && m.player2_id) {
+                    m = { ...m, status: 'completed', winner_id: m.player2_id };
+                } else if (p2ci === 'absent' && m.player1_id) {
+                    m = { ...m, status: 'completed', winner_id: m.player1_id };
+                } else if (p1ci !== 'absent' && p2ci !== 'absent' && m.winner_id) {
+                    m = { ...m, status: 'pending', winner_id: '' };
+                }
             }
 
             next[index] = m;
@@ -461,10 +613,25 @@ export const useKnockoutBracket = ({
             }
 
             const next = [...arr];
-            const m = { ...next[index], [field]: value } as MatchVM;
+            let m = { ...next[index], [field]: value } as MatchVM;
 
-            if (['player1_score', 'player2_score', 'status'].includes(field)) {
-                m.winner_id = resolveWinner(m, parseInt(m.race_to, 10) || 0);
+            if (field === 'player1_score' || field === 'player2_score') {
+                const raceTo = parseInt(m.race_to, 10) || 0;
+                if (raceTo > 0) m.winner_id = resolveWinner(m, raceTo);
+            } else if (field === 'status' && value !== 'completed') {
+                m.winner_id = '';
+            } else if (field === 'player1_check_in' || field === 'player2_check_in') {
+                const p1ci = field === 'player1_check_in' ? value : m.player1_check_in;
+                const p2ci = field === 'player2_check_in' ? value : m.player2_check_in;
+                if (p1ci === 'absent' && p2ci === 'absent') {
+                    m = { ...m, status: 'completed', winner_id: '' };
+                } else if (p1ci === 'absent' && m.player2_id) {
+                    m = { ...m, status: 'completed', winner_id: m.player2_id };
+                } else if (p2ci === 'absent' && m.player1_id) {
+                    m = { ...m, status: 'completed', winner_id: m.player1_id };
+                } else if (p1ci !== 'absent' && p2ci !== 'absent' && m.winner_id) {
+                    m = { ...m, status: 'pending', winner_id: '' };
+                }
             }
 
             next[index] = m;
@@ -489,6 +656,8 @@ export const useKnockoutBracket = ({
             table_no: m.table_no || null,
             match_time: m.match_time || null,
             status: m.status,
+            player1_check_in: m.player1_check_in || 'unconfirmed',
+            player2_check_in: m.player2_check_in || 'unconfirmed',
             winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
         },
     });

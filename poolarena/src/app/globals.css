@@ -3,6 +3,8 @@
 :root {
   --background: #e8e8e8;
   --foreground: #171717;
+  --Primary-Medium: #ED1C1F;
+  --Grey-700: #37393E;
 }
 
 @theme inline {
@@ -43,6 +45,46 @@ body {
 
 .ant-input-password {
   border-radius: 8px !important;
+}
+
+.ant-form-item-explain-error {
+  color: var(--Primary-Medium, #ED1C1F) !important;
+  font-family: var(--font-montserrat), Montserrat, sans-serif !important;
+  font-size: 12px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: 16px !important;
+}
+
+/* Custom error status feedback icon override */
+.ant-form-item-has-error .ant-form-item-feedback-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.ant-form-item-has-error .ant-form-item-feedback-icon svg {
+  display: none !important;
+}
+
+.ant-form-item-has-error .ant-form-item-feedback-icon::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22Z" stroke="%23ED1C1F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9V13" stroke="%23ED1C1F" stroke-width="1.5" stroke-linecap="round"/><path d="M12 17.01L12.01 16.9989" stroke="%23ED1C1F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>') !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+}
+
+/* Hide password visibility eye icon when validation error is active */
+.ant-form-item-has-error .ant-input-password-icon,
+.ant-form-item-has-error .ant-input-suffix .anticon-eye,
+.ant-form-item-has-error .ant-input-suffix .anticon-eye-invisible {
+  display: none !important;
 }
 
 /* Custom scrollbar */
@@ -104,4 +146,94 @@ body {
 
 .animate-slideIn {
   animation: slideIn 0.4s ease-out;
+}
+
+/* Custom Ant Design Error Notification Toast override */
+.ant-notification-notice-error {
+  width: 360px !important;
+  max-width: 360px !important;
+  min-width: 360px !important;
+  height: 56px !important; /* Fixed H Hug 56px */
+  background-color: #ffffff !important;
+  border-left: 5px solid #ED1C1F !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  padding: 16px !important; /* --g-spacing-6 = 16px all sides */
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+
+/* Ensure flex layout for children inside the wrapper to guarantee perfect balance and alignment */
+.ant-notification-notice-error .ant-notification-notice-content {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Hide default error icon svg */
+.ant-notification-notice-error .ant-notification-notice-icon svg {
+  display: none !important;
+}
+
+/* Render custom SVG icon */
+.ant-notification-notice-error .ant-notification-notice-icon::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.99829C10.0222 1.99829 8.08879 2.58478 6.4443 3.68359C4.79981 4.78241 3.51809 6.3442 2.76121 8.17146C2.00433 9.99872 1.8063 12.0094 2.19215 13.9492C2.578 15.889 3.53041 17.6708 4.92894 19.0694C6.32746 20.4679 8.10929 21.4203 10.0491 21.8061C11.9889 22.192 13.9996 21.994 15.8268 21.2371C17.6541 20.4802 19.2159 19.1985 20.3147 17.554C21.4135 15.9095 22 13.9761 22 11.9983C22 10.6851 21.7413 9.38471 21.2388 8.17146C20.7363 6.9582 19.9997 5.85581 19.0711 4.92722C18.1425 3.99864 17.0401 3.26204 15.8268 2.7595C14.6136 2.25695 13.3132 1.99829 12 1.99829ZM11 8.49829C11 8.36568 11.0527 8.23851 11.1464 8.14474C11.2402 8.05097 11.3674 7.99829 11.5 7.99829H12.5C12.6326 7.99829 12.7598 8.05097 12.8536 8.14474C12.9473 8.23851 13 8.36568 13 8.49829V11.4983C13 11.6309 12.9473 11.7581 12.8536 11.8518C12.7598 11.9456 12.6326 11.9983 12.5 11.9983H11.5C11.3674 11.9983 11.2402 11.9456 11.1464 11.8518C11.0527 11.7581 11 11.6309 11 11.4983V8.49829ZM11 14.4983C11 14.3657 11.0527 14.2385 11.1464 14.1447C11.2402 14.051 11.3674 13.9983 11.5 13.9983H12.5C12.6326 13.9983 12.7598 14.051 12.8536 14.1447C12.9473 14.2385 13 14.3657 13 14.4983V15.4983C13 15.6309 12.9473 15.7581 12.8536 15.8518C12.7598 15.9456 12.6326 15.9983 12.5 15.9983H11.5C11.3674 15.9983 11.2402 15.9456 11.1464 15.8518C11.0527 15.7581 11 15.6309 11 15.4983V14.4983Z" fill="%23ED1C1F"/></svg>') !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  flex-shrink: 0 !important;
+}
+
+/* Reset icon default absolute position & margin to ensure correct flex alignment */
+.ant-notification-notice-error .ant-notification-notice-icon {
+  position: static !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Style message text */
+.ant-notification-notice-error .ant-notification-notice-message {
+  color: var(--Grey-700, #37393E) !important;
+  font-family: var(--font-montserrat), Montserrat, sans-serif !important;
+  font-size: 16px !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+  line-height: 24px !important;
+  margin-inline-start: 10px !important; /* Space between icon and text (10px) */
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* Style close button */
+.ant-notification-notice-error .ant-notification-notice-close {
+  color: var(--Grey-700, #37393E) !important;
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: 16px !important; /* Right padding --g-spacing-6 = 16px */
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ant-notification-notice-error .ant-notification-notice-close:hover {
+  color: #ED1C1F !important;
 }

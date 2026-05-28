@@ -48,6 +48,34 @@ export default function MatchRow({
   // Determine if match has a result (at least one player won)
   const matchHasResult = !!player1.isWinner || !!player2.isWinner;
 
+  // Track scores for red flash effect when they change
+  const scoreParts = score.includes(" vs ") ? score.split(" vs ") : [score, ""];
+  const p1ScoreVal = scoreParts[0];
+  const p2ScoreVal = scoreParts[1];
+
+  const [prevP1Score, setPrevP1Score] = React.useState(p1ScoreVal);
+  const [prevP2Score, setPrevP2Score] = React.useState(p2ScoreVal);
+  const [p1Flash, setP1Flash] = React.useState(false);
+  const [p2Flash, setP2Flash] = React.useState(false);
+
+  React.useEffect(() => {
+    if (p1ScoreVal !== prevP1Score) {
+      setP1Flash(true);
+      setPrevP1Score(p1ScoreVal);
+      const timer = setTimeout(() => setP1Flash(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [p1ScoreVal, prevP1Score]);
+
+  React.useEffect(() => {
+    if (p2ScoreVal !== prevP2Score) {
+      setP2Flash(true);
+      setPrevP2Score(p2ScoreVal);
+      const timer = setTimeout(() => setP2Flash(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [p2ScoreVal, prevP2Score]);
+
   // Player name style helper
   // Winner: #FFF, bold 700, line-height 24px
   // Loser: #ACB3C3, medium 500, line-height normal
@@ -66,6 +94,7 @@ export default function MatchRow({
         color: '#FFF',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
+        paddingRight: '4px', // Prevent italic clipping
       };
     }
 
@@ -121,25 +150,37 @@ export default function MatchRow({
         {/* Score - Fixed width, grid 3-col for perfect centering */}
         <div
           className="w-[200px] shrink-0 items-center text-white font-bold text-[16px] gap-[60px]"
-          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '58px' }}
+          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '48px' }}
         >
           {score.includes(" vs ") ? (
             <>
-              <span
-                style={{
-                  width: '30px',
-                  textAlign: 'center',
-                  display: 'inline-block',
-                  color: player1.isWinner ? '#ED1C1F' : (matchHasResult && player2.isWinner ? '#ACB3C3' : '#FFFFFF'),
-                  fontFamily: 'Montserrat, sans-serif',
-                  fontSize: '20px',
-                  fontStyle: 'italic',
-                  fontWeight: 700,
-                  lineHeight: '24px',
-                }}
-              >
-                {score.split(" vs ")[0]}
-              </span>
+              <div style={{
+                backgroundColor: p1Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
+                borderRadius: '6px',
+                padding: '2px 8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background-color 0.2s ease-out',
+                boxShadow: p1Flash ? '0 0 8px rgba(237, 28, 31, 0.4)' : 'none',
+              }}>
+                <span
+                  style={{
+                    width: '30px',
+                    textAlign: 'center',
+                    display: 'inline-block',
+                    color: p1Flash ? '#FF3B3F' : (player1.isWinner ? '#ED1C1F' : (matchHasResult && player2.isWinner ? '#ACB3C3' : '#FFFFFF')),
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: p1Flash ? '24px' : '20px',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    lineHeight: '24px',
+                    transition: 'color 0.2s ease-out, font-size 0.2s ease-out',
+                  }}
+                >
+                  {p1ScoreVal}
+                </span>
+              </div>
               <span
                 style={{
                   color: '#8690A7',
@@ -151,21 +192,33 @@ export default function MatchRow({
                   flexShrink: 0,
                 }}
               >vs</span>
-              <span
-                style={{
-                  width: '30px',
-                  textAlign: 'center',
-                  display: 'inline-block',
-                  color: player2.isWinner ? '#ED1C1F' : (matchHasResult && player1.isWinner ? '#ACB3C3' : '#FFFFFF'),
-                  fontFamily: 'Montserrat, sans-serif',
-                  fontSize: '20px',
-                  fontStyle: 'italic',
-                  fontWeight: 700,
-                  lineHeight: '24px',
-                }}
-              >
-                {score.split(" vs ")[1]}
-              </span>
+              <div style={{
+                backgroundColor: p2Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
+                borderRadius: '6px',
+                padding: '2px 8px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background-color 0.2s ease-out',
+                boxShadow: p2Flash ? '0 0 8px rgba(237, 28, 31, 0.4)' : 'none',
+              }}>
+                <span
+                  style={{
+                    width: '30px',
+                    textAlign: 'center',
+                    display: 'inline-block',
+                    color: p2Flash ? '#FF3B3F' : (player2.isWinner ? '#ED1C1F' : (matchHasResult && player1.isWinner ? '#ACB3C3' : '#FFFFFF')),
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: p2Flash ? '24px' : '20px',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    lineHeight: '24px',
+                    transition: 'color 0.2s ease-out, font-size 0.2s ease-out',
+                  }}
+                >
+                  {p2ScoreVal}
+                </span>
+              </div>
             </>
           ) : (
             <span className="text-white text-center">{score}</span>

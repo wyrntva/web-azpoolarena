@@ -17,6 +17,7 @@ interface RegistrationItem {
     full_name: string;
     rank?: string | null;
     avatar_url?: string | null;
+    points?: number;
     registered_at?: string | null;
 }
 
@@ -30,7 +31,9 @@ export default function TournamentRankingsPage() {
         enabled: !!slug,
     });
 
-    const rankings: RankingData[] = (registrations ?? []).map((reg, index) => ({
+    const sortedRegistrations = [...(registrations ?? [])].sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
+
+    const rankings: RankingData[] = sortedRegistrations.map((reg, index) => ({
         key: String(reg.id),
         rank: index + 1,
         rankLabel: index === 0 ? '#1' : index === 1 ? '#2' : index === 2 ? '#3' : `#${index + 1}`,
@@ -40,7 +43,7 @@ export default function TournamentRankingsPage() {
             avatar: reg.avatar_url ? resolveImageUrl(reg.avatar_url, '') : '',
             tier: reg.rank ? `Hạng ${reg.rank}` : undefined,
         },
-        points: 0,
+        points: reg.points ?? 0,
     }));
 
     return (

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEmail, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsEmail, IsEnum, IsNumber } from 'class-validator';
 import { PoolArenaUserGender } from '../entities';
 
 export class CreatePoolArenaUserDto {
@@ -23,4 +23,7 @@ export class UpdatePoolArenaUserDto {
   @IsOptional() @IsString() instagram_url?: string;
   @IsOptional() @IsString() avatar_url?: string;
   @IsOptional() @IsString() rank?: string;
+  @IsOptional() @IsNumber() points?: number;
+  @IsOptional() phone_number?: string;
+  @IsOptional() is_active?: boolean;
 }

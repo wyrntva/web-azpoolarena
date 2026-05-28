@@ -66,6 +66,18 @@ export class TournamentSettingsController {
   @Get('scoring-rules')
   async getScoringRules() { return this.service.getScoringRules(); }
 
+  @Get('scoring-rules/matrix')
+  async getRatingMatrix() {
+    return this.service.getRatingMatrix();
+  }
+
+  @Post('scoring-rules/matrix')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async saveRatingMatrix(@Body() dto: any[]) {
+    return this.service.saveRatingMatrix(dto);
+  }
+
   @Get('scoring-rules/:id')
   async getScoringRule(@Param('id', ParseIntPipe) id: number) { return this.service.getScoringRule(id); }
 

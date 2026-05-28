@@ -57,6 +57,23 @@ export default function RegisterPage() {
         message: "Đăng ký không thành công!",
         placement: "top"
       });
+      
+      const errorMsg = String(resultAction.payload || '').toLowerCase();
+      if (
+        errorMsg.includes('số điện thoại') ||
+        errorMsg.includes('phone') ||
+        errorMsg.includes('đăng ký') ||
+        errorMsg.includes('registered') ||
+        errorMsg.includes('exist') ||
+        errorMsg.includes('tồn tại')
+      ) {
+        form.setFields([
+          {
+            name: "phoneNumber",
+            errors: ["Số điện thoại đã tồn tại"],
+          },
+        ]);
+      }
     }
   };
 
@@ -88,6 +105,7 @@ export default function RegisterPage() {
                 form={form}
                 name="register"
                 onFinish={handleRegister}
+                onFinishFailed={() => api.error({ message: "Đăng ký không thành công!", placement: "top" })}
                 layout="vertical"
                 size="large"
                 requiredMark={false}
@@ -100,8 +118,9 @@ export default function RegisterPage() {
                       <span className="text-red-500 ml-1">*</span>
                     </div>
                   }
+                  hasFeedback
                   rules={[
-                    { required: true, message: "Vui lòng nhập họ và tên!" },
+                    { required: true, message: "Họ và tên không được để trống" },
                     { min: 2, message: "Họ và tên phải có ít nhất 2 ký tự!" },
                   ]}
                   style={{ marginBottom: 16 }}
@@ -117,8 +136,9 @@ export default function RegisterPage() {
                       <span className="text-red-500 ml-1">*</span>
                     </div>
                   }
+                  hasFeedback
                   rules={[
-                    { required: true, message: "Vui lòng nhập giới tính!" },
+                    { required: true, message: "Giới tính không được để trống" },
                   ]}
                   style={{ marginBottom: 16 }}
                 >
@@ -136,6 +156,7 @@ export default function RegisterPage() {
                       Địa chỉ
                     </div>
                   }
+                  hasFeedback
                   style={{ marginBottom: 16 }}
                 >
                   <Input placeholder="Nhập địa chỉ" className="rounded-lg" />
@@ -149,7 +170,8 @@ export default function RegisterPage() {
                       <span className="text-red-500 ml-1">*</span>
                     </div>
                   }
-                  rules={[{ required: true, message: "Vui lòng nhập hạng!" }]}
+                  hasFeedback
+                  rules={[{ required: true, message: "Hạng không được để trống" }]}
                   style={{ marginBottom: 16 }}
                 >
                   <Select placeholder="Hạng của bạn">
@@ -161,7 +183,7 @@ export default function RegisterPage() {
                   </Select>
                 </Form.Item>
 
-                <Form.Item
+                 <Form.Item
                   name="phoneNumber"
                   label={
                     <div className="text-gray-800 text-base font-semibold">
@@ -169,11 +191,12 @@ export default function RegisterPage() {
                       <span className="text-red-500 ml-1">*</span>
                     </div>
                   }
+                  hasFeedback
                   rules={[
-                    { required: true, message: "Vui lòng nhập số điện thoại!" },
+                    { required: true, message: "Số điện thoại không được để trống" },
                     {
                       pattern: /^(0|\+84)[0-9]{9,10}$/,
-                      message: "Số điện thoại không hợp lệ! (VD: 0999888777 hoặc +84999888777)",
+                      message: "Số điện thoại không hợp lệ",
                     },
                   ]}
                   style={{ marginBottom: 16 }}
@@ -192,11 +215,12 @@ export default function RegisterPage() {
                       <span className="text-red-500 ml-1">*</span>
                     </div>
                   }
+                  hasFeedback
                   rules={[
-                    { required: true, message: "Vui lòng nhập email!" },
+                    { required: true, message: "Email không được để trống" },
                     {
                       pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: "Email không hợp lệ!",
+                      message: "Email không hợp lệ",
                     },
                   ]}
                   style={{ marginBottom: 16 }}
@@ -215,14 +239,15 @@ export default function RegisterPage() {
                       <span className="text-red-500 ml-1">*</span>
                     </div>
                   }
+                  hasFeedback
                   rules={[
-                    { required: true, message: "Vui lòng nhập mật khẩu!" },
-                    { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự!" },
+                    { required: true, message: "Mật khẩu không được để trống" },
+                    { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
                   ]}
                   style={{ marginBottom: 16 }}
                 >
                   <Input.Password
-                    placeholder="Nhập mật khẩu tối thiểu 8 ký tự"
+                    placeholder="Nhập mật khẩu tối thiểu 6 ký tự"
                     className="rounded-lg"
                   />
                 </Form.Item>
@@ -235,16 +260,17 @@ export default function RegisterPage() {
                       <span className="text-red-500 ml-1">*</span>
                     </div>
                   }
+                  hasFeedback
                   dependencies={["password"]}
                   rules={[
-                    { required: true, message: "Vui lòng xác nhận mật khẩu!" },
+                    { required: true, message: "Nhập lại mật khẩu không được để trống" },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
                         if (!value || getFieldValue("password") === value) {
                           return Promise.resolve();
                         }
                         return Promise.reject(
-                          new Error("Mật khẩu xác nhận không khớp!")
+                          new Error("Xác nhận mật khẩu không trùng khớp với mật khẩu")
                         );
                       },
                     }),

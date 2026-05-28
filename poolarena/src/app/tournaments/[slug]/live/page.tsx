@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Spin } from "antd";
@@ -10,6 +9,7 @@ import {
     RoundSection,
 } from "@/components";
 import NavBar from "@/components/NavBar";
+import ChampionshipBanner from "@/components/ChampionshipBanner";
 import { tournamentAPI } from "@/api/tournament.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
 
@@ -81,15 +81,7 @@ export default function TournamentLivePage() {
 
             <main className="w-full max-w-[1360px] mx-auto mt-[48px] flex flex-col gap-[48px]">
 
-                <div className="rounded-[12px] overflow-hidden shadow-sm h-[146px] relative">
-                    <Image
-                        src="/images/home_banner.png"
-                        alt="Banner"
-                        fill
-                        sizes="1360px"
-                        className="object-cover"
-                    />
-                </div>
+                <ChampionshipBanner className="shadow-sm" />
 
                 <div className="flex flex-col gap-[48px]">
                     {isLoading ? (

@@ -16,6 +16,13 @@ export default function HandicapSection({ formData, setFormData }: HandicapSecti
     const showR16 = showFromR16;
     const showR8 = showFromR16 || showFromR8;
 
+    // Xác định các round textbox cần hiện dựa theo draw_from_round
+    const ROUND_ORDER = ['r16', 'r8', 'qf', 'sf', 'f'];
+    const drawFromIdx = ROUND_ORDER.indexOf(formData.draw_from_round);
+    const showQF = drawFromIdx >= 0 && drawFromIdx <= ROUND_ORDER.indexOf('qf');
+    const showSF = drawFromIdx >= 0 && drawFromIdx <= ROUND_ORDER.indexOf('sf');
+    const showFinal = drawFromIdx >= 0;
+
     return (
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -123,38 +130,44 @@ export default function HandicapSection({ formData, setFormData }: HandicapSecti
                 </div>
             )}
 
-            {/* Quarter / Semi / Final */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <Label htmlFor="quarter_final" className="mb-2 block">Tứ kết</Label>
-                    <TextInput
-                        id="quarter_final" type="text"
-                        value={formData.quarter_final}
-                        onChange={(e) => setFormData({ ...formData, quarter_final: e.target.value })}
-                        placeholder="Nhập tỉ lệ"
-                    />
+            {/* Quarter / Semi / Final — chỉ hiện từ vòng được chọn trở đi */}
+            {(showQF || showSF || showFinal) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {showQF && (
+                        <div>
+                            <Label htmlFor="quarter_final" className="mb-2 block">Tứ kết</Label>
+                            <TextInput
+                                id="quarter_final" type="text"
+                                value={formData.quarter_final}
+                                onChange={(e) => setFormData({ ...formData, quarter_final: e.target.value })}
+                                placeholder="Nhập tỉ lệ"
+                            />
+                        </div>
+                    )}
+                    {showSF && (
+                        <div>
+                            <Label htmlFor="semi_final" className="mb-2 block">Bán kết</Label>
+                            <TextInput
+                                id="semi_final" type="text"
+                                value={formData.semi_final}
+                                onChange={(e) => setFormData({ ...formData, semi_final: e.target.value })}
+                                placeholder="Nhập tỉ lệ"
+                            />
+                        </div>
+                    )}
+                    {showFinal && (
+                        <div>
+                            <Label htmlFor="final" className="mb-2 block">Chung kết</Label>
+                            <TextInput
+                                id="final" type="text"
+                                value={formData.final}
+                                onChange={(e) => setFormData({ ...formData, final: e.target.value })}
+                                placeholder="Nhập tỉ lệ"
+                            />
+                        </div>
+                    )}
                 </div>
-                <div>
-                    <Label htmlFor="semi_final" className="mb-2 block">Bán kết</Label>
-                    <TextInput
-                        id="semi_final" type="text"
-                        value={formData.semi_final}
-                        onChange={(e) => setFormData({ ...formData, semi_final: e.target.value })}
-                        placeholder="Nhập tỉ lệ"
-                    />
-                </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <Label htmlFor="final" className="mb-2 block">Chung kết</Label>
-                    <TextInput
-                        id="final" type="text"
-                        value={formData.final}
-                        onChange={(e) => setFormData({ ...formData, final: e.target.value })}
-                        placeholder="Nhập tỉ lệ"
-                    />
-                </div>
-            </div>
+            )}
         </div>
     );
 }

@@ -39,15 +39,15 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
 
     return (
         <div className="w-full">
-            <div className="flex flex-col lg:flex-row gap-3 h-auto lg:h-[628px]">
+            <div className="flex flex-col lg:flex-row gap-3 h-auto lg:h-[612px] lg:w-[1360px] lg:mx-auto">
                 {/* Left Section - Player Image with Dual Background Cards (Two separate blocks) */}
-                <div className="w-full max-w-[361px] lg:max-w-none mx-auto lg:w-1/2 relative h-[588px] lg:h-full flex-shrink-0">
+                <div className="w-full max-w-[361px] lg:max-w-none mx-auto lg:w-[674px] relative h-[588px] lg:h-full flex-shrink-0">
                     {/* Background Cards (Spaced exactly 12px apart) */}
                     <div className="absolute inset-0 flex flex-col gap-3">
                         {/* Top Block - Dark blue background card */}
-                        <div className="h-[200px] lg:flex-1 bg-[#172339] rounded-t-2xl rounded-b-none lg:rounded-2xl shadow-sm"></div>
+                        <div className="h-[200px] lg:h-[200px] bg-[#172339] rounded-t-2xl rounded-b-none lg:rounded-none lg:rounded-tl-2xl shadow-sm"></div>
                         {/* Bottom Block - Light gray background card */}
-                        <div className="h-[376px] lg:h-2/3 bg-[#9A9CA3] rounded-t-none rounded-b-2xl lg:rounded-2xl shadow-sm"></div>
+                        <div className="h-[376px] lg:h-[400px] bg-[#9A9CA3] rounded-t-none rounded-b-2xl lg:rounded-none lg:rounded-bl-2xl shadow-sm"></div>
                     </div>
 
                     {/* Player Image with high z-index */}
@@ -61,7 +61,7 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                                     fill
                                     unoptimized
                                     sizes="(max-width: 1024px) 100vw, 50vw"
-                                    className="object-contain bg-transparent object-bottom scale-[1.25] origin-bottom transition-transform duration-300"
+                                    className="object-contain bg-transparent object-bottom scale-[1.25] lg:scale-[1.0] origin-bottom transition-transform duration-300"
                                     priority
                                     onError={() => setImgSrc('/images/imageprofile.png')}
                                 />
@@ -71,7 +71,7 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                 </div>
 
                 {/* Right Section - Player Information and Achievements */}
-                <div className="w-full lg:w-1/2 bg-[#172339] text-white p-12 h-auto lg:h-full flex flex-col rounded-2xl shadow-sm">
+                <div className="w-full lg:w-[674px] bg-[#172339] text-white p-12 lg:p-12 h-auto lg:h-full flex flex-col rounded-2xl lg:rounded-none lg:rounded-tr-2xl lg:rounded-br-2xl shadow-sm">
                     {/* Player Name and Rank */}
                     <div className="mb-12">
                         <div className="text-white mb-1.5 text-2xl sm:text-4xl font-bold italic uppercase tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>

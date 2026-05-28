@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import type { Tournament, TournamentRegisteredPlayer } from '../../../api/tournament.api';
 import { MatchVM } from './knockoutHelpers';
 import MatchManagementDialog from './MatchManagementDialog';
@@ -32,16 +32,26 @@ interface KnockoutMatchTableProps {
 
 const KnockoutMatchTable: React.FC<KnockoutMatchTableProps> = ({
     matches, players, title, matchRange, matchCount,
-    isPlayerSelectable = false, availablePlayers = [], selectedIds = [],
+    isPlayerSelectable = false, availablePlayers = [], selectedIds = [], selectDisabled = false,
     player1Placeholder = () => 'Chờ...', player2Placeholder = () => 'Chờ...',
     onChange, onSaveMatch,
     tablesList = [], tournament,
 }) => {
     const [editingIdx, setEditingIdx] = useState<number | null>(null);
+    const dirtyRef = useRef(false);
 
     const getPlayerName = (id: string) => players.find(p => p.id === parseInt(id, 10))?.full_name;
 
     const currentMatch = editingIdx !== null ? matches[editingIdx] : null;
+
+    const handleDialogClose = useCallback(async () => {
+        if (editingIdx !== null && dirtyRef.current && onSaveMatch) {
+            try { await onSaveMatch(editingIdx); }
+            catch { /* lỗi đã được xử lý ở parent */ }
+            dirtyRef.current = false;
+        }
+        setEditingIdx(null);
+    }, [editingIdx, onSaveMatch]);
 
     return (
         <div className="space-y-3">
@@ -74,23 +84,53 @@ const KnockoutMatchTable: React.FC<KnockoutMatchTableProps> = ({
                                 <tr key={`match_${match.match_no}`} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer" onClick={() => setEditingIdx(idx)}>
                                     <td className="p-3 text-center font-bold text-gray-400">{match.match_no}</td>
                                     <td className="p-3">
-                                        <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player1_id && match.winner_id ? { fontWeight: 700 } : undefined}>
-                                            {p1Name || (
-                                                match.winner_id && !match.player1_id
-                                                    ? <span className="text-gray-400 italic font-semibold text-xs">bye</span>
-                                                    : <span className="text-gray-400 italic text-xs">{player1Placeholder(idx)}</span>
-                                            )}
-                                        </span>
+                                        {isPlayerSelectable && !match.winner_id ? (
+                                            <select
+                                                className="match-table-player-select"
+                                                disabled={selectDisabled}
+                                                onClick={e => e.stopPropagation()}
+                                                value={match.player1_id}
+                                                onChange={e => onChange(idx, 'player1_id', e.target.value)}
+                                            >
+                                                <option value="">Chọn người chơi</option>
+                                                {availablePlayers
+                                                    .filter(p => !selectedIds.includes(String(p.id)) || match.player1_id === String(p.id))
+                                                    .map(p => <option key={p.id} value={p.id}>{p.full_name}{p.rank ? ` (${p.rank})` : ''}</option>)}
+                                            </select>
+                                        ) : (
+                                            <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player1_id && match.winner_id ? { fontWeight: 700 } : undefined}>
+                                                {p1Name || (
+                                                    match.winner_id && !match.player1_id
+                                                        ? <span className="text-gray-400 italic font-semibold text-xs">bye</span>
+                                                        : <span className="text-gray-400 italic text-xs">{player1Placeholder(idx)}</span>
+                                                )}
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="p-3 text-center text-gray-300 text-xs font-medium">VS</td>
                                     <td className="p-3">
-                                        <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player2_id && match.winner_id ? { fontWeight: 700 } : undefined}>
-                                            {p2Name || (
-                                                match.winner_id && !match.player2_id
-                                                    ? <span className="text-gray-400 italic font-semibold text-xs">bye</span>
-                                                    : <span className="text-gray-400 italic text-xs">{player2Placeholder(idx)}</span>
-                                            )}
-                                        </span>
+                                        {isPlayerSelectable && !match.winner_id ? (
+                                            <select
+                                                className="match-table-player-select"
+                                                disabled={selectDisabled}
+                                                onClick={e => e.stopPropagation()}
+                                                value={match.player2_id}
+                                                onChange={e => onChange(idx, 'player2_id', e.target.value)}
+                                            >
+                                                <option value="">Chọn người chơi</option>
+                                                {availablePlayers
+                                                    .filter(p => !selectedIds.includes(String(p.id)) || match.player2_id === String(p.id))
+                                                    .map(p => <option key={p.id} value={p.id}>{p.full_name}{p.rank ? ` (${p.rank})` : ''}</option>)}
+                                            </select>
+                                        ) : (
+                                            <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player2_id && match.winner_id ? { fontWeight: 700 } : undefined}>
+                                                {p2Name || (
+                                                    match.winner_id && !match.player2_id
+                                                        ? <span className="text-gray-400 italic font-semibold text-xs">bye</span>
+                                                        : <span className="text-gray-400 italic text-xs">{player2Placeholder(idx)}</span>
+                                                )}
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="p-3 text-center font-medium text-gray-700 dark:text-gray-300">
                                         {(() => {
@@ -135,13 +175,23 @@ const KnockoutMatchTable: React.FC<KnockoutMatchTableProps> = ({
             {tournament && (
                 <MatchManagementDialog
                     isOpen={editingIdx !== null}
-                    onClose={() => setEditingIdx(null)}
+                    onClose={handleDialogClose}
                     match={currentMatch}
                     players={players}
                     tables={tablesList}
                     tournament={tournament}
-                    onChange={(field, value) => editingIdx !== null && onChange(editingIdx, field, value)}
-                    onSave={async () => { if (editingIdx !== null && onSaveMatch) await onSaveMatch(editingIdx); }}
+                    onChange={(field, value) => {
+                        if (editingIdx !== null) {
+                            dirtyRef.current = true;
+                            onChange(editingIdx, field, value);
+                        }
+                    }}
+                    onSave={async () => {
+                        if (editingIdx !== null && onSaveMatch) {
+                            await onSaveMatch(editingIdx);
+                            dirtyRef.current = false;
+                        }
+                    }}
                     isPlayerSelectable={isPlayerSelectable}
                     availablePlayers={availablePlayers}
                     selectedIds={selectedIds}

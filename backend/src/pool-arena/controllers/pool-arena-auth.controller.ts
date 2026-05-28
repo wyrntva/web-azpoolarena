@@ -37,4 +37,14 @@ export class PoolArenaAuthController {
   ) {
     return this.authService.changePassword(auth, body.current_password, body.new_password);
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() body: { email: string; token: string; password: string }) {
+    return this.authService.resetPassword(body.email, body.token, body.password);
+  }
 }

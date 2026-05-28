@@ -64,7 +64,7 @@ const PlayerRow = memo(function PlayerRow({
     return (
       <div className="group">
         <Link href={`/player/${player.id}`} className="block">
-          <div className="flex items-center py-[11px] px-2 sm:px-4 rounded-xl hover:bg-blue-50/30 hover:scale-[1.02] hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent">
+          <div className="flex items-center py-[11px] px-2 sm:px-4 rounded-xl lg:bg-[#F8F9FA] hover:bg-[#F0F2F5] hover:scale-[1.01] hover:shadow-sm transition-all duration-300 cursor-pointer border border-transparent">
             {/* Mobile Rank Column */}
             <div className="flex md:hidden w-[52px] flex-shrink-0 flex-row items-baseline gap-[4px] justify-center">
               <span 
@@ -325,18 +325,20 @@ export default function LeaderboardPage() {
           className="object-cover"
           priority
         />
-      </div>      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 -mt-12 sm:-mt-20 md:-mt-[126px] relative z-10 flex flex-col gap-[12px]">
+      </div>
+      <div className="h-[4px] w-full bg-[#172339]" />
+      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 -mt-12 sm:-mt-20 md:-mt-[126px] relative z-10 flex flex-col gap-[12px]">
 
         {/* Tabs */}
-        <div className="absolute -top-[25px] min-[360px]:-top-[30px] sm:-top-[48px] left-[32px] min-[360px]:left-[48px] min-[400px]:left-[60px] sm:left-8 flex space-x-0 z-10">
+        <div className="absolute -top-[25px] min-[360px]:-top-[30px] sm:-top-[56px] left-[32px] min-[360px]:left-[48px] min-[400px]:left-[60px] sm:left-[90px] flex space-x-0 z-10">
           {['logo', 'Woman', 'Man'].map((item, i) => (
             <div
               key={i}
               onClick={() => handleTabChange(i)}
-              className={`${i === 0 ? 'w-[72px] min-[360px]:w-[84px]' : 'w-[52px] min-[360px]:w-[62px]'} sm:w-[140px] py-1 min-[360px]:py-1.5 sm:py-3 rounded-t-xl font-bold text-xs min-[360px]:text-sm sm:text-lg cursor-pointer transition-colors backdrop-blur-sm shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center ${activeTab === i ? 'bg-white text-[#282A2F]' : 'bg-white/40 text-[#282A2F] hover:bg-white/50'}`}
+              className={`${i === 0 ? 'w-[72px] min-[360px]:w-[84px] sm:w-[130px]' : 'w-[52px] min-[360px]:w-[62px] sm:w-[80px]'} sm:h-[56px] py-1 min-[360px]:py-1.5 sm:py-3 rounded-t-xl font-bold text-xs min-[360px]:text-sm sm:text-lg cursor-pointer transition-colors backdrop-blur-sm shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center ${activeTab === i ? 'bg-white text-[#282A2F]' : 'bg-white/40 text-[#282A2F] hover:bg-white/50'}`}
             >
               {i === 0 ? (
-                <div className="relative w-[45px] min-[360px]:w-[55px] sm:w-[110px] h-[16px] min-[360px]:h-[20px] sm:h-[34px]">
+                <div className="relative w-[45px] min-[360px]:w-[55px] sm:w-[90px] h-[16px] min-[360px]:h-[20px] sm:h-[28px]">
                   <Image src="/images/logo-dark.png" alt="Pool Arena" fill sizes="110px" className="object-contain" />
                 </div>
               ) : (
@@ -348,18 +350,18 @@ export default function LeaderboardPage() {
 
         {/* Top 5 Card */}
         {currentPage === 1 && (
-          <div className="bg-white rounded-[16px] shadow-sm w-full min-h-[360px] sm:min-h-[400px] relative flex flex-col">
+          <div className="bg-white rounded-[16px] lg:rounded-3xl shadow-sm w-full lg:max-w-[1360px] lg:mx-auto min-h-[360px] sm:min-h-[400px] relative flex flex-col lg:pb-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 px-4 sm:px-8 pt-6 mb-4">
               <div className="w-[200px] hidden md:block" />
-              <div className="bg-[#111C44] text-white w-full max-w-[313px] md:w-[648px] h-[56px] flex items-center justify-center rounded-b-[24px] md:rounded-b-[32px] -mt-6 shadow-md z-20 px-6 py-3">
+              <div className="bg-[#172339] text-white w-full max-w-[313px] xl:max-w-[648px] xl:w-[648px] h-[56px] flex items-center justify-center rounded-b-[24px] xl:rounded-t-none xl:rounded-b-[32px] xl:py-3 xl:px-6 xl:gap-[10px] -mt-6 shadow-md z-20">
                 <h1 
-                  className="text-[24px] font-bold uppercase tracking-wide m-0 leading-[32px]"
+                  className="text-base sm:text-xl xl:text-[24px] xl:leading-[32px] xl:font-bold uppercase tracking-wide m-0"
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  Bảng Xếp Hạng
+                  BẢNG XẾP HẠNG
                 </h1>
               </div>
-              <div className="flex items-center w-full max-w-[313px] md:w-[200px] justify-end">
+              <div className="flex items-center w-full max-w-[313px] xl:max-w-none xl:w-[200px] justify-end">
                 <span className="hidden md:inline text-gray-500 text-sm sm:text-base font-medium mr-2">Hạng</span>
                 <Select
                   value={selectedRank}
@@ -376,11 +378,11 @@ export default function LeaderboardPage() {
                 </Select>
               </div>
             </div>
-            <div className="px-6 sm:px-8 mt-2 flex-1">
+            <div className="px-6 sm:px-8 lg:px-6 mt-2 flex-1">
               {top5Players.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-400 py-8">Chưa có dữ liệu người chơi</div>
               ) : (
-                <div className="flex flex-col gap-0">
+                <div className="flex flex-col gap-0 lg:gap-3">
                   {top5Players.map((player, index) => (
                     <React.Fragment key={player.id}>
                       <PlayerRow player={player} index={index} isTop5 />

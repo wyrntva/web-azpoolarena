@@ -7,6 +7,7 @@ const { Text } = Typography;
 
 interface CountdownTimerProps {
   targetDate: Date | null;  // Ngày đích để đếm ngược
+  status?: string;  // Trạng thái giải đấu: 'upcoming' | 'ongoing' | 'completed' | 'finished'
 }
 
 const TimeItem = ({ value, label }: { value: number; label: string }) => (
@@ -36,7 +37,7 @@ const TimeItem = ({ value, label }: { value: number; label: string }) => (
   </div>
 );
 
-export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) => {
+export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate, status }) => {
   const [countdown, setCountdown] = useState({
     days: 0,
     hours: 0,
@@ -78,13 +79,20 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate }) =>
   }, [targetDate]);
 
   if (expired) {
+    let statusText = "Giải đấu đã diễn ra";
+    if (status === "ongoing") {
+      statusText = "Giải đấu đang diễn ra";
+    } else if (status === "completed" || status === "finished") {
+      statusText = "Giải đấu đã kết thúc";
+    }
+
     return (
       <div className="text-center">
         <span
           className="text-[#757E95]"
           style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '16px', fontWeight: 500, lineHeight: '24px' }}
         >
-          Giải đấu đã diễn ra
+          {statusText}
         </span>
       </div>
     );

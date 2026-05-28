@@ -22,7 +22,7 @@ export default function ChangePasswordForm() {
         } catch (error: any) {
             api.error({
                 message: "Lỗi",
-                description: error?.response?.data?.detail || "Không thể đổi mật khẩu, vui lòng thử lại.",
+                description: error?.response?.data?.message || error?.response?.data?.detail || "Không thể đổi mật khẩu, vui lòng thử lại.",
             });
         } finally {
             setLoading(false);
@@ -30,16 +30,18 @@ export default function ChangePasswordForm() {
     };
 
     return (
-        <div className="bg-white rounded-2xl overflow-hidden pb-4 mb-0 shadow-sm">
+        <div className="bg-white rounded-2xl lg:rounded-3xl overflow-hidden pb-4 lg:pb-0 mb-0 shadow-sm lg:w-[1360px] lg:h-[380px] lg:mx-auto">
             {contextHolder}
-            <div className="bg-[#172339] w-full text-white text-base sm:text-xl font-bold py-3 text-center uppercase tracking-wider" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                ĐỔI MẬT KHẨU
+            <div className="flex justify-center w-full md:mb-4">
+                <div className="bg-[#172339] text-white text-base sm:text-xl font-bold py-3 text-center uppercase tracking-wider w-full rounded-none md:w-[648px] md:h-[56px] md:rounded-t-none md:rounded-b-[32px] md:py-3 md:px-6 md:gap-[10px] md:text-[24px] md:leading-[32px] md:font-bold md:flex md:items-center md:justify-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    ĐỔI MẬT KHẨU
+                </div>
             </div>
 
             <Form
                 form={form}
                 layout="vertical"
-                className="!px-6 !pt-4 !pb-0"
+                className="!px-6 !pt-4 !pb-0 lg:!px-6 lg:!pt-0 lg:!pb-4"
                 onFinish={handleSubmit}
                 requiredMark={false}
             >
@@ -66,11 +68,11 @@ export default function ChangePasswordForm() {
                         name="newPassword"
                         rules={[
                             { required: true, message: 'Vui lòng nhập mật khẩu mới' },
-                            { min: 8, message: 'Tối thiểu 8 ký tự' },
+                            { min: 6, message: 'Tối thiểu 6 ký tự' },
                         ]}
                         className="!mb-0"
                     >
-                        <Input.Password placeholder="Nhập mật khẩu tối thiểu 8 ký tự" className="h-11 rounded-lg" />
+                        <Input.Password placeholder="Nhập mật khẩu tối thiểu 6 ký tự" className="h-11 rounded-lg" />
                     </Form.Item>
                 </div>
 

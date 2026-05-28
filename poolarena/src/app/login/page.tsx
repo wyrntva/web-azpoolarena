@@ -32,9 +32,34 @@ function LoginFormContent() {
       router.push(redirectTo);
     } else {
       api.error({
-        message: "Đăng nhập thất bại!",
+        message: "Đăng nhập thất bại",
         placement: "top"
       });
+      const errorMsg = String(resultAction.payload || '').toLowerCase();
+      if (
+        errorMsg.includes('phone') || 
+        errorMsg.includes('user') || 
+        errorMsg.includes('tồn tại') || 
+        errorMsg.includes('tìm thấy') || 
+        errorMsg.includes('not found') || 
+        errorMsg.includes('exist') ||
+        errorMsg.includes('số điện thoại') ||
+        errorMsg.includes('sđt')
+      ) {
+        form.setFields([
+          {
+            name: "phone",
+            errors: ["Số điện thoại không đúng"],
+          },
+        ]);
+      } else {
+        form.setFields([
+          {
+            name: "password",
+            errors: ["Mật khẩu không đúng"],
+          },
+        ]);
+      }
     }
   };
 
@@ -68,6 +93,7 @@ function LoginFormContent() {
                 form={form}
                 name="login"
                 onFinish={handleLogin}
+                onFinishFailed={() => api.error({ message: "Đăng nhập thất bại", placement: "top" })}
                 layout="vertical"
                 size="large"
                 requiredMark={false}
@@ -80,11 +106,12 @@ function LoginFormContent() {
                       Số điện thoại
                     </div>
                   }
+                  hasFeedback
                   rules={[
-                    { required: true, message: "Vui lòng nhập số điện thoại!" },
+                    { required: true, message: "Số điện thoại không được để trống" },
                     {
                       pattern: /^(0|\+84)[0-9]{9,10}$/,
-                      message: "Số điện thoại không hợp lệ! (VD: 0999888777 hoặc +84999888777)",
+                      message: "Số điện thoại không hợp lệ",
                     },
                   ]}
                   style={{ marginBottom: 16 }}
@@ -103,8 +130,9 @@ function LoginFormContent() {
                       Mật khẩu
                     </div>
                   }
+                  hasFeedback
                   rules={[
-                    { required: true, message: "Vui lòng nhập mật khẩu!" },
+                    { required: true, message: "Mật khẩu không được để trống" },
                     { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
                   ]}
                   style={{ marginBottom: 4 }}
@@ -140,7 +168,7 @@ function LoginFormContent() {
               </Form>
 
               {/* Register Section */}
-              <div className="text-start" style={{ marginTop: 16 }}>
+              <div className="text-start" style={{ marginTop: 32 }}>
                 <div className="text-gray-800 text-lg font-bold italic" style={{ marginBottom: 16 }}>
                   Bạn chưa có tài khoản?
                 </div>

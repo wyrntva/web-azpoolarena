@@ -43,6 +43,7 @@ function parseBannerUrls(bannerTournament: string | null | undefined): string[] 
 export default function TournamentsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [ongoingTournaments, setOngoingTournaments] = useState<Tournament[]>([]);
   const [upcomingTournaments, setUpcomingTournaments] = useState<Tournament[]>([]);
   const [completedTournaments, setCompletedTournaments] = useState<Tournament[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -69,6 +70,7 @@ export default function TournamentsPage() {
       }
 
       const now = new Date();
+      const ongoing: Tournament[] = [];
       const upcoming: Tournament[] = [];
       const completed: Tournament[] = [];
 
@@ -76,9 +78,10 @@ export default function TournamentsPage() {
         const startDate = tournament.start_date ? new Date(tournament.start_date) : null;
         const status = tournament.status;
 
+        const isOngoing = status === 'ongoing';
         const isCompleted = status === 'completed' || status === 'finished' ||
           (!['upcoming', 'ongoing'].includes(status) && startDate && startDate <= now && status !== 'ongoing');
-        const isUpcoming = !isCompleted;
+        const isUpcoming = !isCompleted && !isOngoing;
 
         const logoUrl = resolveImageUrl(tournament.organizer_logo, resolveImageUrl(tournament.banner, '/images/tournament.png'));
         const bannerUrl = resolveImageUrl(tournament.banner, '/images/tournament.png');
@@ -107,17 +110,21 @@ export default function TournamentsPage() {
           _startDate: startDate,
         };
 
-        if (isUpcoming) upcoming.push(formatted);
+        if (isOngoing) ongoing.push(formatted);
+        else if (isUpcoming) upcoming.push(formatted);
         else completed.push(formatted);
       });
 
+      ongoing.sort((a, b) => (a._startDate?.getTime() ?? 0) - (b._startDate?.getTime() ?? 0));
       upcoming.sort((a, b) => (a._startDate?.getTime() ?? 0) - (b._startDate?.getTime() ?? 0));
       completed.sort((a, b) => (b._startDate?.getTime() ?? 0) - (a._startDate?.getTime() ?? 0));
 
+      setOngoingTournaments(ongoing);
       setUpcomingTournaments(upcoming);
       setCompletedTournaments(completed);
     } catch (error) {
       console.error("Failed to fetch tournaments:", error);
+      setOngoingTournaments([]);
       setUpcomingTournaments([]);
       setCompletedTournaments([]);
     } finally {
@@ -138,13 +145,19 @@ export default function TournamentsPage() {
     return () => clearInterval(interval);
   }, [bannerUrls.length]);
 
-  const handleRegister = useCallback((_tournamentId: number) => {
-    // TODO: implement tournament registration
-  }, []);
+  const handleRegister = useCallback((tournamentId: number) => {
+    const tournament = upcomingTournaments.find((t) => t.id === tournamentId);
+    if (tournament) {
+      router.push(`/tournaments/${tournament.slug || tournament.id}`);
+    }
+  }, [upcomingTournaments, router]);
 
-  const handleViewResults = useCallback((_tournamentId: number) => {
-    // TODO: implement view results
-  }, []);
+  const handleViewResults = useCallback((tournamentId: number) => {
+    const tournament = completedTournaments.find((t) => t.id === tournamentId);
+    if (tournament) {
+      router.push(`/tournaments/${tournament.slug || tournament.id}`);
+    }
+  }, [completedTournaments, router]);
 
   const handleCardClick = useCallback((tournament: Tournament) => {
     router.push(`/tournaments/${tournament.slug || tournament.id}`);
@@ -206,9 +219,29 @@ export default function TournamentsPage() {
 
         {/* Tournament Sections */}
         <div className="space-y-6 sm:space-y-12">
+          {ongoingTournaments.length > 0 && (
+            <div className="space-y-4 sm:space-y-6">
+              <h2
+                className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight flex items-center gap-2"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                GIẢI ĐẤU ĐANG DIỄN RA
+                <span className="flex h-3 w-3 relative sm:h-4 sm:w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 sm:h-4 sm:w-4 bg-red-500"></span>
+                </span>
+              </h2>
+              <TournamentList
+                tournaments={ongoingTournaments}
+                variant="ongoing"
+                onCardClick={handleCardClick}
+              />
+            </div>
+          )}
+
           <div className="space-y-4 sm:space-y-6">
             <h2
-              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn text-[24px] min-[360px]:text-[28px] min-[400px]:text-[32px] sm:text-[36px] leading-[32px] min-[360px]:leading-[36px] min-[400px]:leading-[42px] sm:leading-[48px]"
+              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight"
               style={{ fontFamily: 'Montserrat, sans-serif' }}
             >
               GIẢI ĐẤU SẮP DIỄN RA
@@ -227,7 +260,7 @@ export default function TournamentsPage() {
 
           <div className="space-y-4 sm:space-y-6">
             <h2
-              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn text-[24px] min-[360px]:text-[28px] min-[400px]:text-[32px] sm:text-[36px] leading-[32px] min-[360px]:leading-[36px] min-[400px]:leading-[42px] sm:leading-[48px]"
+              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight"
               style={{ fontFamily: 'Montserrat, sans-serif' }}
             >
               GIẢI ĐẤU ĐÃ KẾT THÚC

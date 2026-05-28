@@ -21,7 +21,7 @@ export interface Tournament {
 
 interface TournamentCardProps {
   tournament: Tournament;
-  variant: "upcoming" | "completed";
+  variant: "upcoming" | "completed" | "ongoing";
   onCardClick: (tournament: Tournament) => void;
   onRegister?: (tournamentId: number) => void;
   onViewResults?: (tournamentId: number) => void;
@@ -49,7 +49,7 @@ const TournamentCard = memo(function TournamentCard({
       onClick={() => onCardClick(tournament)}
     >
       {/* Header (Image + Overlay) */}
-      <div className="relative h-[240px] sm:h-[400px] w-full overflow-hidden">
+      <div className="relative aspect-[439/400] sm:aspect-auto sm:h-[400px] w-full overflow-hidden">
         <Image
           src={tournament.img || "/images/tournament.png"}
           alt={tournament.title}
@@ -73,8 +73,7 @@ const TournamentCard = memo(function TournamentCard({
                 <img
                   src={tournament.category}
                   alt="Logo giải đấu"
-                  className="w-auto object-contain max-w-[140px] sm:max-w-[200px]"
-                  style={{ height: '50px' }}
+                  className="w-auto object-contain max-w-[180px] sm:max-w-[280px] h-[60px] sm:h-[85px]"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -172,6 +171,17 @@ const TournamentCard = memo(function TournamentCard({
               }}
             >
               {isFull ? "Đã đầy" : "Đăng ký ngay"}
+            </button>
+          ) : variant === "ongoing" ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCardClick(tournament);
+              }}
+              className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold text-white bg-[#ED1C1F] hover:bg-[#ED1C1F]/90 transition-all shadow-none flex items-center gap-1.5 animate-pulse"
+            >
+              <span className="w-2 h-2 rounded-full bg-white block"></span>
+              Xem trực tiếp
             </button>
           ) : (
             <button

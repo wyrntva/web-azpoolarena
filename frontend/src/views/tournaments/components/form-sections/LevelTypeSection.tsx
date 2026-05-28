@@ -54,18 +54,6 @@ export default function LevelTypeSection({
                         <option value="double_elimination">Nhánh thắng thua</option>
                     </Select>
                 </div>
-                <div>
-                    <Label htmlFor="knockout_from_round" className="mb-2 block">
-                        Loại trực tiếp từ vòng
-                    </Label>
-                    <Select
-                        id="knockout_from_round"
-                        value={formData.knockout_from_round}
-                        onChange={(e) => setFormData({ ...formData, knockout_from_round: e.target.value })}
-                    >
-                        <option value="">Chọn vòng</option>
-                    </Select>
-                </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   TournamentRankEntity,
   TournamentRoundEntity,
@@ -82,5 +84,38 @@ export class TournamentSettingsService {
   async deleteScoringRule(id: number) {
     const rule = await this.getScoringRule(id);
     await this.ruleRepo.remove(rule);
+  }
+
+  private getMatrixFilePath() {
+    return path.join(__dirname, '..', '..', '..', 'uploads', 'rating_matrix.json');
+  }
+
+  async getRatingMatrix() {
+    const filePath = this.getMatrixFilePath();
+    if (fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(content);
+      } catch {
+        // Fallback to default matrix if file is corrupt
+      }
+    }
+
+    // Default matrix as specified by user requirements
+    return [
+      { diff: 0, winFav: 15, winUnd: 15, loseFav: -15, loseUnd: -15 },
+      { diff: 1, winFav: 10, winUnd: 25, loseFav: -25, loseUnd: -10 },
+      { diff: 2, winFav: 5, winUnd: 30, loseFav: -30, loseUnd: -5 },
+    ];
+  }
+
+  async saveRatingMatrix(matrix: any[]) {
+    const filePath = this.getMatrixFilePath();
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, JSON.stringify(matrix, null, 2), 'utf8');
+    return { success: true };
   }
 }

@@ -36,7 +36,7 @@ export const loginThunk = createAsyncThunk<LoginResponse, { emailOrPhone: string
       return response;
     } catch (error: any) {
       // Get error message from axios response or fallback
-      const errorMessage = error?.response?.data?.detail ?? error?.message ?? 'Login failed';
+      const errorMessage = error?.response?.data?.message ?? error?.response?.data?.detail ?? error?.message ?? 'Login failed';
       return rejectWithValue(errorMessage);
     }
   }
@@ -52,21 +52,35 @@ export const registerThunk = createAsyncThunk<
       const { fullName, phoneNumber, password, email, gender, address, rank, role = 'player' } = payload;
       await authService.register({ fullName, phoneNumber, password, email, gender, address, rank, role } as any);
     } catch (error: any) {
-      return rejectWithValue(error?.message ?? 'Register failed');
+      return rejectWithValue(error?.response?.data?.message ?? error?.response?.data?.detail ?? error?.message ?? 'Register failed');
     }
   }
 );
 
 export const forgotPasswordThunk = createAsyncThunk<
   void,
-  { phoneNumber: string }
+  { email: string }
 >(
   'auth/forgotPassword',
   async (payload, { rejectWithValue }) => {
     try {
-      await authService.forgotPassword(payload.phoneNumber as any);
+      await authService.forgotPassword(payload.email);
     } catch (error: any) {
-      return rejectWithValue(error?.message ?? 'Forgot password failed');
+      return rejectWithValue(error?.response?.data?.message ?? error?.response?.data?.detail ?? error?.message ?? 'Forgot password failed');
+    }
+  }
+);
+
+export const resetPasswordThunk = createAsyncThunk<
+  void,
+  { email: string; token: string; password: string }
+>(
+  'auth/resetPassword',
+  async (payload, { rejectWithValue }) => {
+    try {
+      await authService.resetPassword({ email: payload.email, token: payload.token, password: payload.password });
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message ?? error?.response?.data?.detail ?? error?.message ?? 'Reset password failed');
     }
   }
 );
@@ -145,6 +159,17 @@ export const authSlice = createSlice({
       .addCase(forgotPasswordThunk.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload ?? 'Forgot password failed';
+      })
+      .addCase(resetPasswordThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPasswordThunk.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(resetPasswordThunk.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload ?? 'Reset password failed';
       });
   },
 });

@@ -114,6 +114,11 @@ const TournamentDetail = () => {
             next[idx] = saved;
             return next;
         });
+        // Silently refetch all matches so backend-propagated changes (next-round player seeding)
+        // are visible immediately instead of waiting for the next 5-second poll
+        tournamentAPI.getBracket(tournamentId)
+            .then(r => { if (Array.isArray(r.data) && !dirtyRef.current) setBracketMatches(r.data); })
+            .catch(() => {});
         return saved;
     };
 
@@ -179,6 +184,9 @@ const TournamentDetail = () => {
         });
     }, [bracketMatches, tournament]);
 
+
+    // Auto-update match status được xử lý bởi backend cron job (TournamentSchedulerService)
+    // chạy mỗi 30 giây. Frontend chỉ cần poll bracket để hiển thị trạng thái mới nhất.
 
     if (loading) {
         return (

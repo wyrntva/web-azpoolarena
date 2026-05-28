@@ -171,7 +171,7 @@ export default function PlayersPage() {
                         wins: u.wins ?? 0,
                         losses: u.losses ?? 0,
                         winRate: u.win_rate ?? 0,
-                        points: u.total_games ?? 0,
+                        points: u.points ?? 0,
                         streak: 0,
                       }}
                       isOnline={u.is_active}

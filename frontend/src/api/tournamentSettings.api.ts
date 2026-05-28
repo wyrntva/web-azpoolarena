@@ -64,4 +64,12 @@ export const tournamentSettingsAPI = {
     deleteScoringRule: (id: number): Promise<AxiosResponse<void>> => {
         return axiosClient.delete(`/api/tournament-settings/scoring-rules/${id}`);
     },
+
+    getRatingMatrix: (): Promise<AxiosResponse<any[]>> => {
+        return axiosClient.get('/api/tournament-settings/scoring-rules/matrix');
+    },
+
+    saveRatingMatrix: (data: any[]): Promise<AxiosResponse<void>> => {
+        return axiosClient.post('/api/tournament-settings/scoring-rules/matrix', data);
+    },
 };

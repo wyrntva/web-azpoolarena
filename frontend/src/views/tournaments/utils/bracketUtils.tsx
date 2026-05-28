@@ -67,10 +67,17 @@ export const createEmptyMatch = (matchNo: number, bracket: BracketType, round: n
     updated_at: null,
 });
 
+const toDatetimeLocal = (iso: string): string => {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 export const toVM = (m: TournamentMatch): MatchVM => ({
     match_no: m.match_no,
     table_no: m.table_no || '',
-    match_time: m.match_time ? m.match_time.slice(0, 16) : '',
+    match_time: m.match_time ? toDatetimeLocal(m.match_time) : '',
     player1_id: m.player1_id ? String(m.player1_id) : '',
     player2_id: m.player2_id ? String(m.player2_id) : '',
     player1_score: String(m.player1_score ?? 0),
@@ -112,10 +119,38 @@ export const getWinnerFromMatch = (m?: TournamentMatch): string => {
 // ============================================
 
 const RANK_ORDER = ['I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A', 'S'];
+const DRAW_ROUND_ORDER = ['r16', 'r8', 'qf', 'sf', 'f'];
 
 const getRankIndex = (rank?: string | null) => {
     if (!rank) return -1;
     return RANK_ORDER.indexOf(rank.toUpperCase());
+};
+
+/**
+ * Trả về nhãn vòng đấu (qf/sf/f/r8/r16) của một match trong bảng KO,
+ * dùng để xác định vòng có áp dụng đồng cơ không.
+ */
+export const getMatchRoundLabel = (
+    matchNo: number,
+    numberOfPlayers: number,
+): 'qf' | 'sf' | 'f' | 'r8' | 'r16' | null => {
+    if (numberOfPlayers > 32) {
+        if (matchNo >= 81 && matchNo <= 96)  return 'r16';
+        if (matchNo >= 97 && matchNo <= 104) return 'r8';
+        if (matchNo >= 105 && matchNo <= 108) return 'qf';
+        if (matchNo >= 109 && matchNo <= 110) return 'sf';
+        if (matchNo === 111) return 'f';
+    } else if (numberOfPlayers > 16) {
+        if (matchNo >= 41 && matchNo <= 48) return 'r8';
+        if (matchNo >= 49 && matchNo <= 52) return 'qf';
+        if (matchNo >= 53 && matchNo <= 54) return 'sf';
+        if (matchNo === 55) return 'f';
+    } else {
+        if (matchNo >= 21 && matchNo <= 24) return 'qf';
+        if (matchNo >= 25 && matchNo <= 26) return 'sf';
+        if (matchNo === 27) return 'f';
+    }
+    return null;
 };
 
 export const getRaceToInfo = (
@@ -123,7 +158,22 @@ export const getRaceToInfo = (
     player2Id: string,
     players: TournamentRegisteredPlayer[],
     tournament: Tournament,
+    roundLabel?: string | null,
 ): RaceToInfo => {
+    // Đồng cơ override: nếu vòng này nằm trong vùng đồng cơ, dùng race-to cố định, không chấp
+    if (roundLabel && tournament.draw_from_round) {
+        const drawFromIdx = DRAW_ROUND_ORDER.indexOf(tournament.draw_from_round);
+        const roundIdx = DRAW_ROUND_ORDER.indexOf(roundLabel);
+        if (drawFromIdx >= 0 && roundIdx >= 0 && roundIdx >= drawFromIdx) {
+            let raceTo = 0;
+            if (roundLabel === 'qf') raceTo = parseInt(tournament.quarter_final || '0', 10) || 0;
+            else if (roundLabel === 'sf') raceTo = parseInt(tournament.semi_final || '0', 10) || 0;
+            else if (roundLabel === 'f')  raceTo = parseInt(tournament.final || '0', 10) || 0;
+            else raceTo = parseInt(tournament.draw_touch || '0', 10) || 0; // r8, r16
+            if (raceTo > 0) return { raceTo, handicap: 0, handicappedPlayerId: '' };
+        }
+    }
+
     if (!player1Id || !player2Id) return { raceTo: 0, handicap: 0, handicappedPlayerId: '' };
     const p1 = players.find((p) => p.id === parseInt(player1Id, 10));
     const p2 = players.find((p) => p.id === parseInt(player2Id, 10));
@@ -144,8 +194,9 @@ export const getRaceToText = (
     player2Id: string,
     players: TournamentRegisteredPlayer[],
     tournament: Tournament,
+    roundLabel?: string | null,
 ): string => {
-    const info = getRaceToInfo(player1Id, player2Id, players, tournament);
+    const info = getRaceToInfo(player1Id, player2Id, players, tournament, roundLabel);
     if (!info.raceTo) return '';
     if (info.handicap === 0) return `Chạm ${info.raceTo}`;
     return `Chạm ${info.raceTo} chấp ${info.handicap}`;
@@ -156,7 +207,8 @@ export const getRaceToNumber = (
     player2Id: string,
     players: TournamentRegisteredPlayer[],
     tournament: Tournament,
-): number => getRaceToInfo(player1Id, player2Id, players, tournament).raceTo;
+    roundLabel?: string | null,
+): number => getRaceToInfo(player1Id, player2Id, players, tournament, roundLabel).raceTo;
 
 // ============================================
 // SCORE CLAMPING
@@ -236,6 +288,11 @@ export function handleMatchChange(
         }
 
         m = { ...m, player1_score: p1Score, player2_score: p2Score, winner_id: '', status: 'pending' };
+    } else if (field === 'status') {
+        // Khi thủ công reset về non-completed, xóa winner để backend không ghi đè lại
+        if (value !== 'completed') {
+            m = { ...m, winner_id: '' };
+        }
     } else if (field === 'player1_check_in' || field === 'player2_check_in') {
         // Khi người chơi vắng mặt → tự động kết thúc trận, đối thủ thắng
         const p1ci = field === 'player1_check_in' ? value : m.player1_check_in;

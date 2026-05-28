@@ -4,7 +4,7 @@ import { Select, TextInput } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import type { Tournament, TournamentRegisteredPlayer } from '../../../api/tournament.api';
 import type { MatchVM } from './knockoutHelpers';
-import { getMinDatetimeLocal, getRaceToInfo, STATUS_OPTIONS } from '../utils/bracketUtils';
+import { getMinDatetimeLocal, getRaceToInfo, getMatchRoundLabel, STATUS_OPTIONS } from '../utils/bracketUtils';
 
 interface Props {
     isOpen: boolean;
@@ -195,8 +195,10 @@ const MatchManagementDialog: React.FC<Props> = ({
                             <div className="match-dialog-static">
                                 {(() => {
                                     if (!match.player1_id || !match.player2_id) return '—';
-                                    const info = getRaceToInfo(match.player1_id, match.player2_id, players, tournament);
+                                    const roundLabel = getMatchRoundLabel(match.match_no, tournament.number_of_players);
+                                    const info = getRaceToInfo(match.player1_id, match.player2_id, players, tournament, roundLabel);
                                     if (!info.raceTo) return '—';
+                                    if (info.handicap === 0) return `Chạm ${info.raceTo}`;
                                     return `Chạm ${info.raceTo} chấp ${info.handicap}`;
                                 })()}
                             </div>

@@ -49,18 +49,19 @@ DialogShell {
 
     // Tính thời gian còn lại: deadline = match_time + 15 phút
     function calcTimeRemaining() {
-        if (typeof TournamentService === "undefined" || !TournamentService) return 0
+        if (typeof TournamentService === "undefined" || !TournamentService) return 900
         var m = TournamentService.activeMatch
-        if (!m || !m.match_time) return 0  // match_time bắt buộc
+        if (!m || !m.match_time) return 900  // Fallback 15 phút nếu không có match_time
 
         var matchStart = new Date(m.match_time)
-        if (isNaN(matchStart.getTime())) return 0
+        if (isNaN(matchStart.getTime())) return 900  // Invalid date → fallback 15 phút
 
         var deadline = new Date(matchStart.getTime() + 15 * 60 * 1000) // +15 phút
         var now = new Date()
         var remaining = Math.floor((deadline.getTime() - now.getTime()) / 1000)
         console.log("[JoinDialog] match_time=" + m.match_time + " now=" + now.toISOString() + " remaining=" + remaining + "s")
-        return Math.max(0, remaining)
+        // Nếu deadline đã qua (trận bắt đầu muộn), vẫn cho 15 phút xác nhận
+        return remaining > 0 ? remaining : 900
     }
 
     onOpened: {

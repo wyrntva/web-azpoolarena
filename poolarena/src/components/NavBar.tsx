@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { CiUser } from "react-icons/ci";
 import { HiQuestionMarkCircle } from "react-icons/hi";
+import { FaLock } from "react-icons/fa";
 
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,85 +28,105 @@ export default function NavBar() {
   return (
     <div className="sticky top-0 z-50 shadow-md">
       <div className="h-[4px] w-full bg-[#172339]" />
-    <div className="flex justify-between items-center w-full h-[57px] px-4 sm:px-10 lg:px-20 xl:px-40 2xl:px-[280px] bg-white">
+    <div className="w-full h-[57px] bg-white">
+      <div className="flex justify-between items-center max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 w-full h-full relative">
 
-      {/* Logo (Left) - Desktop */}
-      <Link
-        href="/tournaments"
-        className="hidden md:flex relative w-[260px] h-12"
-        prefetch
-      >
-        <Image
-          src="/images/logo-dark.png"
-          alt="Pool Arena Logo"
-          fill
-          sizes="260px"
-          className="object-contain"
-          priority
-        />
-      </Link>
-
-      {/* Center Menu (Desktop) */}
-      <div className="hidden md:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
+        {/* Logo (Left) - Desktop */}
         <Link
           href="/tournaments"
-          className="text-base text-gray-700 font-medium hover:text-[#D22E39] transition-colors"
+          className="hidden xl:flex relative w-[260px] h-12"
           prefetch
         >
-          GIẢI ĐẤU
+          <Image
+            src="/images/logo-dark.png"
+            alt="Pool Arena Logo"
+            fill
+            sizes="260px"
+            className="object-contain"
+            priority
+          />
         </Link>
-        <Link
-          href="/leaderboard"
-          className="text-base text-gray-700 font-medium hover:text-[#D22E39] transition-colors"
-          prefetch
-        >
-          BẢNG XẾP HẠNG
-        </Link>
-        <Link
-          href="/achievements"
-          className="text-base text-gray-700 font-medium hover:text-[#D22E39] transition-colors"
-          prefetch
-        >
-          THÀNH TÍCH
-        </Link>
-      </div>
 
-      {/* Right Menu (Desktop) */}
-      <div className="hidden md:flex items-center space-x-6">
-        <Link
-          href="/myprofile"
-          className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
-          prefetch
-        >
-          <CiUser className="text-gray-600 group-hover:text-[#D22E39] transition-colors" size={20} />
-          <span className="text-sm text-gray-700 group-hover:text-[#D22E39] transition-colors">My profile</span>
-        </Link>
-        <div className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group">
-          <HiQuestionMarkCircle className="text-gray-700 group-hover:text-[#D22E39] transition-colors" size={20} />
-          <span className="text-sm text-gray-700 group-hover:text-[#D22E39] transition-colors">Support</span>
-        </div>
-        <button
-          className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group"
-          onClick={handleLogout}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            className="text-gray-700 group-hover:text-[#D22E39] transition-colors"
+        {/* Center Menu (Desktop) */}
+        <div className="hidden xl:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
+          <Link
+            href="/tournaments"
+            className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
+            style={{ fontFamily: 'Montserrat, sans-serif' }}
+            prefetch
           >
-            <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="text-sm text-gray-700 group-hover:text-[#D22E39] transition-colors">Đăng xuất</span>
-        </button>
-      </div>
+            GIẢI ĐẤU
+          </Link>
+          <Link
+            href="/leaderboard"
+            className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
+            style={{ fontFamily: 'Montserrat, sans-serif' }}
+            prefetch
+          >
+            BẢNG XẾP HẠNG
+          </Link>
+          <Link
+            href="/achievements"
+            className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap flex items-center gap-1"
+            style={{ fontFamily: 'Montserrat, sans-serif' }}
+            prefetch
+          >
+            <span>THÀNH TÍCH</span>
+            <FaLock size={12} className="text-[#9A9CA3]" />
+          </Link>
+        </div>
+
+        {/* Right Menu (Desktop) */}
+        <div className="hidden xl:flex items-center space-x-6">
+          <Link
+            href="/myprofile"
+            className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
+            prefetch
+          >
+            <CiUser className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+            <span 
+              className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
+              My profile
+            </span>
+          </Link>
+          <div className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group">
+            <HiQuestionMarkCircle className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+            <span 
+              className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
+              Support
+            </span>
+          </div>
+          <button
+            className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group"
+            onClick={handleLogout}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              className="text-[#37393E] group-hover:text-[#D22E39] transition-colors"
+            >
+              <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span 
+              className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
+              Đăng xuất
+            </span>
+          </button>
+        </div>
 
       {/* Mobile: Logo left + hamburger right */}
-      <div className="flex md:hidden items-center w-full justify-between">
+      <div className="flex xl:hidden items-center w-full justify-between">
         {/* Logo (Left) */}
         <Link href="/tournaments" className="relative w-[180px] h-[36px]" prefetch>
           <Image
@@ -142,7 +163,7 @@ export default function NavBar() {
             animate={{ height: "auto" }}
             exit={{ height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute top-[57px] left-0 w-full bg-white shadow-xl md:hidden z-50 overflow-hidden"
+            className="absolute top-[57px] left-0 w-full bg-white shadow-xl xl:hidden z-50 overflow-hidden"
           >
             <div className="p-6 flex flex-col space-y-4">
               {/* Navigation Links */}
@@ -271,32 +292,35 @@ export default function NavBar() {
               </Link>
               <Link
                 href="/achievements"
-                className="flex items-center space-x-3 text-[#37393E] hover:text-[#D22E39] font-medium text-[16px] leading-[24px] tracking-wide uppercase transition-colors"
+                className="flex items-center justify-between text-[#37393E] hover:text-[#D22E39] font-medium text-[16px] leading-[24px] tracking-wide uppercase transition-colors w-full"
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
                 onClick={() => setOpenMenu(false)}
               >
-                <svg 
-                  viewBox="0 0 1024 1024" 
-                  width="20" 
-                  height="20" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="flex-shrink-0"
-                >
-                  <path 
-                    d="M352 128a32 32 0 0 0 12.16-2.56 37.12 37.12 0 0 0 10.56-6.72 37.12 37.12 0 0 0 6.72-10.56A32 32 0 0 0 384 96a33.6 33.6 0 0 0-9.28-22.72 32 32 0 0 0-45.44 0A32 32 0 0 0 320 96a32 32 0 0 0 32 32zM480 128h128a32 32 0 0 0 0-64h-128a32 32 0 0 0 0 64z" 
-                    fill="currentColor"
-                  />
-                  <path 
-                    d="M960 32h-32a32 32 0 0 0-22.72 9.28L832 115.2V96a32 32 0 0 0-32-32h-64a32 32 0 0 0 0 64h32c-8 271.68-117.44 480-256 480-143.68 0-256-224-256-512a32 32 0 0 0-64 0v19.2L118.72 41.28A32 32 0 0 0 96 32H64a32 32 0 0 0-32 32v256a32 32 0 0 0 9.28 22.72l96 96A32 32 0 0 0 160 448h96c46.4 111.04 114.88 188.48 196.16 214.4l-115.2 137.6H224a32 32 0 0 0-32 32v128a32 32 0 0 0 32 32h576a32 32 0 0 0 32-32v-128a32 32 0 0 0-32-32h-112.96l-114.88-137.6c81.28-25.6 149.76-103.04 196.16-214.4h96a32 32 0 0 0 22.72-9.28l96-96A32 32 0 0 0 992 320V64a32 32 0 0 0-32-32zM173.12 384L96 306.88V109.12L198.08 211.2A909.76 909.76 0 0 0 232.32 384zM672 864h96v64H256v-64h96a32 32 0 0 0 24.64-11.52L512 689.92l135.36 162.56A32 32 0 0 0 672 864z m256-557.12L850.88 384h-59.2a909.76 909.76 0 0 0 34.56-172.8L928 109.12z" 
-                    fill="currentColor"
-                  />
-                  <path 
-                    d="M384 224a32 32 0 0 0 0 64h256a32 32 0 0 0 0-64zM448 384a32 32 0 0 0 0 64h128a32 32 0 0 0 0-64z" 
-                    fill="#C6010B"
-                  />
-                </svg>
-                <span>THÀNH TÍCH</span>
+                <div className="flex items-center space-x-3">
+                  <svg 
+                    viewBox="0 0 1024 1024" 
+                    width="20" 
+                    height="20" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="flex-shrink-0"
+                  >
+                    <path 
+                      d="M352 128a32 32 0 0 0 12.16-2.56 37.12 37.12 0 0 0 10.56-6.72 37.12 37.12 0 0 0 6.72-10.56A32 32 0 0 0 384 96a33.6 33.6 0 0 0-9.28-22.72 32 32 0 0 0-45.44 0A32 32 0 0 0 320 96a32 32 0 0 0 32 32zM480 128h128a32 32 0 0 0 0-64h-128a32 32 0 0 0 0 64z" 
+                      fill="currentColor"
+                    />
+                    <path 
+                      d="M960 32h-32a32 32 0 0 0-22.72 9.28L832 115.2V96a32 32 0 0 0-32-32h-64a32 32 0 0 0 0 64h32c-8 271.68-117.44 480-256 480-143.68 0-256-224-256-512a32 32 0 0 0-64 0v19.2L118.72 41.28A32 32 0 0 0 96 32H64a32 32 0 0 0-32 32v256a32 32 0 0 0 9.28 22.72l96 96A32 32 0 0 0 160 448h96c46.4 111.04 114.88 188.48 196.16 214.4l-115.2 137.6H224a32 32 0 0 0-32 32v128a32 32 0 0 0 32 32h576a32 32 0 0 0 32-32v-128a32 32 0 0 0-32-32h-112.96l-114.88-137.6c81.28-25.6 149.76-103.04 196.16-214.4h96a32 32 0 0 0 22.72-9.28l96-96A32 32 0 0 0 992 320V64a32 32 0 0 0-32-32zM173.12 384L96 306.88V109.12L198.08 211.2A909.76 909.76 0 0 0 232.32 384zM672 864h96v64H256v-64h96a32 32 0 0 0 24.64-11.52L512 689.92l135.36 162.56A32 32 0 0 0 672 864z m256-557.12L850.88 384h-59.2a909.76 909.76 0 0 0 34.56-172.8L928 109.12z" 
+                      fill="currentColor"
+                    />
+                    <path 
+                      d="M384 224a32 32 0 0 0 0 64h256a32 32 0 0 0 0-64zM448 384a32 32 0 0 0 0 64h128a32 32 0 0 0 0-64z" 
+                      fill="#C6010B"
+                    />
+                  </svg>
+                  <span>THÀNH TÍCH</span>
+                </div>
+                <FaLock size={12} className="text-[#9A9CA3] mr-1" />
               </Link>
 
               {/* Divider */}
@@ -344,12 +368,12 @@ export default function NavBar() {
       {/* Overlay khi mở menu */}
       {openMenu && (
         <div
-          className="fixed inset-x-0 bottom-0 top-[61px] bg-black/40 md:hidden z-40"
+          className="fixed inset-x-0 bottom-0 top-[61px] bg-black/40 xl:hidden z-40"
           onClick={() => setOpenMenu(false)}
         />
       )}
       {/* Mobile Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-t-[20px] md:hidden h-[52px] flex items-center justify-around px-2 pb-0.5">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-t-[20px] xl:hidden h-[52px] flex items-center justify-around px-2 pb-0.5">
         {/* Tournaments Tab */}
         <Link
           href="/tournaments"
@@ -487,7 +511,7 @@ export default function NavBar() {
         {/* Achievements Tab */}
         <Link
           href="/achievements"
-          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-3 min-[360px]:px-5 rounded-[12px] ${
+          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-3 min-[360px]:px-5 rounded-[12px] relative ${
             pathname === "/achievements"
               ? "bg-[#172339] text-white"
               : "text-[#172339]"
@@ -514,11 +538,13 @@ export default function NavBar() {
               fill="#C6010B"
             />
           </svg>
-          <span className="text-[10px] font-normal uppercase tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            Thành tích
+          <span className="text-[10px] font-normal uppercase tracking-wide flex items-center gap-0.5" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            <span>Thành tích</span>
+            <FaLock size={7} className={pathname === "/achievements" ? "text-white/70" : "text-gray-400"} />
           </span>
         </Link>
       </div>
+    </div>
     </div>
     </div>
   );

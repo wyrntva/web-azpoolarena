@@ -1,0 +1,5 @@
+[
+  { "diff": 0, "winFav": 15, "winUnd": 15, "loseFav": -15, "loseUnd": -15 },
+  { "diff": 1, "winFav": 10, "winUnd": 25, "loseFav": -25, "loseUnd": -10 },
+  { "diff": 2, "winFav": 5, "winUnd": 30, "loseFav": -30, "loseUnd": -5 }
+]

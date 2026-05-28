@@ -217,7 +217,15 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
                         <div>
                             <Label htmlFor="rank" value="Hạng" />
                             <Select id="rank" value={formData.rank}
-                                onChange={(e) => update('rank', e.target.value)}>
+                                onChange={(e) => {
+                                    const selectedName = e.target.value;
+                                    const selectedRank = ranks.find(r => r.name === selectedName);
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        rank: selectedName,
+                                        ...(selectedRank ? { points: selectedRank.default_score } : {}),
+                                    }));
+                                }}>
                                 <option value="">Chọn hạng</option>
                                 {ranks.map((rank) => (
                                     <option key={rank.id} value={rank.name}>{rank.name}</option>

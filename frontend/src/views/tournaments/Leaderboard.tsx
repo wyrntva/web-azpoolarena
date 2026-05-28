@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Card, Table, TextInput } from 'flowbite-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Card, Table, TextInput } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import CustomPagination from '../../components/shared/CustomPagination';
@@ -14,24 +14,24 @@ const Leaderboard = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 50;
 
-    useEffect(() => {
-        const fetchCustomers = async () => {
-            setLoading(true);
-            try {
-                const response = await poolArenaUserAPI.getUsers({ limit: 10000 });
-                const sortedData = (response.data?.data || []).sort(
-                    (a, b) => (b.points ?? 0) - (a.points ?? 0)
-                );
-                setCustomers(sortedData);
-            } catch (_error) {
-                toast.error('Không thể tải bảng xếp hạng');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCustomers();
+    const fetchCustomers = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await poolArenaUserAPI.getUsers({ limit: 10000 });
+            const sortedData = (response.data?.data || []).sort(
+                (a, b) => (b.points ?? 0) - (a.points ?? 0)
+            );
+            setCustomers(sortedData);
+        } catch (_error) {
+            toast.error('Không thể tải bảng xếp hạng');
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
+    useEffect(() => {
+        fetchCustomers();
+    }, [fetchCustomers]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -72,13 +72,19 @@ const Leaderboard = () => {
                         Xếp hạng người chơi theo điểm số từ cao đến thấp
                     </p>
                 </div>
-                <div className="w-full md:w-72">
-                    <TextInput
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Tìm theo tên, SĐT, email, hạng"
-                        icon={() => <Icon icon="solar:magnifer-outline" />}
-                    />
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="flex-1 md:w-72">
+                        <TextInput
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Tìm theo tên, SĐT, email, hạng"
+                            icon={() => <Icon icon="solar:magnifer-outline" />}
+                        />
+                    </div>
+                    <Button color="light" size="sm" onClick={fetchCustomers} disabled={loading}>
+                        <Icon icon="solar:refresh-outline" className="mr-1.5" />
+                        Làm mới
+                    </Button>
                 </div>
             </div>
 

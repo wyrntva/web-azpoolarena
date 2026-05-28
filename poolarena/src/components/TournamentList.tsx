@@ -6,7 +6,7 @@ import TournamentCard, { Tournament } from './TournamentCard';
 
 interface TournamentListProps {
   tournaments: Tournament[];
-  variant: 'upcoming' | 'completed';
+  variant: 'upcoming' | 'completed' | 'ongoing';
   onCardClick: (tournament: Tournament) => void;
   onRegister?: (tournamentId: number) => void;
   onViewResults?: (tournamentId: number) => void;

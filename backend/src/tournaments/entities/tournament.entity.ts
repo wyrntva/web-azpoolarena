@@ -260,6 +260,12 @@ export class TournamentRegistrationEntity {
   @Column()
   user_id: number;
 
+  @Column({ type: 'int', default: 0 })
+  points: number;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  rank: string;
+
   @CreateDateColumn()
   registered_at: Date;
 
