@@ -130,9 +130,10 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto py-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="flex min-h-full items-center justify-center p-4">
       <div
-        className="relative bg-white rounded-[12px] shadow-2xl border border-gray-100 animate-scaleIn font-sans flex flex-col p-[24px] gap-[24px] w-full mx-4"
+        className="relative bg-white rounded-[12px] shadow-2xl border border-gray-100 animate-scaleIn font-sans flex flex-col p-[24px] gap-[24px] w-full"
         style={{ maxWidth: "896px", background: "#FFF" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -285,6 +286,7 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );
