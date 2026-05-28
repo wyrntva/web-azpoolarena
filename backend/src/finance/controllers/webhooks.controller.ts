@@ -58,12 +58,12 @@ export class WebhooksController {
 
         isValid = sha256sig === v1 || sha512sig === v1;
 
-        this.logger.debug(`[Webhook] rawBody available: ${!!req.rawBody}`);
-        this.logger.debug(`[Webhook] rawBody: ${rawBody.substring(0, 100)}`);
-        this.logger.debug(`[Webhook] v1 from Casso (len=${v1.length}): ${v1.substring(0, 32)}...`);
-        this.logger.debug(`[Webhook] sha256 (len=${sha256sig.length}): ${sha256sig.substring(0, 32)}...`);
-        this.logger.debug(`[Webhook] sha512 (len=${sha512sig.length}): ${sha512sig.substring(0, 32)}...`);
-        this.logger.debug(`[Webhook] match: ${isValid}`);
+        this.logger.log(`[Webhook] rawBody available: ${!!req.rawBody}`);
+        this.logger.log(`[Webhook] rawBody: ${rawBody.substring(0, 100)}`);
+        this.logger.log(`[Webhook] v1 from Casso (len=${v1.length}): ${v1.substring(0, 32)}...`);
+        this.logger.log(`[Webhook] sha256 (len=${sha256sig.length}): ${sha256sig.substring(0, 32)}...`);
+        this.logger.log(`[Webhook] sha512 (len=${sha512sig.length}): ${sha512sig.substring(0, 32)}...`);
+        this.logger.log(`[Webhook] match: ${isValid}`);
       }
     }
 
@@ -102,7 +102,7 @@ export class WebhooksController {
             );
           }
         } else {
-          this.logger.debug(`Transaction ignored (non-matching description): "${tx.description}"`);
+          this.logger.log(`Transaction ignored (non-matching description): "${tx.description}"`);
         }
       }
     }
