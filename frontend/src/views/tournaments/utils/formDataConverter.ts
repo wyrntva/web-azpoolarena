@@ -24,9 +24,21 @@ function formatDateForAPI(dateString: string | null | undefined): string | null 
     return dateString;
 }
 
-/** Convert ISO/date string → datetime-local input value (YYYY-MM-DDTHH:mm) */
+/** Convert ISO/date string → datetime-local input value (YYYY-MM-DDTHH:mm) in local timezone */
 export function formatDateForInput(dateString: string | null | undefined): string {
     if (!dateString) return '';
+
+    // If string has timezone info (Z or ±HH:MM), parse and convert to local time
+    if (dateString.endsWith('Z') || dateString.match(/[+-]\d{2}:\d{2}$/)) {
+        const d = new Date(dateString);
+        if (isNaN(d.getTime())) return '';
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
 
     if (dateString.includes('T')) {
         const [datePart, timePart] = dateString.split('T');
