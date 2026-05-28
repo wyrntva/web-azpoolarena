@@ -7,6 +7,7 @@ import { resolveImageUrl } from '@/lib/tournament-utils';
 
 interface ChampionshipBannerProps {
   className?: string;
+  style?: React.CSSProperties;
   /** Fallback image if store settings not available */
   fallbackSrc?: string;
 }
@@ -18,6 +19,7 @@ interface ChampionshipBannerProps {
  */
 export default function ChampionshipBanner({
   className = '',
+  style,
   fallbackSrc = '/images/home_banner.png',
 }: ChampionshipBannerProps) {
   const [bannerUrls, setBannerUrls] = useState<string[]>([]);
@@ -54,6 +56,7 @@ export default function ChampionshipBanner({
   return (
     <div
       className={`relative w-full h-[144px] overflow-hidden rounded-xl ${className}`}
+      style={style}
     >
       {displayUrls.map((url, i) => (
         <div

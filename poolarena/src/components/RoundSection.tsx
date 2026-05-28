@@ -5,6 +5,7 @@ import MatchRow from "./MatchRow";
 interface MatchPlayer {
     name: string;
     avatar?: string;
+    rank?: string | null;
     isWinner?: boolean;
     isBye?: boolean;
 }

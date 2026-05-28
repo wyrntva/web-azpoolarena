@@ -4,6 +4,7 @@ import React from "react";
 interface MatchPlayer {
   name: string;
   avatar?: string;
+  rank?: string | null;
   isWinner?: boolean;
   isBye?: boolean;
 }
@@ -135,7 +136,7 @@ export default function MatchRow({
             className="truncate"
             style={getPlayerNameStyle(player1, player2)}
           >
-            {player1.name}
+            {player1.name}{player1.rank && !player1.isBye ? ` - ${player1.rank}` : ""}
           </span>
           {!player1.isBye && (
             <Avatar
@@ -239,7 +240,7 @@ export default function MatchRow({
             className="truncate"
             style={getPlayerNameStyle(player2, player1)}
           >
-            {player2.name}
+            {player2.name}{player2.rank && !player2.isBye ? ` - ${player2.rank}` : ""}
           </span>
         </div>
       </div>

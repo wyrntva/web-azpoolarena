@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Spin } from "antd";
 import {
@@ -53,8 +52,8 @@ interface FormattedMatch {
     id: number;
     tableNumber: string | number;
     tableNumberColor: "default" | "green" | "yellow";
-    player1: { name: string; avatar: string; isWinner?: boolean; isBye?: boolean };
-    player2: { name: string; avatar: string; isWinner?: boolean; isBye?: boolean };
+    player1: { name: string; avatar: string; rank?: string | null; isWinner?: boolean; isBye?: boolean };
+    player2: { name: string; avatar: string; rank?: string | null; isWinner?: boolean; isBye?: boolean };
     score: string;
     meta: {
         matchNo?: string | number;
@@ -283,12 +282,14 @@ function formatMatch(
         player1: {
             name: getPlayerName(p1Id, p1Name, match.player1_check_in, p1Fallback),
             avatar: formatAvatarUrl(p1Avatar),
+            rank: p1Rank,
             isWinner: p1Winner,
             isBye: !p1Id,
         },
         player2: {
             name: getPlayerName(p2Id, p2Name, match.player2_check_in, p2Fallback),
             avatar: formatAvatarUrl(p2Avatar),
+            rank: p2Rank,
             isWinner: p2Winner,
             isBye: !p2Id,
         },
@@ -307,7 +308,7 @@ function formatMatch(
  */
 function getRoundLabel(bracket: string, round: number, maxRound: number): string {
     if (bracket === "winners") {
-        return `VÒNG ${round}: NHÁNH THẮNG`;
+        return `VÒNG ${round}`;
     }
     if (bracket === "losers") {
         return `VÒNG ${round}: NHÁNH THUA`;
@@ -673,7 +674,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
 
         // Interleave: W1, L1, W2, L2 (matching admin QualificationTab display order)
         groupRounds.push({
-            title: "VÒNG 1: NHÁNH THẮNG",
+            title: "VÒNG 1",
             matches: formatWinnersRound(wr1Matches, true, undefined),
         });
         groupRounds.push({
@@ -715,7 +716,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                 const isFirstRound = roundIdx === 0;
                 const prevMatches = roundIdx > 0 ? winnersMap.get(winnersRounds[roundIdx - 1]) : undefined;
                 groupRounds.push({
-                    title: `VÒNG ${round}: NHÁNH THẮNG`,
+                    title: round === 1 ? `VÒNG ${round}` : `VÒNG ${round}: NHÁNH THẮNG`,
                     matches: formatWinnersRound(winnersMap.get(round)!, isFirstRound, prevMatches),
                 });
             }
@@ -782,13 +783,13 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
     const matchHasResult = !!match.player1.isWinner || !!match.player2.isWinner;
 
     // Table number box color
-    let tableNumBg = "bg-[#2f394e]";
+    let tableNumBg = "#464C58";
     let tableTextColor = "#7C8FB5";
     if (match.tableNumberColor === "green") {
-        tableNumBg = "bg-[#60DB80]";
+        tableNumBg = "#60DB80";
         tableTextColor = "#FFFFFF";
     } else if (match.tableNumberColor === "yellow") {
-        tableNumBg = "bg-[#E5BD4F]";
+        tableNumBg = "#E5BD4F";
         tableTextColor = "#FFFFFF";
     }
 
@@ -797,7 +798,7 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
         match.tableNumber !== "" &&
         match.tableNumber !== "-"
             ? String(match.tableNumber)
-            : "—";
+            : "-";
 
     // Score parts
     const scoreParts = match.score.includes(" vs ")
@@ -843,18 +844,22 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
         return "#FFFFFF";
     };
 
-    const getPlayerNameWeight = (isWinner?: boolean) => (isWinner ? 700 : 500);
+    const getPlayerNameWeight = (isWinner?: boolean, isBye?: boolean) => {
+        if (isBye) return 400;
+        return isWinner ? 700 : 500;
+    };
 
     return (
         <div className="flex flex-col gap-0 mb-3">
             {/* Meta row */}
-            <div className="flex items-center justify-between px-1 pb-[4px]">
+            <div className="flex items-center justify-between px-1" style={{ paddingTop: "8px", paddingBottom: "4px" }}>
                 <span
                     style={{
                         fontFamily: "Montserrat, sans-serif",
                         fontSize: "12px",
-                        fontWeight: 400,
-                        color: "#575E70",
+                        fontStyle: "normal",
+                        fontWeight: 500,
+                        color: "#37393E",
                         lineHeight: "16px",
                     }}
                 >
@@ -864,21 +869,33 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                     style={{
                         fontFamily: "Montserrat, sans-serif",
                         fontSize: "12px",
-                        fontWeight: 400,
-                        color: "#575E70",
+                        fontStyle: "normal",
+                        fontWeight: 500,
+                        color: "#37393E",
                         lineHeight: "16px",
+                        textAlign: "right",
                     }}
                 >
-                    {match.meta.race ? `Chạm ${match.meta.race.replace("chạm ", "").replace("chấp", "chấp")}` : ""}
+                    {[
+                        [match.meta.time, match.meta.date].filter(Boolean).join(", "),
+                        match.meta.race || "",
+                    ].filter(Boolean).join(" / ")}
                 </span>
             </div>
 
             {/* Card */}
-            <div className="w-full bg-[#172339] flex items-stretch rounded-[4px] overflow-hidden shadow-sm">
-                {/* Table number box */}
+            <div className="w-full bg-[#172339] flex items-stretch overflow-hidden shadow-sm" style={{ height: "80px", borderRadius: "12px" }}>
+                {/* Table number box — 72×stretch */}
                 <div
-                    className={`w-[52px] shrink-0 flex items-center justify-center ${tableNumBg}`}
                     style={{
+                        display: "flex",
+                        width: "72px",
+                        padding: "12px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: "4px",
+                        alignSelf: "stretch",
+                        background: tableNumBg,
                         color: tableTextColor,
                         fontFamily: "Montserrat, sans-serif",
                         fontSize: "16px",
@@ -886,22 +903,23 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                         fontWeight: 700,
                         lineHeight: "24px",
                         textAlign: "center",
-                        minHeight: "64px",
+                        flexShrink: 0,
                     }}
                 >
                     {displayTableNumber}
                 </div>
 
-                {/* Players column */}
-                <div className="flex-1 flex flex-col min-w-0">
+                {/* Players column — flex 1, split into 2 equal rows, no divider */}
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", flex: "1 0 0", background: "#172339" }}>
                     {/* Player 1 row */}
-                    <div className="flex items-center justify-between px-3 py-[10px] border-b border-[#2a3650]">
+                    <div className="flex items-center justify-between" style={{ height: "40px", paddingLeft: "8px", paddingRight: "12px" }}>
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                             {!match.player1.isBye && (
                                 <img
                                     src={match.player1.avatar || "/images/generic-profile_mini_dcryfs.webp"}
                                     alt={match.player1.name}
-                                    className="w-7 h-7 rounded object-cover shrink-0 bg-[#2f394e]"
+                                    className="object-cover shrink-0"
+                                    style={{ width: "26px", height: "26px" }}
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).src =
                                             "/images/generic-profile_mini_dcryfs.webp";
@@ -913,14 +931,14 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                                 style={{
                                     fontFamily: "Montserrat, sans-serif",
                                     fontSize: "14px",
-                                    fontWeight: getPlayerNameWeight(match.player1.isWinner),
+                                    fontWeight: getPlayerNameWeight(match.player1.isWinner, match.player1.isBye),
                                     color: getPlayerNameColor(match.player1.isWinner, match.player2.isWinner),
                                     lineHeight: "20px",
                                     fontStyle: match.player1.isBye ? "italic" : "normal",
                                     paddingRight: match.player1.isBye ? "4px" : "0px",
                                 }}
                             >
-                                {match.player1.name}
+                                {match.player1.name}{match.player1.rank && !match.player1.isBye ? ` - ${match.player1.rank}` : ""}
                             </span>
                         </div>
                         <div style={{
@@ -953,13 +971,14 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                     </div>
 
                     {/* Player 2 row */}
-                    <div className="flex items-center justify-between px-3 py-[10px]">
+                    <div className="flex items-center justify-between" style={{ height: "40px", paddingLeft: "8px", paddingRight: "12px" }}>
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                             {!match.player2.isBye && (
                                 <img
                                     src={match.player2.avatar || "/images/generic-profile_mini_dcryfs.webp"}
                                     alt={match.player2.name}
-                                    className="w-7 h-7 rounded object-cover shrink-0 bg-[#2f394e]"
+                                    className="object-cover shrink-0"
+                                    style={{ width: "26px", height: "26px" }}
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).src =
                                             "/images/generic-profile_mini_dcryfs.webp";
@@ -971,14 +990,14 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                                 style={{
                                     fontFamily: "Montserrat, sans-serif",
                                     fontSize: "14px",
-                                    fontWeight: getPlayerNameWeight(match.player2.isWinner),
+                                    fontWeight: getPlayerNameWeight(match.player2.isWinner, match.player2.isBye),
                                     color: getPlayerNameColor(match.player2.isWinner, match.player1.isWinner),
                                     lineHeight: "20px",
                                     fontStyle: match.player2.isBye ? "italic" : "normal",
                                     paddingRight: match.player2.isBye ? "4px" : "0px",
                                 }}
                             >
-                                {match.player2.name}
+                                {match.player2.name}{match.player2.rank && !match.player2.isBye ? ` - ${match.player2.rank}` : ""}
                             </span>
                         </div>
                         <div style={{
@@ -1109,18 +1128,20 @@ export default function TournamentMatchesPage() {
         <div key={`${keyPrefix}-${index}`} className="flex flex-col gap-0">
             {/* Round header */}
             <div
-                className="bg-[#C6010B] flex items-center px-4 mb-[6px]"
-                style={{ height: "40px", borderRadius: "4px" }}
+                className="bg-[#C6010B] flex items-center mb-[6px]"
+                style={{ height: "48px", borderRadius: "12px", padding: "12px", alignSelf: "stretch" }}
             >
                 <span
                     style={{
                         fontFamily: "Montserrat, sans-serif",
-                        fontSize: "16px",
-                        fontStyle: "italic",
+                        fontSize: "18px",
+                        fontStyle: "normal",
                         fontWeight: 700,
                         lineHeight: "24px",
-                        color: "#FFFFFF",
-                        whiteSpace: "nowrap",
+                        color: "#FFF",
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                     }}
@@ -1268,20 +1289,19 @@ export default function TournamentMatchesPage() {
             <div className="block sm:hidden pb-[80px]">
                 {/* Sticky Tab Switcher */}
                 <div className="sticky top-[60px] z-[60] w-full shadow-md">
-                    <div className="flex w-full" style={{ height: "44px" }}>
+                    <div className="flex w-full" style={{ height: "40px" }}>
                         <button
                             id="mobile-tab-group"
                             onClick={() => setActiveStage("group")}
                             className="flex-1 h-full flex items-center justify-center transition-colors"
                             style={{
                                 background: activeStage === "group" ? "#172339" : "#F5F5F5",
-                                color: activeStage === "group" ? "#FFFFFF" : "#172339",
+                                color: activeStage === "group" ? "#FFF" : "#172339",
                                 fontFamily: "Montserrat, sans-serif",
-                                fontSize: "14px",
+                                fontSize: "16px",
                                 fontStyle: "italic",
                                 fontWeight: 700,
-                                lineHeight: "20px",
-                                letterSpacing: "0.3px",
+                                lineHeight: "24px",
                                 textTransform: "uppercase",
                                 border: "none",
                                 outline: "none",
@@ -1295,13 +1315,12 @@ export default function TournamentMatchesPage() {
                             className="flex-1 h-full flex items-center justify-center transition-colors"
                             style={{
                                 background: activeStage === "knockout" ? "#172339" : "#F5F5F5",
-                                color: activeStage === "knockout" ? "#FFFFFF" : "#172339",
+                                color: activeStage === "knockout" ? "#FFF" : "#172339",
                                 fontFamily: "Montserrat, sans-serif",
-                                fontSize: "14px",
+                                fontSize: "16px",
                                 fontStyle: "italic",
                                 fontWeight: 700,
-                                lineHeight: "20px",
-                                letterSpacing: "0.3px",
+                                lineHeight: "24px",
                                 textTransform: "uppercase",
                                 border: "none",
                                 outline: "none",
@@ -1312,8 +1331,10 @@ export default function TournamentMatchesPage() {
                     </div>
                 </div>
 
-                {/* Banner */}
-                <ChampionshipBanner />
+                {/* Championship Banner — same 361/74 ratio + px-4 as tournaments listing page */}
+                <div className="px-4 mt-4">
+                    <ChampionshipBanner className="!h-auto" style={{ aspectRatio: '361 / 74' }} />
+                </div>
 
                 {/* Match content */}
                 <div className="px-4 pt-4">
