@@ -41,22 +41,29 @@ export class WebhooksController {
       // Parse t=<timestamp>,v1=<signature>
       const parts: Record<string, string> = {};
       cassoSignature.split(',').forEach((part) => {
-        const [k, v] = part.split('=');
-        if (k && v) parts[k.trim()] = v.trim();
+        const idx = part.indexOf('=');
+        if (idx > 0) parts[part.slice(0, idx).trim()] = part.slice(idx + 1).trim();
       });
       const timestamp = parts['t'];
       const v1 = parts['v1'];
 
       if (timestamp && v1) {
-        const rawBody = req.rawBody
-          ? req.rawBody.toString()
+        const rawBody: string = req.rawBody
+          ? req.rawBody.toString('utf8')
           : JSON.stringify(payload);
         const signedPayload = `${timestamp}.${rawBody}`;
-        const expected = crypto
-          .createHmac('sha256', secureToken)
-          .update(signedPayload)
-          .digest('hex');
-        isValid = expected === v1;
+
+        const sha256sig = crypto.createHmac('sha256', secureToken).update(signedPayload).digest('hex');
+        const sha512sig = crypto.createHmac('sha512', secureToken).update(signedPayload).digest('hex');
+
+        isValid = sha256sig === v1 || sha512sig === v1;
+
+        this.logger.debug(`[Webhook] rawBody available: ${!!req.rawBody}`);
+        this.logger.debug(`[Webhook] rawBody: ${rawBody.substring(0, 100)}`);
+        this.logger.debug(`[Webhook] v1 from Casso (len=${v1.length}): ${v1.substring(0, 32)}...`);
+        this.logger.debug(`[Webhook] sha256 (len=${sha256sig.length}): ${sha256sig.substring(0, 32)}...`);
+        this.logger.debug(`[Webhook] sha512 (len=${sha512sig.length}): ${sha512sig.substring(0, 32)}...`);
+        this.logger.debug(`[Webhook] match: ${isValid}`);
       }
     }
 
