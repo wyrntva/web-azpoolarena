@@ -10,8 +10,8 @@ ips = [
     "192.168.1.12", "192.168.1.73", "192.168.1.61", "192.168.1.233"
 ]
 
-deb_file_local = "/home/wavy/web-azpoolarena/scoreboard/build/azpool-scoreboard_1.3.10_amd64.deb"
-deb_file_remote = "/tmp/azpool-scoreboard_1.3.10_amd64.deb"
+deb_file_local = "/home/wavy/web-azpoolarena/scoreboard/build/azpool-scoreboard_1.3.11_amd64.deb"
+deb_file_remote = "/tmp/azpool-scoreboard_1.3.11_amd64.deb"
 
 username = "azpoolarena"
 password = "admin"

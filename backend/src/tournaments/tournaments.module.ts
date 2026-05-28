@@ -7,11 +7,14 @@ import {
   TournamentRankEntity,
   TournamentRoundEntity,
   ScoringRuleEntity,
+  PaymentCodeEntity,
 } from './entities';
 import { TournamentsService } from './services/tournaments.service';
 import { TournamentsController } from './controllers/tournaments.controller';
 import { TournamentSettingsService } from './services/tournament-settings.service';
 import { TournamentSettingsController } from './controllers/tournament-settings.controller';
+import { TournamentSchedulerService } from './services/tournament-scheduler.service';
+import { UserEntity } from '../users/entities/user.entity';
 
 @Module({
   imports: [
@@ -22,10 +25,12 @@ import { TournamentSettingsController } from './controllers/tournament-settings.
       TournamentRankEntity,
       TournamentRoundEntity,
       ScoringRuleEntity,
+      PaymentCodeEntity,
+      UserEntity,
     ]),
   ],
   controllers: [TournamentsController, TournamentSettingsController],
-  providers: [TournamentsService, TournamentSettingsService],
+  providers: [TournamentsService, TournamentSettingsService, TournamentSchedulerService],
   exports: [TournamentsService, TournamentSettingsService],
 })
 export class TournamentsModule {}

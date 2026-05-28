@@ -266,6 +266,12 @@ export class TournamentRegistrationEntity {
   @Column({ type: 'int' })
   user_id: number;
 
+  @Column({ type: 'int', default: 0 })
+  points: number;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  rank: string;
+
   @CreateDateColumn()
   registered_at: Date;
 
@@ -279,6 +285,7 @@ export class TournamentRegistrationEntity {
 }
 
 export enum TournamentMatchStatus {
+  PENDING = 'pending',
   UPCOMING = 'upcoming',
   ONGOING = 'ongoing',
   COMPLETED = 'completed',
@@ -362,4 +369,25 @@ export class TournamentMatchEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'winner_id' })
   winner: UserEntity;
+}
+
+@Entity('tournament_payment_codes')
+export class PaymentCodeEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'varchar', length: 19, unique: true })
+  code: string;
+
+  @Column({ type: 'int' })
+  tournament_id: number;
+
+  @Column({ type: 'int' })
+  user_id: number;
+
+  @Column({ type: 'boolean', default: false })
+  used: boolean;
+
+  @CreateDateColumn()
+  created_at: Date;
 }

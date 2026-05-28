@@ -8,4 +8,5 @@ export const tournamentAPI = {
   getTournamentRegistrationsBySlug: (slug: string) => api.get(`/api/tournaments/slug/${slug}/registrations`),
   getTournamentMatchesBySlug: (slug: string) => api.get(`/api/tournaments/slug/${slug}/matches`),
   joinTournament: (id: string) => api.post(`/api/tournaments/${id}/join`),
+  createPaymentCode: (id: string) => api.post(`/api/tournaments/${id}/payment-code`),
 };

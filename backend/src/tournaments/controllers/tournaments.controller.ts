@@ -12,7 +12,12 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Sse,
+  MessageEvent,
+  Header,
+  Request,
 } from '@nestjs/common';
+import { filter, map } from 'rxjs/operators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -130,6 +135,18 @@ export class TournamentsController {
     return this.service.getMatches(id);
   }
 
+  @Sse(':id/matches/live')
+  @Header('X-Accel-Buffering', 'no')
+  @Header('Cache-Control', 'no-cache')
+  liveMatches(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getMatchUpdatesStream().pipe(
+      filter((event) => event.tournamentId === id),
+      map((event) => ({
+        data: event.match,
+      } as MessageEvent)),
+    );
+  }
+
   @Put('matches/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
@@ -212,6 +229,16 @@ export class TournamentsController {
     @Query('search') search?: string,
   ) {
     return this.service.getEligibleUsers(id, search);
+  }
+
+  @Post(':id/payment-code')
+  @UseGuards(JwtAuthGuard)
+  async createPaymentCode(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: any,
+  ) {
+    const code = await this.service.createPaymentCode(id, req.user.id);
+    return { code };
   }
 
   @Post(':id/registrations')

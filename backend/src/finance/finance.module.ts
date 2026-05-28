@@ -18,6 +18,8 @@ import { ReportsService } from './services/reports.service';
 import { ReceiptsController } from './controllers/receipts.controller';
 import { CashflowController } from './controllers/cashflow.controller';
 import { ReportsController } from './controllers/reports.controller';
+import { WebhooksController } from './controllers/webhooks.controller';
+import { TournamentsModule } from '../tournaments/tournaments.module';
 
 @Module({
   imports: [
@@ -32,8 +34,14 @@ import { ReportsController } from './controllers/reports.controller';
       AttendanceEntity,
       BonusEntity,
     ]),
+    TournamentsModule,
   ],
-  controllers: [ReceiptsController, CashflowController, ReportsController],
+  controllers: [
+    ReceiptsController,
+    CashflowController,
+    ReportsController,
+    WebhooksController,
+  ],
   providers: [ReceiptsService, CashflowService, ReportsService],
   exports: [TypeOrmModule],
 })

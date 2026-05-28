@@ -19,15 +19,26 @@ interface PrizeSectionProps {
   };
   targetDate: Date | null;  // Ngày đích để đếm ngược
   onRegister: () => void;
+  isRegistered?: boolean;
   className?: string;
+  participants?: {
+    current: number;
+    max: number;
+  };
+  status?: string;
 }
 
 export const PrizeSection: React.FC<PrizeSectionProps> = ({
   prizes,
   targetDate,
   onRegister,
+  isRegistered = false,
   className = "",
+  participants,
+  status,
 }) => {
+  const isFull = participants ? participants.current >= participants.max : false;
+
   // Tạo mảng các giải thưởng để hiển thị, chỉ lấy những giải thưởng có giá trị
   const prizeItems = [
     { label: 'Tổng giải thưởng', value: prizes.total },
@@ -76,12 +87,18 @@ export const PrizeSection: React.FC<PrizeSectionProps> = ({
 
       <div className="flex flex-col mt-[28px] gap-2">
         {/* Countdown Timer */}
-        <CountdownTimer targetDate={targetDate} />
+        <CountdownTimer targetDate={targetDate} status={status} />
 
         {/* Registration Button */}
         <div className="text-center">
           <Button
-            className="!w-[398px] !h-[40px] !text-white !bg-[#C6010B] hover:!bg-[#8B0007] !border-none !rounded-full transition-all duration-300"
+            className={`!w-[398px] !h-[40px] !text-white !border-none !rounded-full transition-all duration-300 ${
+              isRegistered
+                ? "!bg-[#00B814] !cursor-not-allowed"
+                : isFull
+                ? "!bg-[#808996] !cursor-not-allowed"
+                : "!bg-[#C6010B] hover:!bg-[#8B0007] !cursor-pointer"
+            }`}
             style={{
               fontFamily: 'Montserrat, sans-serif',
               fontSize: '16px',
@@ -89,9 +106,10 @@ export const PrizeSection: React.FC<PrizeSectionProps> = ({
               fontWeight: 500,
               lineHeight: '24px',
             }}
+            disabled={isRegistered || isFull}
             onClick={onRegister}
           >
-            Đăng ký ngay
+            {isRegistered ? "Đã đăng ký" : isFull ? "Đã đầy" : "Đăng ký ngay"}
           </Button>
         </div>
       </div>
