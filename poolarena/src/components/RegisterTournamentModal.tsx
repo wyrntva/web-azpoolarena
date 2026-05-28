@@ -53,8 +53,8 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
     if (!isOpen || !user || showSuccess) return;
 
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const sseUrl = `${API_BASE}/api/tournaments/${tournament.id}/payment/live`;
-    const es = new EventSource(sseUrl, { withCredentials: true });
+    const sseUrl = `${API_BASE}/api/tournaments/${tournament.id}/payment/live?userId=${user.id}`;
+    const es = new EventSource(sseUrl);
 
     es.onmessage = () => setShowSuccess(true);
     es.onerror = () => es.close();
