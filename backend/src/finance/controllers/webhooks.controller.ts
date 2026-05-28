@@ -3,7 +3,6 @@ import {
   Post,
   Body,
   Headers,
-  RawBodyRequest,
   Req,
   UnauthorizedException,
   Logger,
@@ -11,7 +10,6 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
 import * as crypto from 'crypto';
 import { TournamentsService } from '../../tournaments/services/tournaments.service';
 import { CassoWebhookPayloadDto } from '../dto/casso-webhook.dto';
@@ -30,7 +28,7 @@ export class WebhooksController {
   async handleCassoWebhook(
     @Headers() headers: Record<string, string>,
     @Body() payload: CassoWebhookPayloadDto,
-    @Req() req: RawBodyRequest<Request>,
+    @Req() req: Record<string, any>,
   ) {
     const secureToken = this.configService.get<string>('CASSO_SECURE_TOKEN');
     const isDev = this.configService.get<string>('ENV') !== 'production';
