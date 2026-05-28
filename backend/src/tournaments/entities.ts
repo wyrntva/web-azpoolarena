@@ -335,7 +335,7 @@ export class TournamentMatchEntity {
   @Column({
     type: 'varchar',
     length: 20,
-    default: TournamentMatchStatus.UPCOMING,
+    default: TournamentMatchStatus.PENDING,
   })
   status: string;
 

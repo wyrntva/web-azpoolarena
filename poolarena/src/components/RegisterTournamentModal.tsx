@@ -51,7 +51,7 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
   if (!isOpen || !user) return null;
 
   const feeAmount = tournament.registrationFeeAmount || 150000;
-  const bankAccountNo = "0364756638";
+  const bankAccountNo = "CASSPOOLARENA";
   const bankAccountName = "TRAN VIET ANH";
   const bankId = "ocb";
 

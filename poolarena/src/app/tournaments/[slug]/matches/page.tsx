@@ -168,12 +168,6 @@ function buildScoreString(match: ApiMatch): string {
 
     // Not started yet – no score (leave blank)
     if (match.status === "pending" || match.status === "upcoming") {
-        if (!p1Id || !p2Id) {
-            // One side is empty (BYE) – WO on the present player's side
-            if (p1Id && !p2Id) return "WO vs -";
-            if (!p1Id && p2Id) return "- vs WO";
-            return " vs ";
-        }
         return " vs ";
     }
 
@@ -268,15 +262,6 @@ function formatMatch(
     const isCompleted = match.status === "completed";
     let p1Winner = isCompleted && winnerId === p1Id;
     let p2Winner = isCompleted && winnerId === p2Id;
-
-    // WO (walkover): one player present, the other missing
-    if (
-        (match.status === "pending" || match.status === "upcoming") &&
-        (!p1Id || !p2Id)
-    ) {
-        if (p1Id && !p2Id) p1Winner = true;
-        if (!p1Id && p2Id) p2Winner = true;
-    }
 
     // NS (Not Show / absent): the other player wins by default
     if (match.player1_check_in === "absent") p2Winner = true;

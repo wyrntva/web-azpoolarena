@@ -246,7 +246,14 @@ const TournamentDetail = () => {
                         title="Danh sách đăng kí"
                         onClick={() => setActiveTab('registrations')}
                     >
-                        <TournamentRegistrationsTab tournamentId={tournament.id} numberOfPlayers={tournament.number_of_players} />
+                        <TournamentRegistrationsTab
+                            tournamentId={tournament.id}
+                            numberOfPlayers={tournament.number_of_players}
+                            onBracketRefresh={() => {
+                                fetchBracket(tournament.id);
+                                fetchRegisteredPlayers(tournament.id);
+                            }}
+                        />
                     </Tabs.Item>
 
                     {/* Vòng loại - Only for double_elimination */}

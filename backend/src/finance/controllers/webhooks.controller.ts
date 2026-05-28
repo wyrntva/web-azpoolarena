@@ -23,6 +23,14 @@ export class WebhooksController {
     private readonly tournamentsService: TournamentsService,
   ) {}
 
+  private sortKeysDeep(obj: any): any {
+    if (Array.isArray(obj)) return obj.map((i) => this.sortKeysDeep(i));
+    if (obj !== null && typeof obj === 'object') {
+      return Object.keys(obj).sort().reduce((acc, k) => ({ ...acc, [k]: this.sortKeysDeep(obj[k]) }), {});
+    }
+    return obj;
+  }
+
   @Post('casso')
   @HttpCode(HttpStatus.OK)
   async handleCassoWebhook(
@@ -48,22 +56,13 @@ export class WebhooksController {
       const v1 = parts['v1'];
 
       if (timestamp && v1) {
-        const rawBody: string = req.rawBody
-          ? req.rawBody.toString('utf8')
-          : JSON.stringify(payload);
-        const signedPayload = `${timestamp}.${rawBody}`;
+        // Casso Webhook V2: sort all keys alphabetically before computing HMAC-SHA512
+        const sortedPayload = this.sortKeysDeep(payload);
+        const sortedJson = JSON.stringify(sortedPayload);
+        const signedPayload = `${timestamp}.${sortedJson}`;
 
-        const sha256sig = crypto.createHmac('sha256', secureToken).update(signedPayload).digest('hex');
         const sha512sig = crypto.createHmac('sha512', secureToken).update(signedPayload).digest('hex');
-
-        isValid = sha256sig === v1 || sha512sig === v1;
-
-        this.logger.log(`[Webhook] rawBody available: ${!!req.rawBody}`);
-        this.logger.log(`[Webhook] rawBody: ${rawBody.substring(0, 100)}`);
-        this.logger.log(`[Webhook] v1 from Casso (len=${v1.length}): ${v1.substring(0, 32)}...`);
-        this.logger.log(`[Webhook] sha256 (len=${sha256sig.length}): ${sha256sig.substring(0, 32)}...`);
-        this.logger.log(`[Webhook] sha512 (len=${sha512sig.length}): ${sha512sig.substring(0, 32)}...`);
-        this.logger.log(`[Webhook] match: ${isValid}`);
+        isValid = sha512sig === v1;
       }
     }
 
@@ -78,11 +77,17 @@ export class WebhooksController {
       }
     }
 
-    this.logger.log(`Received Casso webhook with ${payload.data?.length || 0} transactions.`);
+    this.logger.log(`Received Casso webhook payload: ${JSON.stringify(payload)}`);
 
-    // 2. Process transactions list
-    if (payload.data && Array.isArray(payload.data)) {
-      for (const tx of payload.data) {
+    // Casso có thể gửi data dạng array hoặc single object
+    const transactions = Array.isArray(payload.data)
+      ? payload.data
+      : payload.data ? [payload.data] : [];
+
+    this.logger.log(`Processing ${transactions.length} transactions.`);
+
+    if (transactions.length > 0) {
+      for (const tx of transactions) {
         const description = (tx.description || '').toUpperCase();
         const match = description.match(/POOLARENA[A-Z0-9]{10}/);
 

@@ -337,7 +337,23 @@ export class TournamentsService {
         tournament_id: tournamentId,
       }),
     );
-    return this.matchRepo.save(matchesToSave);
+    const savedMatches = await this.matchRepo.save(matchesToSave);
+
+    // Auto-assign all already-registered players to Round 1 slots
+    await this.assignAllRegisteredPlayersToRound1(tournamentId);
+
+    return savedMatches;
+  }
+
+  private async assignAllRegisteredPlayersToRound1(tournamentId: number): Promise<void> {
+    const registrations = await this.regRepo.find({
+      where: { tournament_id: tournamentId },
+      order: { registered_at: 'ASC' },
+    });
+
+    for (const reg of registrations) {
+      await this.assignPlayerToRound1(tournamentId, reg.user_id);
+    }
   }
 
   async getRegistrations(tournamentId: number) {
@@ -548,12 +564,20 @@ export class TournamentsService {
   }
 
   private async assignPlayerToRound1(tournamentId: number, userId: number): Promise<void> {
-    const round1Matches = await this.matchRepo.find({
-      where: [
-        { tournament_id: tournamentId, round: 1, bracket: TournamentMatchBracket.WINNERS },
-        { tournament_id: tournamentId, round: 1, bracket: TournamentMatchBracket.KNOCKOUT },
-      ],
-    });
+    const [tournament, round1Matches_] = await Promise.all([
+      this.tourRepo.findOne({ where: { id: tournamentId } }),
+      this.matchRepo.find({
+        where: [
+          { tournament_id: tournamentId, round: 1, bracket: TournamentMatchBracket.WINNERS },
+          { tournament_id: tournamentId, round: 1, bracket: TournamentMatchBracket.KNOCKOUT },
+        ],
+      }),
+    ]);
+
+    let round1Matches = round1Matches_;
+    if (round1Matches.length === 0) {
+      round1Matches = await this.autoGenerateRound1Matches(tournamentId);
+    }
 
     if (round1Matches.length === 0) return;
 
@@ -575,7 +599,41 @@ export class TournamentsService {
       match.player2_id = userId;
     }
 
+    // Always reset to pending when a player is newly placed — overrides any stale BYE state
+    match.status = TournamentMatchStatus.PENDING;
+    match.winner_id = null;
+    match.player1_score = 0;
+    match.player2_score = 0;
+
+    // Set match time to tournament start date
+    if (tournament?.start_date) {
+      match.match_time = tournament.start_date;
+    }
+
     await this.matchRepo.save(match);
+  }
+
+  private async autoGenerateRound1Matches(tournamentId: number): Promise<TournamentMatchEntity[]> {
+    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    if (!tournament) return [];
+
+    const n = tournament.number_of_players || 16;
+    const matchCount = Math.max(1, Math.floor(n / 2));
+
+    const matches: TournamentMatchEntity[] = [];
+    for (let i = 1; i <= matchCount; i++) {
+      matches.push(
+        this.matchRepo.create({
+          tournament_id: tournamentId,
+          match_no: i,
+          bracket: TournamentMatchBracket.KNOCKOUT,
+          round: 1,
+          status: TournamentMatchStatus.PENDING,
+        }),
+      );
+    }
+
+    return this.matchRepo.save(matches);
   }
 
   async unregisterPlayer(tournamentId: number, userId: number) {
@@ -586,6 +644,29 @@ export class TournamentsService {
       throw new NotFoundException('Registration not found');
     }
     await this.regRepo.remove(reg);
+
+    // Remove player from any match they were assigned to and reset those matches
+    const assignedMatches = await this.matchRepo.find({
+      where: [
+        { tournament_id: tournamentId, player1_id: userId },
+        { tournament_id: tournamentId, player2_id: userId },
+      ],
+    });
+
+    for (const match of assignedMatches) {
+      if (match.player1_id === userId) match.player1_id = null;
+      if (match.player2_id === userId) match.player2_id = null;
+      if (match.winner_id === userId) match.winner_id = null;
+      match.status = TournamentMatchStatus.PENDING;
+      match.player1_score = 0;
+      match.player2_score = 0;
+      match.player1_check_in = 'unconfirmed';
+      match.player2_check_in = 'unconfirmed';
+    }
+
+    if (assignedMatches.length > 0) {
+      await this.matchRepo.save(assignedMatches);
+    }
   }
 
   async upsertMatch(tournamentId: number, matchNo: number, dto: UpdateMatchDto) {

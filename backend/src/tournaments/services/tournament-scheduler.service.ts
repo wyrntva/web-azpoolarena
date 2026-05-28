@@ -30,6 +30,16 @@ export class TournamentSchedulerService {
     const now = new Date();
     const fiveMinFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
+    // Reset về pending các match trống (không có player) đang bị sai trạng thái upcoming
+    await this.matchRepo
+      .createQueryBuilder()
+      .update(TournamentMatchEntity)
+      .set({ status: TournamentMatchStatus.PENDING })
+      .where('player1_id IS NULL')
+      .andWhere('player2_id IS NULL')
+      .andWhere('status = :status', { status: TournamentMatchStatus.UPCOMING })
+      .execute();
+
     const matches = await this.matchRepo
       .createQueryBuilder('m')
       .where('m.status NOT IN (:...statuses)', {

@@ -40,7 +40,6 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
     // size tier: 16, 32, or 64
     const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
     const dirtyRef = useRef(false);
-    const byeAutoSavedRef = useRef<Set<number>>(new Set());
 
     const round1Nos = useMemo(() => {
         const count = size === 64 ? 32 : size === 32 ? 16 : 8;
@@ -93,48 +92,6 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round1]);
 
-    // Auto-complete BYE matches when all available players have been assigned
-    // Also auto-saves to backend so Losers bracket can detect them.
-    useEffect(() => {
-        const totalR1Slots = round1.length * 2;
-        if (players.length >= totalR1Slots) return;
-        const assignedCount = round1.flatMap(m => [m.player1_id, m.player2_id]).filter(Boolean).length;
-        if (assignedCount < players.length) return;
-        let changed = false;
-        const next = [...round1];
-        for (let i = 0; i < next.length; i++) {
-            const m = next[i];
-            if (m.winner_id) continue;
-            if (m.player1_id && !m.player2_id) {
-                next[i] = { ...m, status: 'completed', winner_id: m.player1_id };
-                changed = true;
-            } else if (m.player2_id && !m.player1_id) {
-                next[i] = { ...m, status: 'completed', winner_id: m.player2_id };
-                changed = true;
-            }
-            // Auto-save BYE match to backend
-            if (changed && next[i].winner_id && (!next[i].player1_id || !next[i].player2_id) && !byeAutoSavedRef.current.has(next[i].match_no)) {
-                const byeMatch = next[i];
-                byeAutoSavedRef.current.add(byeMatch.match_no);
-                onUpsertMatch(byeMatch.match_no, {
-                    bracket: 'winners',
-                    round: 1,
-                    player1_id: byeMatch.player1_id ? parseInt(byeMatch.player1_id, 10) : null,
-                    player2_id: byeMatch.player2_id ? parseInt(byeMatch.player2_id, 10) : null,
-                    player1_score: 0,
-                    player2_score: 0,
-                    table_no: null,
-                    match_time: null,
-                    status: 'completed',
-                    winner_id: parseInt(byeMatch.winner_id, 10),
-                }).catch(() => {
-                    byeAutoSavedRef.current.delete(byeMatch.match_no);
-                });
-            }
-        }
-        if (changed) setRound1(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [round1, players.length]);
 
     const onChange = (round: 1 | 2, idx: number, field: keyof MatchVM, value: string) => {
         dirtyRef.current = true;

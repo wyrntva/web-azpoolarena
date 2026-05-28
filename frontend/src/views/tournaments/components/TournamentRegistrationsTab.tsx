@@ -8,9 +8,10 @@ import { defaultAvatar, getAvatarUrl } from '../../../constants/shared';
 interface TournamentRegistrationsTabProps {
     tournamentId: number;
     numberOfPlayers?: number;
+    onBracketRefresh?: () => void;
 }
 
-const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32 }: TournamentRegistrationsTabProps) => {
+const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, onBracketRefresh }: TournamentRegistrationsTabProps) => {
     const [players, setPlayers] = useState<TournamentRegisteredPlayer[]>([]);
     const [eligibleUsers, setEligibleUsers] = useState<TournamentEligibleUser[]>([]);
     const [loading, setLoading] = useState(true);
@@ -90,6 +91,7 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32 }: Tour
             setShowUserList(false);
             await fetchRegistrations();
             await fetchEligibleUsers();
+            onBracketRefresh?.();
         } catch (e) {
             toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể đăng kí');
         } finally {
@@ -124,6 +126,7 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32 }: Tour
             setPlayerToRemove(null);
             await fetchRegistrations();
             await fetchEligibleUsers();
+            onBracketRefresh?.();
         } catch (e) {
             toast.error((e as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể hủy đăng kí');
         } finally {
