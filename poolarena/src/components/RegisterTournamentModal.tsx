@@ -48,6 +48,24 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
       .finally(() => setCodeLoading(false));
   }, [isOpen, tournament.id, user?.id]);
 
+  // Poll every 3s while dialog is open — switch to success as soon as backend confirms payment
+  useEffect(() => {
+    if (!isOpen || !user || showSuccess) return;
+
+    const interval = setInterval(() => {
+      tournamentAPI.createPaymentCode(tournament.id)
+        .catch((err) => {
+          const status = err?.response?.status;
+          const message: string = err?.response?.data?.message || '';
+          if (status === 400 && message.toLowerCase().includes('already registered')) {
+            setShowSuccess(true);
+          }
+        });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, showSuccess, tournament.id, user?.id]);
+
   if (!isOpen || !user) return null;
 
   const feeAmount = tournament.registrationFeeAmount || 150000;
