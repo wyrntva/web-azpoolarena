@@ -64,7 +64,7 @@ const PlayerRow = memo(function PlayerRow({
     return (
       <div className="group">
         <Link href={`/player/${player.id}`} className="block">
-          <div className="flex items-center py-[11px] px-2 sm:px-4 rounded-xl lg:bg-[#F8F9FA] hover:bg-[#F0F2F5] hover:scale-[1.01] hover:shadow-sm transition-all duration-300 cursor-pointer border border-transparent">
+          <div className="flex items-center py-[11px] px-2 sm:px-4 rounded-xl hover:bg-[#F0F2F5] hover:scale-[1.01] hover:shadow-sm transition-all duration-300 cursor-pointer border border-transparent">
             {/* Mobile Rank Column */}
             <div className="flex md:hidden w-[52px] flex-shrink-0 flex-row items-baseline gap-[4px] justify-center">
               <span 
@@ -163,18 +163,7 @@ const PlayerRow = memo(function PlayerRow({
           <span className="font-bold italic text-[#575E70] text-base" style={{ fontFamily: 'Montserrat, sans-serif' }}>#</span>
           <span className="font-bold italic text-[#575E70] text-[18px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>{index + 1}</span>
         </div>
-        <div className="w-10 h-10 flex-shrink-0 relative rounded-full overflow-hidden ml-4 border border-gray-100">
-          <Image
-            src={imgSrc}
-            alt={player.full_name}
-            fill
-            unoptimized
-            sizes="40px"
-            className="object-cover"
-            onError={() => setImgSrc('/images/imageprofile.png')}
-          />
-        </div>
-        <div className="flex-1 flex flex-col justify-center ml-3 min-w-0">
+        <div className="flex-1 flex flex-col justify-center ml-4 min-w-0">
           <h3 className="text-base font-bold text-gray-800 m-0 truncate">{player.full_name}</h3>
           <span className="text-xs text-gray-400">
             {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}

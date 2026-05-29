@@ -174,9 +174,21 @@ function buildScoreString(match: ApiMatch): string {
     if (match.player1_check_in === "absent") return "NS vs -";
     if (match.player2_check_in === "absent") return "- vs NS";
 
+    // BYE / Walkover handling:
+    // If it's completed and one of the players is a BYE (missing ID)
+    if (match.status === "completed") {
+        const winnerId = match.winner_id ?? match.winner?.id ?? null;
+        if (!p1Id || !p2Id) {
+            if (p1Id && winnerId === p1Id) return "WO vs -";
+            if (p2Id && winnerId === p2Id) return "- vs WO";
+            return " - vs - ";
+        }
+    }
+
     // Normal score
     return `${match.player1_score} vs ${match.player2_score}`;
 }
+
 
 /**
  * Format match time for display.
@@ -638,6 +650,14 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         });
     }
 
+    function isSourceMatchBye(mNo: number): boolean {
+        const m = matchByNo.get(mNo);
+        if (!m) return false;
+        const hasP1 = !!((m.player1 && m.player1.id) || m.player1_id);
+        const hasP2 = !!((m.player2 && m.player2.id) || m.player2_id);
+        return hasP1 !== hasP2;
+    }
+
     /**
      * Format matches for a losers bracket round with correct source labels.
      */
@@ -648,10 +668,18 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         const sorted = [...roundMatches].sort((a, b) => a.match_no - b.match_no);
         const sourceLabels = getLosersSourceLabels(roundMatches, round);
 
-        return sorted.map((match) => {
+        return sorted.map((match, index) => {
             const labels = sourceLabels.get(match.match_no);
-            const p1Fallback = labels?.[0] ?? "Chờ...";
-            const p2Fallback = labels?.[1] ?? "Chờ...";
+            let p1Fallback = labels?.[0] ?? "Chờ...";
+            let p2Fallback = labels?.[1] ?? "Chờ...";
+
+            if (round === 1) {
+                const src1 = 1 + index * 2;
+                const src2 = 1 + index * 2 + 1;
+                if (isSourceMatchBye(src1)) p1Fallback = "Bye";
+                if (isSourceMatchBye(src2)) p2Fallback = "Bye";
+            }
+
             return formatMatch(match, tournament, p1Fallback, p2Fallback);
         });
     }
@@ -777,9 +805,10 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
 
 interface MobileMatchCardProps {
     match: FormattedMatch;
+    isFinal?: boolean;
 }
 
-const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
+const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = false }) => {
     const matchHasResult = !!match.player1.isWinner || !!match.player2.isWinner;
 
     // Table number box color
@@ -808,28 +837,28 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
     const p1ScoreVal = scoreParts ? scoreParts[0] : match.score;
     const p2ScoreVal = scoreParts ? scoreParts[1] : "";
 
-    const [prevP1Score, setPrevP1Score] = useState(p1ScoreVal);
-    const [prevP2Score, setPrevP2Score] = useState(p2ScoreVal);
+    const prevP1ScoreRef = React.useRef(p1ScoreVal);
+    const prevP2ScoreRef = React.useRef(p2ScoreVal);
     const [p1Flash, setP1Flash] = useState(false);
     const [p2Flash, setP2Flash] = useState(false);
 
     useEffect(() => {
-        if (p1ScoreVal !== prevP1Score) {
+        if (p1ScoreVal !== prevP1ScoreRef.current) {
+            prevP1ScoreRef.current = p1ScoreVal;
             setP1Flash(true);
-            setPrevP1Score(p1ScoreVal);
             const timer = setTimeout(() => setP1Flash(false), 800);
             return () => clearTimeout(timer);
         }
-    }, [p1ScoreVal, prevP1Score]);
+    }, [p1ScoreVal]);
 
     useEffect(() => {
-        if (p2ScoreVal !== prevP2Score) {
+        if (p2ScoreVal !== prevP2ScoreRef.current) {
+            prevP2ScoreRef.current = p2ScoreVal;
             setP2Flash(true);
-            setPrevP2Score(p2ScoreVal);
             const timer = setTimeout(() => setP2Flash(false), 800);
             return () => clearTimeout(timer);
         }
-    }, [p2ScoreVal, prevP2Score]);
+    }, [p2ScoreVal]);
 
     const getScoreColor = (isWinner?: boolean, opponentWinner?: boolean) => {
         if (!matchHasResult) return "#FFFFFF";
@@ -840,6 +869,7 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
 
     const getPlayerNameColor = (isWinner?: boolean, opponentWinner?: boolean) => {
         if (!matchHasResult) return "#FFFFFF";
+        if (isFinal && isWinner) return "#FFD700";
         if (matchHasResult && !isWinner && opponentWinner) return "#ACB3C3";
         return "#FFFFFF";
     };
@@ -884,7 +914,7 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
             </div>
 
             {/* Card */}
-            <div className="w-full bg-[#172339] flex items-stretch overflow-hidden shadow-sm" style={{ height: "80px", borderRadius: "12px" }}>
+            <div className="w-full flex items-stretch overflow-hidden shadow-sm" style={{ height: "80px", borderRadius: "12px", background: "linear-gradient(to right, transparent 72px, #172339 72px)" }}>
                 {/* Table number box — 72×stretch */}
                 <div
                     style={{
@@ -904,6 +934,9 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                         lineHeight: "24px",
                         textAlign: "center",
                         flexShrink: 0,
+                        borderTopLeftRadius: "12px",
+                        borderBottomLeftRadius: "12px",
+                        transition: "background 0.5s ease-in-out, color 0.5s ease-in-out",
                     }}
                 >
                     {displayTableNumber}
@@ -942,27 +975,24 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                             </span>
                         </div>
                         <div style={{
-                            backgroundColor: p1Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
                             borderRadius: '6px',
                             padding: '2px 6px',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'background-color 0.2s ease-out',
-                            boxShadow: p1Flash ? '0 0 6px rgba(237, 28, 31, 0.4)' : 'none',
                         }}>
                             <span
+                                className={p1Flash ? "animate-score-flash" : ""}
                                 style={{
                                     fontFamily: "Montserrat, sans-serif",
-                                    fontSize: p1Flash ? "18px" : "16px",
+                                    fontSize: "18px",
                                     fontStyle: "italic",
                                     fontWeight: 700,
                                     lineHeight: "24px",
-                                    color: p1Flash ? "#FF3B3F" : getScoreColor(match.player1.isWinner, match.player2.isWinner),
+                                    color: getScoreColor(match.player1.isWinner, match.player2.isWinner),
                                     minWidth: "20px",
                                     textAlign: "right",
                                     flexShrink: 0,
-                                    transition: "color 0.2s ease-out, font-size 0.2s ease-out",
                                 }}
                             >
                                 {p1ScoreVal}
@@ -1001,27 +1031,24 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match }) => {
                             </span>
                         </div>
                         <div style={{
-                            backgroundColor: p2Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
                             borderRadius: '6px',
                             padding: '2px 6px',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            transition: 'background-color 0.2s ease-out',
-                            boxShadow: p2Flash ? '0 0 6px rgba(237, 28, 31, 0.4)' : 'none',
                         }}>
                             <span
+                                className={p2Flash ? "animate-score-flash" : ""}
                                 style={{
                                     fontFamily: "Montserrat, sans-serif",
-                                    fontSize: p2Flash ? "18px" : "16px",
+                                    fontSize: "18px",
                                     fontStyle: "italic",
                                     fontWeight: 700,
                                     lineHeight: "24px",
-                                    color: p2Flash ? "#FF3B3F" : getScoreColor(match.player2.isWinner, match.player1.isWinner),
+                                    color: getScoreColor(match.player2.isWinner, match.player1.isWinner),
                                     minWidth: "20px",
                                     textAlign: "right",
                                     flexShrink: 0,
-                                    transition: "color 0.2s ease-out, font-size 0.2s ease-out",
                                 }}
                             >
                                 {p2ScoreVal}
@@ -1078,6 +1105,23 @@ export default function TournamentMatchesPage() {
                 setTournamentData(null);
             })
             .finally(() => setLoading(false));
+    }, [slug]);
+
+    // Fallback polling: refetch matches every 10 seconds to ensure updates are synchronized even if SSE fails/drops
+    useEffect(() => {
+        if (!slug) return;
+        const interval = setInterval(() => {
+            tournamentAPI.getTournamentMatchesBySlug(slug)
+                .then((res) => {
+                    const matches: ApiMatch[] = res.data || [];
+                    setRawMatches(matches);
+                })
+                .catch((err) => {
+                    console.error("Failed to poll matches:", err);
+                });
+        }, 10000); // 10 seconds polling interval
+
+        return () => clearInterval(interval);
     }, [slug]);
 
     useEffect(() => {
@@ -1153,7 +1197,7 @@ export default function TournamentMatchesPage() {
             {/* Match list */}
             <div className="flex flex-col gap-0">
                 {(round.matches as unknown as FormattedMatch[]).map((match) => (
-                    <MobileMatchCard key={match.id} match={match} />
+                    <MobileMatchCard key={match.id} match={match} isFinal={round.title === "CHUNG KẾT"} />
                 ))}
             </div>
         </div>

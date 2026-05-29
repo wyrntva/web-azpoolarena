@@ -141,6 +141,15 @@ export default function TournamentDetailPage() {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [rawTournament, setRawTournament] = useState<TournamentDetail | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [bannerSrc, setBannerSrc] = useState<string>("/images/tour_banner.png");
+
+  useEffect(() => {
+    if (rawTournament?.banner) {
+      setBannerSrc(rawTournament.banner);
+    } else {
+      setBannerSrc("/images/tour_banner.png");
+    }
+  }, [rawTournament?.banner]);
 
   const isAlreadyRegistered = !!user && players.some((p) => p.id === user.id);
 
@@ -313,13 +322,14 @@ export default function TournamentDetailPage() {
         {/* Banner Image */}
         <div className="relative w-full h-[180px] bg-gray-200 overflow-hidden">
           <Image
-            src={tournament.banner || '/images/tour_banner.png'}
+            src={bannerSrc}
             alt={tournament.title}
             fill
             unoptimized
             sizes="100vw"
             className="object-cover"
             priority
+            onError={() => setBannerSrc('/images/tour_banner.png')}
           />
         </div>
 
@@ -656,12 +666,22 @@ export default function TournamentDetailPage() {
       </div>
 
       {/* DESKTOP LAYOUT ONLY (hidden sm:block) */}
-      <div className="hidden sm:block">
-        <div
-          className="flex flex-col bg-[length:1920px_450px] bg-no-repeat"
-          style={{ backgroundImage: `url(${tournament.banner || '/images/tour_banner.png'})` }}
-        >
-          <main className="w-full max-w-[1360px] mx-auto mt-[288px] flex flex-col gap-4">
+      <div className="hidden sm:block relative w-full">
+        {/* Banner Background */}
+        <div className="absolute top-0 left-0 w-full h-[450px] bg-[#172339] overflow-hidden">
+          <Image
+            src={bannerSrc}
+            alt={tournament.title}
+            fill
+            unoptimized
+            className="object-cover object-top"
+            priority
+            onError={() => setBannerSrc('/images/tour_banner.png')}
+          />
+        </div>
+        
+        <div className="relative z-10 flex flex-col w-full">
+          <main className="w-full max-w-[1360px] mx-auto pt-[288px] flex flex-col gap-4">
             <TournamentInfoCard tournament={tournament} onRegister={handleRegisterClick} />
 
             <PrizeSection

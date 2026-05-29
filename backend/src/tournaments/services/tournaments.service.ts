@@ -378,6 +378,7 @@ export class TournamentsService {
       rank: r.rank || r.user?.rank || null,
       avatar_url: r.user?.avatar_url || null,
       points: r.points !== undefined && r.points !== null ? r.points : (r.user?.points || 0),
+      current_points: r.user?.points !== undefined && r.user?.points !== null ? r.user.points : 0,
       registered_at: r.registered_at ? (r.registered_at as Date).toISOString() : null,
     }));
   }
@@ -478,6 +479,10 @@ export class TournamentsService {
     }
 
     await this.matchRepo.save(match);
+    
+    // Broadcast the update immediately over SSE so viewers see score changes instantly!
+    await this.emitMatchUpdate(match.id);
+
     await this.propagateWinnerToNextRound(match);
     if (match.status === TournamentMatchStatus.COMPLETED && match.winner_id) {
       await this.propagateLoserToLR1(match);
@@ -485,7 +490,7 @@ export class TournamentsService {
       await this.propagateWR2LoserToLR2(match);
     }
     await this.autoScheduleQualificationMatches(match.tournament_id);
-    await this.emitMatchUpdate(match.id);
+    
     return { success: true };
   }
 

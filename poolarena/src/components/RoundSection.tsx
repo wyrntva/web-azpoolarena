@@ -60,6 +60,7 @@ export const RoundSection: React.FC<RoundSectionProps> = ({ title, matches }) =>
                         player2={match.player2}
                         score={match.score}
                         meta={match.meta}
+                        isFinal={title === "CHUNG KẾT"}
                     />
                 ))}
             </div>

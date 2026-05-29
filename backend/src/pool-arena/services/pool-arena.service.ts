@@ -74,6 +74,17 @@ export class PoolArenaService {
       .where('u.id = :id AND u.user_type IN (:...types)', { id, types: ['player', 'both'] })
       .getOne();
     if (!user) throw new NotFoundException('PoolArena user not found');
+
+    try {
+      const { TournamentRegistrationEntity } = require('../../tournaments/entities');
+      const count = await this.repo.manager.count(TournamentRegistrationEntity, {
+        where: { user_id: id }
+      });
+      (user as any).tournaments_count = count;
+    } catch {
+      (user as any).tournaments_count = 0;
+    }
+
     return user;
   }
 

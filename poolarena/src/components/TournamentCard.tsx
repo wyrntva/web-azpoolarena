@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo } from "react";
+import React, { memo, useState, useEffect } from "react";
 import Image from "next/image";
 import { LuCalendarRange } from "react-icons/lu";
 
@@ -36,6 +36,11 @@ const TournamentCard = memo(function TournamentCard({
   onViewResults,
 }: TournamentCardProps) {
   const isFull = tournament.participants.current >= tournament.participants.max;
+  const [imgSrc, setImgSrc] = useState(tournament.img || "/images/tournament.png");
+
+  useEffect(() => {
+    setImgSrc(tournament.img || "/images/tournament.png");
+  }, [tournament.img]);
 
   return (
     <div
@@ -51,13 +56,14 @@ const TournamentCard = memo(function TournamentCard({
       {/* Header (Image + Overlay) */}
       <div className="relative aspect-[439/400] sm:aspect-auto sm:h-[400px] w-full overflow-hidden">
         <Image
-          src={tournament.img || "/images/tournament.png"}
+          src={imgSrc}
           alt={tournament.title}
           fill
           unoptimized
           sizes="(max-width: 640px) 100vw, 439px"
           className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
           priority
+          onError={() => setImgSrc("/images/tournament.png")}
         />
 
         {/* Dark Overlay */}

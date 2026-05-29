@@ -21,6 +21,7 @@ interface MatchRowProps {
     time?: string;             // e.g. "11:45"
     date?: string;             // e.g. "13/05"
   };
+  isFinal?: boolean;
 }
 
 export default function MatchRow({
@@ -30,6 +31,7 @@ export default function MatchRow({
   player2,
   score,
   meta,
+  isFinal = false,
 }: MatchRowProps) {
   // Determine table number box colors
   let tableNumBg = "bg-[#2f394e]";
@@ -54,28 +56,28 @@ export default function MatchRow({
   const p1ScoreVal = scoreParts[0];
   const p2ScoreVal = scoreParts[1];
 
-  const [prevP1Score, setPrevP1Score] = React.useState(p1ScoreVal);
-  const [prevP2Score, setPrevP2Score] = React.useState(p2ScoreVal);
+  const prevP1ScoreRef = React.useRef(p1ScoreVal);
+  const prevP2ScoreRef = React.useRef(p2ScoreVal);
   const [p1Flash, setP1Flash] = React.useState(false);
   const [p2Flash, setP2Flash] = React.useState(false);
 
   React.useEffect(() => {
-    if (p1ScoreVal !== prevP1Score) {
+    if (p1ScoreVal !== prevP1ScoreRef.current) {
+      prevP1ScoreRef.current = p1ScoreVal;
       setP1Flash(true);
-      setPrevP1Score(p1ScoreVal);
       const timer = setTimeout(() => setP1Flash(false), 800);
       return () => clearTimeout(timer);
     }
-  }, [p1ScoreVal, prevP1Score]);
+  }, [p1ScoreVal]);
 
   React.useEffect(() => {
-    if (p2ScoreVal !== prevP2Score) {
+    if (p2ScoreVal !== prevP2ScoreRef.current) {
+      prevP2ScoreRef.current = p2ScoreVal;
       setP2Flash(true);
-      setPrevP2Score(p2ScoreVal);
       const timer = setTimeout(() => setP2Flash(false), 800);
       return () => clearTimeout(timer);
     }
-  }, [p2ScoreVal, prevP2Score]);
+  }, [p2ScoreVal]);
 
   // Player name style helper
   // Winner: #FFF, bold 700, line-height 24px
@@ -105,17 +107,22 @@ export default function MatchRow({
       fontStyle: 'normal',
       fontWeight: player.isWinner ? 700 : 500,
       lineHeight: player.isWinner ? '24px' : 'normal',
-      color: isLoser ? '#ACB3C3' : '#FFF',
+      color: isFinal && player.isWinner ? '#FFD700' : (isLoser ? '#ACB3C3' : '#FFF'),
       overflow: 'hidden',
       textOverflow: 'ellipsis',
     };
   };
 
   return (
-    <div className="w-full h-[64px] bg-[#172339] flex items-center rounded-[12px] shadow-sm overflow-hidden">
+    <div
+      className="w-full h-[64px] flex items-center rounded-[12px] shadow-sm overflow-hidden"
+      style={{
+        background: 'linear-gradient(to right, transparent 72px, #172339 72px)'
+      }}
+    >
       {/* Table Number Box */}
       <div
-        className={`w-[72px] h-full ${tableNumBg} flex items-center justify-center p-[12px] gap-[4px] font-bold italic shrink-0`}
+        className={`w-[72px] h-full ${tableNumBg} rounded-l-[12px] flex items-center justify-center p-[12px] gap-[4px] font-bold italic shrink-0`}
         style={{
           color: textColor,
           fontFamily: 'Montserrat, sans-serif',
@@ -123,6 +130,7 @@ export default function MatchRow({
           lineHeight: '24px',
           textAlign: 'center',
           whiteSpace: 'nowrap',
+          transition: 'background-color 0.5s ease-in-out, color 0.5s ease-in-out',
         }}
       >
         {displayTableNumber}
@@ -156,27 +164,24 @@ export default function MatchRow({
           {score.includes(" vs ") ? (
             <>
               <div style={{
-                backgroundColor: p1Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
                 borderRadius: '6px',
                 padding: '2px 8px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'background-color 0.2s ease-out',
-                boxShadow: p1Flash ? '0 0 8px rgba(237, 28, 31, 0.4)' : 'none',
               }}>
                 <span
+                  className={p1Flash ? "animate-score-flash" : ""}
                   style={{
                     width: '30px',
                     textAlign: 'center',
                     display: 'inline-block',
-                    color: p1Flash ? '#FF3B3F' : (player1.isWinner ? '#ED1C1F' : (matchHasResult && player2.isWinner ? '#ACB3C3' : '#FFFFFF')),
+                    color: player1.isWinner ? '#ED1C1F' : (matchHasResult && player2.isWinner ? '#ACB3C3' : '#FFFFFF'),
                     fontFamily: 'Montserrat, sans-serif',
-                    fontSize: p1Flash ? '24px' : '20px',
+                    fontSize: '18px',
                     fontStyle: 'italic',
                     fontWeight: 700,
                     lineHeight: '24px',
-                    transition: 'color 0.2s ease-out, font-size 0.2s ease-out',
                   }}
                 >
                   {p1ScoreVal}
@@ -194,27 +199,24 @@ export default function MatchRow({
                 }}
               >vs</span>
               <div style={{
-                backgroundColor: p2Flash ? 'rgba(237, 28, 31, 0.25)' : 'transparent',
                 borderRadius: '6px',
                 padding: '2px 8px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'background-color 0.2s ease-out',
-                boxShadow: p2Flash ? '0 0 8px rgba(237, 28, 31, 0.4)' : 'none',
               }}>
                 <span
+                  className={p2Flash ? "animate-score-flash" : ""}
                   style={{
                     width: '30px',
                     textAlign: 'center',
                     display: 'inline-block',
-                    color: p2Flash ? '#FF3B3F' : (player2.isWinner ? '#ED1C1F' : (matchHasResult && player1.isWinner ? '#ACB3C3' : '#FFFFFF')),
+                    color: player2.isWinner ? '#ED1C1F' : (matchHasResult && player1.isWinner ? '#ACB3C3' : '#FFFFFF'),
                     fontFamily: 'Montserrat, sans-serif',
-                    fontSize: p2Flash ? '24px' : '20px',
+                    fontSize: '18px',
                     fontStyle: 'italic',
                     fontWeight: 700,
                     lineHeight: '24px',
-                    transition: 'color 0.2s ease-out, font-size 0.2s ease-out',
                   }}
                 >
                   {p2ScoreVal}

@@ -2,13 +2,24 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Các route công khai không cần đăng nhập
-const publicRoutes = ['/login', '/register', '/forgot-password', '/tournaments', '/leaderboard', '/players', '/player'];
+const publicRoutes = ['/login', '/register', '/forgot-password'];
 
 // Các trang auth — khi đã đăng nhập thì redirect ra ngoài
 const authRoutes = ['/login', '/register', '/forgot-password'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Bỏ qua kiểm tra các file tĩnh, ảnh, favicon và api
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/images') ||
+    pathname.includes('.') ||
+    pathname === '/favicon.ico'
+  ) {
+    return NextResponse.next();
+  }
 
   // Kiểm tra token từ cookies (middleware không thể đọc localStorage)
   const token = request.cookies.get('token')?.value;
@@ -37,13 +48,9 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - api routes
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico
-     * - images và các static assets
+     * Match all request paths except API routes, _next/static, _next/image, and favicon.ico
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|images|.*\\.png$|.*\\.jpg$|.*\\.svg$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
+

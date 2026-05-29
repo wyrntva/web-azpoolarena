@@ -11,6 +11,7 @@ import * as bcrypt from 'bcryptjs';
 import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
 import { UserEntity } from '../../users/entities/user.entity';
+import { TournamentRankEntity } from '../../tournaments/entities';
 
 const TOKEN_EXPIRY = '30d';
 
@@ -21,6 +22,8 @@ export class PoolArenaAuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(TournamentRankEntity)
+    private readonly rankRepo: Repository<TournamentRankEntity>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
@@ -112,6 +115,13 @@ export class PoolArenaAuthService {
       throw new BadRequestException('Số điện thoại hoặc email đã được đăng ký');
     }
 
+    const userRank = data.rank || 'K';
+    let defaultPoints = 0;
+    const rankEntity = await this.rankRepo.findOne({ where: { name: userRank } });
+    if (rankEntity) {
+      defaultPoints = rankEntity.default_score;
+    }
+
     const user = this.userRepo.create({
       user_type: 'player',
       full_name: data.full_name,
@@ -120,7 +130,8 @@ export class PoolArenaAuthService {
       hashed_password: await bcrypt.hash(data.password, 10),
       gender: data.gender || undefined,
       address: data.address || undefined,
-      rank: data.rank || 'K',
+      rank: userRank,
+      points: defaultPoints,
     });
 
     const saved = await this.userRepo.save(user);
@@ -131,6 +142,17 @@ export class PoolArenaAuthService {
     const userId = this.verifyToken(auth);
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user || !user.is_active) throw new UnauthorizedException('Không tìm thấy người dùng');
+
+    try {
+      const { TournamentRegistrationEntity } = require('../../tournaments/entities');
+      const count = await this.userRepo.manager.count(TournamentRegistrationEntity, {
+        where: { user_id: userId }
+      });
+      (user as any).tournaments_count = count;
+    } catch {
+      (user as any).tournaments_count = 0;
+    }
+
     return this.strip(user);
   }
 

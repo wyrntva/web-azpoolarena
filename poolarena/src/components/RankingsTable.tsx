@@ -14,7 +14,7 @@ export interface RankingData {
         avatar?: string;
         tier?: string;
     };
-    points: number;
+    points: number | string;
 }
 
 const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, isTop1 }) => {
@@ -29,52 +29,71 @@ const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, i
     return (
         <div
             onClick={handlePlayerClick}
-            className={`w-full flex items-center bg-white rounded-[12px] shadow-sm overflow-hidden px-6 py-2 ${isTop1 ? "h-[100px] border-[2px] border-[#E5BD4F]" : "h-[64px]"
-                } ${data.player.id ? "cursor-pointer hover:bg-gray-50 transition-colors" : ""}`}
+            className={`w-full flex items-center bg-white rounded-xl overflow-hidden transition-all duration-300 group border ${
+                isTop1
+                    ? "h-[200px] pt-3 pb-0 pl-6 pr-[90px] gap-6 self-stretch border-4 border-[#FAC600] shadow-[0_4px_6px_0_rgba(138,138,138,0.10)] hover:-translate-y-1 hover:shadow-xl hover:bg-[#F4F8FF]"
+                    : "h-auto py-3 px-4 gap-2 sm:h-[90px] sm:pt-1 sm:pb-0 sm:px-6 sm:gap-6 border-transparent shadow-[0_4px_6px_0_rgba(138,138,138,0.10)] hover:-translate-y-1 hover:shadow-lg hover:bg-[#F4F8FF]"
+            } ${data.player.id ? "cursor-pointer" : ""}`}
         >
             {/* Rank Label */}
             {!isTop1 && (
-                <div className="w-[100px] text-[#757E95] font-bold italic text-[14px]">
+                <div className="w-[60px] sm:w-[70px] text-[#172339] font-bold italic text-[18px] select-none transition-transform duration-300 group-hover:scale-105">
                     {data.rankLabel || `# ${data.rank}`}
                 </div>
             )}
 
             {/* Player Info */}
-            <div className="flex flex-1 items-center gap-4">
-                <div className={`${isTop1 ? "scale-125 mx-2" : ""}`}>
-                    <div className="w-[60px] h-[75px] flex-shrink-0 relative transition-transform duration-300">
+            <div className="flex flex-1 items-center gap-2 sm:gap-6 h-full min-w-0">
+                <div className="self-center sm:self-end">
+                    <div className={`${isTop1 ? "w-[144px] h-[180px]" : "w-[48px] h-[60px] sm:w-[68px] sm:h-[85px]"} flex-shrink-0 relative transition-transform duration-300 group-hover:scale-105`}>
                         <Image
                             src={data.player.avatar || '/images/imageprofile.png'}
                             alt={data.player.name}
                             fill
                             unoptimized
-                            sizes="60px"
-                            className="object-contain"
+                            sizes={isTop1 ? "144px" : "68px"}
+                            className="object-contain object-bottom"
                             onError={(e) => {
                                 e.currentTarget.src = '/images/imageprofile.png';
                             }}
                         />
                     </div>
                 </div>
-                <div className="flex flex-col">
+                <div className={`flex flex-col py-2 min-w-0 ${isTop1 ? "gap-2" : "gap-1"}`}>
                     <span
-                        className="text-[#172339] font-bold text-[16px]"
+                        className={`font-bold ${
+                            isTop1
+                                ? "text-[#37393E] text-[20px] sm:text-[32px] sm:leading-[32px] truncate"
+                                : "text-[#37393E] text-[16px] sm:text-[24px] leading-tight truncate"
+                        }`}
                         style={{ fontFamily: 'Montserrat, sans-serif' }}
                     >
                         {data.player.name}
                     </span>
                     <span
-                        className="text-[#757E95] text-[12px] font-medium"
+                        className={`font-medium ${
+                            isTop1
+                                ? "text-[#575E70] text-[16px] sm:text-[24px] sm:leading-[24px]"
+                                : "text-[#575E70] text-[14px] sm:text-[16px] leading-tight"
+                        }`}
                         style={{ fontFamily: 'Montserrat, sans-serif' }}
                     >
                         {data.player.tier || "Hạng G+"}
                     </span>
+                    <span
+                        className={`block sm:hidden font-bold italic mt-0.5 ${
+                            isTop1 ? "text-[16px] text-[#CAB765]" : "text-[14px] text-[#7C8FB5]"
+                        }`}
+                        style={{ fontFamily: 'Montserrat, sans-serif' }}
+                    >
+                        {data.points}
+                    </span>
                 </div>
             </div>
 
-            {/* Points */}
+            {/* Points (Desktop Only) */}
             <div
-                className={`text-[#172339] font-bold italic ${isTop1 ? "text-[24px]" : "text-[18px]"}`}
+                className={`hidden sm:block font-bold italic ${isTop1 ? "text-[32px] text-[#CAB765]" : "text-[20px] text-[#7C8FB5]"}`}
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
             >
                 {data.points}
@@ -93,9 +112,6 @@ export const RankingsTable: React.FC<{ data: RankingData[] }> = ({ data }) => {
         <div className="flex flex-col gap-2">
             {/* Top 1 Player Card */}
             <RankingRow data={top1} isTop1={true} />
-
-            {/* Spacer */}
-            <div className="h-4" />
 
             {/* Other Players */}
             {rest.map((item) => (
