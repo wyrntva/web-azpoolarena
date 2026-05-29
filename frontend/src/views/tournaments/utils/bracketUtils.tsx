@@ -95,6 +95,7 @@ export const toVM = (m: TournamentMatch): MatchVM => ({
 
 export const resolveWinner = (vm: MatchVM, raceTo: number): string => {
     if (!vm.player1_id || !vm.player2_id) return '';
+    if (!raceTo) return ''; // raceTo=0 means not configured — can't determine winner from scores
     const s1 = parseInt(vm.player1_score, 10) || 0;
     const s2 = parseInt(vm.player2_score, 10) || 0;
     if (s1 === raceTo && s2 !== raceTo) return vm.player1_id;

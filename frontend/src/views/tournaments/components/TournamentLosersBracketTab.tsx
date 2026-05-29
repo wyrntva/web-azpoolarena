@@ -11,7 +11,7 @@ import {
     type MatchVM,
     createEmptyMatch, toVM, resolveWinner,
     getLoserFromMatch, getWinnerFromMatch,
-    getRaceToNumber, handleMatchChange, validateMatchTimes
+    getRaceToNumber, getRaceToInfo, handleMatchChange, validateMatchTimes
 } from '../utils/bracketUtils';
 import { useAllTables } from '../hooks/useAllTables';
 import MatchManagementDialog from './MatchManagementDialog';
@@ -42,6 +42,9 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
     const dirtyRef = useRef(false);
     const byeAutoSavedRef = useRef<Set<number>>(new Set());
+    const pendingSwapRef = useRef<number | null>(null);
+    const prevLR1FilledRef = useRef<Set<number>>(new Set());
+    const prevLR2FilledRef = useRef<Set<number>>(new Set());
 
     // LR1: 16p → 9–12 (4), 32p → 17–24 (8), 64p → 33–48 (16)
     const round1Nos = useMemo(() => {
@@ -70,6 +73,16 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     }, [round1Nos.join(','), round2Nos.join(',')]);
 
     const matchMap = useMemo(() => new Map(matches.map(m => [m.match_no, m])), [matches]);
+
+    // Initialize filled-refs from DB on mount so existing matches aren't auto-saved again.
+    // Only initialize refs for the rounds this instance is responsible for (visibleRounds).
+    useEffect(() => {
+        if (visibleRounds.includes(1))
+            round1Nos.forEach(no => { const m = matchMap.get(no); if (m?.player1_id && m?.player2_id) prevLR1FilledRef.current.add(no); });
+        if (visibleRounds.includes(2))
+            round2Nos.forEach(no => { const m = matchMap.get(no); if (m?.player1_id && m?.player2_id) prevLR2FilledRef.current.add(no); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const losersRound1Seed = useMemo(() => {
         // WR1 count: 16p → 8, 32p → 16, 64p → 32
@@ -120,7 +133,8 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                 const stored = matchMap.get(no);
                 const base = stored ? toVM(stored) : toVM(createEmptyMatch(no, 'losers', roundNum));
                 const seeded = seed[no] ?? ['', ''];
-                const next: MatchVM = { ...base, match_no: no, player1_id: seeded[0] || '', player2_id: seeded[1] || '' };
+                // Preserve DB player if seed source not yet resolved (prevents wiping players on polling lag)
+                const next: MatchVM = { ...base, match_no: no, player1_id: seeded[0] || base.player1_id || '', player2_id: seeded[1] || base.player2_id || '' };
                 const w = resolveWinner(next, getRaceToNumber(next.player1_id, next.player2_id, players, tournament));
                 if (next.winner_id !== w && (w !== '' || next.status !== 'completed')) next.winner_id = w;
                 return next;
@@ -129,6 +143,47 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
         setRound2(syncRound(round2Nos, 2, losersRound2Seed));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [matchMap, losersRound1Seed, losersRound2Seed, round1Nos, round2Nos]);
+
+    // Auto-save LR1/LR2 when both player slots are newly filled.
+    // Guarded by visibleRounds so each instance only owns the rounds it renders,
+    // preventing duplicate saves when two instances coexist in TournamentQualificationTab.
+    useEffect(() => {
+        if (!visibleRounds.includes(1)) return;
+        for (const m of round1) {
+            if (!m.player1_id || !m.player2_id) continue;
+            if (prevLR1FilledRef.current.has(m.match_no)) continue;
+            prevLR1FilledRef.current.add(m.match_no);
+            onUpsertMatch(m.match_no, {
+                bracket: 'losers', round: 1,
+                player1_id: parseInt(m.player1_id, 10), player2_id: parseInt(m.player2_id, 10),
+                player1_score: parseInt(m.player1_score, 10) || 0, player2_score: parseInt(m.player2_score, 10) || 0,
+                table_no: m.table_no || null, match_time: m.match_time || null,
+                status: m.status,
+                player1_check_in: m.player1_check_in || 'unconfirmed', player2_check_in: m.player2_check_in || 'unconfirmed',
+                winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+            }).catch(() => { prevLR1FilledRef.current.delete(m.match_no); });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [round1]);
+
+    useEffect(() => {
+        if (!visibleRounds.includes(2)) return;
+        for (const m of round2) {
+            if (!m.player1_id || !m.player2_id) continue;
+            if (prevLR2FilledRef.current.has(m.match_no)) continue;
+            prevLR2FilledRef.current.add(m.match_no);
+            onUpsertMatch(m.match_no, {
+                bracket: 'losers', round: 2,
+                player1_id: parseInt(m.player1_id, 10), player2_id: parseInt(m.player2_id, 10),
+                player1_score: parseInt(m.player1_score, 10) || 0, player2_score: parseInt(m.player2_score, 10) || 0,
+                table_no: m.table_no || null, match_time: m.match_time || null,
+                status: m.status,
+                player1_check_in: m.player1_check_in || 'unconfirmed', player2_check_in: m.player2_check_in || 'unconfirmed',
+                winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+            }).catch(() => { prevLR2FilledRef.current.delete(m.match_no); });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [round2]);
 
     // Helper: check if a WR1 match feeding a LR1 slot is a BYE
     // (has exactly one player assigned, other is null → no loser to send)
@@ -146,7 +201,8 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     // The corresponding LR1 match will have only one player and should auto-complete as BYE.
     // Also auto-saves to backend so LR2 can pick up the winner.
     useEffect(() => {
-        // Only relevant when there are fewer players than bracket slots (BYE scenario)
+        // Only the instance rendering LR1 handles BYE auto-complete to avoid duplicate saves
+        if (!visibleRounds.includes(1)) return;
         if (players.length >= size) return;
 
         let changed = false;
@@ -194,6 +250,32 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     const onChange = (round: 1 | 2, idx: number, field: keyof MatchVM, value: string) => {
         dirtyRef.current = true;
         onDirty?.();
+
+        if (field === 'table_no' && value) {
+            const currentMatch = round === 1 ? round1[idx] : round2[idx];
+            const currentTable = currentMatch?.table_no;
+            const conflict = [...round1, ...round2].find(
+                m => m.table_no === value && m.match_no !== currentMatch?.match_no && m.status === 'upcoming'
+            );
+            if (conflict && currentTable) {
+                const r1ConflIdx = round1.findIndex(m => m.match_no === conflict.match_no);
+                const r2ConflIdx = round2.findIndex(m => m.match_no === conflict.match_no);
+                setRound1(round1.map((m, i) => {
+                    if (round === 1 && i === idx) return { ...m, table_no: value };
+                    if (i === r1ConflIdx) return { ...m, table_no: currentTable };
+                    return m;
+                }));
+                setRound2(round2.map((m, i) => {
+                    if (round === 2 && i === idx) return { ...m, table_no: value };
+                    if (i === r2ConflIdx) return { ...m, table_no: currentTable };
+                    return m;
+                }));
+                pendingSwapRef.current = conflict.match_no;
+                return;
+            }
+        }
+
+        pendingSwapRef.current = null;
         handleMatchChange(round, idx, field, value, round1, round2, setRound1, setRound2, players, tournament);
     };
 
@@ -213,22 +295,47 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
             table_no: match.table_no || null,
             match_time: match.match_time || null,
             status: match.status,
+            player1_check_in: match.player1_check_in || 'unconfirmed',
+            player2_check_in: match.player2_check_in || 'unconfirmed',
             winner_id: match.winner_id ? parseInt(match.winner_id, 10) : null,
         });
         toast.success(`Đã lưu trận ${match.match_no}`);
+        dirtyRef.current = false; // prevent double-save when called explicitly via Save button
         onClean?.();
     }, [editingMatch, round1, round2, tournament, onUpsertMatch, onClean]);
 
-    // Auto-save when dialog closes
+    // Auto-save when dialog closes; also saves the other match if a table swap happened
     const handleDialogClose = useCallback(async () => {
         if (editingMatch && dirtyRef.current) {
             try {
                 await saveMatch();
+                const swappedNo = pendingSwapRef.current;
+                if (swappedNo !== null) {
+                    const swapped = round1.find(m => m.match_no === swappedNo) ?? round2.find(m => m.match_no === swappedNo);
+                    const swappedRound: 1 | 2 = round1.some(m => m.match_no === swappedNo) ? 1 : 2;
+                    if (swapped) {
+                        await onUpsertMatch(swappedNo, {
+                            bracket: 'losers', round: swappedRound,
+                            player1_id: swapped.player1_id ? parseInt(swapped.player1_id, 10) : null,
+                            player2_id: swapped.player2_id ? parseInt(swapped.player2_id, 10) : null,
+                            player1_score: parseInt(swapped.player1_score, 10) || 0,
+                            player2_score: parseInt(swapped.player2_score, 10) || 0,
+                            table_no: swapped.table_no || null,
+                            match_time: swapped.match_time || null,
+                            status: swapped.status,
+                            player1_check_in: swapped.player1_check_in || 'unconfirmed',
+                            player2_check_in: swapped.player2_check_in || 'unconfirmed',
+                            winner_id: swapped.winner_id ? parseInt(swapped.winner_id, 10) : null,
+                        });
+                        toast.success(`Trận ${swappedNo} → ${swapped.table_no || '—'}`);
+                    }
+                    pendingSwapRef.current = null;
+                }
             } catch { /* validation error already shown */ }
             dirtyRef.current = false;
         }
         setEditingMatch(null);
-    }, [editingMatch, saveMatch]);
+    }, [editingMatch, saveMatch, round1, round2, onUpsertMatch]);
 
     const getPlayerName = (id: string) => players.find(p => p.id === parseInt(id, 10))?.full_name;
 
@@ -335,7 +442,17 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                                                         </>
                                                     );
                                                 }
-                                                return <><span style={scoreLeft}>{match.player1_score}</span><span className="mx-3">vs</span><span style={scoreRight}>{match.player2_score}</span></>;
+                                                let p1Score = match.player1_score;
+                                                let p2Score = match.player2_score;
+                                                if (match.player1_id && match.player2_id) {
+                                                    const info = getRaceToInfo(match.player1_id, match.player2_id, players, tournament);
+                                                    const noScoresYet = parseInt(match.player1_score, 10) === 0 && parseInt(match.player2_score, 10) === 0;
+                                                    if (info.handicap > 0 && (match.status === 'pending' || match.status === 'upcoming' || (match.status === 'ongoing' && noScoresYet))) {
+                                                        p1Score = info.handicappedPlayerId === match.player1_id ? String(info.handicap) : '0';
+                                                        p2Score = info.handicappedPlayerId === match.player2_id ? String(info.handicap) : '0';
+                                                    }
+                                                }
+                                                return <><span style={scoreLeft}>{p1Score}</span><span className="mx-3">vs</span><span style={scoreRight}>{p2Score}</span></>;
                                             })()}
                                         </td>
                                         <td className="p-3">
@@ -392,6 +509,8 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                 onChange={(field, value) => editingMatch && onChange(editingMatch.round, editingMatch.idx, field, value)}
                 onSave={saveMatch}
             />
+
+
         </div>
     );
 };

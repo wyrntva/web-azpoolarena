@@ -410,6 +410,15 @@ export class TournamentsService {
       
     if (!match) return null;
 
+    const [reg1, reg2] = await Promise.all([
+      match.player1_id
+        ? this.regRepo.findOne({ where: { tournament_id: match.tournament_id, user_id: match.player1_id } })
+        : null,
+      match.player2_id
+        ? this.regRepo.findOne({ where: { tournament_id: match.tournament_id, user_id: match.player2_id } })
+        : null,
+    ]);
+
     // Formatting for the exact keys QML expects payload
     return {
       id: match.id,
@@ -429,11 +438,13 @@ export class TournamentsService {
       player1_id: match.player1_id,
       player1_name: match.player1?.full_name || 'Waiting...',
       player1_avatar: match.player1?.avatar_url || '',
+      player1_rank: reg1?.rank || null,
       player1_score: match.player1_score,
       player1_check_in: match.player1_check_in,
       player2_id: match.player2_id,
       player2_name: match.player2?.full_name || 'Waiting...',
       player2_avatar: match.player2?.avatar_url || '',
+      player2_rank: reg2?.rank || null,
       player2_score: match.player2_score,
       player2_check_in: match.player2_check_in,
       winner_id: match.winner_id,
@@ -467,6 +478,13 @@ export class TournamentsService {
     }
 
     await this.matchRepo.save(match);
+    await this.propagateWinnerToNextRound(match);
+    if (match.status === TournamentMatchStatus.COMPLETED && match.winner_id) {
+      await this.propagateLoserToLR1(match);
+      await this.propagateLR1WinnerToLR2(match);
+      await this.propagateWR2LoserToLR2(match);
+    }
+    await this.autoScheduleQualificationMatches(match.tournament_id);
     await this.emitMatchUpdate(match.id);
     return { success: true };
   }
@@ -693,7 +711,23 @@ export class TournamentsService {
       });
     }
 
-    Object.assign(match, dto);
+    // Guard: if match is already completed with valid result, don't overwrite
+    // with stale 0-0 data from a frontend dialog that may have missed device scores
+    const hasValidResult =
+      match.status === TournamentMatchStatus.COMPLETED &&
+      match.winner_id !== null &&
+      (match.player1_score > 0 || match.player2_score > 0);
+    const isStaleSave =
+      dto.player1_score === 0 &&
+      dto.player2_score === 0 &&
+      !dto.winner_id &&
+      dto.status === TournamentMatchStatus.COMPLETED;
+    if (hasValidResult && isStaleSave) {
+      const { player1_score, player2_score, winner_id, status, ...safeDto } = dto as any;
+      Object.assign(match, safeDto);
+    } else {
+      Object.assign(match, dto);
+    }
 
     if (match.winner_id && match.status !== TournamentMatchStatus.COMPLETED) {
       match.status = TournamentMatchStatus.COMPLETED;
@@ -722,6 +756,14 @@ export class TournamentsService {
 
     await this.matchRepo.save(match);
     await this.propagateWinnerToNextRound(match);
+
+    // Double elimination: propagate losers + auto-schedule subsequent rounds
+    if (match.status === TournamentMatchStatus.COMPLETED && match.winner_id) {
+      await this.propagateLoserToLR1(match);
+      await this.propagateLR1WinnerToLR2(match);
+      await this.propagateWR2LoserToLR2(match);
+    }
+    await this.autoScheduleQualificationMatches(match.tournament_id);
 
     // Auto-complete tournament when the final match finishes
     if (match.status === TournamentMatchStatus.COMPLETED && match.winner_id) {
@@ -922,6 +964,147 @@ export class TournamentsService {
     }
 
     return null;
+  }
+
+  async propagateAndEmit(match: TournamentMatchEntity): Promise<void> {
+    await this.propagateWinnerToNextRound(match);
+    if (match.status === TournamentMatchStatus.COMPLETED && match.winner_id) {
+      await this.propagateLR1WinnerToLR2(match);
+      await this.propagateWR2LoserToLR2(match);
+    }
+    await this.emitMatchUpdate(match.id);
+  }
+
+  // ── Qualification config ─────────────────────────────────────────────────
+
+  private getQualConfig(numberOfPlayers: number) {
+    const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
+    const cfg = {
+      16: { wr1: { start: 1,  count: 8  }, lr1: { start: 9,  count: 4  }, wr2: { start: 13, count: 4  }, lr2: { start: 17, count: 4  } },
+      32: { wr1: { start: 1,  count: 16 }, lr1: { start: 17, count: 8  }, wr2: { start: 25, count: 8  }, lr2: { start: 33, count: 8  } },
+      64: { wr1: { start: 1,  count: 32 }, lr1: { start: 33, count: 16 }, wr2: { start: 49, count: 16 }, lr2: { start: 65, count: 16 } },
+    };
+    return { size, ...cfg[size] };
+  }
+
+  private mkRange(start: number, count: number): number[] {
+    return Array.from({ length: count }, (_, i) => start + i);
+  }
+
+  // Seed a single player into a target match (create if missing, skip if unchanged)
+  private async seedPlayerToMatch(
+    tournamentId: number,
+    matchNo: number,
+    bracket: string,
+    round: number,
+    playerId: number,
+    slot: 1 | 2,
+  ): Promise<void> {
+    let m = await this.matchRepo.findOne({ where: { tournament_id: tournamentId, match_no: matchNo } });
+    if (!m) {
+      m = this.matchRepo.create({ tournament_id: tournamentId, match_no: matchNo, bracket, round, status: TournamentMatchStatus.PENDING });
+    }
+    const current = slot === 1 ? m.player1_id : m.player2_id;
+    if (current === playerId) return;
+    if (slot === 1) m.player1_id = playerId; else m.player2_id = playerId;
+    if (m.status === TournamentMatchStatus.COMPLETED) {
+      m.status = TournamentMatchStatus.PENDING;
+      m.winner_id = null;
+      m.player1_score = 0;
+      m.player2_score = 0;
+    }
+    await this.matchRepo.save(m);
+    if (m.id) await this.emitMatchUpdate(m.id);
+  }
+
+  // WR1 loser → LR1
+  private async propagateLoserToLR1(match: TournamentMatchEntity): Promise<void> {
+    if (match.bracket !== 'winners' || !match.winner_id || !match.player1_id || !match.player2_id) return;
+    const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    if (!tour || tour.tournament_type !== 'double_elimination') return;
+    const cfg = this.getQualConfig(tour.number_of_players);
+    if (match.match_no < cfg.wr1.start || match.match_no >= cfg.wr1.start + cfg.wr1.count) return;
+    const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+    const idx = match.match_no - cfg.wr1.start;
+    const lr1MatchNo = cfg.lr1.start + Math.floor(idx / 2);
+    const slot: 1 | 2 = idx % 2 === 0 ? 1 : 2;
+    await this.seedPlayerToMatch(match.tournament_id, lr1MatchNo, TournamentMatchBracket.LOSERS, 1, loserId, slot);
+  }
+
+  // LR1 winner → LR2 player1
+  private async propagateLR1WinnerToLR2(match: TournamentMatchEntity): Promise<void> {
+    if (match.bracket !== 'losers' || match.round !== 1 || !match.winner_id) return;
+    const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    if (!tour || tour.tournament_type !== 'double_elimination') return;
+    const cfg = this.getQualConfig(tour.number_of_players);
+    if (match.match_no < cfg.lr1.start || match.match_no >= cfg.lr1.start + cfg.lr1.count) return;
+    const idx = match.match_no - cfg.lr1.start;
+    const lr2MatchNo = cfg.lr2.start + idx;
+    await this.seedPlayerToMatch(match.tournament_id, lr2MatchNo, TournamentMatchBracket.LOSERS, 2, match.winner_id, 1);
+  }
+
+  // WR2 loser → LR2 player2 (reversed index)
+  private async propagateWR2LoserToLR2(match: TournamentMatchEntity): Promise<void> {
+    if (match.bracket !== 'winners' || match.round !== 2 || !match.winner_id || !match.player1_id || !match.player2_id) return;
+    const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    if (!tour || tour.tournament_type !== 'double_elimination') return;
+    const cfg = this.getQualConfig(tour.number_of_players);
+    if (match.match_no < cfg.wr2.start || match.match_no >= cfg.wr2.start + cfg.wr2.count) return;
+    const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+    const idx = match.match_no - cfg.wr2.start;
+    const reversedIdx = cfg.wr2.count - 1 - idx;
+    const lr2MatchNo = cfg.lr2.start + reversedIdx;
+    await this.seedPlayerToMatch(match.tournament_id, lr2MatchNo, TournamentMatchBracket.LOSERS, 2, loserId, 2);
+  }
+
+  // Tự động xếp bàn + giờ cho LR1 → WR2 → LR2 khi có bàn trống
+  async autoScheduleQualificationMatches(tournamentId: number): Promise<void> {
+    const tour = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    if (!tour || tour.tournament_type !== 'double_elimination') return;
+
+    const cfg = this.getQualConfig(tour.number_of_players);
+    const prioritized = [
+      ...this.mkRange(cfg.lr1.start, cfg.lr1.count),
+      ...this.mkRange(cfg.wr2.start, cfg.wr2.count),
+      ...this.mkRange(cfg.lr2.start, cfg.lr2.count),
+    ];
+
+    const allMatches = await this.matchRepo.find({ where: { tournament_id: tournamentId } });
+    const matchMap = new Map(allMatches.map(m => [m.match_no, m]));
+
+    // Trận pending có đủ 2 người, chưa có bàn
+    const toSchedule = prioritized
+      .map(no => matchMap.get(no))
+      .filter((m): m is TournamentMatchEntity =>
+        !!m && !!m.player1_id && !!m.player2_id &&
+        m.status === TournamentMatchStatus.PENDING && !m.table_no,
+      );
+    if (toSchedule.length === 0) return;
+
+    // Pool bàn = tất cả bàn đang được dùng trong giải (bất kỳ bracket nào)
+    const allTableNos = [...new Set(allMatches.map(m => m.table_no).filter((t): t is string => !!t))];
+    if (allTableNos.length === 0) return;
+
+    // Bàn đang bận (ongoing hoặc upcoming)
+    const occupiedTables = new Set(
+      allMatches
+        .filter(m => m.status === TournamentMatchStatus.ONGOING || m.status === TournamentMatchStatus.UPCOMING)
+        .map(m => m.table_no)
+        .filter(Boolean),
+    );
+
+    const availableTables = allTableNos.filter(t => !occupiedTables.has(t));
+    if (availableTables.length === 0) return;
+
+    const now = new Date();
+    for (let i = 0; i < Math.min(availableTables.length, toSchedule.length); i++) {
+      const m = toSchedule[i];
+      m.table_no = availableTables[i];
+      m.match_time = new Date(now.getTime() + 3 * 60 * 1000);
+      m.status = TournamentMatchStatus.UPCOMING;
+      await this.matchRepo.save(m);
+      await this.emitMatchUpdate(m.id);
+    }
   }
 
   private async propagateWinnerToNextRound(match: TournamentMatchEntity): Promise<void> {
