@@ -52,7 +52,7 @@ if [ ! -f "$APP_DIR/.env" ]; then
     cat > "$APP_DIR/.env" <<'ENVEOF'
 # Scoreboard Environment Configuration
 # Edit this file to match your backend server
-POOLARENA_API_BASE_URL=http://192.168.1.188:8000
+POOLARENA_API_BASE_URL=https://cms.poolarena.vn
 ENVEOF
     chown "$KIOSK_USER":"$KIOSK_USER" "$APP_DIR/.env"
 fi

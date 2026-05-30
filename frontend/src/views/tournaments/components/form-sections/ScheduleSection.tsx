@@ -7,9 +7,10 @@ import type { TournamentFormData } from '../../types';
 interface ScheduleSectionProps {
     formData: TournamentFormData;
     setFormData: React.Dispatch<React.SetStateAction<TournamentFormData>>;
+    onStartDateChange: (value: string) => void;
 }
 
-export default function ScheduleSection({ formData, setFormData }: ScheduleSectionProps) {
+export default function ScheduleSection({ formData, setFormData, onStartDateChange }: ScheduleSectionProps) {
     return (
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -24,7 +25,7 @@ export default function ScheduleSection({ formData, setFormData }: ScheduleSecti
                         id="start_date"
                         type="datetime-local"
                         value={formData.start_date}
-                        onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                        onChange={(e) => onStartDateChange(e.target.value)}
                         required
                     />
                 </div>

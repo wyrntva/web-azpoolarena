@@ -28,7 +28,7 @@ export class TournamentSchedulerService {
   @Cron('*/30 * * * * *')
   async autoUpdateMatchStatus() {
     const now = new Date();
-    const fiveMinFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+    const tenMinFromNow = new Date(now.getTime() + 10 * 60 * 1000);
 
     // Reset về pending các match trống (không có player) đang bị sai trạng thái upcoming
     await this.matchRepo
@@ -48,7 +48,7 @@ export class TournamentSchedulerService {
       .andWhere('m.match_time IS NOT NULL')
       .andWhere('m.player1_id IS NOT NULL')
       .andWhere('m.player2_id IS NOT NULL')
-      .andWhere('m.match_time <= :fiveMinFromNow', { fiveMinFromNow })
+      .andWhere('m.match_time <= :tenMinFromNow', { tenMinFromNow })
       .getMany();
 
     if (matches.length === 0) return;
@@ -77,6 +77,56 @@ export class TournamentSchedulerService {
           this.logger.error(`Failed to emit scheduler match status update for match ${m.match_no}: ${err.message}`);
         });
       }
+    }
+  }
+
+  // Chạy mỗi 30 giây — tự động xử lý BYE sau khi hết hạn đăng kí
+  // Trận vòng 1 chỉ có 1 người (người kia chưa đăng kí) → người có mặt thắng walkover
+  @Cron('*/30 * * * * *')
+  async autoCompleteByeMatchesAfterRegistration() {
+    const now = new Date();
+
+    // Chỉ xét các giải đã qua registration_end_date
+    const tours = await this.tourRepo
+      .createQueryBuilder('t')
+      .where('t.registration_end_date IS NOT NULL')
+      .andWhere('t.registration_end_date <= :now', { now })
+      .andWhere('t.status != :completed', { completed: 'completed' })
+      .getMany();
+
+    for (const tour of tours) {
+      // Tìm các trận vòng 1 chỉ có đúng 1 player, chưa completed
+      const byeMatches = await this.matchRepo
+        .createQueryBuilder('m')
+        .where('m.tournament_id = :id', { id: tour.id })
+        .andWhere('m.round = 1')
+        .andWhere('m.status != :completed', { completed: TournamentMatchStatus.COMPLETED })
+        .andWhere(
+          '(m.player1_id IS NOT NULL AND m.player2_id IS NULL) OR (m.player1_id IS NULL AND m.player2_id IS NOT NULL)',
+        )
+        .getMany();
+
+      for (const match of byeMatches) {
+        const winnerId = match.player1_id ?? match.player2_id;
+        match.status = TournamentMatchStatus.COMPLETED;
+        match.winner_id = winnerId;
+        await this.matchRepo.save(match);
+        await this.tournamentsService.propagateAndEmit(match);
+        this.logger.log(
+          `Tournament ${tour.id} match ${match.match_no}: BYE walkover → winner=${winnerId}`,
+        );
+      }
+    }
+  }
+
+  // Chạy mỗi 30 giây — tự động xếp bàn + giờ cho các vòng tiếp theo khi có bàn trống
+  @Cron('*/30 * * * * *')
+  async autoScheduleQualificationCron() {
+    const activeTours = await this.tourRepo.find({ where: { status: 'ongoing' } });
+    for (const tour of activeTours) {
+      await this.tournamentsService.autoScheduleQualificationMatches(tour.id).catch((err) => {
+        this.logger.error(`autoScheduleQualification failed for tournament ${tour.id}: ${err.message}`);
+      });
     }
   }
 

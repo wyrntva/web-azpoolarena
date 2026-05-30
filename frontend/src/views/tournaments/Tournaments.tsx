@@ -34,6 +34,7 @@ const Tournaments = () => {
         handleSubmit,
         resetForm,
         handleNameChange,
+        handleStartDateChange,
         loadTournament,
     } = useTournamentForm();
 
@@ -164,6 +165,7 @@ const Tournaments = () => {
                     getFormattedValue={getFormattedValue}
                     handleSubmit={handleFormSubmit}
                     handleNameChange={handleNameChange}
+                    handleStartDateChange={handleStartDateChange}
                 />
             </BaseDialog>
 
@@ -200,6 +202,7 @@ const Tournaments = () => {
                     getFormattedValue={getFormattedValue}
                     handleSubmit={handleUpdateSubmit}
                     handleNameChange={handleNameChange}
+                    handleStartDateChange={handleStartDateChange}
                 />
             </BaseDialog>
         </div>

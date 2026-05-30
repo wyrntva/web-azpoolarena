@@ -132,6 +132,14 @@ export const useTournamentForm = () => {
         }));
     };
 
+    const handleStartDateChange = (startDate: string) => {
+        setFormData(prev => ({
+            ...prev,
+            start_date: startDate,
+            slug: buildTournamentSlug(prev.name, startDate)
+        }));
+    };
+
     // --- Currency formatting ---
 
     const formatNumber = (value: string): string => {
@@ -254,6 +262,7 @@ export const useTournamentForm = () => {
         handleSubmit,
         resetForm,
         handleNameChange,
+        handleStartDateChange,
         loadTournament,
     };
 };

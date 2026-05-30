@@ -25,6 +25,7 @@ interface TournamentFormProps {
     getFormattedValue: (value: string) => string;
     handleSubmit: (e: React.FormEvent) => void;
     handleNameChange: (value: string) => void;
+    handleStartDateChange: (value: string) => void;
 }
 
 const TournamentForm = ({
@@ -42,6 +43,7 @@ const TournamentForm = ({
     getFormattedValue,
     handleSubmit,
     handleNameChange,
+    handleStartDateChange,
 }: TournamentFormProps) => {
     return (
         <form id="tournament-form" onSubmit={handleSubmit} className="space-y-6">
@@ -72,6 +74,7 @@ const TournamentForm = ({
             <ScheduleSection
                 formData={formData}
                 setFormData={setFormData}
+                onStartDateChange={handleStartDateChange}
             />
 
             <FeesPrizesSection

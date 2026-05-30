@@ -1062,20 +1062,27 @@ export class TournamentsService {
     await this.seedPlayerToMatch(match.tournament_id, lr2MatchNo, TournamentMatchBracket.LOSERS, 2, loserId, 2);
   }
 
-  // Tự động xếp bàn + giờ cho LR1 → WR2 → LR2 khi có bàn trống
+  // Tự động xếp bàn + giờ khi có bàn trống (knockout: tất cả vòng; double_elimination: WR1→LR1→WR2→LR2)
   async autoScheduleQualificationMatches(tournamentId: number): Promise<void> {
     const tour = await this.tourRepo.findOne({ where: { id: tournamentId } });
-    if (!tour || tour.tournament_type !== 'double_elimination') return;
-
-    const cfg = this.getQualConfig(tour.number_of_players);
-    const prioritized = [
-      ...this.mkRange(cfg.lr1.start, cfg.lr1.count),
-      ...this.mkRange(cfg.wr2.start, cfg.wr2.count),
-      ...this.mkRange(cfg.lr2.start, cfg.lr2.count),
-    ];
+    if (!tour) return;
 
     const allMatches = await this.matchRepo.find({ where: { tournament_id: tournamentId } });
     const matchMap = new Map(allMatches.map(m => [m.match_no, m]));
+
+    let prioritized: number[];
+    if (tour.tournament_type === 'double_elimination') {
+      const cfg = this.getQualConfig(tour.number_of_players);
+      prioritized = [
+        ...this.mkRange(cfg.wr1.start, cfg.wr1.count),
+        ...this.mkRange(cfg.lr1.start, cfg.lr1.count),
+        ...this.mkRange(cfg.wr2.start, cfg.wr2.count),
+        ...this.mkRange(cfg.lr2.start, cfg.lr2.count),
+      ];
+    } else {
+      // knockout: ưu tiên theo match_no tăng dần
+      prioritized = allMatches.map(m => m.match_no).sort((a, b) => a - b);
+    }
 
     // Trận pending có đủ 2 người, chưa có bàn
     const toSchedule = prioritized

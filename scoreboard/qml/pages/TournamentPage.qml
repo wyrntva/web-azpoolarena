@@ -81,10 +81,12 @@ Item {
         page.leftMinScore = hcP1 ? hc : 0;
         page.rightMinScore = hcP2 ? hc : 0;
 
-        // Auto calculate correct race_to based on tournament data setup
-        let raceToVal = parseInt(m.race_to) || 9;
-        if (diff === 0 && m.draw_touch && parseInt(m.draw_touch)) raceToVal = parseInt(m.draw_touch);
-        else if (diff === 1 && m.handicap_1_touch && parseInt(m.handicap_1_touch)) raceToVal = parseInt(m.handicap_1_touch);
+        // Base race_to: draw_touch (equal-rank target) is the primary source of truth.
+        // handicap_N_touch overrides it when a specific value is configured for that bracket.
+        // Falls back to race_to (legacy), then 9.
+        const baseTouchVal = parseInt(m.draw_touch) || parseInt(m.race_to) || 9;
+        let raceToVal = baseTouchVal;
+        if (diff === 1 && m.handicap_1_touch && parseInt(m.handicap_1_touch)) raceToVal = parseInt(m.handicap_1_touch);
         else if (diff >= 2 && m.handicap_2_touch && parseInt(m.handicap_2_touch)) raceToVal = parseInt(m.handicap_2_touch);
 
         Controller.raceTo = raceToVal;
