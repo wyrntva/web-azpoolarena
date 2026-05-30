@@ -108,9 +108,9 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                                 
                                 const regMap = new Map(registrations.map((r: any) => [r.id, r]));
                                 
-                                semiFinalLosers.sort((a, b) => ((regMap.get(b)?.points ?? 0) - (regMap.get(a)?.points ?? 0)));
-                                quarterFinalLosers.sort((a, b) => ((regMap.get(b)?.points ?? 0) - (regMap.get(a)?.points ?? 0)));
-                                r16Losers.sort((a, b) => ((regMap.get(b)?.points ?? 0) - (regMap.get(a)?.points ?? 0)));
+                                semiFinalLosers.sort((a, b) => (((regMap.get(b) as any)?.points ?? 0) - ((regMap.get(a) as any)?.points ?? 0)));
+                                quarterFinalLosers.sort((a, b) => (((regMap.get(b) as any)?.points ?? 0) - ((regMap.get(a) as any)?.points ?? 0)));
+                                r16Losers.sort((a, b) => (((regMap.get(b) as any)?.points ?? 0) - ((regMap.get(a) as any)?.points ?? 0)));
 
                                 orderedPlayerIds.push(...semiFinalLosers);
                                 orderedPlayerIds.push(...quarterFinalLosers);
