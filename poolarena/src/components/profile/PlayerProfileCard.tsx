@@ -117,7 +117,7 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                                 orderedPlayerIds.push(...r16Losers);
 
                                 orderedPlayerIds.forEach((id, index) => {
-                                    const reg = regMap.get(id);
+                                    const reg = regMap.get(id) as any;
                                     if (reg) {
                                         let label = `#${index + 1}`;
                                         if (index === 0) label = '#1';
