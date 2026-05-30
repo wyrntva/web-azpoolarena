@@ -76,10 +76,13 @@ export class PoolArenaService {
     if (!user) throw new NotFoundException('PoolArena user not found');
 
     try {
-      const { TournamentRegistrationEntity } = require('../../tournaments/entities');
-      const count = await this.repo.manager.count(TournamentRegistrationEntity, {
-        where: { user_id: id }
-      });
+      const { TournamentRegistrationEntity, TournamentEntity } = require('../../tournaments/entities');
+      const count = await this.repo.manager
+        .createQueryBuilder(TournamentRegistrationEntity, 'reg')
+        .innerJoin(TournamentEntity, 'tour', 'tour.id = reg.tournament_id')
+        .where('reg.user_id = :id', { id })
+        .andWhere('tour.status = :status', { status: 'completed' })
+        .getCount();
       (user as any).tournaments_count = count;
     } catch {
       (user as any).tournaments_count = 0;
