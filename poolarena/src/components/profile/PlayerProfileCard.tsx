@@ -42,6 +42,7 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                 // Fetch registrations and matches for each tournament in parallel
                 await Promise.all(
                     tournaments.map(async (tournament: any) => {
+                        if (tournament.status !== 'completed') return;
                         try {
                             const [regRes, matchRes] = await Promise.all([
                                 tournamentAPI.getTournamentRegistrationsBySlug(tournament.slug),
