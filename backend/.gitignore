@@ -12,8 +12,11 @@ cms/dist/
 !.env.example
 
 # Frontend build output (copied in during Docker build, not committed)
-public/
+public/*
 !public/.gitkeep
+# Static assets served by NestJS (default avatars, fallback images)
+!public/images
+!public/images/**
 
 # Uploads (user files, managed via Docker volume)
 uploads/*
