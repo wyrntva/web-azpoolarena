@@ -41,7 +41,7 @@ const TableAssignModal = ({ isOpen, onClose, tables, matchCount, roundTitle, ini
             <Modal.Header>Xếp bàn — {roundTitle}</Modal.Header>
             <Modal.Body>
                 <p className="text-sm text-gray-500 mb-4">
-                    Vòng này có <strong>{matchCount}</strong> trận. Chọn các bàn để xếp lần lượt từ trận đầu tiên.
+                    Vòng này có <strong>{matchCount}</strong> trận. Chọn các bàn để xếp lần lượt cho các trận <strong>chưa có bàn</strong>. Trận đã có bàn sẽ không bị thay đổi.
                 </p>
                 <div className="flex gap-2 mb-4">
                     <Button size="xs" color="light" onClick={() => setSelected(new Set(tables.map(t => t.name)))}>

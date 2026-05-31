@@ -307,12 +307,20 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
         // Update table pool first so future auto-assign respects this selection
         onTablePoolChange?.(tableNames);
 
+        // Exclude tables already assigned to other matches so we don't create duplicates
+        const usedTables = new Set(arr.map(m => m.table_no).filter(Boolean));
+        const available = tableNames.filter(t => !usedTables.has(t));
+        // Put priority tables first if configured
+        const freeTables = priorityTables.length > 0
+            ? [...available.filter(t => priorityTables.includes(t)), ...available.filter(t => !priorityTables.includes(t))]
+            : available;
+
         let tableIdx = 0;
         const updated = arr.map((m) => {
-            // Never overwrite a match that is already ongoing or upcoming — it's playing on its table
-            if (m.status === 'ongoing' || m.status === 'upcoming') return m;
-            if (tableIdx >= tableNames.length) return m;
-            return { ...m, table_no: tableNames[tableIdx++] };
+            // Never overwrite a match that is already active or already has a table assigned
+            if (m.status === 'ongoing' || m.status === 'upcoming' || m.table_no) return m;
+            if (tableIdx >= freeTables.length) return m;
+            return { ...m, table_no: freeTables[tableIdx++] };
         });
         setter(updated);
 
@@ -336,9 +344,14 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                 })
             );
 
+        if (saves.length === 0) {
+            toast('Tất cả trận đã có bàn. Chỉnh sửa từng trận để thay đổi.', { icon: 'ℹ️' });
+            return;
+        }
+
         try {
             await Promise.all(saves);
-            toast.success(`Đã cập nhật pool bàn: ${tableNames.length} bàn hoạt động`);
+            toast.success(`Đã xếp bàn cho ${saves.length} trận`);
             onClean?.();
         } catch {
             toast.error('Không thể lưu một số trận đấu');

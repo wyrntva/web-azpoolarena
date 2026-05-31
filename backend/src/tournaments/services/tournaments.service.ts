@@ -20,6 +20,7 @@ import {
   UpdateMatchDto,
 } from '../dto/tournaments.dto';
 import { UserEntity } from '../../users/entities/user.entity';
+import { TableEntity } from '../../areas/entities/area.entity';
 
 @Injectable()
 export class TournamentsService {
@@ -57,6 +58,8 @@ export class TournamentsService {
     private readonly rankRepo: Repository<TournamentRankEntity>,
     @InjectRepository(PaymentCodeEntity)
     private readonly paymentCodeRepo: Repository<PaymentCodeEntity>,
+    @InjectRepository(TableEntity)
+    private readonly tableRepo: Repository<TableEntity>,
   ) {}
 
   private generateCode(): string {
@@ -759,7 +762,26 @@ export class TournamentsService {
       await this.calculateAndApplyRating(match, match.winner_id);
     }
 
-    await this.matchRepo.save(match);
+    const isNew = !match.id;
+    try {
+      await this.matchRepo.save(match);
+    } catch (err: any) {
+      if (isNew && err?.code === '23505') {
+        // Race condition: another concurrent request already inserted this match.
+        // Re-fetch and merge the dto onto the existing row.
+        const existing = await this.matchRepo.findOne({
+          where: { tournament_id: tournamentId, match_no: matchNo },
+          relations: ['player1', 'player2'],
+        });
+        if (!existing) throw err;
+        Object.assign(existing, dto);
+        await this.matchRepo.save(existing);
+        Object.assign(match, existing);
+      } else {
+        throw err;
+      }
+    }
+
     await this.propagateWinnerToNextRound(match);
 
     // Double elimination: propagate losers + auto-schedule subsequent rounds
@@ -1018,7 +1040,20 @@ export class TournamentsService {
       m.player1_score = 0;
       m.player2_score = 0;
     }
-    await this.matchRepo.save(m);
+    const seedIsNew = !m.id;
+    try {
+      await this.matchRepo.save(m);
+    } catch (err: any) {
+      if (seedIsNew && err?.code === '23505') {
+        const existing = await this.matchRepo.findOne({ where: { tournament_id: tournamentId, match_no: matchNo } });
+        if (!existing) throw err;
+        if (slot === 1) existing.player1_id = playerId; else existing.player2_id = playerId;
+        await this.matchRepo.save(existing);
+        m = existing;
+      } else {
+        throw err;
+      }
+    }
     if (m.id) await this.emitMatchUpdate(m.id);
   }
 
@@ -1067,43 +1102,79 @@ export class TournamentsService {
     const tour = await this.tourRepo.findOne({ where: { id: tournamentId } });
     if (!tour) return;
 
+    // Chỉ xếp bàn tự động sau khi giải đấu đã bắt đầu
+    if (tour.start_date && new Date(tour.start_date) > new Date()) return;
+
     const allMatches = await this.matchRepo.find({ where: { tournament_id: tournamentId } });
     const matchMap = new Map(allMatches.map(m => [m.match_no, m]));
 
     let prioritized: number[];
     if (tour.tournament_type === 'double_elimination') {
       const cfg = this.getQualConfig(tour.number_of_players);
-      prioritized = [
+      const qualNos = new Set([
         ...this.mkRange(cfg.wr1.start, cfg.wr1.count),
         ...this.mkRange(cfg.lr1.start, cfg.lr1.count),
         ...this.mkRange(cfg.wr2.start, cfg.wr2.count),
         ...this.mkRange(cfg.lr2.start, cfg.lr2.count),
-      ];
+      ]);
+      // Vòng loại trước (WR/LR), sau đó vòng KO trực tiếp theo thứ tự tăng dần
+      const koNos = allMatches.map(m => m.match_no).filter(n => !qualNos.has(n)).sort((a, b) => a - b);
+      prioritized = [...Array.from(qualNos).sort((a, b) => a - b), ...koNos];
     } else {
       // knockout: ưu tiên theo match_no tăng dần
       prioritized = allMatches.map(m => m.match_no).sort((a, b) => a - b);
     }
 
-    // Trận pending có đủ 2 người, chưa có bàn
+    // Với double_elimination: vòng KO đầu tiên (Tứ kết) chỉ xếp khi ≥ 3/4 trận đã đủ 2 người
+    // Các vòng KO tiếp theo (Bán kết, Chung kết) xếp ngay khi có đủ người
+    const koFirstRoundBlocked = new Set<number>();
+    if (tour.tournament_type === 'double_elimination') {
+      const size = tour.number_of_players > 32 ? 64 : tour.number_of_players > 16 ? 32 : 16;
+      const koFirstStart = size === 64 ? 81 : size === 32 ? 41 : 21;
+      const koFirstCount = size === 64 ? 16 : size === 32 ? 8 : 4;
+      const koFirstNos = this.mkRange(koFirstStart, koFirstCount);
+      const filledCount = koFirstNos
+        .map(no => matchMap.get(no))
+        .filter((m): m is TournamentMatchEntity => !!m && !!m.player1_id && !!m.player2_id)
+        .length;
+      const threshold = Math.ceil(koFirstCount * 3 / 4);
+      if (filledCount < threshold) {
+        koFirstNos.forEach(no => koFirstRoundBlocked.add(no));
+      }
+    }
+
+    // Trận có đủ 2 người, chưa có bàn, chưa kết thúc, không bị block bởi threshold
     const toSchedule = prioritized
       .map(no => matchMap.get(no))
       .filter((m): m is TournamentMatchEntity =>
         !!m && !!m.player1_id && !!m.player2_id &&
-        m.status === TournamentMatchStatus.PENDING && !m.table_no,
+        m.status !== TournamentMatchStatus.COMPLETED &&
+        !m.table_no &&
+        !koFirstRoundBlocked.has(m.match_no),
       );
     if (toSchedule.length === 0) return;
 
-    // Pool bàn = tất cả bàn đang được dùng trong giải (bất kỳ bracket nào)
+    // Pool bàn = chỉ các bàn đã được admin gán trong giải này
+    // Không dùng toàn bộ arena để tránh xếp bàn ngoài pool admin mong muốn
+    // Nếu chưa có bàn nào trong giải → đợi admin xếp thủ công lần đầu
     const allTableNos = [...new Set(allMatches.map(m => m.table_no).filter((t): t is string => !!t))];
     if (allTableNos.length === 0) return;
 
-    // Bàn đang bận (ongoing hoặc upcoming)
-    const occupiedTables = new Set(
-      allMatches
-        .filter(m => m.status === TournamentMatchStatus.ONGOING || m.status === TournamentMatchStatus.UPCOMING)
-        .map(m => m.table_no)
-        .filter(Boolean),
-    );
+    // Bàn đang bận: toàn hệ thống — bất kỳ trận nào (mọi giải) đang PENDING/UPCOMING/ONGOING có bàn
+    // Bàn chỉ được xếp nếu KHÔNG có trận nào khác đang dùng bàn đó ở trạng thái chưa kết thúc
+    const occupiedRows = await this.matchRepo
+      .createQueryBuilder('m')
+      .select('m.table_no')
+      .where('m.table_no IS NOT NULL')
+      .andWhere('m.status IN (:...activeStatuses)', {
+        activeStatuses: [
+          TournamentMatchStatus.PENDING,
+          TournamentMatchStatus.UPCOMING,
+          TournamentMatchStatus.ONGOING,
+        ],
+      })
+      .getMany();
+    const occupiedTables = new Set(occupiedRows.map(m => m.table_no!));
 
     const availableTables = allTableNos.filter(t => !occupiedTables.has(t));
     if (availableTables.length === 0) return;

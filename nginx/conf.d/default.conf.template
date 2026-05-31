@@ -1,29 +1,27 @@
 # ========================================
-# HTTP Server - Redirects to HTTPS
+# HTTP Server - Redirect to HTTPS
 # ========================================
 server {
     listen 80;
     server_name ${DOMAIN} www.${DOMAIN} ${API_DOMAIN} ${POOLARENA_DOMAIN} www.${POOLARENA_DOMAIN};
 
-    # Allow Let's Encrypt challenges
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
-    # Redirect all other traffic to HTTPS
     location / {
         return 301 https://$host$request_uri;
     }
 }
 
 # ========================================
-# HTTPS Server - Frontend
+# HTTPS Server - CMS Admin (Frontend + API)
+# Backend NestJS phục vụ cả SPA lẫn /api/*
 # ========================================
 server {
     listen 443 ssl http2;
     server_name ${DOMAIN} www.${DOMAIN};
 
-    # SSL Configuration
     ssl_certificate /etc/nginx/ssl/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -32,15 +30,68 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
-    # Security headers
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
-    # Frontend application
+    # Auth endpoints: rate limit chặt hơn
+    location /api/auth/ {
+        limit_req zone=login_limit burst=5 nodelay;
+
+        proxy_pass http://backend:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # API requests
+    location /api/ {
+        limit_req zone=api_limit burst=20 nodelay;
+
+        proxy_pass http://backend:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 10s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        proxy_buffering on;
+        proxy_buffers 16 16k;
+        proxy_buffer_size 16k;
+    }
+
+    # Upload files — nginx serve trực tiếp từ volume (nhanh hơn proxy qua NestJS)
+    location /uploads/ {
+        alias /var/www/uploads/;
+        access_log off;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        add_header X-Content-Type-Options "nosniff";
+        try_files $uri =404;
+    }
+
+    # Vite hashed assets (js/css/fonts/images với content hash trong tên file)
+    # Cache 1 năm vì tên file thay đổi khi nội dung thay đổi
+    location ~* ^/assets/.*\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$ {
+        proxy_pass http://backend:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        access_log off;
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # SPA: tất cả routes còn lại → index.html (NestJS xử lý fallback)
     location / {
-        proxy_pass http://frontend;
+        proxy_pass http://backend:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -49,6 +100,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # index.html không được cache
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
     }
 }
 
@@ -59,7 +112,6 @@ server {
     listen 443 ssl http2;
     server_name ${POOLARENA_DOMAIN} www.${POOLARENA_DOMAIN};
 
-    # SSL Configuration
     ssl_certificate /etc/nginx/ssl/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -68,23 +120,20 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
-    # Security headers
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
 
-    # Static Next.js assets - cache aggressively
     location /_next/static/ {
         proxy_pass http://poolarena:3000;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+        access_log off;
         expires 1y;
         add_header Cache-Control "public, max-age=31536000, immutable";
     }
 
-    # Public static files (images, etc.)
     location /images/ {
         proxy_pass http://poolarena:3000;
         proxy_http_version 1.1;
@@ -93,7 +142,6 @@ server {
         add_header Cache-Control "public, max-age=2592000";
     }
 
-    # PoolArena Next.js application
     location / {
         proxy_pass http://poolarena:3000;
         proxy_http_version 1.1;
@@ -108,13 +156,13 @@ server {
 }
 
 # ========================================
-# HTTPS Server - API Backend
+# HTTPS Server - API (external access)
+# Dùng khi POS app / mobile / ESP32 gọi thẳng vào API domain
 # ========================================
 server {
     listen 443 ssl http2;
     server_name ${API_DOMAIN};
 
-    # SSL Configuration
     ssl_certificate /etc/nginx/ssl/fullchain.pem;
     ssl_certificate_key /etc/nginx/ssl/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -123,10 +171,9 @@ server {
     ssl_session_cache shared:SSL:10m;
     ssl_session_timeout 10m;
 
-    # Security headers
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    
-    # Serve uploads directly via Nginx (faster, offloads backend)
+
+    # Upload files — nginx serve trực tiếp
     location /uploads/ {
         alias /var/www/uploads/;
         access_log off;
@@ -136,7 +183,17 @@ server {
         try_files $uri =404;
     }
 
-    # Rate limiting for API
+    location /api/auth/ {
+        limit_req zone=login_limit burst=5 nodelay;
+
+        proxy_pass http://backend:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     location / {
         limit_req zone=api_limit burst=20 nodelay;
 
@@ -146,31 +203,14 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Timeouts
         proxy_connect_timeout 10s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
-
-        # Buffering (giúp ổn định với JSON response lớn)
         proxy_buffering on;
         proxy_buffers 16 16k;
         proxy_buffer_size 16k;
     }
 
-    # Stricter rate limiting for auth endpoints
-    location /api/auth/ {
-        limit_req zone=login_limit burst=5 nodelay;
-        
-        proxy_pass http://backend:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # Health check endpoint
     location /health {
         access_log off;
         proxy_pass http://backend:8000/health;

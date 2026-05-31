@@ -55,7 +55,7 @@ const TournamentKnockoutTab = ({
                 <KnockoutMatchTable
                     matches={ko8Round1} players={players} title="Tứ kết" matchRange="Trận 21-24" matchCount={4}
                     isPlayerSelectable={true} availablePlayers={qualified8Players} selectedIds={ko8SelectedIds}
-                    selectDisabled={qualified8Count < 8}
+                    selectDisabled={false}
                     onChange={(idx, field, value) => handleKO8Change(1, idx, field, value)}
                     onSaveMatch={(idx) => saveKO8Match(1, idx)}
                     tablesList={tables} tournament={tournament}
@@ -89,7 +89,7 @@ const TournamentKnockoutTab = ({
                 <KnockoutMatchTable
                     matches={ko32R32} players={players} title="Vòng 1/16" matchRange="Trận 81-96" matchCount={16}
                     isPlayerSelectable={true} availablePlayers={qualified32Players} selectedIds={ko32SelectedIds}
-                    selectDisabled={qualified32Count < 32}
+                    selectDisabled={false}
                     onChange={(idx, field, value) => handleKO32Change(1, idx, field, value)}
                     onSaveMatch={(idx) => saveKO32Match(1, idx)}
                     tablesList={tables} tournament={tournament}
@@ -138,7 +138,7 @@ const TournamentKnockoutTab = ({
             <KnockoutMatchTable
                 matches={ko16R16} players={players} title="Vòng 1/8" matchRange="Trận 41-48" matchCount={8}
                 isPlayerSelectable={true} availablePlayers={qualifiedPlayers} selectedIds={ko16SelectedIds}
-                selectDisabled={qualified16Count < 16}
+                selectDisabled={false}
                 onChange={(idx, field, value) => handleKO16Change(1, idx, field, value)}
                 onSaveMatch={(idx) => saveKO16Match(1, idx)}
                 tablesList={tables} tournament={tournament}

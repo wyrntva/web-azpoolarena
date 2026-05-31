@@ -1,3 +1,31 @@
-__pycache__/
-venv/
+# Dependencies
+node_modules/
+cms/node_modules/
+
+# Compiled output
+dist/
+cms/dist/
+
+# Environment
 .env
+.env.*
+!.env.example
+
+# Frontend build output (copied in during Docker build, not committed)
+public/
+!public/.gitkeep
+
+# Uploads (user files, managed via Docker volume)
+uploads/*
+!uploads/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store

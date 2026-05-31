@@ -2,7 +2,7 @@
 # Makefile for AzPoolArena Docker Operations
 # ==============================================
 
-.PHONY: help dev-setup dev-up dev-down dev-logs dev-build prod-deploy prod-up prod-down prod-logs backup clean
+.PHONY: help dev-setup dev-up dev-down dev-logs dev-build prod-build prod-deploy prod-up prod-down prod-logs prod-shell backup clean
 
 # Default target
 help:
@@ -25,10 +25,12 @@ help:
 	@echo "  make db-shell     - Open database shell"
 	@echo ""
 	@echo "Production:"
-	@echo "  make prod-deploy  - Deploy to production"
-	@echo "  make prod-up      - Start production environment"
+	@echo "  make prod-build   - Build unified image (frontend + backend)"
+	@echo "  make prod-deploy  - Build + deploy to production"
+	@echo "  make prod-up      - Start production environment (image must exist)"
 	@echo "  make prod-down    - Stop production environment"
 	@echo "  make prod-logs    - View production logs"
+	@echo "  make prod-shell   - Shell into production backend container"
 	@echo "  make backup       - Backup production database"
 	@echo ""
 	@echo "Cleanup:"
@@ -103,10 +105,23 @@ db-shell:
 # Production Commands
 # ====================
 
+prod-build:
+	@echo "🏗️  Building unified production image (frontend + backend)..."
+	@docker-compose -f docker-compose.prod.yml build backend
+	@echo "✅ Build complete!"
+
 prod-deploy:
 	@echo "🚀 Deploying to production..."
 	@if [ ! -f .env.prod ]; then echo "❌ Error: .env.prod not found!"; exit 1; fi
-	@bash scripts/deploy.sh
+	@docker-compose -f docker-compose.prod.yml build backend
+	@docker-compose -f docker-compose.prod.yml up -d
+	@echo "⏳ Waiting for services..."
+	@sleep 8
+	@docker-compose -f docker-compose.prod.yml exec backend node dist/main --migration:run 2>/dev/null || \
+		docker-compose -f docker-compose.prod.yml exec -T backend sh -c "cd /app && node -e \"require('./dist/data-source').AppDataSource.initialize().then(ds => ds.runMigrations()).then(() => process.exit(0))\"" 2>/dev/null || true
+	@echo "✅ Production deployed!"
+	@echo "📍 CMS:  https://$${DOMAIN}"
+	@echo "📍 API:  https://$${API_DOMAIN}"
 
 prod-up:
 	@echo "🚀 Starting production environment..."
@@ -120,6 +135,9 @@ prod-down:
 
 prod-logs:
 	@docker-compose -f docker-compose.prod.yml logs -f
+
+prod-shell:
+	@docker-compose -f docker-compose.prod.yml exec backend sh
 
 backup:
 	@echo "💾 Creating database backup..."

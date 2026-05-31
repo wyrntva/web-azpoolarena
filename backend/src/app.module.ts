@@ -19,11 +19,8 @@ import { StoreSettingsModule } from './store-settings/store-settings.module';
 import { FinanceModule } from './finance/finance.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { HrModule } from './hr/hr.module';
-import { QrAccessModule } from './qr-access/qr-access.module';
-import { WifiModule } from './wifi/wifi.module';
 import { RankingsModule } from './rankings/rankings.module';
 import { UploadsModule } from './uploads/uploads.module';
-import { DashboardModule } from './dashboard/dashboard.module';
 import { MqttClientModule } from './mqtt/mqtt.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
@@ -65,12 +62,42 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
     // Cron scheduler (replaces threading + time.sleep)
     ScheduleModule.forRoot(),
 
-    // Static file serving (replaces FastAPI StaticFiles)
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
-      serveStaticOptions: { index: false },
-    }),
+    // Static file serving
+    ServeStaticModule.forRoot(
+      // Upload files (avatars, images, documents)
+      {
+        rootPath: join(__dirname, '..', 'uploads'),
+        serveRoot: '/uploads',
+        serveStaticOptions: { index: false },
+      },
+      // Frontend CMS SPA — serves index.html as fallback for all non-api routes
+      {
+        rootPath: join(__dirname, '..', 'public'),
+        exclude: ['/api/*', '/uploads/*'],
+        serveStaticOptions: {
+          index: false,
+          setHeaders: (res: any, filePath: string) => {
+            if (filePath.endsWith('.html')) {
+              // index.html: không cache để SPA luôn lấy bản mới nhất
+              res.setHeader(
+                'Cache-Control',
+                'no-cache, no-store, must-revalidate',
+              );
+            } else if (
+              /\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|ico|webp)$/i.test(
+                filePath,
+              )
+            ) {
+              // Vite build dùng content hash trong tên file → cache 1 năm
+              res.setHeader(
+                'Cache-Control',
+                'public, max-age=31536000, immutable',
+              );
+            }
+          },
+        },
+      },
+    ),
 
     // Feature modules
     AuthModule,
@@ -86,11 +113,8 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
     FinanceModule,
     InventoryModule,
     HrModule,
-    QrAccessModule,
-    WifiModule,
     RankingsModule,
     UploadsModule,
-    DashboardModule,
     MqttClientModule,
   ],
 })

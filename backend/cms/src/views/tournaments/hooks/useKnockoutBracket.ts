@@ -359,49 +359,68 @@ export const useKnockoutBracket = ({
     );
 
     // KO8 auto-seed: cross-seed WR2 (13-16) vs LR2 reversed (20,19,18,17)
-    // Only seeds matches that are still empty; saves to backend automatically
+    // Seeds each player as soon as they qualify — no need to wait for both
     useEffect(() => {
-        if (!isKO8Mode || qualified8Ids.length < 8) return;
+        if (!isKO8Mode) return;
 
         const wr = [winnerOf(13), winnerOf(14), winnerOf(15), winnerOf(16)];
         const lr = [winnerOf(20), winnerOf(19), winnerOf(18), winnerOf(17)];
 
-        const seedings = ko8Round1Nos
-            .map((matchNo, i) => ({ matchNo, p1: wr[i], p2: lr[i] }))
-            .filter(({ p1, p2 }) => p1 && p2);
+        // Include any match where at least 1 player is now known
+        const candidates = ko8Round1Nos.map((matchNo, i) => ({ matchNo, i, p1: wr[i], p2: lr[i] }))
+            .filter(({ p1, p2 }) => p1 || p2);
 
-        if (seedings.length === 0) return;
+        if (candidates.length === 0) return;
 
+        // Update local UI state — seed each player slot independently
         setKo8Round1(prev => {
             const next = [...prev];
             let changed = false;
-            seedings.forEach(({ matchNo, p1, p2 }, i) => {
-                if (next[i] && !next[i].player1_id && !next[i].player2_id) {
+            candidates.forEach(({ i, matchNo, p1, p2 }) => {
+                let m = next[i];
+                if (!m) return;
+                let updated = m;
+
+                if (p1 && !m.player1_id) { updated = { ...updated, player1_id: p1 }; changed = true; }
+                if (p2 && !m.player2_id) { updated = { ...updated, player2_id: p2 }; changed = true; }
+
+                // Recalculate handicap scores when both players are known
+                if (updated.player1_id && updated.player2_id && (updated !== m || (!m.player1_id || !m.player2_id))) {
                     const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
-                    const info = getRaceToInfo(p1, p2, players, tournament, rl);
-                    const p1Score = info.handicap > 0 && info.handicappedPlayerId === p1 ? String(info.handicap) : '0';
-                    const p2Score = info.handicap > 0 && info.handicappedPlayerId === p2 ? String(info.handicap) : '0';
-                    next[i] = { ...next[i], player1_id: p1, player2_id: p2, player1_score: p1Score, player2_score: p2Score };
-                    changed = true;
+                    const info = getRaceToInfo(updated.player1_id, updated.player2_id, players, tournament, rl);
+                    const p1Score = info.handicap > 0 && info.handicappedPlayerId === updated.player1_id ? String(info.handicap) : '0';
+                    const p2Score = info.handicap > 0 && info.handicappedPlayerId === updated.player2_id ? String(info.handicap) : '0';
+                    updated = { ...updated, player1_score: p1Score, player2_score: p2Score };
                 }
+
+                if (updated !== m) next[i] = updated;
             });
             return changed ? next : prev;
         });
 
-        // Save only empty matches to backend (with correct handicap initial scores)
-        // Use `matches` (backend source of truth, same render as qualified8Ids) instead of
-        // ko8Round1[i] which is a stale closure and may not reflect the KO8 sync yet.
-        seedings.forEach(({ matchNo, p1, p2 }) => {
+        // Persist to backend — only send when there's something new to add
+        candidates.forEach(({ matchNo, p1, p2 }) => {
             const storedMatch = matches.find(m => m.match_no === matchNo);
-            if (storedMatch?.player1_id || storedMatch?.player2_id) return;
-            const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
-            const info = getRaceToInfo(p1, p2, players, tournament, rl);
-            const p1Score = info.handicap > 0 && info.handicappedPlayerId === p1 ? info.handicap : 0;
-            const p2Score = info.handicap > 0 && info.handicappedPlayerId === p2 ? info.handicap : 0;
+            const hasNewP1 = p1 && !storedMatch?.player1_id;
+            const hasNewP2 = p2 && !storedMatch?.player2_id;
+            if (!hasNewP1 && !hasNewP2) return;
+
+            const finalP1 = p1 ? parseInt(p1, 10) : (storedMatch?.player1_id ?? null);
+            const finalP2 = p2 ? parseInt(p2, 10) : (storedMatch?.player2_id ?? null);
+
+            let p1Score = storedMatch?.player1_score ?? 0;
+            let p2Score = storedMatch?.player2_score ?? 0;
+            if (p1 && p2) {
+                const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
+                const info = getRaceToInfo(p1, p2, players, tournament, rl);
+                p1Score = info.handicap > 0 && info.handicappedPlayerId === p1 ? info.handicap : 0;
+                p2Score = info.handicap > 0 && info.handicappedPlayerId === p2 ? info.handicap : 0;
+            }
+
             onUpsertMatch(matchNo, {
                 bracket: 'knockout', round: 1,
-                player1_id: parseInt(p1, 10),
-                player2_id: parseInt(p2, 10),
+                player1_id: finalP1,
+                player2_id: finalP2,
                 player1_score: p1Score,
                 player2_score: p2Score,
                 status: 'pending', winner_id: null,

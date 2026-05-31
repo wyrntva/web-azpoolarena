@@ -15,6 +15,7 @@ import { TournamentSettingsService } from './services/tournament-settings.servic
 import { TournamentSettingsController } from './controllers/tournament-settings.controller';
 import { TournamentSchedulerService } from './services/tournament-scheduler.service';
 import { UserEntity } from '../users/entities/user.entity';
+import { TableEntity } from '../areas/entities/area.entity';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UserEntity } from '../users/entities/user.entity';
       ScoringRuleEntity,
       PaymentCodeEntity,
       UserEntity,
+      TableEntity,
     ]),
   ],
   controllers: [TournamentsController, TournamentSettingsController],

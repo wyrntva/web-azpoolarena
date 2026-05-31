@@ -245,15 +245,26 @@ const TournamentDetail = () => {
         const numPlayers = tournament.number_of_players;
         const size = numPlayers > 32 ? 64 : numPlayers > 16 ? 32 : 16;
 
-        // Match number ranges for the 3 auto-assign rounds (LR1, WR2, LR2)
-        const [rangeStart, rangeEnd] = size === 64 ? [33, 80] : size === 32 ? [17, 40] : [9, 20];
+        // Match ranges: qual rounds (LR1, WR2, LR2) + KO bracket
+        const [rangeStart, rangeEnd] = size === 64 ? [33, 111] : size === 32 ? [17, 55] : [9, 27];
         const inRange = (no: number) => no >= rangeStart && no <= rangeEnd;
 
-        // First run: mark existing both-filled matches as "already known" — don't auto-assign retroactively
+        // KO first round threshold: only schedule when ≥ 3/4 matches have both players
+        const [koFirstStart, koFirstCount] = size === 64 ? [81, 16] : size === 32 ? [41, 8] : [21, 4];
+        const koFirstFilled = bracketMatches.filter(m =>
+            m.match_no >= koFirstStart && m.match_no < koFirstStart + koFirstCount
+            && m.player1_id && m.player2_id
+        ).length;
+        const koFirstThreshold = Math.ceil(koFirstCount * 3 / 4);
+        const koFirstReady = koFirstFilled >= koFirstThreshold;
+
+        // First run: mark existing both-filled AND already-scheduled matches as "already known"
+        // Matches with both players but NO table are NOT marked → auto-assign will handle them
         if (prevBothFilledRef.current === null) {
             prevBothFilledRef.current = new Set(
                 bracketMatches
-                    .filter(m => inRange(m.match_no) && m.player1_id && m.player2_id)
+                    .filter(m => inRange(m.match_no) && m.player1_id && m.player2_id
+                        && (m.table_no || m.status === 'completed'))
                     .map(m => m.match_no)
             );
             return;
@@ -283,6 +294,9 @@ const TournamentDetail = () => {
             if (match.status === 'completed') continue;
             if (autoTableAssignedRef.current.has(match.match_no)) continue;
             if (prevBothFilledRef.current.has(match.match_no)) continue;
+            // KO first round: wait for 3/4 threshold before scheduling any
+            const isKOFirst = match.match_no >= koFirstStart && match.match_no < koFirstStart + koFirstCount;
+            if (isKOFirst && !koFirstReady) continue;
 
             if (freeIdx >= freeTables.length) break;
             const tableNo = freeTables[freeIdx++];
@@ -312,10 +326,14 @@ const TournamentDetail = () => {
         // Update snapshot for next comparison
         bracketMatches.forEach(m => {
             if (inRange(m.match_no) && m.player1_id && m.player2_id) {
-                prevBothFilledRef.current!.add(m.match_no);
+                // For KO first round, only mark as known once threshold is met
+                const isKOFirst = m.match_no >= koFirstStart && m.match_no < koFirstStart + koFirstCount;
+                if (!isKOFirst || koFirstReady) {
+                    prevBothFilledRef.current!.add(m.match_no);
+                }
             }
         });
-    }, [bracketMatches, tournament, tables, enabledTables]);
+    }, [bracketMatches, tournament, tables, enabledTables, priorityTables]);
 
     // Auto-update match status được xử lý bởi backend cron job (TournamentSchedulerService)
     // chạy mỗi 30 giây. Frontend chỉ cần poll bracket để hiển thị trạng thái mới nhất.

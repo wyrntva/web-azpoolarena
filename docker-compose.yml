@@ -71,13 +71,13 @@ services:
     networks:
       - azpool-network
 
-  # Frontend Service (Admin/Management Interface)
-  frontend:
+  # CMS Admin Interface (React/Vite dev server — source tại backend/cms/)
+  cms:
     build:
-      context: ./frontend
+      context: ./backend/cms
       dockerfile: Dockerfile
       target: development
-    container_name: azpool-frontend-dev
+    container_name: azpool-cms-dev
     restart: unless-stopped
     depends_on:
       - backend
@@ -87,7 +87,7 @@ services:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       # Mount source code for hot reload
-      - ./frontend:/app:delegated
+      - ./backend/cms:/app:delegated
       - /app/node_modules
     networks:
       - azpool-network
