@@ -879,6 +879,38 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = fals
         return isWinner ? 700 : 500;
     };
 
+    const renderTableNumber = (tableNo: string) => {
+        if (!tableNo || tableNo === "-") return <span style={{ fontSize: "20px", fontWeight: 700 }}>-</span>;
+        
+        let clean = tableNo.trim();
+        // If it's a number, prepend "Bàn "
+        if (/^\d+$/.test(clean)) {
+            clean = `Bàn ${clean}`;
+        }
+
+        // Adjust font size dynamically to make sure it fits the 72px pill in a single line
+        const textLen = clean.length;
+        let fontSize = "13px";
+        if (textLen > 8) {
+            fontSize = "10.5px";
+        } else if (textLen > 6) {
+            fontSize = "11.5px";
+        }
+
+        return (
+            <span style={{ 
+                fontSize: fontSize, 
+                fontWeight: 700, 
+                fontStyle: "italic",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+                letterSpacing: "0.2px"
+            }}>
+                {clean}
+            </span>
+        );
+    };
+
     return (
         <div className="flex flex-col gap-0 mb-3">
             {/* Meta row */}
@@ -920,18 +952,13 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = fals
                     style={{
                         display: "flex",
                         width: "72px",
-                        padding: "12px",
+                        padding: "4px",
                         justifyContent: "center",
                         alignItems: "center",
-                        gap: "4px",
                         alignSelf: "stretch",
                         background: tableNumBg,
                         color: tableTextColor,
                         fontFamily: "Montserrat, sans-serif",
-                        fontSize: "16px",
-                        fontStyle: "italic",
-                        fontWeight: 700,
-                        lineHeight: "24px",
                         textAlign: "center",
                         flexShrink: 0,
                         borderTopLeftRadius: "12px",
@@ -939,13 +966,13 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = fals
                         transition: "background 0.5s ease-in-out, color 0.5s ease-in-out",
                     }}
                 >
-                    {displayTableNumber}
+                    {renderTableNumber(displayTableNumber)}
                 </div>
 
                 {/* Players column — flex 1, split into 2 equal rows, no divider */}
                 <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", flex: "1 0 0", background: "#172339" }}>
                     {/* Player 1 row */}
-                    <div className="flex items-center justify-between" style={{ height: "40px", paddingLeft: "8px", paddingRight: "12px" }}>
+                    <div className="flex items-center justify-between w-full" style={{ height: "40px", paddingLeft: "8px", paddingRight: "12px" }}>
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                             {!match.player1.isBye && (
                                 <img
@@ -1001,7 +1028,7 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = fals
                     </div>
 
                     {/* Player 2 row */}
-                    <div className="flex items-center justify-between" style={{ height: "40px", paddingLeft: "8px", paddingRight: "12px" }}>
+                    <div className="flex items-center justify-between w-full" style={{ height: "40px", paddingLeft: "8px", paddingRight: "12px" }}>
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                             {!match.player2.isBye && (
                                 <img

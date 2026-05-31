@@ -36,8 +36,8 @@ VENV_DIR="venv"
 
 # Kiểm tra và tạo virtual environment nếu chưa có
 if [ ! -d "$VENV_DIR" ]; then
-    echo "Đang tạo môi trường ảo (virtual environment)..."
-    python3 -m venv "$VENV_DIR"
+    echo "Đang tạo môi trường ảo (virtual environment) với system-site-packages..."
+    python3 -m venv --system-site-packages "$VENV_DIR"
     
     # Kiểm tra nếu tạo venv thất bại
     if [ ! -d "$VENV_DIR" ]; then
