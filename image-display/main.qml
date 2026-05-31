@@ -342,7 +342,7 @@ Window {
                                     Image {
                                         id: p1AvatarImg
                                         anchors.fill: parent
-                                        source: modelData.player1Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile_mini_dcryfs.webp")
+                                        source: modelData.player1Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
                                         fillMode: Image.PreserveAspectCrop
                                         smooth: true
                                         antialiasing: true
@@ -425,7 +425,7 @@ Window {
                                     Image {
                                         id: p2AvatarImg
                                         anchors.fill: parent
-                                        source: modelData.player2Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile_mini_dcryfs.webp")
+                                        source: modelData.player2Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
                                         fillMode: Image.PreserveAspectCrop
                                         smooth: true
                                         antialiasing: true
