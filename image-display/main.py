@@ -230,7 +230,10 @@ def format_avatar_url(avatar_url, api_base_url):
     if not avatar_url:
         return ""
     if avatar_url.startswith("http"):
-        return avatar_url
+        # Thay thế bất kỳ URL local/dev nào (192.168.x.x:port hoặc localhost:port)
+        # bằng API base URL hiện tại để tránh kết nối sai server
+        normalized = re.sub(r'https?://(?:localhost|192\.168\.\d+\.\d+|127\.0\.0\.1)(:\d+)?', api_base_url, avatar_url)
+        return normalized
     return f"{api_base_url}{avatar_url}"
 
 def format_match_time(match_time):
