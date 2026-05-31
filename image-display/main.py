@@ -23,8 +23,8 @@ from PySide6.QtGui import QGuiApplication, QScreen
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QUrl, Property, QObject, Signal, Slot, QTimer
 
-# Cấu hình API — ưu tiên biến môi trường, fallback sang hardcode
-API_BASE_URL = os.environ.get("API_BASE_URL", "http://192.168.1.188:8000").rstrip("/")
+# Cấu hình API — ưu tiên biến môi trường, fallback sang production server
+API_BASE_URL = os.environ.get("API_BASE_URL", "https://cms.poolarena.vn").rstrip("/")
 API_SETTINGS_URL = f"{API_BASE_URL}/api/store-settings/public"
 
 class ImageProvider(QObject):
