@@ -25,6 +25,8 @@ export interface MatchVM {
     player1_check_in: string;
     player2_check_in: string;
     winner_id: string;
+    player1_points?: string;
+    player2_points?: string;
 }
 
 export type BracketType = 'winners' | 'losers';
@@ -67,7 +69,23 @@ export const createEmptyMatch = (matchNo: number, bracket: BracketType, round: n
     updated_at: null,
 });
 
-const toDatetimeLocal = (iso: string): string => {
+export const toDatetimeLocal = (iso: string): string => {
+    if (!iso) return '';
+    let normalized = iso.trim();
+
+    // Check if it's already a local timestamp without timezone offset
+    if (!normalized.endsWith('Z') && !normalized.match(/[+-]\d{2}:\d{2}$/)) {
+        if (normalized.includes(' ')) {
+            normalized = normalized.replace(' ', 'T');
+        }
+        const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+        if (match) {
+            const [_, year, month, day, hours, minutes] = match;
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    }
+
+    // Fallback/standard parsing for UTC strings
     const d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -87,6 +105,8 @@ export const toVM = (m: TournamentMatch): MatchVM => ({
     player1_check_in: m.player1_check_in || 'unconfirmed',
     player2_check_in: m.player2_check_in || 'unconfirmed',
     winner_id: m.winner_id ? String(m.winner_id) : '',
+    player1_points: m.player1_points !== undefined && m.player1_points !== null ? String(m.player1_points) : '',
+    player2_points: m.player2_points !== undefined && m.player2_points !== null ? String(m.player2_points) : '',
 });
 
 // ============================================
@@ -343,6 +363,8 @@ export function buildSavePayloads(
                     player1_check_in: m.player1_check_in || 'unconfirmed',
                     player2_check_in: m.player2_check_in || 'unconfirmed',
                     winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+                    player1_points: m.player1_points !== undefined && m.player1_points !== '' ? parseInt(m.player1_points, 10) : null,
+                    player2_points: m.player2_points !== undefined && m.player2_points !== '' ? parseInt(m.player2_points, 10) : null,
                 },
             });
         }

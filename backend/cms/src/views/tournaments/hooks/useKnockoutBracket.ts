@@ -358,13 +358,13 @@ export const useKnockoutBracket = ({
         []
     );
 
-    // KO8 auto-seed: cross-seed WR2 (13-16) vs LR2 reversed (20,19,18,17)
+    // KO8 auto-seed: seed WR2 (13-16) vs LR2 straight (17,18,19,20)
     // Seeds each player as soon as they qualify — no need to wait for both
     useEffect(() => {
         if (!isKO8Mode) return;
 
         const wr = [winnerOf(13), winnerOf(14), winnerOf(15), winnerOf(16)];
-        const lr = [winnerOf(20), winnerOf(19), winnerOf(18), winnerOf(17)];
+        const lr = [winnerOf(17), winnerOf(18), winnerOf(19), winnerOf(20)];
 
         // Include any match where at least 1 player is now known
         const candidates = ko8Round1Nos.map((matchNo, i) => ({ matchNo, i, p1: wr[i], p2: lr[i] }))
@@ -372,17 +372,20 @@ export const useKnockoutBracket = ({
 
         if (candidates.length === 0) return;
 
-        // Update local UI state — seed each player slot independently
+        // Update local UI state — seed each player slot independently (only for non-completed matches)
         setKo8Round1(prev => {
             const next = [...prev];
             let changed = false;
             candidates.forEach(({ i, matchNo, p1, p2 }) => {
                 let m = next[i];
-                if (!m) return;
+                if (!m || m.status === 'completed') return;
                 let updated = m;
 
-                if (p1 && !m.player1_id) { updated = { ...updated, player1_id: p1 }; changed = true; }
-                if (p2 && !m.player2_id) { updated = { ...updated, player2_id: p2 }; changed = true; }
+                const targetP1 = p1 || '';
+                const targetP2 = p2 || '';
+
+                if (m.player1_id !== targetP1) { updated = { ...updated, player1_id: targetP1 }; changed = true; }
+                if (m.player2_id !== targetP2) { updated = { ...updated, player2_id: targetP2 }; changed = true; }
 
                 // Recalculate handicap scores when both players are known
                 if (updated.player1_id && updated.player2_id && (updated !== m || (!m.player1_id || !m.player2_id))) {
@@ -391,6 +394,9 @@ export const useKnockoutBracket = ({
                     const p1Score = info.handicap > 0 && info.handicappedPlayerId === updated.player1_id ? String(info.handicap) : '0';
                     const p2Score = info.handicap > 0 && info.handicappedPlayerId === updated.player2_id ? String(info.handicap) : '0';
                     updated = { ...updated, player1_score: p1Score, player2_score: p2Score };
+                } else if (!updated.player1_id || !updated.player2_id) {
+                    // Reset scores to 0 if one or both players are missing
+                    updated = { ...updated, player1_score: '0', player2_score: '0' };
                 }
 
                 if (updated !== m) next[i] = updated;
@@ -398,23 +404,31 @@ export const useKnockoutBracket = ({
             return changed ? next : prev;
         });
 
-        // Persist to backend — only send when there's something new to add
+        // Persist to backend — only send when there's something new or changed to add
         candidates.forEach(({ matchNo, p1, p2 }) => {
             const storedMatch = matches.find(m => m.match_no === matchNo);
-            const hasNewP1 = p1 && !storedMatch?.player1_id;
-            const hasNewP2 = p2 && !storedMatch?.player2_id;
-            if (!hasNewP1 && !hasNewP2) return;
+            if (storedMatch?.status === 'completed') return;
 
-            const finalP1 = p1 ? parseInt(p1, 10) : (storedMatch?.player1_id ?? null);
-            const finalP2 = p2 ? parseInt(p2, 10) : (storedMatch?.player2_id ?? null);
+            const targetP1 = p1 || '';
+            const targetP2 = p2 || '';
 
-            let p1Score = storedMatch?.player1_score ?? 0;
-            let p2Score = storedMatch?.player2_score ?? 0;
-            if (p1 && p2) {
+            const currentP1 = storedMatch?.player1_id ? String(storedMatch.player1_id) : '';
+            const currentP2 = storedMatch?.player2_id ? String(storedMatch.player2_id) : '';
+
+            const hasChangedP1 = currentP1 !== targetP1;
+            const hasChangedP2 = currentP2 !== targetP2;
+            if (!hasChangedP1 && !hasChangedP2) return;
+
+            const finalP1 = targetP1 ? parseInt(targetP1, 10) : null;
+            const finalP2 = targetP2 ? parseInt(targetP2, 10) : null;
+
+            let p1Score = 0;
+            let p2Score = 0;
+            if (finalP1 && finalP2) {
                 const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
-                const info = getRaceToInfo(p1, p2, players, tournament, rl);
-                p1Score = info.handicap > 0 && info.handicappedPlayerId === p1 ? info.handicap : 0;
-                p2Score = info.handicap > 0 && info.handicappedPlayerId === p2 ? info.handicap : 0;
+                const info = getRaceToInfo(String(finalP1), String(finalP2), players, tournament, rl);
+                p1Score = info.handicap > 0 && info.handicappedPlayerId === String(finalP1) ? info.handicap : 0;
+                p2Score = info.handicap > 0 && info.handicappedPlayerId === String(finalP2) ? info.handicap : 0;
             }
 
             onUpsertMatch(matchNo, {
@@ -678,6 +692,8 @@ export const useKnockoutBracket = ({
             player1_check_in: m.player1_check_in || 'unconfirmed',
             player2_check_in: m.player2_check_in || 'unconfirmed',
             winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+            player1_points: m.player1_points !== undefined && m.player1_points !== '' ? parseInt(m.player1_points, 10) : null,
+            player2_points: m.player2_points !== undefined && m.player2_points !== '' ? parseInt(m.player2_points, 10) : null,
         },
     });
 

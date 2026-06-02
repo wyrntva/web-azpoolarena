@@ -48,6 +48,8 @@ export interface Tournament {
     draw_from_round: string | null;
     semi_final: string | null;
     final: string | null;
+    enabled_tables?: string[] | null;
+    priority_tables?: string[] | null;
     registration_count?: number;
     created_at: string;
     updated_at: string;
@@ -99,6 +101,8 @@ export interface TournamentCreate {
     draw_from_round?: string | null;
     semi_final?: string | null;
     final?: string | null;
+    enabled_tables?: string[] | null;
+    priority_tables?: string[] | null;
 }
 
 export type TournamentUpdate = Partial<TournamentCreate>;
@@ -128,6 +132,8 @@ export interface TournamentMatch {
     player1_check_in?: string;
     player2_check_in?: string;
     winner_id: number | null;
+    player1_points?: number | null;
+    player2_points?: number | null;
     created_at?: string | null;
     updated_at?: string | null;
 }
@@ -145,6 +151,8 @@ export interface TournamentMatchUpsert {
     player1_check_in?: string;
     player2_check_in?: string;
     winner_id?: number | null;
+    player1_points?: number | null;
+    player2_points?: number | null;
 }
 
 export const tournamentAPI = {

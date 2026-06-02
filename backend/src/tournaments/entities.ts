@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { UserEntity } from '../users/entities/user.entity';
 
@@ -248,6 +249,12 @@ export class TournamentEntity {
   @Column({ type: 'varchar', length: 50, nullable: true })
   final: string;
 
+  @Column({ type: 'text', nullable: true })
+  enabled_tables: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  priority_tables: string | null;
+
   @CreateDateColumn()
   created_at: Date;
 
@@ -298,6 +305,7 @@ export enum TournamentMatchBracket {
 }
 
 @Entity('tournament_matches')
+@Index(['tournament_id', 'match_no'], { unique: true })
 export class TournamentMatchEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -347,6 +355,18 @@ export class TournamentMatchEntity {
 
   @Column({ type: 'int', nullable: true })
   winner_id: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  player1_points: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  player2_points: number | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  player1_rank: string | null;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  player2_rank: string | null;
 
   @CreateDateColumn()
   created_at: Date;

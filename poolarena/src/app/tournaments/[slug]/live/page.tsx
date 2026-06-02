@@ -188,9 +188,11 @@ function resolvePlayerAvatar(match: ApiMatch, side: 'player1' | 'player2'): stri
 }
 
 function resolvePlayerRank(match: ApiMatch, side: 'player1' | 'player2'): string | null {
+    const frozenRank = match[`${side}_rank` as 'player1_rank' | 'player2_rank'];
+    if (frozenRank) return frozenRank;
     const nested = match[side];
     if (nested && nested.rank) return nested.rank;
-    return match[`${side}_rank` as 'player1_rank' | 'player2_rank'];
+    return null;
 }
 
 function formatMatch(
@@ -529,6 +531,24 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
     );
 };
 
+// When duplicates exist (same match_no), keep the best row:
+// completed > others, winner set, both players present, higher total score, lower id
+const dedupeMatches = (matches: ApiMatch[]): ApiMatch[] => {
+    const map = new Map<number, ApiMatch>();
+    const statusRank = (s: string) => s === 'completed' ? 0 : s === 'ongoing' ? 1 : s === 'upcoming' ? 2 : 3;
+    for (const m of matches) {
+        const existing = map.get(m.match_no);
+        if (!existing) { map.set(m.match_no, m); continue; }
+        const score = (x: ApiMatch) =>
+            statusRank(x.status) * -100 +
+            (x.winner_id ? 10 : 0) +
+            (x.player1_id && x.player2_id ? 5 : 0) +
+            (x.player1_score + x.player2_score);
+        if (score(m) > score(existing)) map.set(m.match_no, m);
+    }
+    return Array.from(map.values()).sort((a, b) => a.match_no - b.match_no);
+};
+
 // ---------- Main Page Component ----------
 export default function TournamentLivePage() {
     const params = useParams();
@@ -554,8 +574,14 @@ export default function TournamentLivePage() {
     // Filter and format matches that are ongoing, upcoming, or pending
     const activeFormattedMatches = React.useMemo(() => {
         if (!matches) return [];
-        return matches
+        
+        // Deduplicate matches in case there are duplicates in the DB
+        const deduped = dedupeMatches(matches);
+
+        return deduped
             .filter(m => m.status === 'ongoing' || m.status === 'upcoming' || m.status === 'pending')
+            // Only show matches that have both players ready (not waiting on feeder results or empty byes)
+            .filter(m => m.player1_id !== null && m.player2_id !== null)
             .map(m => formatMatch(m, tournament))
             .sort((a, b) => {
                 // Parse table numbers for sorting

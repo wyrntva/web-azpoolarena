@@ -59,6 +59,8 @@ export class CreateTournamentDto {
   @IsOptional() @IsString() draw_from_round?: string | null;
   @IsOptional() @IsString() semi_final?: string | null;
   @IsOptional() @IsString() final?: string | null;
+  @IsOptional() @IsArray() enabled_tables?: string[] | null;
+  @IsOptional() @IsArray() priority_tables?: string[] | null;
 }
 
 export class UpdateTournamentDto {
@@ -107,6 +109,8 @@ export class UpdateTournamentDto {
   @IsOptional() @IsString() draw_from_round?: string | null;
   @IsOptional() @IsString() semi_final?: string | null;
   @IsOptional() @IsString() final?: string | null;
+  @IsOptional() @IsArray() enabled_tables?: string[] | null;
+  @IsOptional() @IsArray() priority_tables?: string[] | null;
 }
 
 export class CreateMatchDto {
@@ -131,4 +135,6 @@ export class UpdateMatchDto {
   @IsOptional() @IsString() player2_check_in?: string;
   @IsOptional() @IsString() bracket?: string;
   @IsOptional() @IsNumber() round?: number;
+  @IsOptional() @IsNumber() player1_points?: number | null;
+  @IsOptional() @IsNumber() player2_points?: number | null;
 }

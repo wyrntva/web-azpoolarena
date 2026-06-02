@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Spin } from "antd";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/stores/store";
 import {
     TournamentNavbar,
     ChampionshipBanner,
@@ -70,6 +72,8 @@ interface TournamentInfo {
     handicap_2_touch?: string | null;
     number_of_players?: number | null;
     tournament_type?: string | null;
+    registration_end_date?: string | null;
+    registration_count?: number | null;
 }
 
 // Rank ordering for handicap calculation (lower index = lower rank)
@@ -242,9 +246,11 @@ function resolvePlayerAvatar(match: ApiMatch, side: 'player1' | 'player2'): stri
  * Resolve player rank – prefer nested object, fall back to flat field.
  */
 function resolvePlayerRank(match: ApiMatch, side: 'player1' | 'player2'): string | null {
+    const frozenRank = match[`${side}_rank` as 'player1_rank' | 'player2_rank'];
+    if (frozenRank) return frozenRank;
     const nested = match[side];
     if (nested && nested.rank) return nested.rank;
-    return match[`${side}_rank` as 'player1_rank' | 'player2_rank'];
+    return null;
 }
 
 /**
@@ -329,6 +335,7 @@ function getRoundLabel(bracket: string, round: number, maxRound: number): string
     if (round === maxRound) return "CHUNG KẾT";
     if (round === maxRound - 1) return "BÁN KẾT";
     if (round === maxRound - 2) return "TỨ KẾT";
+    if (round === maxRound - 3) return "VÒNG 1/8";
     return `VÒNG ${round}`;
 }
 
@@ -400,6 +407,20 @@ function getBracketLayout(numberOfPlayers: number) {
                 { start: 105, count: 4, round: 3 },  // QF
                 { start: 109, count: 2, round: 4 },  // SF
                 { start: 111, count: 1, round: 5 },  // Final
+            ],
+        };
+    } else if (numberOfPlayers === 24) {
+        // 24-player bracket (special: WR1=1-8, WR2=9-16 with seeded slot2, LR1=17-24)
+        return {
+            wr1: { start: 1, count: 8 },
+            lr1: { start: 17, count: 8 },
+            wr2: { start: 9, count: 8 },
+            lr2: { start: 0, count: 0 },
+            knockout: [
+                { start: 41, count: 8, round: 1 },  // R16
+                { start: 49, count: 4, round: 2 },  // QF
+                { start: 53, count: 2, round: 3 },  // SF
+                { start: 55, count: 1, round: 4 },  // Final
             ],
         };
     } else if (numberOfPlayers > 16) {
@@ -526,6 +547,33 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         
         const size = numberOfPlayers;
         
+        if (size === 24) {
+            // 24-player special: WR2 is one-to-one from WR1; LR1 gets losers from WR2 (reversed) + WR1
+            if (m.bracket === "winners" && m.round === 2) {
+                const wr1MatchNo = m.match_no - 8; // match 9→1, 10→2, ..., 16→8
+                if (!p1Id) p1 = getWinnerOfMatch(wr1MatchNo);
+                // player2 is pre-seeded in DB, don't override
+            } else if (m.bracket === "losers" && m.round === 1) {
+                const wr2MatchNo = 33 - m.match_no; // match 17→16, 18→15, ..., 24→9
+                const wr1MatchNo = m.match_no - 16; // match 17→1, 18→2, ..., 24→8
+                if (!p1Id) p1 = getLoserOfMatch(wr2MatchNo);
+                if (!p2Id) p2 = getLoserOfMatch(wr1MatchNo);
+            }
+            return {
+                ...m,
+                player1: p1,
+                player2: p2,
+                player1_id: p1 ? p1.id : m.player1_id,
+                player2_id: p2 ? p2.id : m.player2_id,
+                player1_name: p1 ? p1.full_name : m.player1_name,
+                player2_name: p2 ? p2.full_name : m.player2_name,
+                player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+                player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+                player1_rank: p1 ? p1.rank : m.player1_rank,
+                player2_rank: p2 ? p2.rank : m.player2_rank,
+            };
+        }
+
         if (m.bracket === "winners" && m.round === 2) {
             const idx = m.match_no - layout.wr2.start;
             const src1 = layout.wr1.start + 2 * idx;
@@ -586,12 +634,21 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         const sorted = [...roundMatches].sort((a, b) => a.match_no - b.match_no);
 
         if (round === 1) {
-            // LR1 players come from losers of WR1
-            sorted.forEach((m, i) => {
-                const wr1Match1 = 1 + i * 2;
-                const wr1Match2 = 1 + i * 2 + 1;
-                labels.set(m.match_no, [`Thua trận ${wr1Match1}`, `Thua trận ${wr1Match2}`]);
-            });
+            if (numberOfPlayers === 24) {
+                // 24-player LR1: p1 = loser of WR2 (33-matchNo), p2 = loser of WR1 (matchNo-16)
+                sorted.forEach((m) => {
+                    const wr2MatchNo = 33 - m.match_no;
+                    const wr1MatchNo = m.match_no - 16;
+                    labels.set(m.match_no, [`Thua trận ${wr2MatchNo}`, `Thua trận ${wr1MatchNo}`]);
+                });
+            } else {
+                // Standard: LR1 players come from losers of WR1 pairs
+                sorted.forEach((m, i) => {
+                    const wr1Match1 = 1 + i * 2;
+                    const wr1Match2 = 1 + i * 2 + 1;
+                    labels.set(m.match_no, [`Thua trận ${wr1Match1}`, `Thua trận ${wr1Match2}`]);
+                });
+            }
         } else if (round === 2) {
             // LR2: p1 = winner of LR1, p2 = loser of WR2
             if (is64) {
@@ -640,10 +697,21 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
             let p2Fallback = "Bye";
 
             if (!isFirstRound && prevSorted) {
-                const srcP1 = prevSorted[2 * index];
-                const srcP2 = prevSorted[2 * index + 1];
-                if (srcP1) p1Fallback = `Thắng trận ${srcP1.match_no}`;
-                if (srcP2) p2Fallback = `Thắng trận ${srcP2.match_no}`;
+                // 24-player WR2: one-to-one mapping (WR2[i].player1 = winner of WR1[i])
+                const is24WR2 = numberOfPlayers === 24
+                    && sorted.length > 0
+                    && sorted[0].bracket === "winners"
+                    && sorted[0].round === 2;
+                if (is24WR2) {
+                    const srcP1 = prevSorted[index];
+                    if (srcP1) p1Fallback = `Thắng trận ${srcP1.match_no}`;
+                    // p2 is pre-seeded (already in DB), keep "Bye" fallback
+                } else {
+                    const srcP1 = prevSorted[2 * index];
+                    const srcP2 = prevSorted[2 * index + 1];
+                    if (srcP1) p1Fallback = `Thắng trận ${srcP1.match_no}`;
+                    if (srcP2) p2Fallback = `Thắng trận ${srcP2.match_no}`;
+                }
             }
 
             return formatMatch(match, tournament, p1Fallback, p2Fallback);
@@ -655,7 +723,9 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         if (!m) return false;
         const hasP1 = !!((m.player1 && m.player1.id) || m.player1_id);
         const hasP2 = !!((m.player2 && m.player2.id) || m.player2_id);
-        return hasP1 !== hasP2;
+        // Only a true bye when the match is COMPLETED with exactly one player (walkover).
+        // A pending/upcoming match with one empty slot is just incomplete registration, not a bye.
+        return (hasP1 !== hasP2) && m.status === "completed";
     }
 
     /**
@@ -674,10 +744,17 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
             let p2Fallback = labels?.[1] ?? "Chờ...";
 
             if (round === 1) {
-                const src1 = 1 + index * 2;
-                const src2 = 1 + index * 2 + 1;
-                if (isSourceMatchBye(src1)) p1Fallback = "Bye";
-                if (isSourceMatchBye(src2)) p2Fallback = "Bye";
+                if (numberOfPlayers === 24) {
+                    // WR2 source (p1) is never a true bye — seeded players always get a real opponent
+                    // Only check WR1 source (p2) for bye
+                    const wr1MatchNo = match.match_no - 16;
+                    if (isSourceMatchBye(wr1MatchNo)) p2Fallback = "Bye";
+                } else {
+                    const src1 = 1 + index * 2;
+                    const src2 = 1 + index * 2 + 1;
+                    if (isSourceMatchBye(src1)) p1Fallback = "Bye";
+                    if (isSourceMatchBye(src2)) p2Fallback = "Bye";
+                }
             }
 
             return formatMatch(match, tournament, p1Fallback, p2Fallback);
@@ -700,23 +777,41 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         wr2Matches = wr2Matches.map(resolveDynamicPlayers);
         lr2Matches = lr2Matches.map(resolveDynamicPlayers);
 
-        // Interleave: W1, L1, W2, L2 (matching admin QualificationTab display order)
-        groupRounds.push({
-            title: "VÒNG 1",
-            matches: formatWinnersRound(wr1Matches, true, undefined),
-        });
-        groupRounds.push({
-            title: "VÒNG 1: NHÁNH THUA",
-            matches: formatLosersRound(lr1Matches, 1),
-        });
-        groupRounds.push({
-            title: "VÒNG 2: NHÁNH THẮNG",
-            matches: formatWinnersRound(wr2Matches, false, wr1Matches),
-        });
-        groupRounds.push({
-            title: "VÒNG 2: NHÁNH THUA",
-            matches: formatLosersRound(lr2Matches, 2),
-        });
+        // For 24 players: WR1 → WR2 (seeded vs WR1 winner) → LR1 (no LR2)
+        // For others:     WR1 → LR1 → WR2 → LR2
+        if (numberOfPlayers === 24) {
+            groupRounds.push({
+                title: "VÒNG 1",
+                matches: formatWinnersRound(wr1Matches, true, undefined),
+            });
+            groupRounds.push({
+                title: "VÒNG 2: NHÁNH THẮNG",
+                matches: formatWinnersRound(wr2Matches, false, wr1Matches),
+            });
+            groupRounds.push({
+                title: "VÒNG 2: NHÁNH THUA",
+                matches: formatLosersRound(lr1Matches, 1),
+            });
+        } else {
+            groupRounds.push({
+                title: "VÒNG 1",
+                matches: formatWinnersRound(wr1Matches, true, undefined),
+            });
+            groupRounds.push({
+                title: "VÒNG 1: NHÁNH THUA",
+                matches: formatLosersRound(lr1Matches, 1),
+            });
+            groupRounds.push({
+                title: "VÒNG 2: NHÁNH THẮNG",
+                matches: formatWinnersRound(wr2Matches, false, wr1Matches),
+            });
+            if (lr2Matches.length > 0) {
+                groupRounds.push({
+                    title: "VÒNG 2: NHÁNH THUA",
+                    matches: formatLosersRound(lr2Matches, 2),
+                });
+            }
+        }
     } else {
         // For non-double-elimination, fall back to dynamic grouping from DB data
         const grpMatches = allMatches.filter(
@@ -1090,11 +1185,16 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = fals
 
 export default function TournamentMatchesPage() {
     const params = useParams();
+    const router = useRouter();
     const slug = typeof params.slug === "string"
         ? params.slug
         : Array.isArray(params.slug)
             ? params.slug[0]
             : String(params.slug || "");
+
+    // Auth & registration check
+    const user = useSelector((state: RootState) => state.auth.user);
+    const [isRegistered, setIsRegistered] = useState<boolean | null>(null); // null = checking
 
     const [activeStage, setActiveStage] = useState<"group" | "knockout">("group");
     const [loading, setLoading] = useState(true);
@@ -1104,6 +1204,81 @@ export default function TournamentMatchesPage() {
     const { groupRounds, knockoutRounds } = useMemo(() => {
         return groupMatches(rawMatches, tournamentData);
     }, [rawMatches, tournamentData]);
+
+    // IDs of matches the current user is in
+    const userMatchIds = useMemo(() => {
+        if (!user || !isRegistered) return null;
+        const ids = new Set<number>();
+        for (const m of rawMatches) {
+            if (m.player1_id === user.id || m.player2_id === user.id) {
+                ids.add(m.id);
+            }
+        }
+        return ids;
+    }, [rawMatches, user, isRegistered]);
+
+    // Reveal all names when: registration has closed OR tournament is full
+    const isRevealedPhase = useMemo(() => {
+        if (!tournamentData) return false;
+        const closed = tournamentData.registration_end_date
+            ? new Date() > new Date(tournamentData.registration_end_date)
+            : false;
+        const full = (tournamentData.registration_count ?? 0) >= (tournamentData.number_of_players ?? Infinity);
+        return closed || full;
+    }, [tournamentData]);
+
+    // Own match always shows real names; other matches hidden as "Bye" until revealed phase
+    const sanitizeRoundsForUser = (rounds: RoundGroup[]): RoundGroup[] => {
+        if (!isRegistered) return [];
+        if (isRevealedPhase) return rounds;
+
+        const isPlaceholderName = (name: string) =>
+            !name ||
+            name === "Bye" ||
+            name === "Chờ..." ||
+            name.startsWith("Thắng trận") ||
+            name.startsWith("Thua trận");
+
+        const hidePlayer = (p: FormattedMatch["player1"]) => {
+            if (isPlaceholderName(p.name)) return p;
+            return { ...p, name: "Bye", avatar: "", rank: null, isBye: true };
+        };
+
+        return rounds.map(round => ({
+            ...round,
+            matches: round.matches.map(m => {
+                const fm = m as unknown as FormattedMatch;
+                if (userMatchIds?.has(fm.id)) return m; // Own match — always show full info
+                return { ...fm, player1: hidePlayer(fm.player1), player2: hidePlayer(fm.player2) };
+            }),
+        }));
+    };
+
+    const visibleGroupRounds = useMemo(
+        () => sanitizeRoundsForUser(groupRounds),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [groupRounds, userMatchIds, isRevealedPhase, isRegistered],
+    );
+    const visibleKnockoutRounds = useMemo(
+        () => sanitizeRoundsForUser(knockoutRounds),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [knockoutRounds, userMatchIds, isRevealedPhase, isRegistered],
+    );
+
+    // Check if current user is registered for this tournament
+    useEffect(() => {
+        if (!slug) return;
+        if (!user) {
+            setIsRegistered(false);
+            return;
+        }
+        tournamentAPI.getTournamentRegistrationsBySlug(slug)
+            .then((res) => {
+                const regs: { id: number }[] = res.data || [];
+                setIsRegistered(regs.some(r => r.id === user.id));
+            })
+            .catch(() => setIsRegistered(false));
+    }, [slug, user]);
 
     useEffect(() => {
         if (!slug) return;
@@ -1230,8 +1405,61 @@ export default function TournamentMatchesPage() {
         </div>
     );
 
+    const renderAccessDenied = (isMobile = false) => {
+        const isNotLoggedIn = !user;
+        const msg = isNotLoggedIn
+            ? "Bạn cần đăng nhập để xem trang này"
+            : "Bạn chưa đăng ký giải đấu này";
+        const sub = isNotLoggedIn
+            ? "Vui lòng đăng nhập để xem lịch thi đấu của bạn"
+            : "Chỉ người tham gia giải đấu mới có thể xem trang trận đấu";
+        return (
+            <div
+                className={`flex flex-col items-center justify-center ${isMobile ? "py-16 px-4" : "py-24"}`}
+                style={{ fontFamily: "Montserrat, sans-serif" }}
+            >
+                <div
+                    style={{
+                        background: "#172339",
+                        borderRadius: "16px",
+                        padding: "32px 24px",
+                        maxWidth: "360px",
+                        width: "100%",
+                        textAlign: "center",
+                    }}
+                >
+                    <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔒</div>
+                    <p style={{ color: "#FFFFFF", fontSize: "18px", fontWeight: 700, marginBottom: "8px" }}>
+                        {msg}
+                    </p>
+                    <p style={{ color: "#ACB3C3", fontSize: "13px", marginBottom: "20px" }}>
+                        {sub}
+                    </p>
+                    {isNotLoggedIn && (
+                        <button
+                            onClick={() => router.push("/auth/login")}
+                            style={{
+                                background: "#C6010B",
+                                color: "#FFF",
+                                border: "none",
+                                borderRadius: "8px",
+                                padding: "10px 24px",
+                                fontFamily: "Montserrat, sans-serif",
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Đăng nhập
+                        </button>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     const renderMobileContent = () => {
-        if (loading) {
+        if (loading || isRegistered === null) {
             return (
                 <div className="flex items-center justify-center py-16">
                     <div className="text-center">
@@ -1244,7 +1472,9 @@ export default function TournamentMatchesPage() {
             );
         }
 
-        const rounds = activeStage === "group" ? groupRounds : knockoutRounds;
+        if (!isRegistered) return renderAccessDenied(true);
+
+        const rounds = activeStage === "group" ? visibleGroupRounds : visibleKnockoutRounds;
         const emptyMsg =
             activeStage === "group"
                 ? "Chưa có trận đấu vòng bảng"
@@ -1308,20 +1538,22 @@ export default function TournamentMatchesPage() {
                     {/* Banner */}
                     <ChampionshipBanner className="shadow-sm" />
 
-                    {/* Loading State */}
-                    {loading ? (
+                    {/* Loading / Access Check */}
+                    {(loading || isRegistered === null) ? (
                         <div className="flex items-center justify-center py-16">
                             <div className="text-center">
                                 <Spin size="large" />
                                 <p className="mt-4 text-gray-600">Đang tải trận đấu...</p>
                             </div>
                         </div>
+                    ) : !isRegistered ? (
+                        renderAccessDenied()
                     ) : (
                         <>
                             {activeStage === "group" ? (
                                 <div className="flex flex-col gap-[48px]">
-                                    {groupRounds.length > 0 ? (
-                                        groupRounds.map((round, i) => (
+                                    {visibleGroupRounds.length > 0 ? (
+                                        visibleGroupRounds.map((round, i) => (
                                             <RoundSection
                                                 key={`group-${i}`}
                                                 title={round.title}
@@ -1336,8 +1568,8 @@ export default function TournamentMatchesPage() {
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-[48px]">
-                                    {knockoutRounds.length > 0 ? (
-                                        knockoutRounds.map((round, i) => (
+                                    {visibleKnockoutRounds.length > 0 ? (
+                                        visibleKnockoutRounds.map((round, i) => (
                                             <RoundSection
                                                 key={`ko-${i}`}
                                                 title={round.title}

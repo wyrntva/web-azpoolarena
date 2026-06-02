@@ -8,7 +8,7 @@ import TournamentRegistrationsTab from './components/TournamentRegistrationsTab'
 import TournamentQualificationTab from './components/TournamentQualificationTab';
 import TournamentKnockoutTab from './components/TournamentKnockoutTab';
 import { getTournamentTypeLabel } from '../../constants/shared';
-import { useAllTables } from './hooks/useAllTables';
+
 
 // When duplicates exist (same match_no), keep the best row:
 // completed > others, winner set, both players present, higher total score, lower id
@@ -56,9 +56,14 @@ const TournamentDetail = () => {
         } catch { return null; }
     });
 
-    const handleTablePoolChange = useCallback((names: string[]) => {
+    const handleTablePoolChange = useCallback(async (names: string[]) => {
         setEnabledTables(names);
         try { localStorage.setItem(`tournament-${id}-enabled-tables`, JSON.stringify(names)); } catch { /* noop */ }
+        try {
+            await tournamentAPI.updateTournament(parseInt(id!), { enabled_tables: names } as any);
+        } catch (e) {
+            console.error("Lỗi khi lưu pool bàn lên server:", e);
+        }
     }, [id]);
 
     const [priorityTables, setPriorityTables] = useState<string[]>(() => {
@@ -69,10 +74,28 @@ const TournamentDetail = () => {
         } catch { return []; }
     });
 
-    const handlePriorityTablesChange = useCallback((names: string[]) => {
+    const handlePriorityTablesChange = useCallback(async (names: string[]) => {
         setPriorityTables(names);
         try { localStorage.setItem(`tournament-${id}-priority-tables`, JSON.stringify(names)); } catch { /* noop */ }
+        try {
+            await tournamentAPI.updateTournament(parseInt(id!), { priority_tables: names } as any);
+        } catch (e) {
+            console.error("Lỗi khi lưu bàn ưu tiên lên server:", e);
+        }
     }, [id]);
+
+    useEffect(() => {
+        if (tournament) {
+            if (tournament.enabled_tables) {
+                setEnabledTables(tournament.enabled_tables);
+                try { localStorage.setItem(`tournament-${id}-enabled-tables`, JSON.stringify(tournament.enabled_tables)); } catch {}
+            }
+            if (tournament.priority_tables) {
+                setPriorityTables(tournament.priority_tables);
+                try { localStorage.setItem(`tournament-${id}-priority-tables`, JSON.stringify(tournament.priority_tables)); } catch {}
+            }
+        }
+    }, [tournament, id]);
 
     useEffect(() => {
         let interval: ReturnType<typeof setInterval>;
@@ -89,9 +112,13 @@ const TournamentDetail = () => {
     const pollBracket = async (tournamentId: number) => {
         if (dirtyRef.current) return; // Skip poll when user has unsaved changes
         try {
-            const res = await tournamentAPI.getBracket(tournamentId);
+            const [bracketRes, playersRes] = await Promise.all([
+                tournamentAPI.getBracket(tournamentId),
+                tournamentAPI.getRegisteredPlayers(tournamentId)
+            ]);
             if (!dirtyRef.current) { // Double-check after async call
-                setBracketMatches(Array.isArray(res.data) ? dedupeMatches(res.data) : []);
+                setBracketMatches(Array.isArray(bracketRes.data) ? dedupeMatches(bracketRes.data) : []);
+                setRegisteredPlayers(Array.isArray(playersRes.data) ? playersRes.data : []);
             }
         } catch {
             /* silent error on poll */
@@ -161,11 +188,17 @@ const TournamentDetail = () => {
             next[idx] = saved;
             return next;
         });
-        // Silently refetch all matches so backend-propagated changes (next-round player seeding)
+        // Silently refetch all matches and registered players so backend-propagated changes (next-round player seeding, player rank ups)
         // are visible immediately instead of waiting for the next 5-second poll
-        tournamentAPI.getBracket(tournamentId)
-            .then(r => { if (Array.isArray(r.data) && !dirtyRef.current) setBracketMatches(dedupeMatches(r.data)); })
-            .catch(() => {});
+        Promise.all([
+            tournamentAPI.getBracket(tournamentId),
+            tournamentAPI.getRegisteredPlayers(tournamentId)
+        ]).then(([bracketRes, playersRes]) => {
+            if (!dirtyRef.current) {
+                if (Array.isArray(bracketRes.data)) setBracketMatches(dedupeMatches(bracketRes.data));
+                if (Array.isArray(playersRes.data)) setRegisteredPlayers(playersRes.data);
+            }
+        }).catch(() => {});
         return saved;
     };
 
@@ -233,107 +266,7 @@ const TournamentDetail = () => {
     }, [bracketMatches, tournament]);
 
 
-    // --- Auto-assign free table when LR1 / WR2 / LR2 gets both players ---
-    const { tables } = useAllTables();
-    const autoTableAssignedRef = useRef<Set<number>>(new Set());
-    // null = not yet initialized; initialized on first bracketMatches load
-    const prevBothFilledRef = useRef<Set<number> | null>(null);
-
-    useEffect(() => {
-        if (!tournament || bracketMatches.length === 0 || tables.length === 0) return;
-
-        const numPlayers = tournament.number_of_players;
-        const size = numPlayers > 32 ? 64 : numPlayers > 16 ? 32 : 16;
-
-        // Match ranges: qual rounds (LR1, WR2, LR2) + KO bracket
-        const [rangeStart, rangeEnd] = size === 64 ? [33, 111] : size === 32 ? [17, 55] : [9, 27];
-        const inRange = (no: number) => no >= rangeStart && no <= rangeEnd;
-
-        // KO first round threshold: only schedule when ≥ 3/4 matches have both players
-        const [koFirstStart, koFirstCount] = size === 64 ? [81, 16] : size === 32 ? [41, 8] : [21, 4];
-        const koFirstFilled = bracketMatches.filter(m =>
-            m.match_no >= koFirstStart && m.match_no < koFirstStart + koFirstCount
-            && m.player1_id && m.player2_id
-        ).length;
-        const koFirstThreshold = Math.ceil(koFirstCount * 3 / 4);
-        const koFirstReady = koFirstFilled >= koFirstThreshold;
-
-        // First run: mark existing both-filled AND already-scheduled matches as "already known"
-        // Matches with both players but NO table are NOT marked → auto-assign will handle them
-        if (prevBothFilledRef.current === null) {
-            prevBothFilledRef.current = new Set(
-                bracketMatches
-                    .filter(m => inRange(m.match_no) && m.player1_id && m.player2_id
-                        && (m.table_no || m.status === 'completed'))
-                    .map(m => m.match_no)
-            );
-            return;
-        }
-
-        // Tables busy with ongoing or upcoming matches
-        const busyTables = new Set(
-            bracketMatches
-                .filter(m => (m.status === 'ongoing' || m.status === 'upcoming') && m.table_no)
-                .map(m => m.table_no!)
-        );
-        // Respect the enabled-tables pool; null = all tables enabled
-        const poolNames = enabledTables ?? tables.map(t => t.name);
-        const available = poolNames.filter(n => !busyTables.has(n));
-        // Put priority tables first if they're free
-        const freeTables = priorityTables.length > 0
-            ? [...available.filter(n => priorityTables.includes(n)), ...available.filter(n => !priorityTables.includes(n))]
-            : available;
-        let freeIdx = 0;
-
-        // Sort ascending by match_no guarantees priority: LR1 → WR2 → LR2 (their ranges don't overlap)
-        const sorted = [...bracketMatches].sort((a, b) => a.match_no - b.match_no);
-        for (const match of sorted) {
-            if (!inRange(match.match_no)) continue;
-            if (!match.player1_id || !match.player2_id) continue;
-            if (match.table_no) continue;
-            if (match.status === 'completed') continue;
-            if (autoTableAssignedRef.current.has(match.match_no)) continue;
-            if (prevBothFilledRef.current.has(match.match_no)) continue;
-            // KO first round: wait for 3/4 threshold before scheduling any
-            const isKOFirst = match.match_no >= koFirstStart && match.match_no < koFirstStart + koFirstCount;
-            if (isKOFirst && !koFirstReady) continue;
-
-            if (freeIdx >= freeTables.length) break;
-            const tableNo = freeTables[freeIdx++];
-            autoTableAssignedRef.current.add(match.match_no);
-
-            const matchTime = new Date(Date.now() + 3 * 60 * 1000).toISOString();
-            upsertMatch(tournament.id, match.match_no, {
-                bracket: match.bracket,
-                round: match.round,
-                player1_id: match.player1_id,
-                player2_id: match.player2_id,
-                player1_score: match.player1_score,
-                player2_score: match.player2_score,
-                table_no: tableNo,
-                match_time: matchTime,
-                status: 'upcoming',
-                player1_check_in: match.player1_check_in || 'unconfirmed',
-                player2_check_in: match.player2_check_in || 'unconfirmed',
-                winner_id: match.winner_id,
-            }).then(() => {
-                toast.success(`Trận ${match.match_no}: tự động xếp ${tableNo}`);
-            }).catch(() => {
-                autoTableAssignedRef.current.delete(match.match_no);
-            });
-        }
-
-        // Update snapshot for next comparison
-        bracketMatches.forEach(m => {
-            if (inRange(m.match_no) && m.player1_id && m.player2_id) {
-                // For KO first round, only mark as known once threshold is met
-                const isKOFirst = m.match_no >= koFirstStart && m.match_no < koFirstStart + koFirstCount;
-                if (!isKOFirst || koFirstReady) {
-                    prevBothFilledRef.current!.add(m.match_no);
-                }
-            }
-        });
-    }, [bracketMatches, tournament, tables, enabledTables, priorityTables]);
+    // --- Auto-assign free table logic removed (Transitioned to 100% manual table assignment) ---
 
     // Auto-update match status được xử lý bởi backend cron job (TournamentSchedulerService)
     // chạy mỗi 30 giây. Frontend chỉ cần poll bracket để hiển thị trạng thái mới nhất.

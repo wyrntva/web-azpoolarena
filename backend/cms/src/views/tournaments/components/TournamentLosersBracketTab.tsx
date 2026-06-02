@@ -46,19 +46,25 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     const prevLR1FilledRef = useRef<Set<number>>(new Set());
     const prevLR2FilledRef = useRef<Set<number>>(new Set());
 
-    // LR1: 16p → 9–12 (4), 32p → 17–24 (8), 64p → 33–48 (16)
+    // LR1: 16p → 9–12 (4), 32p → 17–24 (8), 64p → 33–48 (16), 24p → 17–24 (8)
     const round1Nos = useMemo(() => {
+        if (numberOfPlayers === 24) {
+            return Array.from({ length: 8 }, (_, i) => 17 + i);
+        }
         const config = { 16: { start: 9, count: 4 }, 32: { start: 17, count: 8 }, 64: { start: 33, count: 16 } };
         const { start, count } = config[size];
         return Array.from({ length: count }, (_, i) => start + i);
-    }, [size]);
+    }, [size, numberOfPlayers]);
 
-    // LR2: 16p → 17–20 (4), 32p → 33–40 (8), 64p → 65–80 (16)
+    // LR2: 16p → 17–20 (4), 32p → 33–40 (8), 64p → 65–80 (16), 24p → [] (0)
     const round2Nos = useMemo(() => {
+        if (numberOfPlayers === 24) {
+            return [];
+        }
         const config = { 16: { start: 17, count: 4 }, 32: { start: 33, count: 8 }, 64: { start: 65, count: 16 } };
         const { start, count } = config[size];
         return Array.from({ length: count }, (_, i) => start + i);
-    }, [size]);
+    }, [size, numberOfPlayers]);
 
     const [round1, setRound1] = useState<MatchVM[]>(() => round1Nos.map(n => toVM(createEmptyMatch(n, 'losers', 1))));
     const [round2, setRound2] = useState<MatchVM[]>(() => round2Nos.map(n => toVM(createEmptyMatch(n, 'losers', 2))));
@@ -85,6 +91,18 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     }, []);
 
     const losersRound1Seed = useMemo(() => {
+        if (numberOfPlayers === 24) {
+            const seed: Record<number, [string, string]> = {};
+            for (let i = 0; i < 8; i++) {
+                const wr2No = 16 - i;
+                const wr1No = 1 + i;
+                seed[17 + i] = [
+                    getLoserFromMatch(matchMap.get(wr2No)) || '',
+                    getLoserFromMatch(matchMap.get(wr1No)) || '',
+                ];
+            }
+            return seed;
+        }
         // WR1 count: 16p → 8, 32p → 16, 64p → 32
         const wr1Count = size === 64 ? 32 : size === 32 ? 16 : 8;
         const losers = Array.from({ length: wr1Count }, (_, i) => getLoserFromMatch(matchMap.get(1 + i)));
@@ -93,7 +111,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
             seed[round1Nos[i]] = [losers[i * 2] || '', losers[i * 2 + 1] || ''];
         }
         return seed;
-    }, [size, matchMap, round1Nos]);
+    }, [size, numberOfPlayers, matchMap, round1Nos]);
 
     const losersRound2Seed = useMemo(() => {
         const seed: Record<number, [string, string]> = {};
@@ -161,6 +179,8 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                 status: m.status,
                 player1_check_in: m.player1_check_in || 'unconfirmed', player2_check_in: m.player2_check_in || 'unconfirmed',
                 winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+                player1_points: m.player1_points !== undefined && m.player1_points !== '' ? parseInt(m.player1_points, 10) : null,
+                player2_points: m.player2_points !== undefined && m.player2_points !== '' ? parseInt(m.player2_points, 10) : null,
             }).catch(() => { prevLR1FilledRef.current.delete(m.match_no); });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -180,21 +200,26 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                 status: m.status,
                 player1_check_in: m.player1_check_in || 'unconfirmed', player2_check_in: m.player2_check_in || 'unconfirmed',
                 winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+                player1_points: m.player1_points !== undefined && m.player1_points !== '' ? parseInt(m.player1_points, 10) : null,
+                player2_points: m.player2_points !== undefined && m.player2_points !== '' ? parseInt(m.player2_points, 10) : null,
             }).catch(() => { prevLR2FilledRef.current.delete(m.match_no); });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [round2]);
 
-    // Helper: check if a WR1 match feeding a LR1 slot is a BYE
+    // Helper: check if a source match feeding a LR1 slot is a BYE
     // (has exactly one player assigned, other is null → no loser to send)
     const isWR1SourceBye = useCallback((lr1Idx: number, slot: 1 | 2): boolean => {
-        // LR1[i].player1 comes from loser of WR1 match (1 + i*2)
-        // LR1[i].player2 comes from loser of WR1 match (1 + i*2 + 1)
-        const wr1No = slot === 1 ? (1 + lr1Idx * 2) : (1 + lr1Idx * 2 + 1);
-        const wr1Match = matchMap.get(wr1No);
-        if (!wr1Match) return false;
-        return (!!wr1Match.player1_id !== !!wr1Match.player2_id); // exactly one player
-    }, [matchMap]);
+        let sourceMatchNo = 0;
+        if (numberOfPlayers === 24) {
+            sourceMatchNo = slot === 1 ? (16 - lr1Idx) : (1 + lr1Idx);
+        } else {
+            sourceMatchNo = slot === 1 ? (1 + lr1Idx * 2) : (1 + lr1Idx * 2 + 1);
+        }
+        const sourceMatch = matchMap.get(sourceMatchNo);
+        if (!sourceMatch) return false;
+        return (!!sourceMatch.player1_id !== !!sourceMatch.player2_id); // exactly one player
+    }, [matchMap, numberOfPlayers]);
 
     // Auto-complete BYE matches in Losers Round 1
     // When a WR1 match was a BYE (only one player, auto-wins), there is no loser to send to LR1.
@@ -236,6 +261,8 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                         match_time: null,
                         status: 'completed',
                         winner_id: parseInt(winnerId, 10),
+                        player1_points: next[i].player1_points !== undefined && next[i].player1_points !== '' ? parseInt(next[i].player1_points, 10) : null,
+                        player2_points: next[i].player2_points !== undefined && next[i].player2_points !== '' ? parseInt(next[i].player2_points, 10) : null,
                     }).catch(() => {
                         // If save fails, allow retry on next cycle
                         byeAutoSavedRef.current.delete(m.match_no);
@@ -298,6 +325,8 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
             player1_check_in: match.player1_check_in || 'unconfirmed',
             player2_check_in: match.player2_check_in || 'unconfirmed',
             winner_id: match.winner_id ? parseInt(match.winner_id, 10) : null,
+            player1_points: match.player1_points !== undefined && match.player1_points !== '' ? parseInt(match.player1_points, 10) : null,
+            player2_points: match.player2_points !== undefined && match.player2_points !== '' ? parseInt(match.player2_points, 10) : null,
         });
         toast.success(`Đã lưu trận ${match.match_no}`);
         dirtyRef.current = false; // prevent double-save when called explicitly via Save button
@@ -326,6 +355,8 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                             player1_check_in: swapped.player1_check_in || 'unconfirmed',
                             player2_check_in: swapped.player2_check_in || 'unconfirmed',
                             winner_id: swapped.winner_id ? parseInt(swapped.winner_id, 10) : null,
+                            player1_points: swapped.player1_points !== undefined && swapped.player1_points !== '' ? parseInt(swapped.player1_points, 10) : null,
+                            player2_points: swapped.player2_points !== undefined && swapped.player2_points !== '' ? parseInt(swapped.player2_points, 10) : null,
                         });
                         toast.success(`Trận ${swappedNo} → ${swapped.table_no || '—'}`);
                     }
@@ -348,6 +379,17 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
      * Returns an array of [player1Label, player2Label] per match.
      */
     const getSourceLabels = (round: 1 | 2): Array<[string, string]> => {
+        if (numberOfPlayers === 24) {
+            if (round === 1) {
+                // For 24 players, LR1 player1 = loser of WR2 (reversed: 16 - i), player2 = loser of WR1 (direct: 1 + i)
+                return round1Nos.map((_, i) => {
+                    const wr2No = 16 - i;
+                    const wr1No = 1 + i;
+                    return [`Thua trận ${wr2No}`, `Thua trận ${wr1No}`] as [string, string];
+                });
+            }
+            return [];
+        }
         if (round === 1) {
             // LR1 players come from losers of WR1
             return round1Nos.map((_, i) => {
@@ -486,7 +528,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
 
     if (bracketLoading) return <div className="flex justify-center p-12"><Spinner /></div>;
 
-    const r1Label = 'Vòng 1: Nhánh thua';
+    const r1Label = numberOfPlayers === 24 ? 'Vòng 2: Nhánh thua' : 'Vòng 1: Nhánh thua';
     const r2Label = 'Vòng 2: Nhánh thua';
 
     return (

@@ -17,14 +17,27 @@ export const formatNumber = (num: number): string => {
 };
 
 // Format date to Vietnamese format
+// Parse date safely, converting space-separated dates (like "2026-06-02 18:00:00") to T-separated to prevent parsing errors/quirks
+export const parseDateSafe = (date: Date | string): Date => {
+    if (typeof date === 'string') {
+        let normalized = date.trim();
+        if (normalized.includes(' ')) {
+            normalized = normalized.replace(' ', 'T');
+        }
+        return new Date(normalized);
+    }
+    return date;
+};
+
+// Format date to Vietnamese format
 export const formatDate = (date: Date | string): string => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const dateObj = parseDateSafe(date);
     return new Intl.DateTimeFormat('vi-VN').format(dateObj);
 };
 
 // Format datetime
 export const formatDateTime = (date: Date | string): string => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const dateObj = parseDateSafe(date);
     return new Intl.DateTimeFormat('vi-VN', {
         year: 'numeric',
         month: '2-digit',

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Subject } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In, Not } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
@@ -79,6 +79,35 @@ export class TournamentsService {
       throw new BadRequestException('User already registered for this tournament');
     }
 
+    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    if (!tournament) {
+      throw new NotFoundException('Tournament not found');
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    let allowedRanks: string[] = [];
+    if (tournament.ranks) {
+      try {
+        allowedRanks = JSON.parse(tournament.ranks);
+      } catch (e) {
+        allowedRanks = [];
+      }
+    }
+
+    if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
+      const userRank = user.rank ? user.rank.toUpperCase() : '';
+      const isAllowed = allowedRanks.map((r) => r.toUpperCase()).includes(userRank);
+      if (!isAllowed) {
+        throw new BadRequestException(
+          `Hạng của bạn (${user.rank || 'N/A'}) không được tham gia giải đấu này (Chỉ nhận các hạng: ${allowedRanks.join(', ')})`,
+        );
+      }
+    }
+
     // Reuse pending code if exists (user reopens modal)
     const pending = await this.paymentCodeRepo.findOne({
       where: { tournament_id: tournamentId, user_id: userId, used: false },
@@ -135,10 +164,30 @@ export class TournamentsService {
       }
     }
 
+    let enabled_tables = null;
+    if (t.enabled_tables) {
+      try {
+        enabled_tables = JSON.parse(t.enabled_tables);
+      } catch (e) {
+        enabled_tables = null;
+      }
+    }
+
+    let priority_tables = [];
+    if (t.priority_tables) {
+      try {
+        priority_tables = JSON.parse(t.priority_tables);
+      } catch (e) {
+        priority_tables = [];
+      }
+    }
+
     return {
       ...t,
       sponsor_logos,
       ranks,
+      enabled_tables,
+      priority_tables,
     };
   }
 
@@ -167,11 +216,13 @@ export class TournamentsService {
   }
 
   async create(dto: CreateTournamentDto) {
-    const { sponsor_logos, ranks, ...rest } = dto;
+    const { sponsor_logos, ranks, enabled_tables, priority_tables, ...rest } = dto;
     const entity = new TournamentEntity();
     Object.assign(entity, rest);
     if (sponsor_logos !== undefined) entity.sponsor_logos = JSON.stringify(sponsor_logos);
     if (ranks !== undefined) entity.ranks = JSON.stringify(ranks);
+    if (enabled_tables !== undefined) entity.enabled_tables = enabled_tables ? JSON.stringify(enabled_tables) : null;
+    if (priority_tables !== undefined) entity.priority_tables = priority_tables ? JSON.stringify(priority_tables) : null;
     const saved = await this.tourRepo.save(entity);
     return this.mapTournament(saved);
   }
@@ -180,10 +231,12 @@ export class TournamentsService {
     const tour = await this.tourRepo.findOne({ where: { id } });
     if (!tour) throw new NotFoundException('Tournament not found');
 
-    const { sponsor_logos, ranks, ...rest } = dto;
+    const { sponsor_logos, ranks, enabled_tables, priority_tables, ...rest } = dto;
     const updates: any = { ...rest };
     if (sponsor_logos !== undefined) updates.sponsor_logos = JSON.stringify(sponsor_logos);
     if (ranks !== undefined) updates.ranks = JSON.stringify(ranks);
+    if (enabled_tables !== undefined) updates.enabled_tables = enabled_tables ? JSON.stringify(enabled_tables) : null;
+    if (priority_tables !== undefined) updates.priority_tables = priority_tables ? JSON.stringify(priority_tables) : null;
 
     Object.assign(tour, updates);
     await this.tourRepo.save(tour);
@@ -302,6 +355,10 @@ export class TournamentsService {
 
     Object.assign(match, dto);
 
+    if (dto.match_time !== undefined) {
+      match.match_time = dto.match_time ? new Date(dto.match_time) : null as any;
+    }
+
     // If winner is assigned and status is not COMPLETED, mark it as COMPLETED
     if (match.winner_id && match.status !== TournamentMatchStatus.COMPLETED) {
       match.status = TournamentMatchStatus.COMPLETED;
@@ -327,6 +384,7 @@ export class TournamentsService {
       await this.calculateAndApplyRating(match, match.winner_id);
     }
 
+    await this.freezeOrUnfreezeMatchRanks(match);
     const savedMatch = await this.matchRepo.save(match);
     await this.propagateWinnerToNextRound(savedMatch);
     await this.emitMatchUpdate(savedMatch.id);
@@ -341,18 +399,42 @@ export class TournamentsService {
     await this.matchRepo.delete({ tournament_id: tournamentId });
 
     // Create new ones
-    const matchesToSave = matchList.map((m) =>
-      this.matchRepo.create({
+    const matchesToSave = matchList.map((m) => {
+      const match = this.matchRepo.create({
         ...m,
         tournament_id: tournamentId,
-      }),
-    );
+      });
+      if (!match.match_time && tournament.start_date && match.player1_id && match.player2_id) {
+        match.match_time = tournament.start_date;
+      }
+      return match;
+    });
     const savedMatches = await this.matchRepo.save(matchesToSave);
 
     // Auto-assign all already-registered players to Round 1 slots
     await this.assignAllRegisteredPlayersToRound1(tournamentId);
 
     return savedMatches;
+  }
+
+  private async freezeOrUnfreezeMatchRanks(match: TournamentMatchEntity) {
+    if (match.status === TournamentMatchStatus.COMPLETED) {
+      if (match.player1_id && !match.player1_rank) {
+        const reg = await this.regRepo.findOne({
+          where: { tournament_id: match.tournament_id, user_id: match.player1_id },
+        });
+        match.player1_rank = reg?.rank || null;
+      }
+      if (match.player2_id && !match.player2_rank) {
+        const reg = await this.regRepo.findOne({
+          where: { tournament_id: match.tournament_id, user_id: match.player2_id },
+        });
+        match.player2_rank = reg?.rank || null;
+      }
+    } else {
+      match.player1_rank = null;
+      match.player2_rank = null;
+    }
   }
 
   private async assignAllRegisteredPlayersToRound1(tournamentId: number): Promise<void> {
@@ -442,13 +524,13 @@ export class TournamentsService {
       player1_id: match.player1_id,
       player1_name: match.player1?.full_name || 'Waiting...',
       player1_avatar: match.player1?.avatar_url || '',
-      player1_rank: reg1?.rank || null,
+      player1_rank: match.player1_rank || reg1?.rank || null,
       player1_score: match.player1_score,
       player1_check_in: match.player1_check_in,
       player2_id: match.player2_id,
       player2_name: match.player2?.full_name || 'Waiting...',
       player2_avatar: match.player2?.avatar_url || '',
-      player2_rank: reg2?.rank || null,
+      player2_rank: match.player2_rank || reg2?.rank || null,
       player2_score: match.player2_score,
       player2_check_in: match.player2_check_in,
       winner_id: match.winner_id,
@@ -481,6 +563,7 @@ export class TournamentsService {
       await this.calculateAndApplyRating(match, match.winner_id);
     }
 
+    await this.freezeOrUnfreezeMatchRanks(match);
     await this.matchRepo.save(match);
     
     // Broadcast the update immediately over SSE so viewers see score changes instantly!
@@ -529,6 +612,11 @@ export class TournamentsService {
   }
 
   async getEligibleUsers(tournamentId: number, search?: string) {
+    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    if (!tournament) {
+      throw new NotFoundException('Tournament not found');
+    }
+
     const regs = await this.regRepo.find({
       where: { tournament_id: tournamentId },
       select: ['user_id'],
@@ -542,6 +630,20 @@ export class TournamentsService {
 
     if (registeredUserIds.length > 0) {
       qb.andWhere('u.id NOT IN (:...ids)', { ids: registeredUserIds });
+    }
+
+    let allowedRanks: string[] = [];
+    if (tournament.ranks) {
+      try {
+        allowedRanks = JSON.parse(tournament.ranks);
+      } catch (e) {
+        allowedRanks = [];
+      }
+    }
+
+    if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
+      const upperRanks = allowedRanks.map((r) => r.toUpperCase());
+      qb.andWhere('UPPER(u.rank) IN (:...upperRanks)', { upperRanks });
     }
 
     if (search) {
@@ -580,6 +682,26 @@ export class TournamentsService {
       throw new NotFoundException('User not found');
     }
 
+    // Validate rank restriction
+    let allowedRanks: string[] = [];
+    if (tournament.ranks) {
+      try {
+        allowedRanks = JSON.parse(tournament.ranks);
+      } catch (e) {
+        allowedRanks = [];
+      }
+    }
+
+    if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
+      const userRank = user.rank ? user.rank.toUpperCase() : '';
+      const isAllowed = allowedRanks.map((r) => r.toUpperCase()).includes(userRank);
+      if (!isAllowed) {
+        throw new BadRequestException(
+          `Cơ thủ ${user.full_name} có hạng ${user.rank || 'N/A'}, không nằm trong các hạng được phép của giải đấu: ${allowedRanks.join(', ')}`,
+        );
+      }
+    }
+
     const reg = this.regRepo.create({
       tournament_id: tournamentId,
       user_id: userId,
@@ -597,36 +719,52 @@ export class TournamentsService {
   }
 
   private async assignPlayerToRound1(tournamentId: number, userId: number): Promise<void> {
-    const [tournament, round1Matches_] = await Promise.all([
-      this.tourRepo.findOne({ where: { id: tournamentId } }),
-      this.matchRepo.find({
-        where: [
-          { tournament_id: tournamentId, round: 1, bracket: TournamentMatchBracket.WINNERS },
-          { tournament_id: tournamentId, round: 1, bracket: TournamentMatchBracket.KNOCKOUT },
-        ],
-      }),
-    ]);
+    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    if (!tournament) return;
 
-    let round1Matches = round1Matches_;
-    if (round1Matches.length === 0) {
-      round1Matches = await this.autoGenerateRound1Matches(tournamentId);
+    // Fetch only the initial stage bracket matches (WINNERS for double elimination, KNOCKOUT for single elimination)
+    const targetBracket = tournament.tournament_type === 'double_elimination'
+      ? TournamentMatchBracket.WINNERS
+      : TournamentMatchBracket.KNOCKOUT;
+
+    let allMatches = await this.matchRepo.find({
+      where: {
+        tournament_id: tournamentId,
+        bracket: targetBracket,
+      },
+    });
+
+    if (allMatches.length === 0) {
+      allMatches = await this.autoGenerateRound1Matches(tournamentId);
     }
 
-    if (round1Matches.length === 0) return;
+    if (allMatches.length === 0) return;
 
-    // Find matches that have an empty slot and the player is not already in this match
-    const available = round1Matches.filter(
-      (m) =>
-        (m.player1_id === null || m.player2_id === null) &&
-        m.player1_id !== userId &&
-        m.player2_id !== userId,
-    );
+    const available: Array<{ match: TournamentMatchEntity; slot: 1 | 2 }> = [];
+    const is24Players = tournament.number_of_players === 24;
+
+    for (const m of allMatches) {
+      if (m.round === 1) {
+        if (m.player1_id === null && m.player2_id !== userId) {
+          available.push({ match: m, slot: 1 });
+        }
+        if (m.player2_id === null && m.player1_id !== userId) {
+          available.push({ match: m, slot: 2 });
+        }
+      } else if (m.round === 2 && is24Players) {
+        // For 24 players DE, player2 of Winners Round 2 is a starting slot
+        if (m.player2_id === null && m.player1_id !== userId) {
+          available.push({ match: m, slot: 2 });
+        }
+      }
+    }
 
     if (available.length === 0) return;
 
-    const match = available[Math.floor(Math.random() * available.length)];
+    const choice = available[Math.floor(Math.random() * available.length)];
+    const match = choice.match;
 
-    if (match.player1_id === null) {
+    if (choice.slot === 1) {
       match.player1_id = userId;
     } else {
       match.player2_id = userId;
@@ -638,9 +776,11 @@ export class TournamentsService {
     match.player1_score = 0;
     match.player2_score = 0;
 
-    // Set match time to tournament start date
-    if (tournament?.start_date) {
+    // Set match time to tournament start date only if both players are present
+    if (tournament?.start_date && match.player1_id && match.player2_id) {
       match.match_time = tournament.start_date;
+    } else {
+      match.match_time = null as any;
     }
 
     await this.matchRepo.save(match);
@@ -651,19 +791,51 @@ export class TournamentsService {
     if (!tournament) return [];
 
     const n = tournament.number_of_players || 16;
-    const matchCount = Math.max(1, Math.floor(n / 2));
+    const is24 = tournament.tournament_type === 'double_elimination' && n === 24;
 
     const matches: TournamentMatchEntity[] = [];
-    for (let i = 1; i <= matchCount; i++) {
-      matches.push(
-        this.matchRepo.create({
-          tournament_id: tournamentId,
-          match_no: i,
-          bracket: TournamentMatchBracket.KNOCKOUT,
-          round: 1,
-          status: TournamentMatchStatus.PENDING,
-        }),
-      );
+
+    if (is24) {
+      // For 24-player DE, generate wr1 (1-8, round 1) and wr2 (9-16, round 2)
+      for (let i = 1; i <= 8; i++) {
+        matches.push(
+          this.matchRepo.create({
+            tournament_id: tournamentId,
+            match_no: i,
+            bracket: TournamentMatchBracket.WINNERS,
+            round: 1,
+            status: TournamentMatchStatus.PENDING,
+          }),
+        );
+      }
+      for (let i = 9; i <= 16; i++) {
+        matches.push(
+          this.matchRepo.create({
+            tournament_id: tournamentId,
+            match_no: i,
+            bracket: TournamentMatchBracket.WINNERS,
+            round: 2,
+            status: TournamentMatchStatus.PENDING,
+          }),
+        );
+      }
+    } else {
+      const matchCount = this.getQualConfig(n).wr1.count;
+      const targetBracket = tournament.tournament_type === 'double_elimination'
+        ? TournamentMatchBracket.WINNERS
+        : TournamentMatchBracket.KNOCKOUT;
+
+      for (let i = 1; i <= matchCount; i++) {
+        matches.push(
+          this.matchRepo.create({
+            tournament_id: tournamentId,
+            match_no: i,
+            bracket: targetBracket,
+            round: 1,
+            status: TournamentMatchStatus.PENDING,
+          }),
+        );
+      }
     }
 
     return this.matchRepo.save(matches);
@@ -709,6 +881,40 @@ export class TournamentsService {
     });
 
     const statusBefore = match ? match.status : null;
+    const oldP1Points = match ? match.player1_points : null;
+    const oldP2Points = match ? match.player2_points : null;
+    const oldP1Id = match ? match.player1_id : null;
+    const oldP2Id = match ? match.player2_id : null;
+    const oldWinnerId = match ? match.winner_id : null;
+
+    if (
+      statusBefore === TournamentMatchStatus.COMPLETED &&
+      oldWinnerId &&
+      oldP1Id &&
+      oldP2Id
+    ) {
+      const p1 = await this.userRepo.findOne({ where: { id: oldP1Id } });
+      const p2 = await this.userRepo.findOne({ where: { id: oldP2Id } });
+      if (p1 && p2) {
+        if (oldP1Points !== null && oldP1Points !== undefined) {
+          p1.points = Math.max(0, (p1.points || 0) - oldP1Points);
+        }
+        if (oldP2Points !== null && oldP2Points !== undefined) {
+          p2.points = Math.max(0, (p2.points || 0) - oldP2Points);
+        }
+        p1.wins = Math.max(0, (p1.wins || 0) - (oldWinnerId === p1.id ? 1 : 0));
+        p1.losses = Math.max(0, (p1.losses || 0) - (oldWinnerId === p1.id ? 0 : 1));
+        p1.total_games = Math.max(0, (p1.total_games || 0) - 1);
+
+        p2.wins = Math.max(0, (p2.wins || 0) - (oldWinnerId === p2.id ? 1 : 0));
+        p2.losses = Math.max(0, (p2.losses || 0) - (oldWinnerId === p2.id ? 0 : 1));
+        p2.total_games = Math.max(0, (p2.total_games || 0) - 1);
+
+        await this.userRepo.save([p1, p2]);
+        await this.checkAndUpdatePlayerRank(oldP1Id, tournamentId);
+        await this.checkAndUpdatePlayerRank(oldP2Id, tournamentId);
+      }
+    }
 
     if (!match) {
       match = this.matchRepo.create({
@@ -737,6 +943,10 @@ export class TournamentsService {
       Object.assign(match, dto);
     }
 
+    if (dto.match_time !== undefined) {
+      match.match_time = dto.match_time ? new Date(dto.match_time) : null as any;
+    }
+
     if (match.winner_id && match.status !== TournamentMatchStatus.COMPLETED) {
       match.status = TournamentMatchStatus.COMPLETED;
     }
@@ -756,12 +966,27 @@ export class TournamentsService {
     if (
       match &&
       match.status === TournamentMatchStatus.COMPLETED &&
-      statusBefore !== TournamentMatchStatus.COMPLETED &&
       match.winner_id
     ) {
       await this.calculateAndApplyRating(match, match.winner_id);
     }
 
+    // Auto-assign match time if eligible (both players present, table assigned, table not busy, no match_time set yet)
+    if (match.player1_id && match.player2_id && match.table_no && !match.match_time) {
+      const isTableBusy = await this.matchRepo.findOne({
+        where: {
+          tournament_id: tournamentId,
+          table_no: match.table_no,
+          id: Not(match.id || -1),
+          status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
+        },
+      });
+      if (!isTableBusy) {
+        match.match_time = new Date(Date.now() + 3 * 60 * 1000);
+      }
+    }
+
+    await this.freezeOrUnfreezeMatchRanks(match);
     const isNew = !match.id;
     try {
       await this.matchRepo.save(match);
@@ -775,6 +1000,7 @@ export class TournamentsService {
         });
         if (!existing) throw err;
         Object.assign(existing, dto);
+        await this.freezeOrUnfreezeMatchRanks(existing);
         await this.matchRepo.save(existing);
         Object.assign(match, existing);
       } else {
@@ -879,20 +1105,63 @@ export class TournamentsService {
       }
     }
 
-    // Update players points and game stats
-    const winner = player1.id === winnerId ? player1 : player2;
-    const loser = player1.id === winnerId ? player2 : player1;
+    let p1PointsChange = 0;
+    let p2PointsChange = 0;
 
-    winner.points = (winner.points || 0) + pointsChange;
-    winner.wins = (winner.wins || 0) + 1;
-    winner.total_games = (winner.total_games || 0) + 1;
+    if (match.player1_points !== null && match.player1_points !== undefined) {
+      p1PointsChange = match.player1_points;
+    } else {
+      p1PointsChange = winnerId === player1.id ? pointsChange : -pointsChange;
+      match.player1_points = p1PointsChange;
+    }
 
-    // Cap points to 0 so they don't go negative
-    loser.points = Math.max(0, (loser.points || 0) - pointsChange);
-    loser.losses = (loser.losses || 0) + 1;
-    loser.total_games = (loser.total_games || 0) + 1;
+    if (match.player2_points !== null && match.player2_points !== undefined) {
+      p2PointsChange = match.player2_points;
+    } else {
+      p2PointsChange = winnerId === player2.id ? pointsChange : -pointsChange;
+      match.player2_points = p2PointsChange;
+    }
 
-    await this.userRepo.save([winner, loser]);
+    // Save calculated points back to the match in DB
+    await this.matchRepo.save(match);
+
+    player1.points = Math.max(0, (player1.points || 0) + p1PointsChange);
+    player1.wins = (player1.wins || 0) + (winnerId === player1.id ? 1 : 0);
+    player1.losses = (player1.losses || 0) + (winnerId === player1.id ? 0 : 1);
+    player1.total_games = (player1.total_games || 0) + 1;
+
+    player2.points = Math.max(0, (player2.points || 0) + p2PointsChange);
+    player2.wins = (player2.wins || 0) + (winnerId === player2.id ? 1 : 0);
+    player2.losses = (player2.losses || 0) + (winnerId === player2.id ? 0 : 1);
+    player2.total_games = (player2.total_games || 0) + 1;
+
+    await this.userRepo.save([player1, player2]);
+    await this.checkAndUpdatePlayerRank(player1.id, match.tournament_id);
+    await this.checkAndUpdatePlayerRank(player2.id, match.tournament_id);
+  }
+
+  async checkAndUpdatePlayerRank(playerId: number, tournamentId: number) {
+    const player = await this.userRepo.findOne({ where: { id: playerId } });
+    if (!player) return;
+
+    const ranks = await this.rankRepo.find({ order: { order: 'ASC' } });
+    const matchingRank = ranks.find(
+      (r) => player.points >= r.min_score && player.points <= r.max_score,
+    );
+
+    if (matchingRank && player.rank !== matchingRank.name) {
+      player.rank = matchingRank.name;
+      await this.userRepo.save(player);
+
+      const reg = await this.regRepo.findOne({
+        where: { tournament_id: tournamentId, user_id: player.id },
+      });
+      if (reg) {
+        reg.rank = matchingRank.name;
+        await this.regRepo.save(reg);
+      }
+      console.log(`Rank updated for player ${player.full_name} to ${matchingRank.name}`);
+    }
   }
 
   private getFinalMatchNo(numberOfPlayers: number): number {
@@ -906,6 +1175,12 @@ export class TournamentsService {
     numberOfPlayers: number,
     bracket: string,
   ): { nextMatchNo: number; playerSlot: 1 | 2 } | null {
+    if (numberOfPlayers === 24) {
+      if (bracket === 'winners' && matchNo >= 1 && matchNo <= 8) {
+        return { nextMatchNo: matchNo + 8, playerSlot: 1 };
+      }
+      return null;
+    }
     const isKO8 = numberOfPlayers <= 16;
     const isKO32 = numberOfPlayers > 32;
 
@@ -1005,6 +1280,15 @@ export class TournamentsService {
   // ── Qualification config ─────────────────────────────────────────────────
 
   private getQualConfig(numberOfPlayers: number) {
+    if (numberOfPlayers === 24) {
+      return {
+        size: 24 as any,
+        wr1: { start: 1,  count: 8  },
+        lr1: { start: 17, count: 8  },
+        wr2: { start: 9,  count: 8  },
+        lr2: { start: 0,  count: 0  },
+      };
+    }
     const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
     const cfg = {
       16: { wr1: { start: 1,  count: 8  }, lr1: { start: 9,  count: 4  }, wr2: { start: 13, count: 4  }, lr2: { start: 17, count: 4  } },
@@ -1062,6 +1346,14 @@ export class TournamentsService {
     if (match.bracket !== 'winners' || !match.winner_id || !match.player1_id || !match.player2_id) return;
     const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
     if (!tour || tour.tournament_type !== 'double_elimination') return;
+    if (tour.number_of_players === 24) {
+      if (match.match_no >= 1 && match.match_no <= 8) {
+        const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+        const lr1MatchNo = match.match_no + 16;
+        await this.seedPlayerToMatch(match.tournament_id, lr1MatchNo, TournamentMatchBracket.LOSERS, 1, loserId, 2);
+      }
+      return;
+    }
     const cfg = this.getQualConfig(tour.number_of_players);
     if (match.match_no < cfg.wr1.start || match.match_no >= cfg.wr1.start + cfg.wr1.count) return;
     const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
@@ -1076,6 +1368,7 @@ export class TournamentsService {
     if (match.bracket !== 'losers' || match.round !== 1 || !match.winner_id) return;
     const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
     if (!tour || tour.tournament_type !== 'double_elimination') return;
+    if (tour.number_of_players === 24) return; // LR1 winners qualify directly to Knockout stage, no further propagation in this stage
     const cfg = this.getQualConfig(tour.number_of_players);
     if (match.match_no < cfg.lr1.start || match.match_no >= cfg.lr1.start + cfg.lr1.count) return;
     const idx = match.match_no - cfg.lr1.start;
@@ -1088,6 +1381,14 @@ export class TournamentsService {
     if (match.bracket !== 'winners' || match.round !== 2 || !match.winner_id || !match.player1_id || !match.player2_id) return;
     const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
     if (!tour || tour.tournament_type !== 'double_elimination') return;
+    if (tour.number_of_players === 24) {
+      if (match.match_no >= 9 && match.match_no <= 16) {
+        const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+        const lr1MatchNo = 33 - match.match_no;
+        await this.seedPlayerToMatch(match.tournament_id, lr1MatchNo, TournamentMatchBracket.LOSERS, 1, loserId, 1);
+      }
+      return;
+    }
     const cfg = this.getQualConfig(tour.number_of_players);
     if (match.match_no < cfg.wr2.start || match.match_no >= cfg.wr2.start + cfg.wr2.count) return;
     const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
@@ -1099,95 +1400,8 @@ export class TournamentsService {
 
   // Tự động xếp bàn + giờ khi có bàn trống (knockout: tất cả vòng; double_elimination: WR1→LR1→WR2→LR2)
   async autoScheduleQualificationMatches(tournamentId: number): Promise<void> {
-    const tour = await this.tourRepo.findOne({ where: { id: tournamentId } });
-    if (!tour) return;
-
-    // Chỉ xếp bàn tự động sau khi giải đấu đã bắt đầu
-    if (tour.start_date && new Date(tour.start_date) > new Date()) return;
-
-    const allMatches = await this.matchRepo.find({ where: { tournament_id: tournamentId } });
-    const matchMap = new Map(allMatches.map(m => [m.match_no, m]));
-
-    let prioritized: number[];
-    if (tour.tournament_type === 'double_elimination') {
-      const cfg = this.getQualConfig(tour.number_of_players);
-      const qualNos = new Set([
-        ...this.mkRange(cfg.wr1.start, cfg.wr1.count),
-        ...this.mkRange(cfg.lr1.start, cfg.lr1.count),
-        ...this.mkRange(cfg.wr2.start, cfg.wr2.count),
-        ...this.mkRange(cfg.lr2.start, cfg.lr2.count),
-      ]);
-      // Vòng loại trước (WR/LR), sau đó vòng KO trực tiếp theo thứ tự tăng dần
-      const koNos = allMatches.map(m => m.match_no).filter(n => !qualNos.has(n)).sort((a, b) => a - b);
-      prioritized = [...Array.from(qualNos).sort((a, b) => a - b), ...koNos];
-    } else {
-      // knockout: ưu tiên theo match_no tăng dần
-      prioritized = allMatches.map(m => m.match_no).sort((a, b) => a - b);
-    }
-
-    // Với double_elimination: vòng KO đầu tiên (Tứ kết) chỉ xếp khi ≥ 3/4 trận đã đủ 2 người
-    // Các vòng KO tiếp theo (Bán kết, Chung kết) xếp ngay khi có đủ người
-    const koFirstRoundBlocked = new Set<number>();
-    if (tour.tournament_type === 'double_elimination') {
-      const size = tour.number_of_players > 32 ? 64 : tour.number_of_players > 16 ? 32 : 16;
-      const koFirstStart = size === 64 ? 81 : size === 32 ? 41 : 21;
-      const koFirstCount = size === 64 ? 16 : size === 32 ? 8 : 4;
-      const koFirstNos = this.mkRange(koFirstStart, koFirstCount);
-      const filledCount = koFirstNos
-        .map(no => matchMap.get(no))
-        .filter((m): m is TournamentMatchEntity => !!m && !!m.player1_id && !!m.player2_id)
-        .length;
-      const threshold = Math.ceil(koFirstCount * 3 / 4);
-      if (filledCount < threshold) {
-        koFirstNos.forEach(no => koFirstRoundBlocked.add(no));
-      }
-    }
-
-    // Trận có đủ 2 người, chưa có bàn, chưa kết thúc, không bị block bởi threshold
-    const toSchedule = prioritized
-      .map(no => matchMap.get(no))
-      .filter((m): m is TournamentMatchEntity =>
-        !!m && !!m.player1_id && !!m.player2_id &&
-        m.status !== TournamentMatchStatus.COMPLETED &&
-        !m.table_no &&
-        !koFirstRoundBlocked.has(m.match_no),
-      );
-    if (toSchedule.length === 0) return;
-
-    // Pool bàn = chỉ các bàn đã được admin gán trong giải này
-    // Không dùng toàn bộ arena để tránh xếp bàn ngoài pool admin mong muốn
-    // Nếu chưa có bàn nào trong giải → đợi admin xếp thủ công lần đầu
-    const allTableNos = [...new Set(allMatches.map(m => m.table_no).filter((t): t is string => !!t))];
-    if (allTableNos.length === 0) return;
-
-    // Bàn đang bận: toàn hệ thống — bất kỳ trận nào (mọi giải) đang PENDING/UPCOMING/ONGOING có bàn
-    // Bàn chỉ được xếp nếu KHÔNG có trận nào khác đang dùng bàn đó ở trạng thái chưa kết thúc
-    const occupiedRows = await this.matchRepo
-      .createQueryBuilder('m')
-      .select('m.table_no')
-      .where('m.table_no IS NOT NULL')
-      .andWhere('m.status IN (:...activeStatuses)', {
-        activeStatuses: [
-          TournamentMatchStatus.PENDING,
-          TournamentMatchStatus.UPCOMING,
-          TournamentMatchStatus.ONGOING,
-        ],
-      })
-      .getMany();
-    const occupiedTables = new Set(occupiedRows.map(m => m.table_no!));
-
-    const availableTables = allTableNos.filter(t => !occupiedTables.has(t));
-    if (availableTables.length === 0) return;
-
-    const now = new Date();
-    for (let i = 0; i < Math.min(availableTables.length, toSchedule.length); i++) {
-      const m = toSchedule[i];
-      m.table_no = availableTables[i];
-      m.match_time = new Date(now.getTime() + 3 * 60 * 1000);
-      m.status = TournamentMatchStatus.UPCOMING;
-      await this.matchRepo.save(m);
-      await this.emitMatchUpdate(m.id);
-    }
+    // Tự động xếp bàn đã bị vô hiệu hóa theo yêu cầu. Từ giờ sẽ xếp bàn thủ công.
+    return;
   }
 
   private async propagateWinnerToNextRound(match: TournamentMatchEntity): Promise<void> {
@@ -1244,6 +1458,21 @@ export class TournamentsService {
         nextMatch.winner_id = null;
         nextMatch.player1_score = 0;
         nextMatch.player2_score = 0;
+      }
+
+      // Auto-assign match time if eligible (both players present, table assigned, table not busy, no match_time set yet)
+      if (nextMatch.player1_id && nextMatch.player2_id && nextMatch.table_no && !nextMatch.match_time) {
+        const isTableBusy = await this.matchRepo.findOne({
+          where: {
+            tournament_id: match.tournament_id,
+            table_no: nextMatch.table_no,
+            id: Not(nextMatch.id),
+            status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
+          },
+        });
+        if (!isTableBusy) {
+          nextMatch.match_time = new Date(Date.now() + 3 * 60 * 1000);
+        }
       }
 
       await this.matchRepo.save(nextMatch);

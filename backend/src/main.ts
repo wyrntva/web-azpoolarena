@@ -1,3 +1,6 @@
+import * as pg from 'pg';
+pg.types.setTypeParser(1114, (stringValue) => stringValue);
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

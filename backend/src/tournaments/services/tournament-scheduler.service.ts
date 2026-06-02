@@ -26,34 +26,92 @@ export class TournamentSchedulerService {
 
   // Chạy mỗi 30 giây — tự động cập nhật trạng thái trận đấu
   // Quy tắc:
-  //   PENDING  → UPCOMING : đủ 2 người + có bàn + có giờ (giờ chưa đến)
-  //   UPCOMING → PENDING  : mất bàn hoặc mất người hoặc mất giờ
+  //   Vòng 1: PENDING → UPCOMING khi hết hạn đăng kí + đủ 2 người
+  //   Vòng 2+: PENDING → UPCOMING khi đủ 2 người + có bàn + có giờ + giờ trong vòng 15 phút tới
+  //   UPCOMING → PENDING  : mất điều kiện (trừ vòng 1 sau đăng kí)
   //   UPCOMING → ONGOING  : giờ đã đến + có bàn
   @Cron('*/30 * * * * *')
   async autoUpdateMatchStatus() {
     const now = new Date();
 
-    // 1. Reset UPCOMING → PENDING nếu thiếu bất kỳ điều kiện nào
-    // QUAN TRỌNG: dùng ngoặc để tránh lỗi SQL precedence với OR
+    // 1a. Reset vòng 2+ UPCOMING → PENDING nếu thiếu bất kỳ điều kiện nào
     await this.matchRepo
       .createQueryBuilder()
       .update(TournamentMatchEntity)
       .set({ status: TournamentMatchStatus.PENDING })
       .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
+      .andWhere('round > 1')
       .andWhere(
         '(player1_id IS NULL OR player2_id IS NULL OR table_no IS NULL OR match_time IS NULL)',
       )
       .execute();
 
-    // 2. PENDING → UPCOMING: đủ 2 người + có bàn + có giờ + giờ chưa đến
+    // 1b. Reset vòng 1 UPCOMING → PENDING nếu chưa hết hạn đăng kí HOẶC thiếu người chơi
+    await this.matchRepo
+      .createQueryBuilder()
+      .update(TournamentMatchEntity)
+      .set({ status: TournamentMatchStatus.PENDING })
+      .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
+      .andWhere('round = 1')
+      .andWhere(
+        `(player1_id IS NULL OR player2_id IS NULL
+          OR tournament_id NOT IN (
+            SELECT id FROM tournaments
+            WHERE registration_end_date IS NOT NULL
+            AND registration_end_date <= :now
+            AND status != 'completed'
+          ))`,
+        { now },
+      )
+      .execute();
+
+    // 2. Vòng 1: PENDING → UPCOMING khi hết hạn đăng kí + đủ 2 người
+    const toursPastRegistration = await this.tourRepo
+      .createQueryBuilder('t')
+      .where('t.registration_end_date IS NOT NULL')
+      .andWhere('t.registration_end_date <= :now', { now })
+      .andWhere("t.status != 'completed'")
+      .getMany();
+
+    if (toursPastRegistration.length > 0) {
+      const tourIds = toursPastRegistration.map((t) => t.id);
+      const round1ToUpcoming = await this.matchRepo
+        .createQueryBuilder('m')
+        .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
+        .andWhere('m.round = 1')
+        .andWhere('m.player1_id IS NOT NULL')
+        .andWhere('m.player2_id IS NOT NULL')
+        .andWhere('m.tournament_id IN (:...tourIds)', { tourIds })
+        .getMany();
+
+      if (round1ToUpcoming.length > 0) {
+        for (const m of round1ToUpcoming) {
+          m.status = TournamentMatchStatus.UPCOMING;
+          this.logger.log(
+            `Match ${m.match_no} (tour ${m.tournament_id}) → upcoming (vòng 1 sau đăng kí)`,
+          );
+        }
+        await this.matchRepo.save(round1ToUpcoming);
+        for (const m of round1ToUpcoming) {
+          await this.tournamentsService.emitMatchUpdate(m.id).catch((err) =>
+            this.logger.error(`Emit upcoming failed for match ${m.match_no}: ${err.message}`),
+          );
+        }
+      }
+    }
+
+    // 3. Vòng 2+: PENDING → UPCOMING khi đủ 2 người + có bàn + có giờ + giờ trong vòng 15 phút tới
+    const upcomingWindow = new Date(now.getTime() + 15 * 60 * 1000);
     const pendingToUpcoming = await this.matchRepo
       .createQueryBuilder('m')
       .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
+      .andWhere('m.round > 1')
       .andWhere('m.player1_id IS NOT NULL')
       .andWhere('m.player2_id IS NOT NULL')
       .andWhere('m.table_no IS NOT NULL')
       .andWhere('m.match_time IS NOT NULL')
       .andWhere('m.match_time > :now', { now })
+      .andWhere('m.match_time <= :upcomingWindow', { upcomingWindow })
       .getMany();
 
     if (pendingToUpcoming.length > 0) {
@@ -69,7 +127,7 @@ export class TournamentSchedulerService {
       }
     }
 
-    // 3. UPCOMING → ONGOING: giờ đã đến + có bàn
+    // 4. UPCOMING → ONGOING: giờ đã đến + có bàn
     const upcomingToOngoing = await this.matchRepo
       .createQueryBuilder('m')
       .where('m.status = :status', { status: TournamentMatchStatus.UPCOMING })
@@ -188,24 +246,8 @@ export class TournamentSchedulerService {
   // Chạy mỗi 30 giây — tự động xếp bàn + giờ cho các vòng tiếp theo khi có bàn trống
   @Cron('*/30 * * * * *')
   async autoScheduleQualificationCron() {
-    const now = new Date();
-    const fifteenMinFromNow = new Date(now.getTime() + 15 * 60 * 1000);
-
-    // Bao gồm giải đang diễn ra + giải sắp bắt đầu trong 15 phút tới
-    const tours = await this.tourRepo
-      .createQueryBuilder('t')
-      .where('t.status = :ongoing', { ongoing: 'ongoing' })
-      .orWhere(
-        't.status = :upcoming AND t.start_date IS NOT NULL AND t.start_date <= :soon',
-        { upcoming: 'upcoming', soon: fifteenMinFromNow },
-      )
-      .getMany();
-
-    for (const tour of tours) {
-      await this.tournamentsService.autoScheduleQualificationMatches(tour.id).catch((err) => {
-        this.logger.error(`autoScheduleQualification failed for tournament ${tour.id}: ${err.message}`);
-      });
-    }
+    // Tự động xếp bàn đã bị vô hiệu hóa theo yêu cầu. Từ giờ sẽ xếp bàn thủ công.
+    return;
   }
 
   // Chạy mỗi 30 giây — tự động cập nhật trạng thái giải đấu

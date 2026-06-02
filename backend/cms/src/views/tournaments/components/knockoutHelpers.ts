@@ -17,6 +17,8 @@ export interface MatchVM {
     player1_check_in: string;
     player2_check_in: string;
     winner_id: PlayerIdStr;
+    player1_points?: string;
+    player2_points?: string;
 }
 
 export const createEmptyMatch = (matchNo: number, bracket: Bracket, round: number): TournamentMatch => ({
@@ -48,6 +50,8 @@ export const toVM = (m: TournamentMatch): MatchVM => ({
     player1_check_in: m.player1_check_in || 'unconfirmed',
     player2_check_in: m.player2_check_in || 'unconfirmed',
     winner_id: m.winner_id ? String(m.winner_id) : '',
+    player1_points: m.player1_points !== undefined && m.player1_points !== null ? String(m.player1_points) : '',
+    player2_points: m.player2_points !== undefined && m.player2_points !== null ? String(m.player2_points) : '',
 });
 
 export const resolveWinner = (vm: MatchVM, raceTo: number): PlayerIdStr => {

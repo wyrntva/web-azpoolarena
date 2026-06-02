@@ -28,9 +28,14 @@ function formatDateForAPI(dateString: string | null | undefined): string | null 
 export function formatDateForInput(dateString: string | null | undefined): string {
     if (!dateString) return '';
 
+    let normalized = dateString.trim();
+    if (normalized.includes(' ')) {
+        normalized = normalized.replace(' ', 'T');
+    }
+
     // If string has timezone info (Z or ±HH:MM), parse and convert to local time
-    if (dateString.endsWith('Z') || dateString.match(/[+-]\d{2}:\d{2}$/)) {
-        const d = new Date(dateString);
+    if (normalized.endsWith('Z') || normalized.match(/[+-]\d{2}:\d{2}$/)) {
+        const d = new Date(normalized);
         if (isNaN(d.getTime())) return '';
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -40,8 +45,8 @@ export function formatDateForInput(dateString: string | null | undefined): strin
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
-    if (dateString.includes('T')) {
-        const [datePart, timePart] = dateString.split('T');
+    if (normalized.includes('T')) {
+        const [datePart, timePart] = normalized.split('T');
         if (timePart) {
             const timeOnly = timePart.split(':').slice(0, 2).join(':');
             return `${datePart}T${timeOnly}`;
@@ -49,7 +54,7 @@ export function formatDateForInput(dateString: string | null | undefined): strin
         return `${datePart}T00:00`;
     }
 
-    if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) return `${dateString}T00:00`;
+    if (normalized.match(/^\d{4}-\d{2}-\d{2}$/)) return `${normalized}T00:00`;
 
     return '';
 }

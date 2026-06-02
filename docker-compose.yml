@@ -132,6 +132,7 @@ services:
     volumes:
       # Mount source code for hot reload
       - ./member:/app:delegated
+      - /app/node_modules
     networks:
       - azpool-network
 

@@ -15,7 +15,7 @@ import {
 } from '../utils/bracketUtils';
 import { useAllTables } from '../hooks/useAllTables';
 import MatchManagementDialog from './MatchManagementDialog';
-import TableAssignModal from './TableAssignModal';
+
 
 interface Props {
     tournamentId: number;
@@ -47,18 +47,6 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
     // size tier: 16, 32, or 64
     const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
     const dirtyRef = useRef(false);
-    const [showPriorityDropdown, setShowPriorityDropdown] = useState(false);
-    const priorityDropdownRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!showPriorityDropdown) return;
-        const handler = (e: MouseEvent) => {
-            if (priorityDropdownRef.current && !priorityDropdownRef.current.contains(e.target as Node))
-                setShowPriorityDropdown(false);
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [showPriorityDropdown]);
 
     // Tracks WR2 matches already saved-with-players to avoid duplicate auto-saves
     const prevR2FilledRef = useRef<Set<number>>(new Set());
@@ -66,24 +54,25 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
     const pendingSwapRef = useRef<number | null>(null);
 
     const round1Nos = useMemo(() => {
+        if (numberOfPlayers === 24) return Array.from({ length: 8 }, (_, i) => 1 + i);
         const count = size === 64 ? 32 : size === 32 ? 16 : 8;
         return Array.from({ length: count }, (_, i) => 1 + i);
-    }, [size]);
+    }, [size, numberOfPlayers]);
     const round2Nos = useMemo(() => {
+        if (numberOfPlayers === 24) return Array.from({ length: 8 }, (_, i) => 9 + i);
         // 16p: WR2 starts at 13  (4 matches)
         // 32p: WR2 starts at 25  (8 matches)
         // 64p: WR2 starts at 49  (16 matches)
         const start = size === 64 ? 49 : size === 32 ? 25 : 13;
         const count = size === 64 ? 16 : size === 32 ? 8 : 4;
         return Array.from({ length: count }, (_, i) => start + i);
-    }, [size]);
+    }, [size, numberOfPlayers]);
 
     const [round1, setRound1] = useState<MatchVM[]>(() => round1Nos.map(n => toVM(createEmptyMatch(n, 'winners', 1))));
     const [round2, setRound2] = useState<MatchVM[]>(() => round2Nos.map(n => toVM(createEmptyMatch(n, 'winners', 2))));
 
     // Dialog state
     const [editingMatch, setEditingMatch] = useState<{ round: 1 | 2; idx: number } | null>(null);
-    const [assigningRound, setAssigningRound] = useState<1 | 2 | null>(null);
 
     useEffect(() => {
         setRound1(round1Nos.map(n => toVM(createEmptyMatch(n, 'winners', 1))));
@@ -112,15 +101,30 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
         const next = [...round2];
         let changed = false;
         for (let i = 0; i < round2Nos.length; i++) {
-            const w1 = round1[i * 2]?.winner_id || '';
-            const w2 = round1[i * 2 + 1]?.winner_id || '';
+            let w1 = '';
+            let w2 = '';
+            if (numberOfPlayers === 24) {
+                w1 = round1[i]?.winner_id || '';
+                w2 = round2[i]?.player2_id || '';
+            } else {
+                w1 = round1[i * 2]?.winner_id || '';
+                w2 = round1[i * 2 + 1]?.winner_id || '';
+            }
             let item = next[i];
             // Track if a slot is being cleared because R1 has no winner yet.
             // In that case we must also clear stale winner_id/status — even on completed matches —
             // because R2 cannot have a legitimate result without both R1 feeders decided.
             let slotCleared = false;
-            if (item.player1_id !== w1) { if (w1 === '') slotCleared = true; item = { ...item, player1_id: w1 }; changed = true; }
-            if (item.player2_id !== w2) { if (w2 === '') slotCleared = true; item = { ...item, player2_id: w2 }; changed = true; }
+            if (numberOfPlayers === 24) {
+                if (item.player1_id !== w1) {
+                    if (w1 === '') slotCleared = true;
+                    item = { ...item, player1_id: w1 };
+                    changed = true;
+                }
+            } else {
+                if (item.player1_id !== w1) { if (w1 === '') slotCleared = true; item = { ...item, player1_id: w1 }; changed = true; }
+                if (item.player2_id !== w2) { if (w2 === '') slotCleared = true; item = { ...item, player2_id: w2 }; changed = true; }
+            }
             const winner = resolveWinner(item, getRaceToNumber(item.player1_id, item.player2_id, players, tournament));
             // winner_id set but a player slot is empty = inconsistent state (e.g. DB has stale winner
             // from when both players existed, but now one feeder R1 match has no winner).
@@ -161,6 +165,8 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                 player1_check_in: m.player1_check_in || 'unconfirmed',
                 player2_check_in: m.player2_check_in || 'unconfirmed',
                 winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+                player1_points: m.player1_points !== undefined && m.player1_points !== '' ? parseInt(m.player1_points, 10) : null,
+                player2_points: m.player2_points !== undefined && m.player2_points !== '' ? parseInt(m.player2_points, 10) : null,
             }).catch(() => {
                 prevR2FilledRef.current.delete(m.match_no);
             });
@@ -234,6 +240,8 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             player1_check_in: match.player1_check_in || 'unconfirmed',
             player2_check_in: match.player2_check_in || 'unconfirmed',
             winner_id: null,
+            player1_points: match.player1_points !== undefined && match.player1_points !== '' ? parseInt(match.player1_points, 10) : null,
+            player2_points: match.player2_points !== undefined && match.player2_points !== '' ? parseInt(match.player2_points, 10) : null,
         }).then(() => onClean?.()).catch(() => toast.error('Không thể lưu trận đấu'));
     }, [round1, round2, players, tournament, onUpsertMatch, onDirty, onClean]);
 
@@ -261,6 +269,8 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             player1_check_in: match.player1_check_in || 'unconfirmed',
             player2_check_in: match.player2_check_in || 'unconfirmed',
             winner_id: match.winner_id ? parseInt(match.winner_id, 10) : null,
+            player1_points: match.player1_points !== undefined && match.player1_points !== '' ? parseInt(match.player1_points, 10) : null,
+            player2_points: match.player2_points !== undefined && match.player2_points !== '' ? parseInt(match.player2_points, 10) : null,
         });
         toast.success(`Đã lưu trận ${match.match_no}`);
         dirtyRef.current = false; // prevent double-save when called explicitly via Save button
@@ -289,6 +299,8 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                             player1_check_in: swapped.player1_check_in || 'unconfirmed',
                             player2_check_in: swapped.player2_check_in || 'unconfirmed',
                             winner_id: swapped.winner_id ? parseInt(swapped.winner_id, 10) : null,
+                            player1_points: swapped.player1_points !== undefined && swapped.player1_points !== '' ? parseInt(swapped.player1_points, 10) : null,
+                            player2_points: swapped.player2_points !== undefined && swapped.player2_points !== '' ? parseInt(swapped.player2_points, 10) : null,
                         });
                         toast.success(`Trận ${swappedNo} → ${swapped.table_no || '—'}`);
                     }
@@ -300,65 +312,15 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
         setEditingMatch(null);
     }, [editingMatch, saveMatch, round1, round2, onUpsertMatch]);
 
-    const assignTables = useCallback(async (round: 1 | 2, tableNames: string[]) => {
-        const arr = round === 1 ? round1 : round2;
-        const setter = round === 1 ? setRound1 : setRound2;
 
-        // Update table pool first so future auto-assign respects this selection
-        onTablePoolChange?.(tableNames);
 
-        // Exclude tables already assigned to other matches so we don't create duplicates
-        const usedTables = new Set(arr.map(m => m.table_no).filter(Boolean));
-        const available = tableNames.filter(t => !usedTables.has(t));
-        // Put priority tables first if configured
-        const freeTables = priorityTables.length > 0
-            ? [...available.filter(t => priorityTables.includes(t)), ...available.filter(t => !priorityTables.includes(t))]
-            : available;
-
-        let tableIdx = 0;
-        const updated = arr.map((m) => {
-            // Never overwrite a match that is already active or already has a table assigned
-            if (m.status === 'ongoing' || m.status === 'upcoming' || m.table_no) return m;
-            if (tableIdx >= freeTables.length) return m;
-            return { ...m, table_no: freeTables[tableIdx++] };
-        });
-        setter(updated);
-
-        // Only save matches whose table_no actually changed
-        const saves = updated
-            .filter((m, i) => m.table_no !== arr[i].table_no)
-            .map((m) =>
-                onUpsertMatch(m.match_no, {
-                    bracket: 'winners',
-                    round,
-                    player1_id: m.player1_id ? parseInt(m.player1_id, 10) : null,
-                    player2_id: m.player2_id ? parseInt(m.player2_id, 10) : null,
-                    player1_score: parseInt(m.player1_score, 10) || 0,
-                    player2_score: parseInt(m.player2_score, 10) || 0,
-                    table_no: m.table_no || null,
-                    match_time: m.match_time || null,
-                    status: m.status,
-                    player1_check_in: m.player1_check_in || 'unconfirmed',
-                    player2_check_in: m.player2_check_in || 'unconfirmed',
-                    winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
-                })
-            );
-
-        if (saves.length === 0) {
-            toast('Tất cả trận đã có bàn. Chỉnh sửa từng trận để thay đổi.', { icon: 'ℹ️' });
-            return;
+    const selectedPlayerIds = useMemo(() => {
+        const ids = round1.flatMap(m => [m.player1_id, m.player2_id]);
+        if (numberOfPlayers === 24) {
+            ids.push(...round2.map(m => m.player2_id));
         }
-
-        try {
-            await Promise.all(saves);
-            toast.success(`Đã xếp bàn cho ${saves.length} trận`);
-            onClean?.();
-        } catch {
-            toast.error('Không thể lưu một số trận đấu');
-        }
-    }, [round1, round2, onUpsertMatch, onClean, onTablePoolChange]);
-
-    const selectedPlayerIds = round1.flatMap(m => [m.player1_id, m.player2_id]).filter(Boolean);
+        return ids.filter(Boolean);
+    }, [round1, round2, numberOfPlayers]);
 
     const getPlayerName = (id: string) => players.find(p => p.id === parseInt(id, 10))?.full_name;
 
@@ -371,66 +333,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             <div className="flex items-center gap-2 px-2">
                 <h4 className="text-md font-bold text-gray-800 dark:text-white uppercase">{title}</h4>
                 <span className="text-xs text-gray-400">({matchesVM.length} trận đấu)</span>
-                {round === 1 && (
-                    <>
-                        <button
-                            className="ml-2 inline-flex items-center gap-1 rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                            onClick={() => setAssigningRound(round)}
-                        >
-                            <Icon icon="solar:billiards-outline" className="text-sm" />
-                            Xếp bàn
-                        </button>
-                        <div className="relative ml-1" ref={priorityDropdownRef}>
-                            <button
-                                className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors ${priorityTables.length > 0 ? 'border-yellow-400 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-500 dark:bg-yellow-950 dark:text-yellow-400 dark:hover:bg-yellow-900' : 'border-gray-300 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-                                onClick={() => setShowPriorityDropdown(v => !v)}
-                            >
-                                <Icon icon={priorityTables.length > 0 ? 'solar:star-bold' : 'solar:star-outline'} className="text-sm" />
-                                {priorityTables.length === 0
-                                    ? 'Bàn ưu tiên'
-                                    : priorityTables.length === 1
-                                        ? `Ưu tiên: ${priorityTables[0]}`
-                                        : `Ưu tiên: ${priorityTables.length} bàn`}
-                            </button>
-                            {showPriorityDropdown && (
-                                <div className="absolute left-0 top-full mt-1 z-30 min-w-[160px] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                                    {priorityTables.length > 0 && (
-                                        <>
-                                            <button
-                                                className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700 rounded-t-lg"
-                                                onClick={() => onPriorityTablesChange?.([])}
-                                            >
-                                                <Icon icon="solar:close-circle-outline" className="text-sm" />
-                                                Bỏ tất cả ưu tiên
-                                            </button>
-                                            <div className="border-t border-gray-100 dark:border-gray-700" />
-                                        </>
-                                    )}
-                                    <div className="max-h-48 overflow-y-auto py-1">
-                                        {tables.map(t => {
-                                            const active = priorityTables.includes(t.name);
-                                            return (
-                                                <button
-                                                    key={t.id}
-                                                    className={`flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-xs ${active ? 'bg-yellow-50 font-semibold text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400' : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-                                                    onClick={() => {
-                                                        const next = active
-                                                            ? priorityTables.filter(n => n !== t.name)
-                                                            : [...priorityTables, t.name];
-                                                        onPriorityTablesChange?.(next);
-                                                    }}
-                                                >
-                                                    <Icon icon={active ? 'solar:star-bold' : 'solar:star-outline'} className={`text-sm ${active ? 'text-yellow-500' : 'text-gray-400'}`} />
-                                                    {t.name}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </>
-                )}
+
             </div>
             <div className="overflow-x-auto rounded-lg border border-gray-100">
                 <table className="min-w-full text-sm table-fixed">
@@ -477,7 +380,13 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                             );
                                         })() : (
                                             <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player1_id && match.winner_id ? { fontWeight: 700, ...(round === 2 ? { color: '#91d913' } : {}) } : undefined}>
-                                                {getPlayerName(match.player1_id) || <span className="text-gray-400 italic text-xs">Thắng trận {round1[idx * 2]?.match_no}</span>}
+                                                {getPlayerName(match.player1_id) || (
+                                                    numberOfPlayers === 24 && round === 2 ? (
+                                                        <span className="text-gray-400 italic text-xs">Thắng trận {match.match_no - 8}</span>
+                                                    ) : (
+                                                        <span className="text-gray-400 italic text-xs">Thắng trận {round1[idx * 2]?.match_no}</span>
+                                                    )
+                                                )}
                                             </span>
                                         )}
                                     </td>
@@ -520,7 +429,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                         })()}
                                     </td>
                                     <td className="p-3">
-                                        {round === 1 ? (() => {
+                                        {(round === 1 || (round === 2 && numberOfPlayers === 24)) ? (() => {
                                             if (match.winner_id) {
                                                 const isP2Winner = match.winner_id === match.player2_id;
                                                 return (
@@ -546,7 +455,13 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                             );
                                         })() : (
                                             <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player2_id && match.winner_id ? { fontWeight: 700, ...(round === 2 ? { color: '#91d913' } : {}) } : undefined}>
-                                                {getPlayerName(match.player2_id) || <span className="text-gray-400 italic text-xs">Thắng trận {round1[idx * 2 + 1]?.match_no}</span>}
+                                                {getPlayerName(match.player2_id) || (
+                                                    numberOfPlayers === 24 && round === 2 ? (
+                                                        <span className="text-gray-400 italic font-semibold text-xs">bye</span>
+                                                    ) : (
+                                                        <span className="text-gray-400 italic text-xs">Thắng trận {round1[idx * 2 + 1]?.match_no}</span>
+                                                    )
+                                                )}
                                             </span>
                                         )}
                                     </td>
@@ -571,8 +486,8 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
 
     if (bracketLoading) return <div className="flex justify-center p-12"><Spinner /></div>;
 
-    const r1Label = 'Vòng 1';
-    const r2Label = 'Vòng 2 nhánh thắng';
+    const r1Label = numberOfPlayers === 24 ? 'Vòng 1: Nhánh thắng' : 'Vòng 1';
+    const r2Label = numberOfPlayers === 24 ? 'Vòng 2: Nhánh thắng' : 'Vòng 2 nhánh thắng';
 
     return (
         <div className="mt-4 space-y-12 pb-10">
@@ -599,16 +514,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                 selectedIds={selectedPlayerIds}
             />
 
-            {/* Table Assignment Modal */}
-            <TableAssignModal
-                isOpen={assigningRound !== null}
-                onClose={() => setAssigningRound(null)}
-                tables={tables}
-                matchCount={assigningRound === 1 ? round1.length : round2.length}
-                roundTitle={assigningRound === 1 ? r1Label : r2Label}
-                initialSelected={enabledTables ?? tables.map(t => t.name)}
-                onApply={(tableNames) => assigningRound && assignTables(assigningRound, tableNames)}
-            />
+
         </div>
     );
 };

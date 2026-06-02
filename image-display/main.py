@@ -18,7 +18,7 @@ import requests
 import threading
 import hashlib
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from PySide6.QtGui import QGuiApplication, QScreen
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QUrl, Property, QObject, Signal, Slot, QTimer
@@ -96,8 +96,12 @@ class BannerPoller(QObject):
             
         # 2. Fetch active matches
         try:
-            _, new_matches = fetch_active_matches(API_BASE_URL)
-            self.matchesFetched.emit(new_matches)
+            tournament, new_matches = fetch_active_matches(API_BASE_URL)
+            # Only update if we got a valid response (tournament found)
+            # When API fails (DNS, timeout), tournament is None and new_matches is []
+            # In that case, keep showing the last known match data
+            if tournament is not None:
+                self.matchesFetched.emit(new_matches)
         except Exception:
             pass
 
@@ -242,8 +246,11 @@ def format_match_time(match_time):
     try:
         iso_str = match_time.replace("Z", "+00:00")
         dt = datetime.fromisoformat(iso_str)
-        time_str = dt.strftime("%H:%M")
-        date_str = dt.strftime("%d-%m")
+        # Convert to Vietnam timezone (UTC+7)
+        vn_tz = timezone(timedelta(hours=7))
+        dt_vn = dt.astimezone(vn_tz)
+        time_str = dt_vn.strftime("%H:%M")
+        date_str = dt_vn.strftime("%d-%m")
         return time_str, date_str
     except Exception:
         return "", ""
@@ -277,6 +284,39 @@ def build_score_string(match):
             return " - vs - "
             
     return f"{p1_score} vs {p2_score}"
+
+def dedupe_matches(matches):
+    status_rank = lambda s: 0 if s == 'completed' else 1 if s == 'ongoing' else 2 if s == 'upcoming' else 3
+    match_map = {}
+    for m in matches:
+        match_no = m.get("match_no")
+        if match_no is None:
+            continue
+        existing = match_map.get(match_no)
+        if not existing:
+            match_map[match_no] = m
+            continue
+            
+        def score(x):
+            status = x.get("status")
+            p1 = x.get("player1") or {}
+            p2 = x.get("player2") or {}
+            p1_id = p1.get("id") or x.get("player1_id")
+            p2_id = p2.get("id") or x.get("player2_id")
+            p1_score = x.get("player1_score", 0)
+            p2_score = x.get("player2_score", 0)
+            
+            return (
+                status_rank(status) * -100 +
+                (10 if x.get("winner_id") else 0) +
+                (5 if p1_id and p2_id else 0) +
+                (p1_score + p2_score)
+            )
+            
+        if score(m) > score(existing):
+            match_map[match_no] = m
+            
+    return sorted(list(match_map.values()), key=lambda x: x.get("match_no", 0))
 
 def fetch_active_matches(api_base_url):
     try:
@@ -331,10 +371,19 @@ def fetch_active_matches(api_base_url):
         else:
             matches = []
         
+        # Deduplicate matches
+        deduped_matches = dedupe_matches(matches)
+        
         # 5. Filter and format active matches
         active_matches = []
-        for m in matches:
-            if m.get("status") in ["ongoing", "upcoming", "pending"]:
+        for m in deduped_matches:
+            status = m.get("status")
+            p1 = m.get("player1") or {}
+            p2 = m.get("player2") or {}
+            p1_id = p1.get("id") or m.get("player1_id")
+            p2_id = p2.get("id") or m.get("player2_id")
+            
+            if status in ["ongoing", "upcoming", "pending"] and p1_id is not None and p2_id is not None:
                 active_matches.append(m)
                 
         # Format them

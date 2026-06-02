@@ -1,3 +1,6 @@
+import * as pg from 'pg';
+pg.types.setTypeParser(1114, (stringValue) => stringValue);
+
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
