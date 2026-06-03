@@ -4,11 +4,13 @@ import axios from 'axios';
 // For client-side requests, use the backend URL accessible from browser
 const getApiBaseURL = () => {
   if (typeof window !== 'undefined') {
-    // Client-side: dynamically use the current hostname to connect to the backend on port 8000
-    const hostname = window.location.hostname;
-    return `http://${hostname}:8000`;
+    // In production (HTTPS), use configured API URL to avoid Mixed Content errors
+    if (window.location.protocol === 'https:') {
+      return process.env.NEXT_PUBLIC_API_URL || `https://${window.location.hostname}`;
+    }
+    // Dev: connect directly to backend port
+    return `http://${window.location.hostname}:8000`;
   }
-  // Server-side: use internal Docker service name or fallback
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 };
 
