@@ -122,12 +122,14 @@ export function convertFormDataToAPI(
     if (isUpdate && existingTournament) {
         apiData.banner = resolveImageField(data.banner, existingTournament.banner);
         apiData.organizer_logo = resolveImageField(data.organizer_logo, null);
+        apiData.detail_logo = resolveImageField(data.detail_logo, null);
         apiData.sponsor_logos = (data.sponsor_logos?.length > 0)
             ? data.sponsor_logos.filter((l: unknown) => typeof l === 'string' && (l as string).trim() !== '')
             : [];
     } else {
         apiData.banner = resolveImageField(data.banner, null);
         apiData.organizer_logo = resolveImageField(data.organizer_logo, null);
+        apiData.detail_logo = resolveImageField(data.detail_logo, null);
         apiData.sponsor_logos = (data.sponsor_logos?.length > 0)
             ? data.sponsor_logos.filter((l: unknown) => typeof l === 'string' && (l as string).trim() !== '')
             : [];
@@ -137,7 +139,7 @@ export function convertFormDataToAPI(
     if (isUpdate) {
         const IMPORTANT_FIELDS = [
             'public_date', 'start_date', 'registration_start_date', 'registration_end_date',
-            'banner', 'organizer_logo', 'sponsor_logos',
+            'banner', 'organizer_logo', 'detail_logo', 'sponsor_logos',
         ];
 
         const updateData: Record<string, unknown> = {};

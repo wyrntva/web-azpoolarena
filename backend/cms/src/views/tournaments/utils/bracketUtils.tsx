@@ -161,6 +161,11 @@ export const getMatchRoundLabel = (
         if (matchNo >= 105 && matchNo <= 108) return 'qf';
         if (matchNo >= 109 && matchNo <= 110) return 'sf';
         if (matchNo === 111) return 'f';
+    } else if (numberOfPlayers === 24) {
+        if (matchNo >= 25 && matchNo <= 32) return 'r8';
+        if (matchNo >= 33 && matchNo <= 36) return 'qf';
+        if (matchNo >= 37 && matchNo <= 38) return 'sf';
+        if (matchNo === 39) return 'f';
     } else if (numberOfPlayers > 16) {
         if (matchNo >= 41 && matchNo <= 48) return 'r8';
         if (matchNo >= 49 && matchNo <= 52) return 'qf';
@@ -377,7 +382,10 @@ export function buildSavePayloads(
 
 export function validateMatchTimes(matches: MatchVM[], tournamentStartDate: string | null): string | null {
     if (!tournamentStartDate) return null;
-    const startStr = tournamentStartDate.substring(0, 16).replace(' ', 'T');
+    // Convert tournament start_date to local datetime-local format for consistent comparison
+    const startLocal = toDatetimeLocal(tournamentStartDate);
+    if (!startLocal) return null;
+    const startStr = startLocal.substring(0, 16);
     for (const m of matches) {
         if (m.match_time) {
             const mStr = m.match_time.substring(0, 16).replace(' ', 'T');

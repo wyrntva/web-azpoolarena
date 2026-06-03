@@ -88,6 +88,7 @@ export const useKnockoutBracket = ({
     const [saving, setSaving] = useState(false);
     const isKO8Mode = numberOfPlayers <= 16;
     const isKO32Mode = numberOfPlayers > 32;
+    const is24Mode = numberOfPlayers === 24;
     // Tracks which match_nos have had their handicap scores repaired this session
     const handicapRepairedRef = useRef<Set<number>>(new Set());
 
@@ -111,10 +112,10 @@ export const useKnockoutBracket = ({
     // =====================
     // KO16 Configuration (32 players)
     // =====================
-    const ko16R16Nos = useMemo(() => generateMatchNos(41, 8), []);
-    const ko16QFNos = useMemo(() => generateMatchNos(49, 4), []);
-    const ko16SFNos = useMemo(() => generateMatchNos(53, 2), []);
-    const ko16FinalNos = useMemo(() => [55], []);
+    const ko16R16Nos = useMemo(() => generateMatchNos(is24Mode ? 25 : 41, 8), [is24Mode]);
+    const ko16QFNos = useMemo(() => generateMatchNos(is24Mode ? 33 : 49, 4), [is24Mode]);
+    const ko16SFNos = useMemo(() => generateMatchNos(is24Mode ? 37 : 53, 2), [is24Mode]);
+    const ko16FinalNos = useMemo(() => [is24Mode ? 39 : 55], [is24Mode]);
 
     const [ko16R16, setKo16R16] = useState<MatchVM[]>(() =>
         ko16R16Nos.map((n) => toVM(createEmptyMatch(n, 'knockout', 1)))
@@ -215,19 +216,22 @@ export const useKnockoutBracket = ({
     const qualified16Ids = useMemo(() => {
         if (isKO8Mode) return [] as string[];
         const ids: string[] = [];
-        // Winners WR2 (25-32)
-        for (let m = 25; m <= 32; m++) {
-            const w = winnerOf(m);
-            if (w) ids.push(w);
-        }
-        // Winners LR2 (33-40)
-        for (let m = 33; m <= 40; m++) {
-            const w = winnerOf(m);
-            if (w) ids.push(w);
+        if (is24Mode) {
+            // 24 players: winners of WR2 (9-16) and LR1 (17-24)
+            for (let m = 9; m <= 24; m++) {
+                const w = winnerOf(m);
+                if (w) ids.push(w);
+            }
+        } else {
+            // 32 players: winners of WR2 (25-32) and LR2 (33-40)
+            for (let m = 25; m <= 40; m++) {
+                const w = winnerOf(m);
+                if (w) ids.push(w);
+            }
         }
         return Array.from(new Set(ids));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [matches, isKO8Mode, winnerOf]);
+    }, [matches, isKO8Mode, is24Mode, winnerOf]);
 
     const qualifiedPlayers = useMemo(() => {
         const set = new Set(qualified16Ids.map((x) => parseInt(x, 10)));
@@ -366,9 +370,13 @@ export const useKnockoutBracket = ({
         const wr = [winnerOf(13), winnerOf(14), winnerOf(15), winnerOf(16)];
         const lr = [winnerOf(17), winnerOf(18), winnerOf(19), winnerOf(20)];
 
-        // Include any match where at least 1 player is now known
+        // Include matches where at least 1 player is known, or where stale players need clearing
         const candidates = ko8Round1Nos.map((matchNo, i) => ({ matchNo, i, p1: wr[i], p2: lr[i] }))
-            .filter(({ p1, p2 }) => p1 || p2);
+            .filter(({ matchNo, p1, p2 }) => {
+                if (p1 || p2) return true;
+                const stored = matches.find(m => m.match_no === matchNo);
+                return !!(stored?.player1_id || stored?.player2_id);
+            });
 
         if (candidates.length === 0) return;
 
@@ -479,6 +487,75 @@ export const useKnockoutBracket = ({
         });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko8Round1, isKO8Mode]);
+
+    // KO24 auto-seed: trận 25+i: P1 = winner WR2 (9+i), P2 = winner LR1 (17+i)
+    useEffect(() => {
+        if (!is24Mode) return;
+
+        const wr2 = Array.from({ length: 8 }, (_, i) => winnerOf(9 + i));
+        const lr1 = Array.from({ length: 8 }, (_, i) => winnerOf(17 + i));
+
+        const candidates = ko16R16Nos.map((matchNo, i) => ({ matchNo, i, p1: wr2[i], p2: lr1[i] }))
+            .filter(({ matchNo, p1, p2 }) => {
+                if (p1 || p2) return true;
+                // Also clear stale players when source matches no longer have winners
+                const stored = matches.find(m => m.match_no === matchNo);
+                return !!(stored?.player1_id || stored?.player2_id);
+            });
+
+        if (candidates.length === 0) return;
+
+        setKo16R16(prev => {
+            const next = [...prev];
+            let changed = false;
+            candidates.forEach(({ i, matchNo, p1, p2 }) => {
+                let m = next[i];
+                if (!m || m.status === 'completed') return;
+                let updated = m;
+                const targetP1 = p1 || '';
+                const targetP2 = p2 || '';
+                if (m.player1_id !== targetP1) { updated = { ...updated, player1_id: targetP1 }; changed = true; }
+                if (m.player2_id !== targetP2) { updated = { ...updated, player2_id: targetP2 }; changed = true; }
+                if (updated.player1_id && updated.player2_id) {
+                    const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
+                    const info = getRaceToInfo(updated.player1_id, updated.player2_id, players, tournament, rl);
+                    const p1Score = info.handicap > 0 && info.handicappedPlayerId === updated.player1_id ? String(info.handicap) : '0';
+                    const p2Score = info.handicap > 0 && info.handicappedPlayerId === updated.player2_id ? String(info.handicap) : '0';
+                    updated = { ...updated, player1_score: p1Score, player2_score: p2Score };
+                } else {
+                    updated = { ...updated, player1_score: '0', player2_score: '0' };
+                }
+                if (updated !== m) next[i] = updated;
+            });
+            return changed ? next : prev;
+        });
+
+        candidates.forEach(({ matchNo, p1, p2 }) => {
+            const storedMatch = matches.find(m => m.match_no === matchNo);
+            if (storedMatch?.status === 'completed') return;
+            const targetP1 = p1 || '';
+            const targetP2 = p2 || '';
+            const currentP1 = storedMatch?.player1_id ? String(storedMatch.player1_id) : '';
+            const currentP2 = storedMatch?.player2_id ? String(storedMatch.player2_id) : '';
+            if (currentP1 === targetP1 && currentP2 === targetP2) return;
+            const finalP1 = targetP1 ? parseInt(targetP1, 10) : null;
+            const finalP2 = targetP2 ? parseInt(targetP2, 10) : null;
+            let p1Score = 0, p2Score = 0;
+            if (finalP1 && finalP2) {
+                const rl = getMatchRoundLabel(matchNo, numberOfPlayers);
+                const info = getRaceToInfo(String(finalP1), String(finalP2), players, tournament, rl);
+                p1Score = info.handicap > 0 && info.handicappedPlayerId === String(finalP1) ? info.handicap : 0;
+                p2Score = info.handicap > 0 && info.handicappedPlayerId === String(finalP2) ? info.handicap : 0;
+            }
+            onUpsertMatch(matchNo, {
+                bracket: 'knockout', round: 1,
+                player1_id: finalP1, player2_id: finalP2,
+                player1_score: p1Score, player2_score: p2Score,
+                status: 'pending', winner_id: null,
+            }).catch(() => {});
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [qualified16Ids, is24Mode]);
 
     // KO8 propagation
     useEffect(() => {

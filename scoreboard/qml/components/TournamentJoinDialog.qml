@@ -27,8 +27,14 @@ DialogShell {
     // Ngăn chặn tắt dialog bằng nút X
     showCloseButton: false
 
-    // Thời gian đếm ngược
-    property int timeRemaining: 900
+    // Thời gian đếm ngược (30 phút = 1800 giây)
+    property int timeRemaining: 1800
+
+    property int leftMinScore: 0
+    property int rightMinScore: 0
+
+    property int p1LatePenalty: 0
+    property int p2LatePenalty: 0
 
     function formatTime(seconds) {
         var hrs = Math.floor(seconds / 3600);
@@ -47,21 +53,72 @@ DialogShell {
         TournamentService.updateCheckIn(m.match_id, p1Status || "", p2Status || "")
     }
 
-    // Tính thời gian còn lại: deadline = match_time + 15 phút
+    // Tính thời gian còn lại: deadline = match_time + 30 phút
     function calcTimeRemaining() {
-        if (typeof TournamentService === "undefined" || !TournamentService) return 900
+        if (typeof TournamentService === "undefined" || !TournamentService) return 1800
         var m = TournamentService.activeMatch
-        if (!m || !m.match_time) return 900  // Fallback 15 phút nếu không có match_time
+        if (!m || !m.match_time) return 1800  // Fallback 30 phút nếu không có match_time
 
         var matchStart = new Date(m.match_time)
-        if (isNaN(matchStart.getTime())) return 900  // Invalid date → fallback 15 phút
+        if (isNaN(matchStart.getTime())) return 1800  // Invalid date → fallback 30 phút
 
-        var deadline = new Date(matchStart.getTime() + 15 * 60 * 1000) // +15 phút
+        var deadline = new Date(matchStart.getTime() + 30 * 60 * 1000) // +30 phút
         var now = new Date()
         var remaining = Math.floor((deadline.getTime() - now.getTime()) / 1000)
         console.log("[JoinDialog] match_time=" + m.match_time + " now=" + now.toISOString() + " remaining=" + remaining + "s")
-        // Nếu deadline đã qua (trận bắt đầu muộn), vẫn cho 15 phút xác nhận
-        return remaining > 0 ? remaining : 900
+        // Nếu deadline đã qua (trận bắt đầu muộn), vẫn cho 30 phút xác nhận
+        return remaining > 0 ? remaining : 1800
+    }
+
+    function checkLatePenalties() {
+        if (typeof TournamentService === "undefined" || !TournamentService) return
+        var m = TournamentService.activeMatch
+        if (!m || !m.match_id) return
+
+        var elapsedSecs = 1800 - timeRemaining
+        if (elapsedSecs < 0) elapsedSecs = 0
+
+        // Chỉ tính phạt nếu người chơi chưa xác nhận (chưa check-in)
+        if (!leftConfirmed) {
+            if (elapsedSecs >= 1800) {
+                p1LatePenalty = 3 // Absent
+            } else if (elapsedSecs >= 1200) {
+                p1LatePenalty = 2
+            } else if (elapsedSecs >= 600) {
+                p1LatePenalty = 1
+            }
+        }
+
+        if (!rightConfirmed) {
+            if (elapsedSecs >= 1800) {
+                p2LatePenalty = 3 // Absent
+            } else if (elapsedSecs >= 1200) {
+                p2LatePenalty = 2
+            } else if (elapsedSecs >= 600) {
+                p2LatePenalty = 1
+            }
+        }
+
+        // Tự động xử lý Vắng mặt nếu muộn 30 phút
+        if (p1LatePenalty === 3 || p2LatePenalty === 3) {
+            countdownTimer.stop()
+            var p1Status = leftConfirmed ? "" : "absent"
+            var p2Status = rightConfirmed ? "" : "absent"
+            sendCheckIn(p1Status, p2Status)
+            root.close()
+            return
+        }
+
+        // Điểm phạt của người này sẽ cộng cho đối thủ của họ
+        var expectedP1Score = leftMinScore + p2LatePenalty
+        var expectedP2Score = rightMinScore + p1LatePenalty
+
+        if (Controller.leftScore !== expectedP1Score || Controller.rightScore !== expectedP2Score) {
+            console.log("[JoinDialog] Cập nhật điểm phạt đi muộn: elapsedSecs=" + elapsedSecs + " leftScore=" + expectedP1Score + " rightScore=" + expectedP2Score)
+            Controller.leftScore = expectedP1Score
+            Controller.rightScore = expectedP2Score
+            TournamentService.updateScore(m.match_id, Controller.leftScore, Controller.rightScore, 0)
+        }
     }
 
     onOpened: {
@@ -77,6 +134,11 @@ DialogShell {
             Qt.callLater(function() { root.close() })
             return
         }
+
+        // Khởi tạo các giá trị phạt ban đầu
+        p1LatePenalty = 0
+        p2LatePenalty = 0
+        checkLatePenalties()
 
         countdownTimer.restart()
         forceActiveFocus()
@@ -95,6 +157,7 @@ DialogShell {
         onTriggered: {
             if (root.timeRemaining > 0) {
                 root.timeRemaining -= 1
+                root.checkLatePenalties()
             } else {
                 running = false
                 // Hết giờ — đánh dấu vắng mặt cho người chưa xác nhận
@@ -161,6 +224,7 @@ DialogShell {
 
                     onClicked: {
                         root.leftConfirmed = true
+                        root.checkLatePenalties()
                         // Gửi xác nhận player 1 lên backend
                         root.sendCheckIn("confirmed", "")
                         root.checkBoth()
@@ -203,6 +267,7 @@ DialogShell {
 
                     onClicked: {
                         root.rightConfirmed = true
+                        root.checkLatePenalties()
                         // Gửi xác nhận player 2 lên backend
                         root.sendCheckIn("", "confirmed")
                         root.checkBoth()

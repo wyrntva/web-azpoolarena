@@ -130,13 +130,14 @@ const TournamentKnockoutTab = ({
         );
     }
 
-    // KO16 Mode (32 players)
+    // KO16 Mode (24 or 32 players)
+    const is24 = numberOfPlayers === 24;
     return (
         <div className="mt-4 space-y-12 pb-10">
             <QualificationWarning current={qualified16Count} required={16} />
 
             <KnockoutMatchTable
-                matches={ko16R16} players={players} title="Vòng 1/8" matchRange="Trận 41-48" matchCount={8}
+                matches={ko16R16} players={players} title="Vòng 1/8" matchRange={is24 ? 'Trận 25-32' : 'Trận 41-48'} matchCount={8}
                 isPlayerSelectable={true} availablePlayers={qualifiedPlayers} selectedIds={ko16SelectedIds}
                 selectDisabled={false}
                 onChange={(idx, field, value) => handleKO16Change(1, idx, field, value)}
@@ -145,7 +146,7 @@ const TournamentKnockoutTab = ({
             />
             <RoundDivider />
             <KnockoutMatchTable
-                matches={ko16QF} players={players} title="Tứ Kết" matchRange="Trận 49-52" matchCount={4}
+                matches={ko16QF} players={players} title="Tứ Kết" matchRange={is24 ? 'Trận 33-36' : 'Trận 49-52'} matchCount={4}
                 player1Placeholder={() => 'Chờ thắng KO...'} player2Placeholder={() => 'Chờ thắng KO...'}
                 onChange={(idx, field, value) => handleKO16Change(2, idx, field, value)}
                 onSaveMatch={(idx) => saveKO16Match(2, idx)}
@@ -153,7 +154,7 @@ const TournamentKnockoutTab = ({
             />
             <RoundDivider />
             <KnockoutMatchTable
-                matches={ko16SF} players={players} title="Bán Kết" matchRange="Trận 53-54" matchCount={2}
+                matches={ko16SF} players={players} title="Bán Kết" matchRange={is24 ? 'Trận 37-38' : 'Trận 53-54'} matchCount={2}
                 player1Placeholder={() => 'Chờ thắng TK...'} player2Placeholder={() => 'Chờ thắng TK...'}
                 onChange={(idx, field, value) => handleKO16Change(3, idx, field, value)}
                 onSaveMatch={(idx) => saveKO16Match(3, idx)}
@@ -161,7 +162,7 @@ const TournamentKnockoutTab = ({
             />
             <RoundDivider />
             <KnockoutMatchTable
-                matches={ko16Final} players={players} title="Chung Kết" matchRange="Trận 55" matchCount={1}
+                matches={ko16Final} players={players} title="Chung Kết" matchRange={is24 ? 'Trận 39' : 'Trận 55'} matchCount={1}
                 player1Placeholder={() => 'Chờ thắng BK...'} player2Placeholder={() => 'Chờ thắng BK...'}
                 onChange={(idx, field, value) => handleKO16Change(4, idx, field, value)}
                 onSaveMatch={(idx) => saveKO16Match(4, idx)}

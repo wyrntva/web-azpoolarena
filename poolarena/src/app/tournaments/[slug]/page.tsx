@@ -242,7 +242,7 @@ export default function TournamentDetailPage() {
         phone: data.support_phone || 'Chưa có',
         registrationFee: `${formatCurrency(data.registration_fee)}${data.free_table_fee ? ' - FREE tiền bàn' : ' - Thua trả tiền bàn'}`,
         registrationFeeAmount: data.registration_fee || 0,
-        logo: resolveImageUrl(data.organizer_logo, resolveImageUrl(data.banner, '')),
+        logo: resolveImageUrl(data.detail_logo, ''),
         banner: resolveImageUrl(data.banner, '/images/tour_banner.png'),
         sponsorLogos: Array.isArray(data.sponsor_logos)
           ? data.sponsor_logos.map((logo: string) => resolveImageUrl(logo, ''))

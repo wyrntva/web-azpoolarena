@@ -18,6 +18,7 @@ export class CreateTournamentDto {
   @IsString() slug: string;
   @IsOptional() @IsString() banner?: string | null;
   @IsOptional() @IsString() organizer_logo?: string | null;
+  @IsOptional() @IsString() detail_logo?: string | null;
   @IsOptional() @IsArray() sponsor_logos?: string[];
   @IsOptional() @IsArray() ranks?: string[];
   @IsOptional() @IsString() display?: string;
@@ -68,6 +69,7 @@ export class UpdateTournamentDto {
   @IsOptional() @IsString() slug?: string;
   @IsOptional() @IsString() banner?: string | null;
   @IsOptional() @IsString() organizer_logo?: string | null;
+  @IsOptional() @IsString() detail_logo?: string | null;
   @IsOptional() @IsArray() sponsor_logos?: string[];
   @IsOptional() @IsArray() ranks?: string[];
   @IsOptional() @IsString() display?: string;

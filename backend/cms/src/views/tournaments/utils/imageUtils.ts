@@ -152,6 +152,28 @@ export function createImageHandlers(
         setFormData(prev => ({ ...prev, organizer_logo: null }));
     };
 
+    const handleDetailLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                const croppedFile = await cropImageToSize(file, 300, 100);
+                setFormData(prev => ({ ...prev, detail_logo: croppedFile }));
+            } catch (_error) {
+                alert(`Lỗi khi xử lý ảnh logo trang giải "${file.name}"`);
+            }
+        }
+    };
+
+    const handleRemoveDetailLogo = () => {
+        const editingId = getEditingId();
+        if (editingId !== null) {
+            tournamentAPI.deleteImage(editingId, 'detail_logo').catch((_error) => {
+                alert('Không thể xóa logo trang giải');
+            });
+        }
+        setFormData(prev => ({ ...prev, detail_logo: null }));
+    };
+
     return {
         handleBannerChange,
         handleOrganizerLogoChange,
@@ -159,6 +181,8 @@ export function createImageHandlers(
         handleRemoveSponsorLogo,
         handleRemoveBanner,
         handleRemoveOrganizerLogo,
+        handleDetailLogoChange,
+        handleRemoveDetailLogo,
     };
 }
 
@@ -170,7 +194,7 @@ export function createImageHandlers(
 export async function uploadFormImages(
     formData: TournamentFormData,
     existingTournament?: Record<string, unknown>,
-): Promise<{ banner: string | null; organizer_logo: string | null; sponsor_logos: string[] }> {
+): Promise<{ banner: string | null; organizer_logo: string | null; detail_logo: string | null; sponsor_logos: string[] }> {
     // Banner
     let bannerUrl: string | null;
     if (formData.banner instanceof File) {
@@ -199,6 +223,22 @@ export async function uploadFormImages(
         organizerLogoUrl = null;
     }
 
+    // Detail logo
+    let detailLogoUrl: string | null;
+    if (formData.detail_logo instanceof File) {
+        try {
+            detailLogoUrl = await tournamentAPI.uploadImage('detail_logo', formData.detail_logo);
+        } catch (error) {
+            throw new Error(`Không thể tải lên logo trang giải: ${error}`);
+        }
+    } else if (typeof formData.detail_logo === 'string' && formData.detail_logo.trim() !== '') {
+        detailLogoUrl = formData.detail_logo;
+    } else if (existingTournament?.detail_logo) {
+        detailLogoUrl = existingTournament.detail_logo as string;
+    } else {
+        detailLogoUrl = null;
+    }
+
     // Sponsor logos
     const sponsorLogos = formData.sponsor_logos || [];
     const uploadedSponsorLogos: string[] = [];
@@ -216,5 +256,5 @@ export async function uploadFormImages(
         }
     }
 
-    return { banner: bannerUrl, organizer_logo: organizerLogoUrl, sponsor_logos: uploadedSponsorLogos };
+    return { banner: bannerUrl, organizer_logo: organizerLogoUrl, detail_logo: detailLogoUrl, sponsor_logos: uploadedSponsorLogos };
 }

@@ -893,6 +893,8 @@ Item {
         id: joinDlg
         leftName: page.pLeftName || defaultLeftName()
         rightName: page.pRightName || defaultRightName()
+        leftMinScore: page.leftMinScore
+        rightMinScore: page.rightMinScore
         fixedW: dlgW; minW: dlgMin; sideMargin: dlgSide; keyboardMargin: dlgKb
         onBothConfirmed: {
             page.matchJoined = true

@@ -3,6 +3,7 @@ export interface TournamentFormData {
     slug: string;
     banner: File | string | null; // Can be File (new upload) or string (existing URL)
     organizer_logo: File | string | null; // Can be File (new upload) or string (existing URL)
+    detail_logo: File | string | null; // Can be File (new upload) or string (existing URL)
     sponsor_logos: (File | string)[]; // Can be File[] (new uploads) or string[] (existing URLs)
     ranks: string[];
     display: string;

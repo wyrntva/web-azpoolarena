@@ -4,6 +4,7 @@
  * Auto-saves individual matches when the dialog is closed.
  */
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { Spinner } from 'flowbite-react';
 import toast from 'react-hot-toast';
 import type { Tournament, TournamentMatch, TournamentMatchUpsert, TournamentRegisteredPlayer } from '../../../api/tournament.api';
@@ -218,7 +219,10 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
         }
         const sourceMatch = matchMap.get(sourceMatchNo);
         if (!sourceMatch) return false;
-        return (!!sourceMatch.player1_id !== !!sourceMatch.player2_id); // exactly one player
+        // A match with exactly one player is only a BYE when it already has a winner.
+        // If winner_id is null, the empty slot is waiting for propagation — not a BYE.
+        if (!sourceMatch.winner_id) return false;
+        return (!!sourceMatch.player1_id !== !!sourceMatch.player2_id);
     }, [matchMap, numberOfPlayers]);
 
     // Auto-complete BYE matches in Losers Round 1
@@ -332,6 +336,12 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
         dirtyRef.current = false; // prevent double-save when called explicitly via Save button
         onClean?.();
     }, [editingMatch, round1, round2, tournament, onUpsertMatch, onClean]);
+
+    // Wrapper: save and close dialog (only close on success, throw on error so dialog stays open)
+    const handleDialogSave = useCallback(async () => {
+        await saveMatch();
+        flushSync(() => setEditingMatch(null));
+    }, [saveMatch]);
 
     // Auto-save when dialog closes; also saves the other match if a table swap happened
     const handleDialogClose = useCallback(async () => {
@@ -549,7 +559,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                 tables={tables}
                 tournament={tournament}
                 onChange={(field, value) => editingMatch && onChange(editingMatch.round, editingMatch.idx, field, value)}
-                onSave={saveMatch}
+                onSave={handleDialogSave}
             />
 
 

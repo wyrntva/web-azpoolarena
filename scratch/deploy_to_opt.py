@@ -49,7 +49,7 @@ def main():
     
     # 3. Adjust ownership and permissions
     print("\n--- Step 3: Setting correct owner and permissions ---")
-    run_cmd("chown -R azimgdisplay:azimgdisplay /opt/azpool-imagedisplay", run_sudo=True)
+    run_cmd("chown -R poolarena:poolarena /opt/azpool-imagedisplay", run_sudo=True)
     run_cmd("chmod +x /opt/azpool-imagedisplay/run.sh /opt/azpool-imagedisplay/kiosk-run.sh", run_sudo=True)
     
     # 4. Verify /opt files
@@ -58,16 +58,15 @@ def main():
     run_cmd("ls -la /opt/azpool-imagedisplay/fonts", run_sudo=True)
     
     # 5. Restart the application process
-    print("\n--- Step 5: Restarting the image-display application ---")
-    # Kill the main.py running under user azimgdisplay
-    # This will trigger the kiosk-run.sh loop to restart it automatically with our new code
-    run_cmd("pkill -f 'python /opt/azpool-imagedisplay/main.py'", run_sudo=True)
+    print("\n--- Step 5: Restarting the image-display application service ---")
+    run_cmd("systemctl restart azpool-imagedisplay.service", run_sudo=True)
     
     # 6. Verify if it restarted successfully
     print("\n--- Step 6: Verifying new process status ---")
     import time
-    time.sleep(6) # Wait for it to restart (loop has 5s sleep)
-    run_cmd("ps aux | grep -E 'python /opt/azpool-imagedisplay/main.py'", run_sudo=True)
+    time.sleep(4) # Wait for it to start
+    run_cmd("systemctl status azpool-imagedisplay.service")
+    run_cmd("ps aux | grep -E 'python.*main.py|image-display'")
     
     ssh.close()
     print("\n=== App deployment and restart finished! ===")

@@ -7,7 +7,7 @@ def main():
     username = "poolarena"
     password = "admin"
     
-    local_dir = "F:\\web-azpoolarena\\image-display"
+    local_dir = "/home/wavy/web-azpoolarena/image-display"
     remote_dir = "/home/poolarena/image-display"
     
     print(f"=== Deploying Image Display to Raspberry Pi 5 ({ip}) ===")

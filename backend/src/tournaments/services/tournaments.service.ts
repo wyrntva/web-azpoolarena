@@ -272,6 +272,9 @@ export class TournamentsService {
     } else if (imageType === 'organizer_logo') {
       this.deleteLocalFile(tour.organizer_logo);
       (tour as any).organizer_logo = null;
+    } else if (imageType === 'detail_logo') {
+      this.deleteLocalFile((tour as any).detail_logo);
+      (tour as any).detail_logo = null;
     } else if (imageType === 'sponsor_logo') {
       let logos: string[] = [];
       try { logos = JSON.parse(tour.sponsor_logos || '[]'); } catch { logos = []; }
@@ -877,7 +880,6 @@ export class TournamentsService {
   async upsertMatch(tournamentId: number, matchNo: number, dto: UpdateMatchDto) {
     let match = await this.matchRepo.findOne({
       where: { tournament_id: tournamentId, match_no: matchNo },
-      relations: ['player1', 'player2'],
     });
 
     const statusBefore = match ? match.status : null;
@@ -1461,14 +1463,14 @@ export class TournamentsService {
       }
 
       // Auto-assign match time if eligible (both players present, table assigned, table not busy, no match_time set yet)
+      // Table is considered busy if any other match in this tournament uses the same table and is PENDING (with table set), UPCOMING, or ONGOING
       if (nextMatch.player1_id && nextMatch.player2_id && nextMatch.table_no && !nextMatch.match_time) {
         const isTableBusy = await this.matchRepo.findOne({
-          where: {
-            tournament_id: match.tournament_id,
-            table_no: nextMatch.table_no,
-            id: Not(nextMatch.id),
-            status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
-          },
+          where: [
+            { tournament_id: match.tournament_id, table_no: nextMatch.table_no, id: Not(nextMatch.id), status: TournamentMatchStatus.ONGOING },
+            { tournament_id: match.tournament_id, table_no: nextMatch.table_no, id: Not(nextMatch.id), status: TournamentMatchStatus.UPCOMING },
+            { tournament_id: match.tournament_id, table_no: nextMatch.table_no, id: Not(nextMatch.id), status: TournamentMatchStatus.PENDING },
+          ],
         });
         if (!isTableBusy) {
           nextMatch.match_time = new Date(Date.now() + 3 * 60 * 1000);

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import type { Tournament, TournamentRegisteredPlayer } from '../../../api/tournament.api';
 import { MatchVM } from './knockoutHelpers';
 import MatchManagementDialog from './MatchManagementDialog';
@@ -205,6 +206,7 @@ const KnockoutMatchTable: React.FC<KnockoutMatchTableProps> = ({
                         if (editingIdx !== null && onSaveMatch) {
                             await onSaveMatch(editingIdx);
                             dirtyRef.current = false;
+                            flushSync(() => setEditingIdx(null));
                         }
                     }}
                     isPlayerSelectable={isPlayerSelectable}

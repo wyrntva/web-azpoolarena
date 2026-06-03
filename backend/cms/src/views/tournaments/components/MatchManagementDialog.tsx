@@ -137,7 +137,7 @@ const MatchManagementDialog: React.FC<Props> = ({
         setSaving(true);
         try { await onSave(); }
         catch { /* error shown via toast by parent */ }
-        finally { setSaving(false); onClose(); }
+        finally { setSaving(false); }
     };
 
     const DropdownArrow = () => (

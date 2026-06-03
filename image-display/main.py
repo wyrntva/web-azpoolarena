@@ -48,7 +48,7 @@ class ImageProvider(QObject):
     def hasActiveMatches(self):
         return len(self._active_matches) > 0
 
-    @Property(str)
+    @Property(str, constant=True)
     def apiBaseUrl(self):
         return API_BASE_URL
 
@@ -255,35 +255,46 @@ def format_match_time(match_time):
     except Exception:
         return "", ""
 
-def build_score_string(match):
+def build_score_string(match, p1_rank=None, p2_rank=None):
     status = match.get("status")
-    p1_score = match.get("player1_score", 0)
-    p2_score = match.get("player2_score", 0)
+    s1 = match.get("player1_score", 0)
+    s2 = match.get("player2_score", 0)
     p1_check_in = match.get("player1_check_in")
     p2_check_in = match.get("player2_check_in")
-    
+
     p1 = match.get("player1") or {}
     p2 = match.get("player2") or {}
     p1_id = p1.get("id") or match.get("player1_id")
     p2_id = p2.get("id") or match.get("player2_id")
-    
-    if status in ["pending", "upcoming"]:
+
+    if status == "pending":
         return " vs "
-        
+
     if p1_check_in == "absent": return "NS vs -"
     if p2_check_in == "absent": return "- vs NS"
-    
+
     if status == "completed":
         winner_id = match.get("winner_id")
         if not winner_id and match.get("winner"):
             winner_id = match.get("winner").get("id")
-            
         if not p1_id or not p2_id:
             if p1_id and winner_id == p1_id: return "WO vs -"
             if p2_id and winner_id == p2_id: return "- vs WO"
             return " - vs - "
-            
-    return f"{p1_score} vs {p2_score}"
+
+    # Apply handicap head start when both scores are 0 and match is in progress.
+    # Device initialises locally with the head start but only pushes an update after the first ball is potted.
+    if s1 == 0 and s2 == 0 and status in ("upcoming", "ongoing") and p1_rank and p2_rank:
+        r1 = get_rank_index(p1_rank)
+        r2 = get_rank_index(p2_rank)
+        if r1 >= 0 and r2 >= 0 and r1 != r2:
+            head_start = 1 if abs(r1 - r2) == 1 else 2
+            if r1 < r2:
+                s1 = head_start  # player1 is weaker → gets the head start
+            else:
+                s2 = head_start  # player2 is weaker → gets the head start
+
+    return f"{s1} vs {s2}"
 
 def dedupe_matches(matches):
     status_rank = lambda s: 0 if s == 'completed' else 1 if s == 'ongoing' else 2 if s == 'upcoming' else 3
@@ -383,7 +394,7 @@ def fetch_active_matches(api_base_url):
             p1_id = p1.get("id") or m.get("player1_id")
             p2_id = p2.get("id") or m.get("player2_id")
             
-            if status in ["ongoing", "upcoming", "pending"] and p1_id is not None and p2_id is not None:
+            if status in ["ongoing", "upcoming"] and p1_id is not None and p2_id is not None:
                 active_matches.append(m)
                 
         # Format them
@@ -423,11 +434,11 @@ def fetch_active_matches(api_base_url):
             table_color = "default"
             if status == "ongoing":
                 table_color = "green"
-            elif status in ["upcoming", "pending"]:
+            elif status == "upcoming":
                 table_color = "yellow"
                 
             # Score
-            score_str = build_score_string(m)
+            score_str = build_score_string(m, p1_rank, p2_rank)
             score_parts = score_str.split(" vs ") if " vs " in score_str else [score_str, ""]
             p1_score = score_parts[0]
             p2_score = score_parts[1]
@@ -549,7 +560,7 @@ def main():
         except Exception:
             pass
 
-        poller = BannerPoller(interval=10000) # 10 giây check 1 lần
+        poller = BannerPoller(interval=1000) # 1 giây check 1 lần
         poller.bannersFetched.connect(provider.update_banners)
         poller.matchesFetched.connect(provider.update_matches)
         poller.start()

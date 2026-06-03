@@ -4,6 +4,7 @@
  * Auto-saves individual matches when the dialog is closed.
  */
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { Spinner } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
@@ -277,6 +278,12 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
         onClean?.();
     }, [editingMatch, round1, round2, tournament, onUpsertMatch, onClean]);
 
+    // Wrapper: save and close dialog (only close on success, throw on error so dialog stays open)
+    const handleDialogSave = useCallback(async () => {
+        await saveMatch();
+        flushSync(() => setEditingMatch(null));
+    }, [saveMatch]);
+
     // Auto-save when dialog closes; also saves the other match if a table swap happened
     const handleDialogClose = useCallback(async () => {
         if (editingMatch && dirtyRef.current) {
@@ -508,7 +515,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                 tables={tables}
                 tournament={tournament}
                 onChange={(field, value) => editingMatch && onChange(editingMatch.round, editingMatch.idx, field, value)}
-                onSave={saveMatch}
+                onSave={handleDialogSave}
                 isPlayerSelectable={editingMatch?.round === 1}
                 availablePlayers={players}
                 selectedIds={selectedPlayerIds}

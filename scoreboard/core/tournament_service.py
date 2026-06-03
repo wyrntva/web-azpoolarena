@@ -129,6 +129,7 @@ class TournamentService(QObject):
         
         body = json.dumps(payload).encode("utf-8")
         reply = self._network.put(request, body)
+        reply.finished.connect(self.fetchActiveMatch)
         reply.finished.connect(reply.deleteLater)
 
     @Slot(int, str, str)
@@ -152,4 +153,5 @@ class TournamentService(QObject):
 
         body_bytes = json.dumps(payload).encode("utf-8")
         reply = self._network.put(request, body_bytes)
+        reply.finished.connect(self.fetchActiveMatch)
         reply.finished.connect(reply.deleteLater)

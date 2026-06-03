@@ -17,10 +17,12 @@ interface TournamentFormProps {
     handleRankToggle: (rank: string) => void;
     handleBannerChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleOrganizerLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    handleDetailLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleSponsorLogosChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     handleRemoveSponsorLogo: (index: number) => void;
     handleRemoveBanner: () => void;
     handleRemoveOrganizerLogo: () => void;
+    handleRemoveDetailLogo: () => void;
     handleCurrencyChange: (field: keyof TournamentFormData, value: string) => void;
     getFormattedValue: (value: string) => string;
     handleSubmit: (e: React.FormEvent) => void;
@@ -35,10 +37,12 @@ const TournamentForm = ({
     handleRankToggle,
     handleBannerChange,
     handleOrganizerLogoChange,
+    handleDetailLogoChange,
     handleSponsorLogosChange,
     handleRemoveSponsorLogo,
     handleRemoveBanner,
     handleRemoveOrganizerLogo,
+    handleRemoveDetailLogo,
     handleCurrencyChange,
     getFormattedValue,
     handleSubmit,
@@ -53,10 +57,12 @@ const TournamentForm = ({
                 handleNameChange={handleNameChange}
                 handleBannerChange={handleBannerChange}
                 handleOrganizerLogoChange={handleOrganizerLogoChange}
+                handleDetailLogoChange={handleDetailLogoChange}
                 handleSponsorLogosChange={handleSponsorLogosChange}
                 handleRemoveSponsorLogo={handleRemoveSponsorLogo}
                 handleRemoveBanner={handleRemoveBanner}
                 handleRemoveOrganizerLogo={handleRemoveOrganizerLogo}
+                handleRemoveDetailLogo={handleRemoveDetailLogo}
             />
 
             <LevelTypeSection

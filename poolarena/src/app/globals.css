@@ -243,7 +243,6 @@ body {
   0% {
     opacity: 1;
     transform: scale(1);
-    color: inherit;
   }
   25% {
     opacity: 0.2;
@@ -263,7 +262,6 @@ body {
   100% {
     opacity: 1;
     transform: scale(1);
-    color: inherit;
   }
 }
 

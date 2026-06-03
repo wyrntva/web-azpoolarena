@@ -22,6 +22,7 @@ const initialFormData: TournamentFormData = {
     slug: '',
     banner: null,
     organizer_logo: null,
+    detail_logo: null,
     sponsor_logos: [],
     ranks: [],
     display: 'public',
@@ -164,12 +165,13 @@ export const useTournamentForm = () => {
         e.preventDefault();
         // Upload any File objects → get URLs
         const existing = existingTournament as Record<string, unknown> | undefined;
-        const { banner, organizer_logo, sponsor_logos } = await uploadFormImages(formData, existing);
+        const { banner, organizer_logo, detail_logo, sponsor_logos } = await uploadFormImages(formData, existing);
 
         const formDataWithUrls = {
             ...formData,
             banner,
             organizer_logo,
+            detail_logo,
             sponsor_logos,
         };
 
@@ -198,6 +200,7 @@ export const useTournamentForm = () => {
             slug: tournament.slug,
             banner: tournament.banner ? (tournament.banner as string) : null,
             organizer_logo: tournament.organizer_logo ? (tournament.organizer_logo as string) : null,
+            detail_logo: tournament.detail_logo ? (tournament.detail_logo as string) : null,
             sponsor_logos: tournament.sponsor_logos ? (tournament.sponsor_logos as string[]) : [],
             ranks: tournament.ranks || [],
             display: tournament.display || 'public',

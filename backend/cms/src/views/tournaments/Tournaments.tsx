@@ -25,10 +25,12 @@ const Tournaments = () => {
         handleRankToggle,
         handleBannerChange,
         handleOrganizerLogoChange,
+        handleDetailLogoChange,
         handleSponsorLogosChange,
         handleRemoveSponsorLogo,
         handleRemoveBanner,
         handleRemoveOrganizerLogo,
+        handleRemoveDetailLogo,
         handleCurrencyChange,
         getFormattedValue,
         handleSubmit,
@@ -157,10 +159,12 @@ const Tournaments = () => {
                     handleRankToggle={handleRankToggle}
                     handleBannerChange={handleBannerChange}
                     handleOrganizerLogoChange={handleOrganizerLogoChange}
+                    handleDetailLogoChange={handleDetailLogoChange}
                     handleSponsorLogosChange={handleSponsorLogosChange}
                     handleRemoveSponsorLogo={handleRemoveSponsorLogo}
                     handleRemoveBanner={handleRemoveBanner}
                     handleRemoveOrganizerLogo={handleRemoveOrganizerLogo}
+                    handleRemoveDetailLogo={handleRemoveDetailLogo}
                     handleCurrencyChange={handleCurrencyChange}
                     getFormattedValue={getFormattedValue}
                     handleSubmit={handleFormSubmit}
@@ -194,10 +198,12 @@ const Tournaments = () => {
                     handleRankToggle={handleRankToggle}
                     handleBannerChange={handleBannerChange}
                     handleOrganizerLogoChange={handleOrganizerLogoChange}
+                    handleDetailLogoChange={handleDetailLogoChange}
                     handleSponsorLogosChange={handleSponsorLogosChange}
                     handleRemoveSponsorLogo={handleRemoveSponsorLogo}
                     handleRemoveBanner={handleRemoveBanner}
                     handleRemoveOrganizerLogo={handleRemoveOrganizerLogo}
+                    handleRemoveDetailLogo={handleRemoveDetailLogo}
                     handleCurrencyChange={handleCurrencyChange}
                     getFormattedValue={getFormattedValue}
                     handleSubmit={handleUpdateSubmit}

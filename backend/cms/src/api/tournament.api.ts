@@ -7,6 +7,7 @@ export interface Tournament {
     slug: string;
     banner: string | null;
     organizer_logo: string | null;
+    detail_logo: string | null;
     sponsor_logos: string[];
     ranks: string[];
     display: string;
@@ -60,6 +61,7 @@ export interface TournamentCreate {
     slug: string;
     banner?: string | null;
     organizer_logo?: string | null;
+    detail_logo?: string | null;
     sponsor_logos?: string[];
     ranks?: string[];
     display?: string;
@@ -188,7 +190,7 @@ export const tournamentAPI = {
         return axiosClient.put(`/api/tournaments/${tournamentId}/matches/${matchNo}`, data);
     },
 
-    uploadImage: async (imageType: 'banner' | 'organizer_logo' | 'sponsor_logo', file: File): Promise<string> => {
+    uploadImage: async (imageType: 'banner' | 'organizer_logo' | 'detail_logo' | 'sponsor_logo', file: File): Promise<string> => {
         const formData = new FormData();
         formData.append('file', file);
         const response = await axiosClient.post(`/api/tournaments/upload-image?image_type=${imageType}`, formData, {
@@ -199,7 +201,7 @@ export const tournamentAPI = {
         return response.data.url;
     },
 
-    deleteImage: (tournamentId: number, imageType: 'banner' | 'organizer_logo' | 'sponsor_logo', sponsorIndex?: number): Promise<AxiosResponse<void>> => {
+    deleteImage: (tournamentId: number, imageType: 'banner' | 'organizer_logo' | 'detail_logo' | 'sponsor_logo', sponsorIndex?: number): Promise<AxiosResponse<void>> => {
         const params: Record<string, string | number> = { image_type: imageType };
         if (typeof sponsorIndex === 'number') {
             params.sponsor_index = sponsorIndex;

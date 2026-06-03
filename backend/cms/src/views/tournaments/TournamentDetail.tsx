@@ -114,7 +114,7 @@ const TournamentDetail = () => {
         try {
             const [bracketRes, playersRes] = await Promise.all([
                 tournamentAPI.getBracket(tournamentId),
-                tournamentAPI.getRegisteredPlayers(tournamentId)
+                tournamentAPI.getRegistrations(tournamentId)
             ]);
             if (!dirtyRef.current) { // Double-check after async call
                 setBracketMatches(Array.isArray(bracketRes.data) ? dedupeMatches(bracketRes.data) : []);
@@ -192,7 +192,7 @@ const TournamentDetail = () => {
         // are visible immediately instead of waiting for the next 5-second poll
         Promise.all([
             tournamentAPI.getBracket(tournamentId),
-            tournamentAPI.getRegisteredPlayers(tournamentId)
+            tournamentAPI.getRegistrations(tournamentId)
         ]).then(([bracketRes, playersRes]) => {
             if (!dirtyRef.current) {
                 if (Array.isArray(bracketRes.data)) setBracketMatches(dedupeMatches(bracketRes.data));

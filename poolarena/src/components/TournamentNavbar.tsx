@@ -35,7 +35,7 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
       router.push(`/tournaments/${slug}/rankings`);
     }
     if (tab === "live") {
-      if (status !== "ongoing" && status !== "upcoming") return;
+      if (status !== "ongoing") return;
       router.push(`/tournaments/${slug}/live`);
     }
   };
@@ -122,7 +122,7 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
           variant={
             activeTab === "live"
               ? "active"
-              : (status === "ongoing" || status === "upcoming")
+              : status === "ongoing"
                 ? "default"
                 : "disabled"
           }

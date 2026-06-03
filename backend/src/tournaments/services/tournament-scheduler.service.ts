@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TournamentEntity, TournamentMatchEntity, TournamentMatchStatus } from '../entities';
+import { TournamentEntity, TournamentMatchEntity, TournamentMatchStatus, TournamentMatchBracket } from '../entities';
 import { TournamentsService } from './tournaments.service';
 
 @Injectable()
@@ -65,7 +65,19 @@ export class TournamentSchedulerService {
       )
       .execute();
 
-    // 2. Vòng 1: PENDING → UPCOMING khi hết hạn đăng kí + đủ 2 người
+    // Helper: kiểm tra bàn có đang bận không (có trận ongoing/upcoming khác dùng bàn này)
+    const isTableBusy = async (tableNo: string, excludeId: number): Promise<boolean> => {
+      const busy = await this.matchRepo.findOne({
+        where: [
+          { table_no: tableNo, status: TournamentMatchStatus.ONGOING },
+          { table_no: tableNo, status: TournamentMatchStatus.UPCOMING },
+        ],
+      });
+      return !!(busy && busy.id !== excludeId);
+    };
+
+    // 2. Vòng 1: PENDING → UPCOMING khi hết hạn đăng kí + đủ 2 người + có bàn + bàn không bận
+    // Knockout bracket round 1: thêm điều kiện 75% — ít nhất 75% trận trong vòng phải đủ 2 người
     const toursPastRegistration = await this.tourRepo
       .createQueryBuilder('t')
       .where('t.registration_end_date IS NOT NULL')
@@ -75,21 +87,44 @@ export class TournamentSchedulerService {
 
     if (toursPastRegistration.length > 0) {
       const tourIds = toursPastRegistration.map((t) => t.id);
-      const round1ToUpcoming = await this.matchRepo
+      const round1Candidates = await this.matchRepo
         .createQueryBuilder('m')
         .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
         .andWhere('m.round = 1')
         .andWhere('m.player1_id IS NOT NULL')
         .andWhere('m.player2_id IS NOT NULL')
+        .andWhere('m.table_no IS NOT NULL')
         .andWhere('m.tournament_id IN (:...tourIds)', { tourIds })
         .getMany();
+
+      const round1ToUpcoming: typeof round1Candidates = [];
+      for (const m of round1Candidates) {
+        // Knockout bracket: enforce 75% threshold
+        if (m.bracket === 'knockout') {
+          const allKoR1 = await this.matchRepo.find({
+            where: { tournament_id: m.tournament_id, bracket: TournamentMatchBracket.KNOCKOUT, round: 1 },
+          });
+          const filledCount = allKoR1.filter(x => x.player1_id && x.player2_id).length;
+          const threshold = Math.ceil(allKoR1.length * 0.75);
+          if (filledCount < threshold) {
+            this.logger.log(
+              `Tournament ${m.tournament_id} KO round 1: ${filledCount}/${allKoR1.length} filled (need ${threshold}) — skipping UPCOMING for match ${m.match_no}`,
+            );
+            continue;
+          }
+        }
+        // Bàn không được đang bận
+        if (await isTableBusy(m.table_no, m.id)) {
+          this.logger.log(`Match ${m.match_no}: bàn ${m.table_no} đang bận — bỏ qua UPCOMING`);
+          continue;
+        }
+        round1ToUpcoming.push(m);
+      }
 
       if (round1ToUpcoming.length > 0) {
         for (const m of round1ToUpcoming) {
           m.status = TournamentMatchStatus.UPCOMING;
-          this.logger.log(
-            `Match ${m.match_no} (tour ${m.tournament_id}) → upcoming (vòng 1 sau đăng kí)`,
-          );
+          this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) → upcoming (vòng 1)`);
         }
         await this.matchRepo.save(round1ToUpcoming);
         for (const m of round1ToUpcoming) {
@@ -100,9 +135,9 @@ export class TournamentSchedulerService {
       }
     }
 
-    // 3. Vòng 2+: PENDING → UPCOMING khi đủ 2 người + có bàn + có giờ + giờ trong vòng 15 phút tới
+    // 3. Vòng 2+: PENDING → UPCOMING khi đủ 2 người + có bàn + bàn không bận + có giờ trong vòng 15 phút
     const upcomingWindow = new Date(now.getTime() + 15 * 60 * 1000);
-    const pendingToUpcoming = await this.matchRepo
+    const pendingToUpcomingRaw = await this.matchRepo
       .createQueryBuilder('m')
       .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
       .andWhere('m.round > 1')
@@ -113,6 +148,15 @@ export class TournamentSchedulerService {
       .andWhere('m.match_time > :now', { now })
       .andWhere('m.match_time <= :upcomingWindow', { upcomingWindow })
       .getMany();
+
+    const pendingToUpcoming: typeof pendingToUpcomingRaw = [];
+    for (const m of pendingToUpcomingRaw) {
+      if (await isTableBusy(m.table_no, m.id)) {
+        this.logger.log(`Match ${m.match_no}: bàn ${m.table_no} đang bận — bỏ qua UPCOMING`);
+        continue;
+      }
+      pendingToUpcoming.push(m);
+    }
 
     if (pendingToUpcoming.length > 0) {
       for (const m of pendingToUpcoming) {
@@ -127,13 +171,26 @@ export class TournamentSchedulerService {
       }
     }
 
-    // 4. UPCOMING → ONGOING: giờ đã đến + có bàn
-    const upcomingToOngoing = await this.matchRepo
+    // 4. UPCOMING → ONGOING: giờ đã đến + có bàn + bàn không đang có trận ongoing khác
+    const upcomingToOngoingRaw = await this.matchRepo
       .createQueryBuilder('m')
       .where('m.status = :status', { status: TournamentMatchStatus.UPCOMING })
       .andWhere('m.table_no IS NOT NULL')
       .andWhere('m.match_time <= :now', { now })
       .getMany();
+
+    const upcomingToOngoing: typeof upcomingToOngoingRaw = [];
+    for (const m of upcomingToOngoingRaw) {
+      // Bàn không được có trận ongoing khác
+      const ongoingOnTable = await this.matchRepo.findOne({
+        where: { table_no: m.table_no, status: TournamentMatchStatus.ONGOING },
+      });
+      if (ongoingOnTable && ongoingOnTable.id !== m.id) {
+        this.logger.log(`Match ${m.match_no}: bàn ${m.table_no} đang có trận ongoing — chờ`);
+        continue;
+      }
+      upcomingToOngoing.push(m);
+    }
 
     if (upcomingToOngoing.length > 0) {
       for (const m of upcomingToOngoing) {
@@ -210,24 +267,33 @@ export class TournamentSchedulerService {
 
         for (const lrMatch of lr1ByeCandidates) {
           const lrIdx = lrMatch.match_no - lr1Start;
-          // slot trống → xác định WR1 feeder tương ứng
           const emptySlot = lrMatch.player1_id === null ? 1 : 2;
-          const feederWR1No = emptySlot === 1
-            ? wr1Start + lrIdx * 2       // WR1 match cho slot1
-            : wr1Start + lrIdx * 2 + 1;  // WR1 match cho slot2
 
-          const feederWR1 = await this.matchRepo.findOne({
-            where: { tournament_id: tour.id, match_no: feederWR1No },
+          // 24-player format: LR1 P1 = loser of WR2 (match 16-lrIdx), P2 = loser of WR1 (match 1+lrIdx)
+          // Standard format: LR1 P1 = loser of WR1 (lrIdx*2), P2 = loser of WR1 (lrIdx*2+1)
+          let feederMatchNo: number;
+          let feederRound: number;
+          if (tour.number_of_players === 24) {
+            feederMatchNo = emptySlot === 1 ? (16 - lrIdx) : (wr1Start + lrIdx);
+            feederRound = emptySlot === 1 ? 2 : 1; // slot1 feeds from WR2, slot2 from WR1
+          } else {
+            feederMatchNo = emptySlot === 1
+              ? wr1Start + lrIdx * 2
+              : wr1Start + lrIdx * 2 + 1;
+            feederRound = 1;
+          }
+
+          const feeder = await this.matchRepo.findOne({
+            where: { tournament_id: tour.id, match_no: feederMatchNo, round: feederRound },
           });
 
-          // Chỉ complete WO khi WR1 feeder đã kết thúc VÀ bản thân là bye (chỉ có 1 người)
-          // Nếu WR1 feeder có cả 2 người → luôn tạo ra loser → không phải bye LR1
-          if (!feederWR1 || feederWR1.status !== TournamentMatchStatus.COMPLETED) {
-            continue; // WR1 feeder chưa xong → chờ
+          // Chỉ complete WO khi feeder đã kết thúc VÀ là bye (chỉ có 1 người)
+          if (!feeder || feeder.status !== TournamentMatchStatus.COMPLETED) {
+            continue; // Feeder chưa xong → chờ
           }
-          const feederWasBye = !feederWR1.player1_id || !feederWR1.player2_id;
+          const feederWasBye = !feeder.player1_id || !feeder.player2_id;
           if (!feederWasBye) {
-            continue; // WR1 feeder có 2 người → có loser thật, đang chờ propagation, không phải bye
+            continue; // Feeder có 2 người → có loser thật, không phải bye
           }
 
           const winnerId = lrMatch.player1_id ?? lrMatch.player2_id;
@@ -236,7 +302,7 @@ export class TournamentSchedulerService {
           await this.matchRepo.save(lrMatch);
           await this.tournamentsService.propagateAndEmit(lrMatch);
           this.logger.log(
-            `Tournament ${tour.id} LR1 match ${lrMatch.match_no}: WO (WR1-${feederWR1No} bye) → winner=${winnerId}`,
+            `Tournament ${tour.id} LR1 match ${lrMatch.match_no}: WO (feeder-${feederMatchNo} bye) → winner=${winnerId}`,
           );
         }
       }

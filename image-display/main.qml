@@ -40,6 +40,86 @@ Window {
         }
     }
 
+    // Model để giữ kết nối và hiển thị ổn định (không destroy/recreate delegates)
+    ListModel {
+        id: matchesModel
+    }
+
+    function syncMatchesModel() {
+        var newMatches = imageProvider.activeMatches
+        if (!newMatches) {
+            matchesModel.clear()
+            return
+        }
+
+        // 1. Remove matches that are no longer active
+        var newMatchesMap = {}
+        for (var i = 0; i < newMatches.length; i++) {
+            newMatchesMap[newMatches[i].id] = true
+        }
+        for (var j = matchesModel.count - 1; j >= 0; j--) {
+            var existingId = matchesModel.get(j).id
+            if (!newMatchesMap[existingId]) {
+                matchesModel.remove(j)
+            }
+        }
+
+        // 2. Add new matches or update existing ones in-place
+        for (var k = 0; k < newMatches.length; k++) {
+            var newM = newMatches[k]
+            var foundIdx = -1
+            for (var l = 0; l < matchesModel.count; l++) {
+                if (matchesModel.get(l).id === newM.id) {
+                    foundIdx = l
+                    break
+                }
+            }
+
+            if (foundIdx !== -1) {
+                // Update properties
+                var item = matchesModel.get(foundIdx)
+                if (item.player1Score !== newM.player1Score) matchesModel.setProperty(foundIdx, "player1Score", newM.player1Score)
+                if (item.player2Score !== newM.player2Score) matchesModel.setProperty(foundIdx, "player2Score", newM.player2Score)
+                if (item.player1Name !== newM.player1Name) matchesModel.setProperty(foundIdx, "player1Name", newM.player1Name)
+                if (item.player2Name !== newM.player2Name) matchesModel.setProperty(foundIdx, "player2Name", newM.player2Name)
+                if (item.player1Avatar !== newM.player1Avatar) matchesModel.setProperty(foundIdx, "player1Avatar", newM.player1Avatar)
+                if (item.player2Avatar !== newM.player2Avatar) matchesModel.setProperty(foundIdx, "player2Avatar", newM.player2Avatar)
+                if (item.player1Rank !== newM.player1Rank) matchesModel.setProperty(foundIdx, "player1Rank", newM.player1Rank)
+                if (item.player2Rank !== newM.player2Rank) matchesModel.setProperty(foundIdx, "player2Rank", newM.player2Rank)
+                if (item.player1IsWinner !== newM.player1IsWinner) matchesModel.setProperty(foundIdx, "player1IsWinner", newM.player1IsWinner)
+                if (item.player2IsWinner !== newM.player2IsWinner) matchesModel.setProperty(foundIdx, "player2IsWinner", newM.player2IsWinner)
+                if (item.hasActiveResult !== newM.hasActiveResult) matchesModel.setProperty(foundIdx, "hasActiveResult", newM.hasActiveResult)
+                if (item.tableNumber !== newM.tableNumber) matchesModel.setProperty(foundIdx, "tableNumber", newM.tableNumber)
+                if (item.tableNumberColor !== newM.tableNumberColor) matchesModel.setProperty(foundIdx, "tableNumberColor", newM.tableNumberColor)
+                if (item.raceText !== newM.raceText) matchesModel.setProperty(foundIdx, "raceText", newM.raceText)
+                if (item.time !== newM.time) matchesModel.setProperty(foundIdx, "time", newM.time)
+                if (item.date !== newM.date) matchesModel.setProperty(foundIdx, "date", newM.date)
+                if (item.matchNo !== newM.matchNo) matchesModel.setProperty(foundIdx, "matchNo", newM.matchNo)
+                if (item.player1IsBye !== newM.player1IsBye) matchesModel.setProperty(foundIdx, "player1IsBye", newM.player1IsBye)
+                if (item.player2IsBye !== newM.player2IsBye) matchesModel.setProperty(foundIdx, "player2IsBye", newM.player2IsBye)
+            } else {
+                // Append new item
+                matchesModel.append(newM)
+            }
+        }
+
+        // 3. Re-order items in matchesModel to match the newMatches array order
+        for (var mIdx = 0; mIdx < newMatches.length; mIdx++) {
+            var targetId = newMatches[mIdx].id
+            if (matchesModel.get(mIdx).id !== targetId) {
+                // Find where targetId is in matchesModel
+                for (var searchIdx = mIdx + 1; searchIdx < matchesModel.count; searchIdx++) {
+                    if (matchesModel.get(searchIdx).id === targetId) {
+                        matchesModel.move(searchIdx, mIdx, 1)
+                        break
+                    }
+                }
+            }
+        }
+    }
+
+
+
     // Lắng nghe sự kiện thay đổi trạng thái trận đấu hoạt động
     Connections {
         target: imageProvider
@@ -52,6 +132,7 @@ Window {
                 console.log("Không có giải đấu/trận đấu hoạt động. Kích hoạt lại slideshow banner...")
                 _initSync()
             }
+            window.syncMatchesModel()
         }
     }
 
@@ -82,7 +163,6 @@ Window {
             cache: true
             asynchronous: true
             smooth: true
-            mipmap: true
             opacity: 1
             z: 1
             onStatusChanged: {
@@ -104,7 +184,6 @@ Window {
             cache: true
             asynchronous: true
             smooth: true
-            mipmap: true
             opacity: 0
             onStatusChanged: {
                 if (status === Image.Error) {
@@ -209,7 +288,7 @@ Window {
                 cellWidth: width / 3 // 3 cột
                 cellHeight: 220     // Chiều cao ô 220px: 4 dòng x 220 = 880px (vừa khít màn hình 1080p hiển thị trọn vẹn 12 card không cuộn)
 
-                model: imageProvider.activeMatches
+                model: matchesModel
                 delegate: Item {
                     width: matchesGrid.cellWidth - 32 
                     height: 210                      // Tăng chiều cao delegate lên 210
@@ -220,7 +299,7 @@ Window {
                         height: 44 // Tăng từ 36 lên 44
 
                         Text {
-                            text: modelData.matchNo ? "Trận " + modelData.matchNo : ""
+                            text: model.matchNo ? "Trận " + model.matchNo : ""
                             anchors.left: parent.left
                             anchors.leftMargin: 4
                             anchors.verticalCenter: parent.verticalCenter
@@ -234,11 +313,11 @@ Window {
                             // Ghép thời gian, ngày và chạm chấp
                             text: {
                                 var parts = []
-                                if (modelData.time && modelData.date) {
-                                    parts.push(modelData.time + ", " + modelData.date)
+                                if (model.time && model.date) {
+                                    parts.push(model.time + ", " + model.date)
                                 }
-                                if (modelData.raceText) {
-                                    parts.push(modelData.raceText)
+                                if (model.raceText) {
+                                    parts.push(model.raceText)
                                 }
                                 return parts.join(" / ")
                             }
@@ -265,8 +344,8 @@ Window {
                             width: 120 // Tăng chiều rộng từ 100 lên 120
                             height: 160 // Tăng chiều cao từ 130 lên 160
                             color: {
-                                if (modelData.tableNumberColor === "green") return "#60DB80"
-                                if (modelData.tableNumberColor === "yellow") return "#E5BD4F"
+                                if (model.tableNumberColor === "green") return "#60DB80"
+                                if (model.tableNumberColor === "yellow") return "#E5BD4F"
                                 return "#464C58"
                             }
                             radius: 20 // Tăng bo góc từ 16 lên 20
@@ -281,7 +360,7 @@ Window {
 
                             Text {
                                 text: {
-                                    var t = modelData.tableNumber || "-"
+                                    var t = model.tableNumber || "-"
                                     if (t === "-") return "-"
                                     var clean = t.trim()
                                     if (/^\d+$/.test(clean)) {
@@ -339,13 +418,17 @@ Window {
                                     anchors.left: parent.left
                                     anchors.leftMargin: 18 // Tăng lề trái từ 16 lên 18
                                     anchors.verticalCenter: parent.verticalCenter
-                                    visible: !modelData.player1IsBye
+                                    visible: !model.player1IsBye
                                     color: "transparent"
 
                                     Image {
                                         id: p1AvatarImg
                                         anchors.fill: parent
-                                        source: modelData.player1Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
+                                        source: model.player1Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
+                                        sourceSize.width: 104
+                                        sourceSize.height: 104
+                                        cache: true
+                                        asynchronous: true
                                         fillMode: Image.PreserveAspectCrop
                                         smooth: true
                                         antialiasing: true
@@ -354,19 +437,19 @@ Window {
 
                                 // Tên & Rank
                                 Text {
-                                    text: modelData.player1Name + (modelData.player1Rank && !modelData.player1IsBye ? " - " + modelData.player1Rank : "")
+                                    text: model.player1Name + (model.player1Rank && !model.player1IsBye ? " - " + model.player1Rank : "")
                                     anchors.left: p1AvatarBg.visible ? p1AvatarBg.right : parent.left
                                     anchors.leftMargin: 14 // Tăng từ 12 lên 14
                                     anchors.right: p1ScoreText.left
                                     anchors.rightMargin: 14 // Tăng từ 12 lên 14
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
-                                    font.bold: modelData.hasActiveResult ? modelData.player1IsWinner : false
-                                    font.italic: modelData.player1IsBye
+                                    font.bold: model.hasActiveResult ? model.player1IsWinner : false
+                                    font.italic: model.player1IsBye
                                     font.pixelSize: 24 // Tăng kích cỡ chữ tên lên 24
                                     color: {
-                                        if (modelData.hasActiveResult) {
-                                            if (!modelData.player1IsWinner && modelData.player2IsWinner) return "#ACB3C3"
+                                        if (model.hasActiveResult) {
+                                            if (!model.player1IsWinner && model.player2IsWinner) return "#ACB3C3"
                                         }
                                         return "#FFFFFF"
                                     }
@@ -376,7 +459,7 @@ Window {
                                 // Tỉ số với hiệu ứng đổi số cực nhạy (Score Flash)
                                 Text {
                                     id: p1ScoreText
-                                    text: modelData.player1Score
+                                    text: model.player1Score
                                     anchors.right: parent.right
                                     anchors.rightMargin: 24 // Tăng từ 20 lên 24
                                     anchors.verticalCenter: parent.verticalCenter
@@ -384,24 +467,40 @@ Window {
                                     font.bold: true
                                     font.italic: true
                                     font.pixelSize: 34 // Tăng kích cỡ chữ điểm số cực to lên 34
-                                    color: {
-                                        if (modelData.hasActiveResult) {
-                                            if (modelData.player1IsWinner) return "#ED1C1F"
-                                            if (modelData.player2IsWinner) return "#ACB3C3"
+                                    property color baseColor: {
+                                        if (model.hasActiveResult) {
+                                            if (model.player1IsWinner) return "#ED1C1F"
+                                            if (model.player2IsWinner) return "#ACB3C3"
                                         }
                                         return "#FFFFFF"
                                     }
+                                    color: baseColor
                                     horizontalAlignment: Text.AlignRight
                                     transformOrigin: Item.Center
 
+                                    property bool isInitialized: false
+
                                     onTextChanged: {
-                                        scoreFlashP1.start()
+                                        if (isInitialized) {
+                                            scoreFlashP1.start()
+                                        } else {
+                                            isInitialized = true
+                                        }
                                     }
 
                                     SequentialAnimation {
                                         id: scoreFlashP1
-                                        NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.45; duration: 200; easing.type: Easing.OutQuad } // scale to 1.45
-                                        NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.45; duration: 200; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p1ScoreText; property: "color"; to: "#ED1C1F"; duration: 200 }
+                                        }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p1ScoreText; property: "color"; to: p1ScoreText.baseColor; duration: 250 }
+                                        }
+                                        onFinished: {
+                                            p1ScoreText.color = Qt.binding(function() { return p1ScoreText.baseColor })
+                                        }
                                     }
                                 }
                             }
@@ -422,13 +521,17 @@ Window {
                                     anchors.left: parent.left
                                     anchors.leftMargin: 18 // Tăng lề trái từ 16 lên 18
                                     anchors.verticalCenter: parent.verticalCenter
-                                    visible: !modelData.player2IsBye
+                                    visible: !model.player2IsBye
                                     color: "transparent"
 
                                     Image {
                                         id: p2AvatarImg
                                         anchors.fill: parent
-                                        source: modelData.player2Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
+                                        source: model.player2Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
+                                        sourceSize.width: 104
+                                        sourceSize.height: 104
+                                        cache: true
+                                        asynchronous: true
                                         fillMode: Image.PreserveAspectCrop
                                         smooth: true
                                         antialiasing: true
@@ -437,19 +540,19 @@ Window {
 
                                 // Tên & Rank
                                 Text {
-                                    text: modelData.player2Name + (modelData.player2Rank && !modelData.player2IsBye ? " - " + modelData.player2Rank : "")
+                                    text: model.player2Name + (model.player2Rank && !model.player2IsBye ? " - " + model.player2Rank : "")
                                     anchors.left: p2AvatarBg.visible ? p2AvatarBg.right : parent.left
                                     anchors.leftMargin: 14 // Tăng từ 12 lên 14
                                     anchors.right: p2ScoreText.left
                                     anchors.rightMargin: 14 // Tăng từ 12 lên 14
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
-                                    font.bold: modelData.hasActiveResult ? modelData.player2IsWinner : false
-                                    font.italic: modelData.player2IsBye
+                                    font.bold: model.hasActiveResult ? model.player2IsWinner : false
+                                    font.italic: model.player2IsBye
                                     font.pixelSize: 24 // Tăng kích cỡ chữ tên lên 24
                                     color: {
-                                        if (modelData.hasActiveResult) {
-                                            if (!modelData.player2IsWinner && modelData.player1IsWinner) return "#ACB3C3"
+                                        if (model.hasActiveResult) {
+                                            if (!model.player2IsWinner && model.player1IsWinner) return "#ACB3C3"
                                         }
                                         return "#FFFFFF"
                                     }
@@ -459,7 +562,7 @@ Window {
                                 // Tỉ số với hiệu ứng đổi số cực nhạy (Score Flash)
                                 Text {
                                     id: p2ScoreText
-                                    text: modelData.player2Score
+                                    text: model.player2Score
                                     anchors.right: parent.right
                                     anchors.rightMargin: 24 // Tăng từ 20 lên 24
                                     anchors.verticalCenter: parent.verticalCenter
@@ -467,24 +570,40 @@ Window {
                                     font.bold: true
                                     font.italic: true
                                     font.pixelSize: 34 // Tăng kích cỡ chữ điểm số cực to lên 34
-                                    color: {
-                                        if (modelData.hasActiveResult) {
-                                            if (modelData.player2IsWinner) return "#ED1C1F"
-                                            if (modelData.player1IsWinner) return "#ACB3C3"
+                                    property color baseColor: {
+                                        if (model.hasActiveResult) {
+                                            if (model.player2IsWinner) return "#ED1C1F"
+                                            if (model.player1IsWinner) return "#ACB3C3"
                                         }
                                         return "#FFFFFF"
                                     }
+                                    color: baseColor
                                     horizontalAlignment: Text.AlignRight
                                     transformOrigin: Item.Center
 
+                                    property bool isInitialized: false
+
                                     onTextChanged: {
-                                        scoreFlashP2.start()
+                                        if (isInitialized) {
+                                            scoreFlashP2.start()
+                                        } else {
+                                            isInitialized = true
+                                        }
                                     }
 
                                     SequentialAnimation {
                                         id: scoreFlashP2
-                                        NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.45; duration: 200; easing.type: Easing.OutQuad } // scale to 1.45
-                                        NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.45; duration: 200; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p2ScoreText; property: "color"; to: "#ED1C1F"; duration: 200 }
+                                        }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p2ScoreText; property: "color"; to: p2ScoreText.baseColor; duration: 250 }
+                                        }
+                                        onFinished: {
+                                            p2ScoreText.color = Qt.binding(function() { return p2ScoreText.baseColor })
+                                        }
                                     }
                                 }
                             }
@@ -617,6 +736,7 @@ Window {
     }
 
     Component.onCompleted: {
+        syncMatchesModel()
         if (!imageProvider.hasActiveMatches) {
             _initSync()
         }

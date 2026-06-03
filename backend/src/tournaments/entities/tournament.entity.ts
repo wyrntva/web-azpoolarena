@@ -119,6 +119,9 @@ export class TournamentEntity {
   @Column({ type: 'varchar', length: 500, nullable: true })
   organizer_logo: string;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  detail_logo: string;
+
   @Column({ type: 'text', nullable: true })
   sponsor_logos: string; // JSON array
 

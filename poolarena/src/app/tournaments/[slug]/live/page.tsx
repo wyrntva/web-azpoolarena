@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spin } from "antd";
 import { TournamentNavbar } from "@/components";
 import NavBar from "@/components/NavBar";
@@ -114,7 +114,7 @@ function formatAvatarUrl(avatarUrl: string | null): string {
 
 function getIndexColor(match: ApiMatch): "default" | "green" | "yellow" {
     if (match.status === "ongoing") return "green";
-    if (match.status === "upcoming" || match.status === "pending") return "yellow";
+    if (match.status === "upcoming") return "yellow";
     return "default";
 }
 
@@ -128,11 +128,11 @@ function getPlayerName(
     return playerName || fallback;
 }
 
-function buildScoreString(match: ApiMatch): string {
+function buildScoreString(match: ApiMatch, p1Rank?: string | null, p2Rank?: string | null): string {
     const p1Id = (match.player1 && match.player1.id) || match.player1_id;
     const p2Id = (match.player2 && match.player2.id) || match.player2_id;
 
-    if (match.status === "pending" || match.status === "upcoming") {
+    if (match.status === "pending") {
         return " vs ";
     }
 
@@ -148,7 +148,22 @@ function buildScoreString(match: ApiMatch): string {
         }
     }
 
-    return `${match.player1_score} vs ${match.player2_score}`;
+    let s1 = match.player1_score;
+    let s2 = match.player2_score;
+
+    // Apply handicap head start when both scores are 0 and match is in progress.
+    // Device initialises the scoreboard locally but only pushes an update after the first ball is potted.
+    if (s1 === 0 && s2 === 0 && (match.status === "upcoming" || match.status === "ongoing") && p1Rank && p2Rank) {
+        const r1 = getRankIndex(p1Rank);
+        const r2 = getRankIndex(p2Rank);
+        if (r1 >= 0 && r2 >= 0 && r1 !== r2) {
+            const headStart = Math.abs(r1 - r2) === 1 ? 1 : 2;
+            if (r1 < r2) s1 = headStart;
+            else s2 = headStart;
+        }
+    }
+
+    return `${s1} vs ${s2}`;
 }
 
 function formatMatchTime(matchTime: string | null): { time: string; date: string } {
@@ -242,7 +257,7 @@ function formatMatch(
             isWinner: p2Winner,
             isBye: !p2Id,
         },
-        score: buildScoreString(match),
+        score: buildScoreString(match, p1Rank, p2Rank),
         meta: {
             matchNo: match.match_no,
             race: raceText || undefined,
@@ -553,6 +568,7 @@ const dedupeMatches = (matches: ApiMatch[]): ApiMatch[] => {
 export default function TournamentLivePage() {
     const params = useParams();
     const slug = params?.slug as string;
+    const router = useRouter();
 
     // Fetch tournament details
     const { data: tournament, isLoading: isTourLoading } = useQuery({
@@ -566,12 +582,67 @@ export default function TournamentLivePage() {
         queryKey: ['tournament-matches', slug],
         queryFn: () => tournamentAPI.getTournamentMatchesBySlug(slug).then(r => r.data as ApiMatch[]),
         enabled: !!slug,
-        refetchInterval: 10000,
+        refetchInterval: 5000,
     });
+
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+        if (!tournament?.id) return;
+
+        let API_BASE = "";
+        if (typeof window !== "undefined") {
+            API_BASE = `http://${window.location.hostname}:8000`;
+        } else {
+            API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        }
+        const sseUrl = `${API_BASE}/api/tournaments/${tournament.id}/matches/live`;
+        console.log("Connecting to live match updates SSE in live page:", sseUrl);
+
+        const eventSource = new EventSource(sseUrl, { withCredentials: true });
+
+        eventSource.onmessage = (event) => {
+            try {
+                const updatedMatch: ApiMatch = JSON.parse(event.data);
+                console.log("Realtime match update received in live page:", updatedMatch);
+                
+                queryClient.setQueryData(['tournament-matches', slug], (prev: ApiMatch[] | undefined) => {
+                    if (!prev) return prev;
+                    const idx = prev.findIndex((m) => m.match_no === updatedMatch.match_no);
+                    if (idx !== -1) {
+                        const next = [...prev];
+                        next[idx] = { ...next[idx], ...updatedMatch };
+                        return next;
+                    } else {
+                        return [...prev, updatedMatch];
+                    }
+                });
+            } catch (e) {
+                console.error("Failed to parse SSE data in live page:", e);
+            }
+        };
+
+        eventSource.onerror = (err) => {
+            console.error("SSE connection error in live page:", err);
+        };
+
+        return () => {
+            console.log("Closing live match updates SSE connection in live page");
+            eventSource.close();
+        };
+    }, [tournament?.id, queryClient, slug]);
+
+    const isRedirecting = tournament && tournament.status !== "ongoing";
+
+    useEffect(() => {
+        if (tournament && tournament.status !== "ongoing" && !isTourLoading) {
+            router.replace(`/tournaments/${slug}`);
+        }
+    }, [tournament, isTourLoading, router, slug]);
 
     const isLoading = isTourLoading || isMatchesLoading;
 
-    // Filter and format matches that are ongoing, upcoming, or pending
+    // Filter and format matches that are ongoing or upcoming
     const activeFormattedMatches = React.useMemo(() => {
         if (!matches) return [];
         
@@ -579,7 +650,7 @@ export default function TournamentLivePage() {
         const deduped = dedupeMatches(matches);
 
         return deduped
-            .filter(m => m.status === 'ongoing' || m.status === 'upcoming' || m.status === 'pending')
+            .filter(m => m.status === 'ongoing' || m.status === 'upcoming')
             // Only show matches that have both players ready (not waiting on feeder results or empty byes)
             .filter(m => m.player1_id !== null && m.player2_id !== null)
             .map(m => formatMatch(m, tournament))
@@ -597,10 +668,12 @@ export default function TournamentLivePage() {
             <NavBar />
 
             <main className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 mt-[48px]">
-                {isLoading ? (
+                {isLoading || isRedirecting ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                         <Spin size="large" />
-                        <p className="text-gray-500 font-medium text-sm font-['Montserrat']">Đang tải danh sách trận đấu...</p>
+                        <p className="text-gray-500 font-medium text-sm font-['Montserrat']">
+                            {isRedirecting ? "Đang chuyển hướng..." : "Đang tải danh sách trận đấu..."}
+                        </p>
                     </div>
                 ) : activeFormattedMatches.length === 0 ? (
                     <div className="bg-white p-12 rounded-[16px] text-center shadow-sm border border-gray-100 max-w-md mx-auto mt-12">

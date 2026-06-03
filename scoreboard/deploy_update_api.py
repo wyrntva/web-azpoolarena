@@ -25,8 +25,8 @@ PASSWORD = "admin"
 REMOTE_APP_DIR = "/opt/azpool-scoreboard"
 
 NEW_ENV = """# Scoreboard Environment Configuration
-# API Base URL - production backend server
-POOLARENA_API_BASE_URL=https://cms.poolarena.vn
+# API Base URL - development backend server
+POOLARENA_API_BASE_URL=http://192.168.1.188:8000
 """
 
 # Đọc file core mới nhất từ repo local
@@ -53,6 +53,22 @@ for f in CORE_FILES:
     else:
         print(f"[WARN] Local file not found: {path}")
 
+# Đọc các file QML mới nhất từ repo local
+QML_DIR = os.path.join(SCRIPT_DIR, "qml")
+QML_FILES = [
+    "components/TournamentJoinDialog.qml",
+    "pages/TournamentPage.qml",
+]
+
+qml_contents = {}
+for f in QML_FILES:
+    path = os.path.join(QML_DIR, f)
+    if os.path.exists(path):
+        with open(path, "r") as fp:
+            qml_contents[f] = fp.read()
+    else:
+        print(f"[WARN] Local file not found: {path}")
+
 results = {}
 lock = threading.Lock()
 
@@ -63,29 +79,51 @@ def update_machine(ip):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(ip, username=USERNAME, password=PASSWORD, timeout=15)
+
+        # 1. Tạo thư mục tạm trên remote
+        _, stdout, stderr = ssh.exec_command("mkdir -p /tmp/sb_up/core /tmp/sb_up/qml/components /tmp/sb_up/qml/pages")
+        stdout.channel.recv_exit_status()
+
         sftp = ssh.open_sftp()
 
-        # 1. Cập nhật .env
-        env_remote = f"{REMOTE_APP_DIR}/.env"
-        with sftp.open(env_remote, "w") as f:
+        # Upload .env
+        with sftp.open("/tmp/sb_up/.env", "w") as f:
             f.write(NEW_ENV)
-        lines.append("✓ .env → https://cms.poolarena.vn")
+        lines.append("✓ .env uploaded to temp")
 
-        # 2. Copy các file core mới nhất
+        # Upload core files
         for fname, content in core_contents.items():
-            remote_path = f"{REMOTE_APP_DIR}/core/{fname}"
-            with sftp.open(remote_path, "w") as f:
+            with sftp.open(f"/tmp/sb_up/core/{fname}", "w") as f:
                 f.write(content)
-            lines.append(f"✓ core/{fname}")
+        lines.append(f"✓ core files uploaded to temp")
+
+        # Upload QML files
+        for fname, content in qml_contents.items():
+            with sftp.open(f"/tmp/sb_up/qml/{fname}", "w") as f:
+                f.write(content)
+        lines.append(f"✓ QML files uploaded to temp")
 
         sftp.close()
 
-        # 3. Xóa __pycache__ (buộc Python reload)
-        ssh.exec_command(f"rm -rf {REMOTE_APP_DIR}/core/__pycache__")
+        # 2. Sao chép vào /opt/azpool-scoreboard bằng sudo
+        commands = [
+            f"echo '{PASSWORD}' | sudo -S cp /tmp/sb_up/.env {REMOTE_APP_DIR}/.env",
+            f"echo '{PASSWORD}' | sudo -S cp /tmp/sb_up/core/* {REMOTE_APP_DIR}/core/",
+            f"echo '{PASSWORD}' | sudo -S cp /tmp/sb_up/qml/components/* {REMOTE_APP_DIR}/qml/components/",
+            f"echo '{PASSWORD}' | sudo -S cp /tmp/sb_up/qml/pages/* {REMOTE_APP_DIR}/qml/pages/",
+            f"echo '{PASSWORD}' | sudo -S rm -rf {REMOTE_APP_DIR}/core/__pycache__",
+            f"echo '{PASSWORD}' | sudo -S rm -rf /tmp/sb_up",
+        ]
+
+        for cmd in commands:
+            _, stdout, stderr = ssh.exec_command(cmd)
+            stdout.channel.recv_exit_status()
+
+        lines.append("✓ Copied to /opt/azpool-scoreboard via sudo")
         lines.append("✓ __pycache__ cleared")
 
-        # 4. Restart app — kiosk-run.sh tự khởi động lại sau pkill
-        _, out, _ = ssh.exec_command("pkill -f 'python app.py'; sleep 1; echo restarted")
+        # 3. Restart app
+        _, out, _ = ssh.exec_command(f"echo '{PASSWORD}' | sudo -S pkill -f 'python app.py'; sleep 1; echo restarted")
         out.read()
         lines.append("✓ App restarted")
 
@@ -102,8 +140,8 @@ def main():
     print(f"{'='*62}")
     print(f"  AZ Scoreboard — Deploy API URL Update")
     print(f"  Machines : {len(IPS)}")
-    print(f"  New URL  : https://cms.poolarena.vn")
-    print(f"  Core files: {len(core_contents)} files")
+    print(f"  New URL  : http://192.168.1.188:8000")
+    print(f"  Core/QML files: {len(core_contents) + len(qml_contents)} files")
     print(f"{'='*62}\n")
 
     start = time.time()

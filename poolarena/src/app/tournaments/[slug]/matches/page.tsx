@@ -163,14 +163,16 @@ function getPlayerName(
 
 /**
  * Build the score display string from match data.
+ * When both scores are 0 and a handicap applies, shows the head-start score
+ * so the display matches the device's initial state before the first ball is potted.
  */
-function buildScoreString(match: ApiMatch): string {
+function buildScoreString(match: ApiMatch, p1Rank?: string | null, p2Rank?: string | null): string {
     // Resolve player IDs from nested objects or flat fields
     const p1Id = (match.player1 && match.player1.id) || match.player1_id;
     const p2Id = (match.player2 && match.player2.id) || match.player2_id;
 
     // Not started yet – no score (leave blank)
-    if (match.status === "pending" || match.status === "upcoming") {
+    if (match.status === "pending") {
         return " vs ";
     }
 
@@ -189,8 +191,24 @@ function buildScoreString(match: ApiMatch): string {
         }
     }
 
-    // Normal score
-    return `${match.player1_score} vs ${match.player2_score}`;
+    let s1 = match.player1_score;
+    let s2 = match.player2_score;
+
+    // When both scores are 0 and the match is in progress, apply handicap head start.
+    // The device initialises the scoreboard with the handicap locally but only pushes
+    // an update to the backend when the first ball is actually potted.
+    if (s1 === 0 && s2 === 0 && (match.status === "upcoming" || match.status === "ongoing") && p1Rank && p2Rank) {
+        const r1 = getRankIndex(p1Rank);
+        const r2 = getRankIndex(p2Rank);
+        if (r1 >= 0 && r2 >= 0 && r1 !== r2) {
+            // headStart: 1 game for 1-rank gap, 2 games for 2+ rank gap
+            const headStart = Math.abs(r1 - r2) === 1 ? 1 : 2;
+            if (r1 < r2) s1 = headStart; // player1 is weaker → gets the head start
+            else s2 = headStart;         // player2 is weaker → gets the head start
+        }
+    }
+
+    return `${s1} vs ${s2}`;
 }
 
 
@@ -286,12 +304,18 @@ function formatMatch(
     const { time, date } = formatMatchTime(match.match_time);
 
     // Build table number display from table_no (e.g. "Bàn 1" → "1", "Bàn 2" → "2")
-    const tableNumber = match.table_no
+    // Only display table number and race info if the match status is "upcoming", "ongoing", or "completed"
+    const isMatchActiveOrCompleted =
+        match.status === "upcoming" ||
+        match.status === "ongoing" ||
+        match.status === "completed";
+
+    const tableNumber = isMatchActiveOrCompleted && match.table_no
         ? match.table_no.replace(/[^\d]/g, "") || match.table_no
         : "-";
 
     // Compute race info from player ranks + tournament settings
-    const raceText = computeRaceText(p1Rank, p2Rank, tournament);
+    const raceText = isMatchActiveOrCompleted ? computeRaceText(p1Rank, p2Rank, tournament) : "";
 
     return {
         id: match.id,
@@ -311,7 +335,7 @@ function formatMatch(
             isWinner: p2Winner,
             isBye: !p2Id,
         },
-        score: buildScoreString(match),
+        score: buildScoreString(match, p1Rank, p2Rank),
         meta: {
             matchNo: match.match_no,
             race: raceText || undefined,
@@ -411,16 +435,17 @@ function getBracketLayout(numberOfPlayers: number) {
         };
     } else if (numberOfPlayers === 24) {
         // 24-player bracket (special: WR1=1-8, WR2=9-16 with seeded slot2, LR1=17-24)
+        // Group stage uses matches 1-24; knockout starts at 25
         return {
             wr1: { start: 1, count: 8 },
             lr1: { start: 17, count: 8 },
             wr2: { start: 9, count: 8 },
             lr2: { start: 0, count: 0 },
             knockout: [
-                { start: 41, count: 8, round: 1 },  // R16
-                { start: 49, count: 4, round: 2 },  // QF
-                { start: 53, count: 2, round: 3 },  // SF
-                { start: 55, count: 1, round: 4 },  // Final
+                { start: 25, count: 8, round: 1 },  // R16
+                { start: 33, count: 4, round: 2 },  // QF
+                { start: 37, count: 2, round: 3 },  // SF
+                { start: 39, count: 1, round: 4 },  // Final
             ],
         };
     } else if (numberOfPlayers > 16) {
@@ -686,6 +711,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         roundMatches: ApiMatch[],
         isFirstRound: boolean,
         prevRoundMatches: ApiMatch[] | undefined,
+        emptySlotFallback: string = "Bye",
     ): FormattedMatch[] {
         const sorted = [...roundMatches].sort((a, b) => a.match_no - b.match_no);
         const prevSorted = prevRoundMatches
@@ -693,8 +719,8 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
             : undefined;
 
         return sorted.map((match, index) => {
-            let p1Fallback = "Bye";
-            let p2Fallback = "Bye";
+            let p1Fallback = emptySlotFallback;
+            let p2Fallback = emptySlotFallback;
 
             if (!isFirstRound && prevSorted) {
                 // 24-player WR2: one-to-one mapping (WR2[i].player1 = winner of WR1[i])
@@ -858,13 +884,58 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
     if (isDoubleElimination && layout.knockout.length > 0) {
         // Generate complete knockout structure from layout
         let prevKoMatches: ApiMatch[] | undefined;
+        const maxKoRound = layout.knockout[layout.knockout.length - 1].round;
+
         for (let i = 0; i < layout.knockout.length; i++) {
             const ko = layout.knockout[i];
-            const koMatches = ensureMatchRange(matchByNo, ko.start, ko.count, "knockout", ko.round);
-            const maxKoRound = layout.knockout[layout.knockout.length - 1].round;
+            let koMatches = ensureMatchRange(matchByNo, ko.start, ko.count, "knockout", ko.round);
+
+            let roundFormattedMatches: FormattedMatch[];
+
+            if (i === 0 && numberOfPlayers === 24) {
+                // 24-player knockout R16 (matches 25-32):
+                // p1 = winner of WR2 match (9+idx), p2 = winner of LR1 match (17+idx)
+                const sortedKo = [...koMatches].sort((a, b) => a.match_no - b.match_no);
+
+                // Dynamically resolve players when not yet in DB
+                koMatches = sortedKo.map((m, idx) => {
+                    const p1Id = m.player1?.id || m.player1_id;
+                    const p2Id = m.player2?.id || m.player2_id;
+                    if (p1Id && p2Id) return m;
+
+                    const wr2MatchNo = layout.wr2.start + idx;
+                    const lr1MatchNo = layout.lr1.start + idx;
+                    let p1 = m.player1 || null;
+                    let p2 = m.player2 || null;
+                    if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
+                    if (!p2Id) p2 = getWinnerOfMatch(lr1MatchNo);
+                    return {
+                        ...m,
+                        player1: p1,
+                        player2: p2,
+                        player1_id: p1 ? p1.id : m.player1_id,
+                        player2_id: p2 ? p2.id : m.player2_id,
+                        player1_name: p1 ? p1.full_name : m.player1_name,
+                        player2_name: p2 ? p2.full_name : m.player2_name,
+                        player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+                        player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+                        player1_rank: p1 ? p1.rank : m.player1_rank,
+                        player2_rank: p2 ? p2.rank : m.player2_rank,
+                    };
+                });
+
+                roundFormattedMatches = koMatches.map((match, idx) => {
+                    const p1Fallback = `Thắng trận ${layout.wr2.start + idx}`;
+                    const p2Fallback = `Thắng trận ${layout.lr1.start + idx}`;
+                    return formatMatch(match, tournament, p1Fallback, p2Fallback);
+                });
+            } else {
+                roundFormattedMatches = formatWinnersRound(koMatches, i === 0, prevKoMatches, "Chờ...");
+            }
+
             knockoutRounds.push({
                 title: getRoundLabel("knockout", ko.round, maxKoRound),
-                matches: formatWinnersRound(koMatches, i === 0, prevKoMatches),
+                matches: roundFormattedMatches,
             });
             prevKoMatches = koMatches;
         }
@@ -1309,19 +1380,32 @@ export default function TournamentMatchesPage() {
             .finally(() => setLoading(false));
     }, [slug]);
 
-    // Fallback polling: refetch matches every 10 seconds to ensure updates are synchronized even if SSE fails/drops
+    // Fallback polling: refetch matches every 5 seconds (matches CMS polling cadence)
+    // Uses a smart merge: only overwrite a match if the polled version is newer or has a different score,
+    // so SSE real-time updates are not clobbered by a stale poll that arrives slightly later.
     useEffect(() => {
         if (!slug) return;
         const interval = setInterval(() => {
             tournamentAPI.getTournamentMatchesBySlug(slug)
                 .then((res) => {
-                    const matches: ApiMatch[] = res.data || [];
-                    setRawMatches(matches);
+                    const freshMatches: ApiMatch[] = res.data || [];
+                    setRawMatches((prev) => {
+                        const prevByNo = new Map(prev.map((m) => [m.match_no, m]));
+                        const merged = freshMatches.map((fm) => {
+                            const existing = prevByNo.get(fm.match_no);
+                            if (!existing) return fm;
+                            // Keep the version with the higher total score (more recent device update)
+                            const freshTotal = (fm.player1_score ?? 0) + (fm.player2_score ?? 0);
+                            const existingTotal = (existing.player1_score ?? 0) + (existing.player2_score ?? 0);
+                            return freshTotal >= existingTotal ? fm : existing;
+                        });
+                        return merged;
+                    });
                 })
                 .catch((err) => {
                     console.error("Failed to poll matches:", err);
                 });
-        }, 10000); // 10 seconds polling interval
+        }, 5000);
 
         return () => clearInterval(interval);
     }, [slug]);
@@ -1329,11 +1413,13 @@ export default function TournamentMatchesPage() {
     useEffect(() => {
         if (!tournamentData?.id) return;
 
-        let API_BASE = process.env.NEXT_PUBLIC_API_URL;
-        if (!API_BASE && typeof window !== "undefined") {
+        let API_BASE = "";
+        if (typeof window !== "undefined") {
             API_BASE = `http://${window.location.hostname}:8000`;
+        } else {
+            API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         }
-        const sseUrl = `${API_BASE || "http://localhost:8000"}/api/tournaments/${tournamentData.id}/matches/live`;
+        const sseUrl = `${API_BASE}/api/tournaments/${tournamentData.id}/matches/live`;
         console.log("Connecting to live match updates SSE:", sseUrl);
 
         const eventSource = new EventSource(sseUrl, { withCredentials: true });
