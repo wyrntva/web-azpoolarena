@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AiConversationEntity } from './entities/ai-conversation.entity';
 import { StoreSettingsEntity } from '../store-settings/entities';
 import { AreaEntity } from '../areas/entities/area.entity';
+import { TournamentEntity } from '../tournaments/entities/tournament.entity';
 import { ChatResponseDto, FbAiResponseDto } from './dto/chat.dto';
 
 // gpt-4o-mini pricing (per 1K tokens, USD)
@@ -49,6 +50,8 @@ export class AiService implements OnModuleInit {
     private readonly storeSettingsRepo: Repository<StoreSettingsEntity>,
     @InjectRepository(AreaEntity)
     private readonly areaRepo: Repository<AreaEntity>,
+    @InjectRepository(TournamentEntity)
+    private readonly tournamentRepo: Repository<TournamentEntity>,
   ) {
     this.model = this.config.get<string>('OPENAI_MODEL', 'gpt-4o-mini');
   }
@@ -282,8 +285,8 @@ Giá theo giờ:
 Combo tiết kiệm:
 - Combo 2 giờ: 129.000đ (tặng 1 nước)
 - Combo 3 giờ: 189.000đ (tặng 1 nước)
-- Combo 4 giờ: 249.000đ (tặng 1 nước)
-- Combo 6 giờ: 369.000đ (tặng 2 nước)
+- Combo 4 giờ: 249.000đ (tặng 1 nước + 1 đĩa hoa quả)
+- Combo 6 giờ: 369.000đ (tặng 2 nước + 1 đĩa hoa quả)
 - Combo ngày: 249.000đ (chơi từ 08h00 - 16h00)
 - Buffet đêm: 89.000đ/người
 
@@ -392,6 +395,12 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
       if (tableInfo) sections.push(tableInfo);
     }
 
+    // Thông tin giải đấu
+    if (intents.includes('tournament') || intents.includes('general')) {
+      const tournamentInfo = await this.getTournamentInfo();
+      if (tournamentInfo) sections.push(tournamentInfo);
+    }
+
     const context = sections.join('\n\n');
     this.setCache(cacheKey, context);
     return context;
@@ -435,6 +444,40 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
       return `## Khu vực & Bàn bida\n${lines.join('\n')}`;
     } catch (err) {
       this.logger.warn(`[DB] Không lấy được thông tin bàn: ${err.message}`);
+      return null;
+    }
+  }
+
+  private async getTournamentInfo(): Promise<string | null> {
+    try {
+      const tournaments = await this.tournamentRepo.find({
+        where: [{ status: 'ongoing' }, { status: 'upcoming' }],
+        select: ['id', 'name', 'status', 'start_date', 'registration_start_date', 'registration_end_date', 'location', 'organizer', 'support_phone', 'number_of_players'],
+        order: { start_date: 'ASC' },
+        take: 5,
+      });
+
+      if (!tournaments.length) return null;
+
+      const STATUS_MAP: Record<string, string> = {
+        ongoing: 'Đang diễn ra',
+        upcoming: 'Sắp diễn ra',
+        finished: 'Đã kết thúc',
+      };
+
+      const lines = tournaments.map((t) => {
+        const parts = [`- Tên: ${t.name}`, `  Trạng thái: ${STATUS_MAP[t.status] ?? t.status}`];
+        if (t.start_date) parts.push(`  Ngày bắt đầu: ${new Date(t.start_date).toLocaleDateString('vi-VN')}`);
+        if (t.registration_end_date) parts.push(`  Hạn đăng ký: ${new Date(t.registration_end_date).toLocaleDateString('vi-VN')}`);
+        if (t.number_of_players) parts.push(`  Số người tham dự: ${t.number_of_players}`);
+        if (t.location) parts.push(`  Địa điểm: ${t.location}`);
+        if (t.support_phone) parts.push(`  Liên hệ: ${t.support_phone}`);
+        return parts.join('\n');
+      });
+
+      return `## Giải đấu hiện tại & sắp tới\n${lines.join('\n\n')}`;
+    } catch (err: any) {
+      this.logger.warn(`[DB] Không lấy được thông tin giải đấu: ${err.message}`);
       return null;
     }
   }

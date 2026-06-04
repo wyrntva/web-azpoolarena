@@ -6,6 +6,7 @@ import { AiService } from './ai.service';
 import { AiConversationEntity } from './entities/ai-conversation.entity';
 import { StoreSettingsEntity } from '../store-settings/entities';
 import { AreaEntity } from '../areas/entities/area.entity';
+import { TournamentEntity } from '../tournaments/entities/tournament.entity';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AreaEntity } from '../areas/entities/area.entity';
       AiConversationEntity,
       StoreSettingsEntity,
       AreaEntity,
+      TournamentEntity,
     ]),
   ],
   controllers: [AiController],
