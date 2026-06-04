@@ -212,8 +212,8 @@ export class AiService implements OnModuleInit {
     // Chuyển history sang đúng type OpenAI
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
-      // Chỉ gửi 10 tin gần nhất để tiết kiệm token
-      ...history.slice(-10).map((m) => ({
+      // Chỉ gửi 5 tin gần nhất để giảm token → tăng tốc độ
+      ...history.slice(-5).map((m) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
       })),
@@ -224,8 +224,8 @@ export class AiService implements OnModuleInit {
       const completion = await this.openai.chat.completions.create({
         model: this.model,
         messages,
-        max_tokens: 600,      // Messenger cần ngắn gọn
-        temperature: 0.4,     // Ổn định, ít sáng tạo
+        max_tokens: 300,      // Messenger ngắn gọn — giảm từ 600 → 300
+        temperature: 0.3,     // Ổn định hơn, nhanh hơn
       });
 
       const reply = completion.choices[0]?.message?.content ?? '';
@@ -248,22 +248,12 @@ export class AiService implements OnModuleInit {
   }
 
   private buildFacebookSystemPrompt(dbContext: string): string {
-    return `Bạn là JARVIS — trợ lý AI chính thức của AZ POOLARENA.
+    return `Bạn là JARVIS, trợ lý AI của AZ POOLARENA. Xưng "mình", gọi khách là "bạn".
+Khi chào lần đầu: "Xin chào bạn, mình là JARVIS trợ lý AI của AZ POOLARENA, mình có thể hỗ trợ gì cho bạn?"
+Quy tắc: ngắn gọn (2-3 câu), không emoji, không bịa thông tin, chỉ dùng dữ liệu bên dưới, tiếng Việt.
+Không có thông tin → yêu cầu khách liên hệ trực tiếp.
 
-Khi khách chào hoặc bắt đầu hội thoại, hãy tự giới thiệu theo mẫu:
-"Xin chào bạn, mình là JARVIS trợ lý AI của AZ POOLARENA, mình có thể hỗ trợ gì cho bạn?"
-
-Quy tắc bắt buộc:
-- Xưng "mình", gọi khách là "bạn" — thân thiện, gần gũi
-- Ngắn gọn — tối đa 3-4 câu mỗi tin nhắn
-- KHÔNG dùng emoji, icon hay ký tự đặc biệt trong tin nhắn
-- Chỉ sử dụng thông tin trong phần DỮ LIỆU bên dưới
-- KHÔNG tự bịa thông tin, giá, giờ giấc không có trong dữ liệu
-- Nếu không có thông tin → đề nghị khách liên hệ trực tiếp với cửa hàng
-- Luôn trả lời bằng tiếng Việt
-
-DỮ LIỆU TỪ HỆ THỐNG:
-${dbContext || '(Chưa có dữ liệu — hướng dẫn khách liên hệ trực tiếp)'}`;
+DỮ LIỆU: ${dbContext || 'Chưa có — hướng dẫn khách liên hệ trực tiếp.'}`;
   }
 
   // ─────────────────────────────────────────────────────────
