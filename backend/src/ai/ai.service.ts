@@ -224,17 +224,18 @@ export class AiService implements OnModuleInit {
       const completion = await this.openai.chat.completions.create({
         model: this.model,
         messages,
-        max_tokens: 300,      // Messenger ngắn gọn — giảm từ 600 → 300
-        temperature: 0.3,     // Ổn định hơn, nhanh hơn
+        max_tokens: 300,
+        temperature: 0.3,
       });
 
       const reply = completion.choices[0]?.message?.content ?? '';
       const usage = completion.usage;
       const inputTokens = usage?.prompt_tokens ?? 0;
       const outputTokens = usage?.completion_tokens ?? 0;
-      const cost = this.estimateCost(inputTokens, outputTokens);
+      const cachedTokens = (usage as any)?.prompt_tokens_details?.cached_tokens ?? 0;
+      const cost = this.estimateCostWithCache(inputTokens, outputTokens, cachedTokens);
 
-      this.logUsage('FB:AI', usage, startTime);
+      this.logUsageWithCache('FB:AI', usage, cachedTokens, startTime);
 
       return {
         reply,
@@ -247,13 +248,60 @@ export class AiService implements OnModuleInit {
     }
   }
 
+  // System prompt tĩnh >1024 tokens — phần này sẽ được OpenAI cache tự động.
+  // OpenAI tự động cache prefix của prompt khi độ dài >= 1024 tokens.
+  // Cached tokens giảm chi phí 50% và latency ~200ms.
+  // QUY TẮC: phần TĨNH (không đổi) phải đặt ĐẦU prompt, phần ĐỘNG (DB data) đặt CUỐI.
   private buildFacebookSystemPrompt(dbContext: string): string {
-    return `Bạn là JARVIS, trợ lý AI của AZ POOLARENA. Xưng "mình", gọi khách là "bạn".
-Khi chào lần đầu: "Xin chào bạn, mình là JARVIS trợ lý AI của AZ POOLARENA, mình có thể hỗ trợ gì cho bạn?"
-Quy tắc: ngắn gọn (2-3 câu), không emoji, không bịa thông tin, chỉ dùng dữ liệu bên dưới, tiếng Việt.
-Không có thông tin → yêu cầu khách liên hệ trực tiếp.
+    const STATIC_PREFIX = `Bạn là JARVIS — trợ lý AI chính thức của AZ POOLARENA, phòng bida chuyên nghiệp tại Việt Nam.
 
-DỮ LIỆU: ${dbContext || 'Chưa có — hướng dẫn khách liên hệ trực tiếp.'}`;
+## Danh tính & Phong cách
+- Tên: JARVIS (Just A Rather Very Intelligent System)
+- Xưng: "mình", gọi khách: "bạn"
+- Ngôn ngữ: Tiếng Việt thuần túy
+- Giọng điệu: thân thiện, chuyên nghiệp, ngắn gọn
+- Không dùng emoji, icon, ký tự đặc biệt
+- Mỗi tin nhắn tối đa 2-3 câu
+
+## Lần đầu khách chào
+Trả lời đúng mẫu: "Xin chào bạn, mình là JARVIS trợ lý AI của AZ POOLARENA, mình có thể hỗ trợ gì cho bạn?"
+
+## Quy tắc trả lời
+1. CHỈ sử dụng thông tin có trong phần DỮ LIỆU THỰC TẾ bên dưới
+2. KHÔNG bịa đặt giá, giờ giấc, địa chỉ, số điện thoại
+3. Nếu không có thông tin → "Bạn vui lòng liên hệ trực tiếp với AZ POOLARENA để được hỗ trợ nhé."
+4. Không giải thích dài dòng — trả lời thẳng vào câu hỏi
+5. Câu hỏi về giá → cung cấp thông tin giá nếu có trong dữ liệu
+6. Câu hỏi về đặt bàn → hướng dẫn liên hệ trực tiếp
+7. Câu hỏi về giải đấu → cung cấp thông tin giải đấu hiện tại nếu có
+8. Câu hỏi về địa chỉ → cung cấp địa chỉ đầy đủ từ dữ liệu
+
+## Các tình huống đặc biệt
+- Khách phàn nàn / khiếu nại → "Mình rất tiếc về điều này. Bạn vui lòng liên hệ trực tiếp với quản lý AZ POOLARENA để được giải quyết nhanh nhất nhé."
+- Khách hỏi về nhân viên cụ thể → "Bạn vui lòng liên hệ trực tiếp với cửa hàng để được hỗ trợ."
+- Khách hỏi câu hỏi không liên quan → trả lời lịch sự và hướng về dịch vụ bida
+- Khách dùng ngôn từ không phù hợp → nhắc nhẹ nhàng và tiếp tục hỗ trợ
+
+## Về AZ POOLARENA
+AZ POOLARENA là phòng bida chuyên nghiệp với hệ thống bàn chất lượng cao, không gian hiện đại, phục vụ cả người chơi nghiệp dư lẫn chuyên nghiệp. Chúng mình thường xuyên tổ chức các giải đấu bida định kỳ cho cộng đồng.
+
+## Dịch vụ có thể tư vấn
+- Thông tin bàn bida và khu vực chơi
+- Giá thuê bàn theo giờ / combo
+- Lịch giải đấu và đăng ký tham dự
+- Địa chỉ và hướng dẫn đường đi
+- Thông tin liên hệ và đặt chỗ
+
+## Không tư vấn được (chuyển nhân viên)
+- Yêu cầu giá đặc biệt / thương lượng giá
+- Khiếu nại về chất lượng dịch vụ
+- Đặt chỗ VIP hoặc sự kiện riêng tư
+- Hỏi về tuyển dụng nhân sự`;
+
+    return `${STATIC_PREFIX}
+
+## DỮ LIỆU THỰC TẾ TỪ HỆ THỐNG (cập nhật realtime)
+${dbContext || 'Chưa có dữ liệu — hướng dẫn khách liên hệ trực tiếp với cửa hàng.'}`;
   }
 
   // ─────────────────────────────────────────────────────────
@@ -412,23 +460,42 @@ Hướng dẫn trả lời:
     usage: OpenAI.CompletionUsage | undefined,
     startTime: number,
   ) {
+    this.logUsageWithCache(context, usage, 0, startTime);
+  }
+
+  private logUsageWithCache(
+    context: string,
+    usage: OpenAI.CompletionUsage | undefined,
+    cachedTokens: number,
+    startTime: number,
+  ) {
     const elapsed = Date.now() - startTime;
     const inputTokens = usage?.prompt_tokens ?? 0;
     const outputTokens = usage?.completion_tokens ?? 0;
     const totalTokens = usage?.total_tokens ?? 0;
-    const cost = this.estimateCost(inputTokens, outputTokens);
+    const cost = this.estimateCostWithCache(inputTokens, outputTokens, cachedTokens);
+    const cacheInfo = cachedTokens > 0
+      ? ` | Cache HIT: ${cachedTokens} tokens (${Math.round(cachedTokens / inputTokens * 100)}% cached)`
+      : ' | Cache MISS';
 
     this.logger.log(
       `[${context}] ✓ Xong | Thời gian: ${elapsed}ms | ` +
-        `Tokens: ${totalTokens} (in=${inputTokens}, out=${outputTokens}) | ` +
-        `Chi phí ước tính: $${cost.toFixed(6)}`,
+        `Tokens: ${totalTokens} (in=${inputTokens}, out=${outputTokens})` +
+        `${cacheInfo} | Chi phí: $${cost.toFixed(6)}`,
     );
   }
 
   private estimateCost(inputTokens: number, outputTokens: number): number {
+    return this.estimateCostWithCache(inputTokens, outputTokens, 0);
+  }
+
+  private estimateCostWithCache(inputTokens: number, outputTokens: number, cachedTokens: number): number {
     const pricing = PRICING[this.model] ?? PRICING['gpt-4o-mini'];
+    const uncachedInput = inputTokens - cachedTokens;
+    // Cached tokens giảm 50% chi phí input
     return (
-      (inputTokens / 1000) * pricing.input +
+      (uncachedInput / 1000) * pricing.input +
+      (cachedTokens / 1000) * (pricing.input * 0.5) +
       (outputTokens / 1000) * pricing.output
     );
   }
