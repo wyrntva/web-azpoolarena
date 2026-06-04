@@ -55,14 +55,16 @@ export class FacebookController {
    */
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  async handleWebhook(@Body() payload: FbWebhookPayloadDto) {
-    // Trả về 200 ngay — Facebook sẽ retry nếu không nhận được 200 trong 20 giây
+  async handleWebhook(@Body() payload: any) {
+    this.logger.log(`[FB Webhook POST] object="${payload?.object}" entries=${payload?.entry?.length ?? 0}`);
+
     if (payload?.object !== 'page') {
+      this.logger.warn(`[FB Webhook POST] Bỏ qua — object="${payload?.object}" | body=${JSON.stringify(payload).slice(0, 200)}`);
       return 'ignored';
     }
 
     // Xử lý bất đồng bộ — không await để tránh timeout
-    this.processMessagingEvents(payload).catch((err) =>
+    this.processMessagingEvents(payload as FbWebhookPayloadDto).catch((err) =>
       this.logger.error(`[FB Webhook] Lỗi xử lý event: ${err.message}`, err.stack),
     );
 
