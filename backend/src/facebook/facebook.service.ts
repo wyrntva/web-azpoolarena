@@ -27,10 +27,20 @@ const HUMAN_HANDOVER_PATTERNS = [
 
 const FB_GRAPH_URL = 'https://graph.facebook.com/v22.0';
 
+// Debounce buffer: gom tin nhắn liên tiếp trong 2 giây → xử lý 1 lần
+interface DebounceEntry {
+  messages: string[];
+  timer: ReturnType<typeof setTimeout>;
+}
+
 @Injectable()
 export class FacebookService implements OnModuleInit {
   private readonly logger = new Logger(FacebookService.name);
   private pageAccessToken: string;
+
+  // Map psid → pending messages + timer
+  private readonly debounceMap = new Map<string, DebounceEntry>();
+  private readonly DEBOUNCE_MS = 2000; // chờ 2 giây
 
   constructor(
     private readonly config: ConfigService,
@@ -58,9 +68,38 @@ export class FacebookService implements OnModuleInit {
   // ─────────────────────────────────────────────────────────
 
   /**
-   * Xử lý tin nhắn văn bản đến từ khách hàng.
+   * Nhận tin nhắn vào buffer debounce.
+   * Nếu khách nhắn nhiều tin liên tiếp trong 2 giây → gom lại xử lý 1 lần.
    */
   async handleIncomingMessage(psid: string, text: string): Promise<void> {
+    const existing = this.debounceMap.get(psid);
+
+    if (existing) {
+      // Có tin đang chờ — reset timer, thêm tin mới vào buffer
+      clearTimeout(existing.timer);
+      existing.messages.push(text);
+      this.logger.log(`[Debounce] psid=${psid} buffer=${existing.messages.length} msgs`);
+    } else {
+      // Tin đầu tiên — tạo entry mới
+      this.debounceMap.set(psid, { messages: [text], timer: null as any });
+    }
+
+    // Set timer mới — sau 2 giây không có tin nào thêm thì xử lý
+    const entry = this.debounceMap.get(psid)!;
+    entry.timer = setTimeout(() => {
+      this.debounceMap.delete(psid);
+      const combined = entry.messages.join('\n');
+      this.logger.log(`[Debounce] Xử lý psid=${psid} | ${entry.messages.length} tin → "${combined.slice(0, 80)}"`);
+      this.processMessage(psid, combined).catch((err) =>
+        this.logger.error(`[FB] Lỗi xử lý message: ${err.message}`, err.stack),
+      );
+    }, this.DEBOUNCE_MS);
+  }
+
+  /**
+   * Xử lý tin nhắn sau khi debounce.
+   */
+  private async processMessage(psid: string, text: string): Promise<void> {
     // 1. Lấy hoặc tạo customer
     const customer = await this.getOrCreateCustomer(psid);
 
