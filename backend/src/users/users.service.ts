@@ -98,7 +98,27 @@ export class UsersService {
       skip,
       take: limit,
     });
-    return users.map((u) => this.parseUserPermissions(u));
+
+    const userIds = users.map((u) => u.id);
+    let firstScheduleMap: Record<number, string> = {};
+    if (userIds.length > 0) {
+      const rows: { user_id: number; min_date: string }[] =
+        await this.userRepo.manager.query(
+          `SELECT user_id, MIN(work_date)::text AS min_date
+           FROM work_schedules
+           WHERE user_id = ANY($1)
+           GROUP BY user_id`,
+          [userIds],
+        );
+      for (const r of rows) {
+        firstScheduleMap[r.user_id] = r.min_date;
+      }
+    }
+
+    return users.map((u) => ({
+      ...this.parseUserPermissions(u),
+      first_schedule_date: firstScheduleMap[u.id] ?? null,
+    }));
   }
 
   async findOne(id: number) {

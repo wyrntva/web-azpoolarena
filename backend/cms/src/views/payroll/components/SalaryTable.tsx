@@ -129,18 +129,21 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
         return employees.filter(emp => {
             if (!isManager && emp.id !== user?.id) return false;
             if (emp.role?.requires_timekeeping === false) return false;
-            
-            if (emp.created_at && dayjs(emp.created_at).isAfter(selectedDate.endOf('month'))) return false;
 
-            const hasData = attendances.some(a => a.user_id === emp.id) || 
+            const hasData = attendances.some(a => a.user_id === emp.id) ||
                             schedules.some(s => s.user_id === emp.id) ||
                             (payrollSummary[emp.id] && (
-                                payrollSummary[emp.id].total_bonuses > 0 || 
-                                payrollSummary[emp.id].total_advances > 0 || 
+                                payrollSummary[emp.id].total_bonuses > 0 ||
+                                payrollSummary[emp.id].total_advances > 0 ||
                                 payrollSummary[emp.id].total_penalties > 0
                             ));
-            
+
             if (hasData) return true;
+
+            // Dùng ngày bắt đầu có lịch làm việc đầu tiên để xác định nhân viên có "tồn tại" trong tháng đang xem không.
+            // Fallback về created_at nếu chưa có lịch nào.
+            const startDate = (emp as any).first_schedule_date || emp.created_at;
+            if (startDate && dayjs(startDate).isAfter(selectedDate.endOf('month'))) return false;
             if (isPastMonth) return false;
 
             return emp.is_active;

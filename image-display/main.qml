@@ -491,15 +491,25 @@ Window {
                                     SequentialAnimation {
                                         id: scoreFlashP1
                                         ParallelAnimation {
-                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.45; duration: 200; easing.type: Easing.OutQuad }
-                                            ColorAnimation { target: p1ScoreText; property: "color"; to: "#ED1C1F"; duration: 200 }
+                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 0.9; duration: 150; easing.type: Easing.OutQuad }
+                                            NumberAnimation { target: p1ScoreText; property: "opacity"; to: 0.2; duration: 150; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p1ScoreText; property: "color"; to: "#ED1C1F"; duration: 150 }
                                         }
                                         ParallelAnimation {
-                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
-                                            ColorAnimation { target: p1ScoreText; property: "color"; to: p1ScoreText.baseColor; duration: 250 }
+                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.35; duration: 150; easing.type: Easing.OutBack }
+                                            NumberAnimation { target: p1ScoreText; property: "opacity"; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
+                                        }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 0.95; duration: 150; easing.type: Easing.InOutQuad }
+                                        }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p1ScoreText; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p1ScoreText; property: "color"; to: p1ScoreText.baseColor; duration: 150 }
                                         }
                                         onFinished: {
                                             p1ScoreText.color = Qt.binding(function() { return p1ScoreText.baseColor })
+                                            p1ScoreText.opacity = 1.0
+                                            p1ScoreText.scale = 1.0
                                         }
                                     }
                                 }
@@ -594,15 +604,25 @@ Window {
                                     SequentialAnimation {
                                         id: scoreFlashP2
                                         ParallelAnimation {
-                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.45; duration: 200; easing.type: Easing.OutQuad }
-                                            ColorAnimation { target: p2ScoreText; property: "color"; to: "#ED1C1F"; duration: 200 }
+                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 0.9; duration: 150; easing.type: Easing.OutQuad }
+                                            NumberAnimation { target: p2ScoreText; property: "opacity"; to: 0.2; duration: 150; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p2ScoreText; property: "color"; to: "#ED1C1F"; duration: 150 }
                                         }
                                         ParallelAnimation {
-                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
-                                            ColorAnimation { target: p2ScoreText; property: "color"; to: p2ScoreText.baseColor; duration: 250 }
+                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.35; duration: 150; easing.type: Easing.OutBack }
+                                            NumberAnimation { target: p2ScoreText; property: "opacity"; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
+                                        }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 0.95; duration: 150; easing.type: Easing.InOutQuad }
+                                        }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: p2ScoreText; property: "scale"; to: 1.0; duration: 150; easing.type: Easing.OutQuad }
+                                            ColorAnimation { target: p2ScoreText; property: "color"; to: p2ScoreText.baseColor; duration: 150 }
                                         }
                                         onFinished: {
                                             p2ScoreText.color = Qt.binding(function() { return p2ScoreText.baseColor })
+                                            p2ScoreText.opacity = 1.0
+                                            p2ScoreText.scale = 1.0
                                         }
                                     }
                                 }

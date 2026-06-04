@@ -97,11 +97,10 @@ class BannerPoller(QObject):
         # 2. Fetch active matches
         try:
             tournament, new_matches = fetch_active_matches(API_BASE_URL)
-            # Only update if we got a valid response (tournament found)
-            # When API fails (DNS, timeout), tournament is None and new_matches is []
-            # In that case, keep showing the last known match data
-            if tournament is not None:
-                self.matchesFetched.emit(new_matches)
+            # If the API succeeds (doesn't raise an exception), we always emit the list of matches.
+            # If there is no ongoing tournament, new_matches is [] which clears the active matches.
+            # On network failures, fetch_active_matches raises an Exception, keeping last known data.
+            self.matchesFetched.emit(new_matches)
         except Exception:
             pass
 
@@ -491,7 +490,7 @@ def fetch_active_matches(api_base_url):
         return tournament, formatted_list
     except Exception as e:
         print(f"Error fetching active matches: {e}")
-        return None, []
+        raise e
 
 def main():
     # RPi5 Wayland/X11 auto-detect (chỉ chạy trên Linux)
