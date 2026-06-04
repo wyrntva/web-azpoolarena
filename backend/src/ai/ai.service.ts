@@ -313,6 +313,12 @@ Sau khi có đủ, trả lời:
 "Mình đã lưu lại yêu cầu cắt cam của bạn rồi. Nhân viên sẽ gửi file cho bạn qua Zalo số [SĐT khách] sớm nhất có thể nhé!
 Ngoài ra bạn biết không, bảng tỉ số tại AZ POOLARENA đã hỗ trợ tính năng cắt cam trực tiếp tại quán luôn đó. Nếu bạn muốn tự cắt mà chưa biết cách dùng, cứ nhờ nhân viên hỗ trợ ngay tại chỗ là được nhé!"
 
+## THÔNG TIN NHÓM ZALO
+- Nhóm giải đấu: https://zalo.me/g/qazqsv816
+  Khi khách hỏi về giải đấu, LUÔN gửi kèm: "Bạn có thể tham gia nhóm Zalo giải đấu tại đây để cập nhật thông tin nhanh nhất nhé: https://zalo.me/g/qazqsv816"
+- Nhóm khuyến mãi: https://zalo.me/g/ytqpxk355
+  Khi khách hỏi về khuyến mãi/ưu đãi/giảm giá, LUÔN gửi kèm: "Bạn tham gia nhóm Zalo khuyến mãi để nhận ưu đãi mới nhất nhé: https://zalo.me/g/ytqpxk355"
+
 ## QUY TẮC TRẢ LỜI
 1. Trả lời thân thiện, tự nhiên như người bạn — không cứng nhắc kiểu robot
 2. Chỉ dùng thông tin trong prompt này và DỮ LIỆU THỰC TẾ bên dưới
@@ -353,6 +359,10 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
     // Liên hệ
     if (/liên hệ|contact|số điện thoại|phone|zalo|hotline|gọi|nhắn/.test(lower)) {
       intents.add('contact');
+    }
+    // Khuyến mãi / ưu đãi
+    if (/khuyến mãi|ưu đãi|giảm giá|sale|promo|coupon|voucher|deal|khuyến|ưu đãi/.test(lower)) {
+      intents.add('promotion');
     }
     // Giải đấu / sự kiện
     if (/giải đấu|tournament|thi đấu|event|cuộc thi|cup|championship|giải/.test(lower)) {
