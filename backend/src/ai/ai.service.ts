@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AiConversationEntity } from './entities/ai-conversation.entity';
 import { StoreSettingsEntity } from '../store-settings/entities';
 import { AreaEntity } from '../areas/entities/area.entity';
-import { TournamentEntity } from '../tournaments/entities/tournament.entity';
+import { TournamentEntity, TournamentRegistrationEntity } from '../tournaments/entities/tournament.entity';
 import { ChatResponseDto, FbAiResponseDto } from './dto/chat.dto';
 
 // gpt-4o-mini pricing (per 1K tokens, USD)
@@ -52,6 +52,8 @@ export class AiService implements OnModuleInit {
     private readonly areaRepo: Repository<AreaEntity>,
     @InjectRepository(TournamentEntity)
     private readonly tournamentRepo: Repository<TournamentEntity>,
+    @InjectRepository(TournamentRegistrationEntity)
+    private readonly registrationRepo: Repository<TournamentRegistrationEntity>,
   ) {
     this.model = this.config.get<string>('OPENAI_MODEL', 'gpt-4o-mini');
   }
@@ -373,8 +375,8 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
     if (/khuyến mãi|ưu đãi|giảm giá|sale|promo|coupon|voucher|deal|khuyến|ưu đãi/.test(lower)) {
       intents.add('promotion');
     }
-    // Giải đấu / sự kiện
-    if (/giải đấu|tournament|thi đấu|event|cuộc thi|cup|championship|giải/.test(lower)) {
+    // Giải đấu / sự kiện (mở rộng: đăng ký, tuần này, tháng này, số người)
+    if (/giải đấu|tournament|thi đấu|event|cuộc thi|cup|championship|giải|đăng ký|đã đăng|tuần này|tháng này|hôm nay|số người|tổng người|còn chỗ|slot/.test(lower)) {
       intents.add('tournament');
     }
     // Dịch vụ
@@ -469,32 +471,57 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
 
   private async getTournamentInfo(): Promise<string | null> {
     try {
-      const tournaments = await this.tournamentRepo.find({
-        where: [{ status: 'ongoing' }, { status: 'upcoming' }],
-        select: [
-          'id', 'name', 'slug', 'status',
-          'start_date', 'registration_start_date', 'registration_end_date',
-          'location', 'organizer', 'support_phone', 'number_of_players',
-          'registration_fee', 'total_prize', 'ranks',
-        ],
-        order: { start_date: 'ASC' },
-        take: 5,
-      });
+      // Lấy giải ongoing + upcoming + finished trong 30 ngày gần đây
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      if (!tournaments.length) return null;
+      const tournaments = await this.tournamentRepo
+        .createQueryBuilder('t')
+        .where('t.status IN (:...statuses)', { statuses: ['ongoing', 'upcoming', 'finished'] })
+        .andWhere('(t.start_date >= :since OR t.status != :finished)', {
+          since: thirtyDaysAgo,
+          finished: 'finished',
+        })
+        .select([
+          't.id', 't.name', 't.slug', 't.status',
+          't.start_date', 't.registration_end_date',
+          't.location', 't.support_phone', 't.number_of_players',
+          't.registration_fee', 't.total_prize', 't.ranks',
+        ])
+        .orderBy('t.start_date', 'ASC')
+        .take(10)
+        .getMany();
+
+      if (!tournaments.length) return '## Giải đấu\nHiện không có giải đấu nào đang diễn ra hoặc sắp tới.';
+
+      // Đếm số người đăng ký từng giải một lần query
+      const tournamentIds = tournaments.map((t) => t.id);
+      const regCounts: { tournament_id: number; count: string }[] = await this.registrationRepo
+        .createQueryBuilder('r')
+        .select('r.tournament_id', 'tournament_id')
+        .addSelect('COUNT(r.id)', 'count')
+        .where('r.tournament_id IN (:...ids)', { ids: tournamentIds })
+        .groupBy('r.tournament_id')
+        .getRawMany();
+
+      const countMap = new Map(regCounts.map((r) => [r.tournament_id, Number(r.count)]));
 
       const STATUS_MAP: Record<string, string> = {
         ongoing: 'Đang diễn ra',
         upcoming: 'Sắp diễn ra',
+        finished: 'Đã kết thúc',
       };
 
       const fmt = (d: Date) =>
-        d ? new Date(d).toLocaleString('vi-VN', {
-          day: '2-digit', month: '2-digit', year: 'numeric',
-          hour: '2-digit', minute: '2-digit', hour12: false,
-        }) : null;
+        d
+          ? new Date(d).toLocaleString('vi-VN', {
+              day: '2-digit', month: '2-digit', year: 'numeric',
+              hour: '2-digit', minute: '2-digit', hour12: false,
+            })
+          : null;
 
       const lines = tournaments.map((t) => {
+        const registered = countMap.get(t.id) ?? 0;
         const parts = [
           `- Tên giải: ${t.name}`,
           `  Trạng thái: ${STATUS_MAP[t.status] ?? t.status}`,
@@ -502,21 +529,21 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
         ];
         if (t.start_date) parts.push(`  Ngày bắt đầu: ${fmt(t.start_date)}`);
         if (t.registration_end_date) parts.push(`  Hạn đăng ký: ${fmt(t.registration_end_date)}`);
-        if (t.number_of_players) parts.push(`  Số người tham dự: ${t.number_of_players} người`);
+        parts.push(`  Số người đã đăng ký: ${registered}/${t.number_of_players ?? '?'} người`);
         if (t.registration_fee) parts.push(`  Lệ phí: ${Number(t.registration_fee).toLocaleString('vi-VN')}đ`);
         if (t.total_prize) parts.push(`  Tổng giải thưởng: ${Number(t.total_prize).toLocaleString('vi-VN')}đ`);
         if (t.ranks) {
           try {
             const rankList: string[] = JSON.parse(t.ranks);
             if (rankList.length) parts.push(`  Hạng tham dự: ${rankList.join(', ')}`);
-          } catch { /* ignore parse error */ }
+          } catch { /* ignore */ }
         }
         if (t.location) parts.push(`  Địa điểm: ${t.location}`);
         if (t.support_phone) parts.push(`  Liên hệ: ${t.support_phone}`);
         return parts.join('\n');
       });
 
-      return `## Giải đấu hiện tại & sắp tới\n${lines.join('\n\n')}`;
+      return `## Giải đấu (30 ngày gần nhất + sắp tới)\n${lines.join('\n\n')}`;
     } catch (err: any) {
       this.logger.warn(`[DB] Không lấy được thông tin giải đấu: ${err.message}`);
       return null;
