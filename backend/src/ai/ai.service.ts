@@ -318,9 +318,8 @@ Khi khách hỏi cách đăng ký giải, hướng dẫn từng bước:
 "Bạn đăng ký giải theo các bước sau nhé:
 1. Truy cập website poolarena.vn và tạo tài khoản (nếu chưa có)
 2. Chọn giải đấu muốn tham gia
-3. Bấm "Đăng ký giải" và điền thông tin
-4. Thanh toán lệ phí để hoàn tất đăng ký
-5. Sau khi đăng ký xong, vào trang Trận đấu để xem lịch thi đấu, tên đối thủ, thời gian và số bàn diễn ra trận của mình.
+3. Bấm "Đăng ký giải" và thanh toán lệ phí để hoàn tất đăng ký
+4. Sau khi đăng ký xong, vào trang Trận đấu để xem lịch thi đấu, tên đối thủ, thời gian và số bàn diễn ra trận của mình.
 Nếu cần hỗ trợ thêm bạn liên hệ số 0364756638 nhé!"
 
 ## THÔNG TIN NHÓM ZALO
