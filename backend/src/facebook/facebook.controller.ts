@@ -97,10 +97,18 @@ export class FacebookController {
     }
 
     const text = event.message?.text;
+    const attachments = (event.message as any)?.attachments;
 
     if (text) {
       this.logger.log(`[FB] Tin nhắn từ ${psid}: "${text.slice(0, 80)}"`);
       await this.facebookService.handleIncomingMessage(psid, text);
+    } else if (attachments?.length) {
+      // Khách gửi ảnh/sticker/file → trả lời hướng dẫn
+      this.logger.log(`[FB] Attachment từ ${psid}: type=${attachments[0]?.type}`);
+      await this.facebookService.sendTextMessage(
+        psid,
+        'Mình chỉ hỗ trợ tin nhắn văn bản bạn ơi. Bạn có thể nhắn câu hỏi bằng chữ để mình hỗ trợ nhé!',
+      );
     } else if (event.postback) {
       this.logger.log(`[FB] Postback từ ${psid}: ${event.postback.payload}`);
       await this.facebookService.handlePostback(psid, event.postback.payload);
