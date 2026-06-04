@@ -313,6 +313,16 @@ Sau khi có đủ, trả lời:
 "Mình đã lưu lại yêu cầu cắt cam của bạn rồi. Nhân viên sẽ gửi file cho bạn qua Zalo số [SĐT khách] sớm nhất có thể nhé!
 Ngoài ra bạn biết không, bảng tỉ số tại AZ POOLARENA đã hỗ trợ tính năng cắt cam trực tiếp tại quán luôn đó. Nếu bạn muốn tự cắt mà chưa biết cách dùng, cứ nhờ nhân viên hỗ trợ ngay tại chỗ là được nhé!"
 
+## HƯỚNG DẪN ĐĂNG KÝ GIẢI ĐẤU
+Khi khách hỏi cách đăng ký giải, hướng dẫn từng bước:
+"Bạn đăng ký giải theo các bước sau nhé:
+1. Truy cập website poolarena.vn và tạo tài khoản (nếu chưa có)
+2. Chọn giải đấu muốn tham gia
+3. Bấm "Đăng ký giải" và điền thông tin
+4. Thanh toán lệ phí để hoàn tất đăng ký
+5. Sau khi đăng ký xong, vào trang Trận đấu để xem lịch thi đấu, tên đối thủ, thời gian và số bàn diễn ra trận của mình.
+Nếu cần hỗ trợ thêm bạn liên hệ số 0364756638 nhé!"
+
 ## THÔNG TIN NHÓM ZALO
 - Nhóm giải đấu: https://zalo.me/g/qazqsv816
   Khi khách hỏi về giải đấu, LUÔN gửi kèm: "Bạn có thể tham gia nhóm Zalo giải đấu tại đây để cập nhật thông tin nhanh nhất nhé: https://zalo.me/g/qazqsv816"
@@ -462,7 +472,12 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
     try {
       const tournaments = await this.tournamentRepo.find({
         where: [{ status: 'ongoing' }, { status: 'upcoming' }],
-        select: ['id', 'name', 'status', 'start_date', 'registration_start_date', 'registration_end_date', 'location', 'organizer', 'support_phone', 'number_of_players'],
+        select: [
+          'id', 'name', 'slug', 'status',
+          'start_date', 'registration_start_date', 'registration_end_date',
+          'location', 'organizer', 'support_phone', 'number_of_players',
+          'registration_fee', 'total_prize', 'ranks',
+        ],
         order: { start_date: 'ASC' },
         take: 5,
       });
@@ -472,14 +487,31 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
       const STATUS_MAP: Record<string, string> = {
         ongoing: 'Đang diễn ra',
         upcoming: 'Sắp diễn ra',
-        finished: 'Đã kết thúc',
       };
 
+      const fmt = (d: Date) =>
+        d ? new Date(d).toLocaleString('vi-VN', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: false,
+        }) : null;
+
       const lines = tournaments.map((t) => {
-        const parts = [`- Tên: ${t.name}`, `  Trạng thái: ${STATUS_MAP[t.status] ?? t.status}`];
-        if (t.start_date) parts.push(`  Ngày bắt đầu: ${new Date(t.start_date).toLocaleDateString('vi-VN')}`);
-        if (t.registration_end_date) parts.push(`  Hạn đăng ký: ${new Date(t.registration_end_date).toLocaleDateString('vi-VN')}`);
-        if (t.number_of_players) parts.push(`  Số người tham dự: ${t.number_of_players}`);
+        const parts = [
+          `- Tên giải: ${t.name}`,
+          `  Trạng thái: ${STATUS_MAP[t.status] ?? t.status}`,
+          `  Link xem giải & đăng ký: https://poolarena.vn/tournaments/${t.slug}`,
+        ];
+        if (t.start_date) parts.push(`  Ngày bắt đầu: ${fmt(t.start_date)}`);
+        if (t.registration_end_date) parts.push(`  Hạn đăng ký: ${fmt(t.registration_end_date)}`);
+        if (t.number_of_players) parts.push(`  Số người tham dự: ${t.number_of_players} người`);
+        if (t.registration_fee) parts.push(`  Lệ phí: ${Number(t.registration_fee).toLocaleString('vi-VN')}đ`);
+        if (t.total_prize) parts.push(`  Tổng giải thưởng: ${Number(t.total_prize).toLocaleString('vi-VN')}đ`);
+        if (t.ranks) {
+          try {
+            const rankList: string[] = JSON.parse(t.ranks);
+            if (rankList.length) parts.push(`  Hạng tham dự: ${rankList.join(', ')}`);
+          } catch { /* ignore parse error */ }
+        }
         if (t.location) parts.push(`  Địa điểm: ${t.location}`);
         if (t.support_phone) parts.push(`  Liên hệ: ${t.support_phone}`);
         return parts.join('\n');
