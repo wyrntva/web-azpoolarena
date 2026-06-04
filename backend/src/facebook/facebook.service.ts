@@ -42,6 +42,10 @@ export class FacebookService implements OnModuleInit {
   private readonly debounceMap = new Map<string, DebounceEntry>();
   private readonly DEBOUNCE_MS = 2000; // chờ 2 giây
 
+  // Cooldown: sau khi AI reply xong, bỏ qua tin nhắn mới trong N giây
+  private readonly cooldownMap = new Map<string, number>(); // psid → timestamp hết cooldown
+  private readonly COOLDOWN_MS = 5000; // 5 giây cooldown sau mỗi reply
+
   constructor(
     private readonly config: ConfigService,
     private readonly aiService: AiService,
@@ -72,6 +76,13 @@ export class FacebookService implements OnModuleInit {
    * Nếu khách nhắn nhiều tin liên tiếp trong 2 giây → gom lại xử lý 1 lần.
    */
   async handleIncomingMessage(psid: string, text: string): Promise<void> {
+    // Kiểm tra cooldown — nếu AI vừa reply xong, bỏ qua tin nhắn mới
+    const cooldownUntil = this.cooldownMap.get(psid);
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      this.logger.log(`[Cooldown] psid=${psid} — bỏ qua "${text.slice(0, 40)}" (còn ${Math.ceil((cooldownUntil - Date.now()) / 1000)}s)`);
+      return;
+    }
+
     const existing = this.debounceMap.get(psid);
 
     if (existing) {
@@ -145,6 +156,9 @@ export class FacebookService implements OnModuleInit {
 
       // 8. Gửi reply qua Facebook Graph API
       await this.sendTextMessage(psid, reply);
+
+      // 9. Bật cooldown — bỏ qua tin nhắn mới trong 5 giây tiếp theo
+      this.cooldownMap.set(psid, Date.now() + this.COOLDOWN_MS);
     } catch (err) {
       this.logger.error(`[FB] Lỗi xử lý AI cho ${psid}: ${err.message}`, err.stack);
       await this.sendTextMessage(
