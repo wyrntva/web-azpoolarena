@@ -22,6 +22,8 @@ import { HrModule } from './hr/hr.module';
 import { RankingsModule } from './rankings/rankings.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { MqttClientModule } from './mqtt/mqtt.module';
+import { AiModule } from './ai/ai.module';
+import { FacebookModule } from './facebook/facebook.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 
@@ -73,7 +75,7 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
       // Frontend CMS SPA — serves index.html as fallback for all non-api routes
       {
         rootPath: join(__dirname, '..', 'public'),
-        exclude: ['/api/*', '/uploads/*'],
+        exclude: ['/api/*', '/uploads/*', '/facebook/*'],
         serveStaticOptions: {
           index: false,
           setHeaders: (res: any, filePath: string) => {
@@ -116,6 +118,8 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
     RankingsModule,
     UploadsModule,
     MqttClientModule,
+    AiModule,
+    FacebookModule,
   ],
 })
 export class AppModule implements NestModule {
