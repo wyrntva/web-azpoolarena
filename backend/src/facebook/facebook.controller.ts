@@ -85,10 +85,16 @@ export class FacebookController {
 
   private async processOneEvent(event: FbMessagingDto) {
     const psid = event.sender?.id;
+    // Log toàn bộ event để debug
+    this.logger.log(`[FB Event] psid=${psid} keys=${Object.keys(event).join(',')} msg=${JSON.stringify(event.message)?.slice(0, 120)}`);
+
     if (!psid) return;
 
     // Bỏ qua echo (tin nhắn do page gửi đi)
-    if ((event.message as any)?.is_echo) return;
+    if ((event.message as any)?.is_echo) {
+      this.logger.log(`[FB Event] Bỏ qua echo từ page`);
+      return;
+    }
 
     const text = event.message?.text;
 
