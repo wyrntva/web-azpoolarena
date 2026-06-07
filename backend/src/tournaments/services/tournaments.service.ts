@@ -532,9 +532,10 @@ export class TournamentsService {
     // When set, QML should skip rank-based handicap calculation entirely.
     let effective_race_to: number | null = null;
     if (match.bracket === 'knockout' && maxRoundResult?.maxRound) {
-      const maxRound = parseInt(maxRoundResult.maxRound);
+      const maxRound = parseInt(maxRoundResult.maxRound ?? maxRoundResult.maxround ?? 0);
       const roundsFromEnd = maxRound - match.round;
       const t = match.tournament;
+      console.log(`[device] bracket=${match.bracket} round=${match.round} maxRound=${maxRound} roundsFromEnd=${roundsFromEnd} final=${t?.final} semi_final=${t?.semi_final}`);
       if (roundsFromEnd === 0 && t?.final) effective_race_to = parseInt(t.final);
       else if (roundsFromEnd === 1 && t?.semi_final) effective_race_to = parseInt(t.semi_final);
       else if (roundsFromEnd === 2 && t?.quarter_final) effective_race_to = parseInt(t.quarter_final);
