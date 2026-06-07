@@ -1,6 +1,8 @@
 import TournamentNavbarItem from "./TournamentNavbarItem";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/stores/store";
 import { tournamentAPI } from "@/api/tournament.api";
 
 interface Props {
@@ -11,13 +13,18 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
   const router = useRouter();
   const params = useParams();
   const slug = params?.slug as string | undefined;
+  
+  const user = useSelector((state: RootState) => state.auth.user);
   const [status, setStatus] = useState<string>("upcoming");
+  const [tournament, setTournament] = useState<any>(null);
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
 
   useEffect(() => {
     if (!slug) return;
     tournamentAPI.getTournament(slug)
       .then((res) => {
         if (res.data) {
+          setTournament(res.data);
           setStatus(res.data.status || "upcoming");
         }
       })
@@ -26,10 +33,38 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
       });
   }, [slug]);
 
+  useEffect(() => {
+    if (!slug) return;
+    if (!user) {
+      setIsRegistered(false);
+      return;
+    }
+    tournamentAPI.getTournamentRegistrationsBySlug(slug)
+      .then((res) => {
+        const regs: { id: number }[] = res.data || [];
+        setIsRegistered(regs.some(r => r.id === user.id));
+      })
+      .catch(() => setIsRegistered(false));
+  }, [slug, user]);
+
+  const isRevealedPhase = (() => {
+    if (!tournament) return false;
+    const closed = tournament.registration_end_date
+      ? new Date() > new Date(tournament.registration_end_date)
+      : false;
+    const full = (tournament.registration_count ?? 0) >= (tournament.number_of_players ?? Infinity);
+    return closed || full;
+  })();
+
+  const canAccessMatches = isRevealedPhase || isRegistered;
+
   const go = (tab: "info" | "matches" | "live" | "rankings" | "fav") => {
     if (!slug) return;
     if (tab === "info") router.push(`/tournaments/${slug}`);
-    if (tab === "matches") router.push(`/tournaments/${slug}/matches`);
+    if (tab === "matches") {
+      if (!canAccessMatches) return;
+      router.push(`/tournaments/${slug}/matches`);
+    }
     if (tab === "rankings") {
       if (status !== "completed" && status !== "finished") return;
       router.push(`/tournaments/${slug}/rankings`);
@@ -75,7 +110,13 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
 
         <TournamentNavbarItem
           label="Trận đấu"
-          variant={activeTab === "matches" ? "active" : "default"}
+          variant={
+            activeTab === "matches"
+              ? "active"
+              : canAccessMatches
+                ? "default"
+                : "disabled"
+          }
           icon={
             <svg
               xmlns="http://www.w3.org/2000/svg"

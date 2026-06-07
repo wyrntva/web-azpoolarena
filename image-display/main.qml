@@ -18,6 +18,8 @@ Window {
     title: "Project Show Image"
     color: "black"
 
+    readonly property string apiBaseUrl: imageProvider.apiBaseUrl
+
     // Load Montserrat Font files dynamically
     FontLoader { id: fontMontserratBold; source: "fonts/Montserrat-Bold.otf" }
     FontLoader { id: fontMontserratItalic; source: "fonts/Montserrat-Italic.otf" }
@@ -285,18 +287,44 @@ Window {
                 anchors.bottomMargin: 10
                 clip: true
                 
-                cellWidth: width / 3 // 3 cột
-                cellHeight: 220     // Chiều cao ô 220px: 4 dòng x 220 = 880px (vừa khít màn hình 1080p hiển thị trọn vẹn 12 card không cuộn)
+                cellWidth: width / 4 // 4 cột
+                cellHeight: 165     // Chiều cao ô 165px để thon gọn và vừa khít 16 card trên màn hình 1080p
 
                 model: matchesModel
                 delegate: Item {
-                    width: matchesGrid.cellWidth - 32 
-                    height: 210                      // Tăng chiều cao delegate lên 210
+                    width: matchesGrid.cellWidth - 24 
+                    height: 155                      
 
-                    // Vòng đấu & thời gian / chạm handicap (Cỡ chữ cực to)
+                    property int matchId: model.id
+                    property var currentP1Score: model.player1Score
+                    property var currentP2Score: model.player2Score
+
+                    property var lastP1Score: undefined
+                    property var lastP2Score: undefined
+
+                    onMatchIdChanged: {
+                        lastP1Score = currentP1Score
+                        lastP2Score = currentP2Score
+                    }
+
+                    onCurrentP1ScoreChanged: {
+                        if (lastP1Score !== undefined && lastP1Score !== currentP1Score) {
+                            scoreFlashP1.start()
+                        }
+                        lastP1Score = currentP1Score
+                    }
+
+                    onCurrentP2ScoreChanged: {
+                        if (lastP2Score !== undefined && lastP2Score !== currentP2Score) {
+                            scoreFlashP2.start()
+                        }
+                        lastP2Score = currentP2Score
+                    }
+
+                    // Vòng đấu & thời gian / chạm handicap (Cỡ chữ chuẩn 16px)
                     Item {
                         width: parent.width
-                        height: 44 // Tăng từ 36 lên 44
+                        height: 32
 
                         Text {
                             text: model.matchNo ? "Trận " + model.matchNo : ""
@@ -305,7 +333,7 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: baseFontFamily
                             font.bold: false
-                            font.pixelSize: 22 // Tăng từ 18 lên 22
+                            font.pixelSize: 16
                             color: "#37393E"
                         }
 
@@ -326,7 +354,7 @@ Window {
                             anchors.verticalCenter: parent.verticalCenter
                             font.family: baseFontFamily
                             font.bold: false
-                            font.pixelSize: 22 // Tăng từ 18 lên 22
+                            font.pixelSize: 16
                             color: "#37393E"
                             horizontalAlignment: Text.AlignRight
                         }
@@ -335,26 +363,26 @@ Window {
                     // Card Container (Transparent)
                     Item {
                         width: parent.width
-                        height: 160 // Tăng chiều cao từ 130 lên 160
-                        y: 44      // Điều chỉnh y từ 40 lên 44 để khớp với chiều cao phần top text mới
+                        height: 120
+                        y: 32
 
                         // Cột số bàn bên trái (Pill dọc - Bo góc trái tuyệt đối)
                         Rectangle {
                             id: tablePill
-                            width: 120 // Tăng chiều rộng từ 100 lên 120
-                            height: 160 // Tăng chiều cao từ 130 lên 160
+                            width: 96
+                            height: 120
                             color: {
                                 if (model.tableNumberColor === "green") return "#60DB80"
                                 if (model.tableNumberColor === "yellow") return "#E5BD4F"
                                 return "#464C58"
                             }
-                            radius: 20 // Tăng bo góc từ 16 lên 20
+                            radius: 16
 
                             // Che góc bo tròn bên phải để Pill phẳng seamless
                             Rectangle {
-                                width: 20 // Tăng từ 16 lên 20
-                                height: 160 // Tăng từ 130 lên 160
-                                x: 100      // Điều chỉnh x từ 84 lên 100
+                                width: 16
+                                height: 120
+                                x: 80      // 96 - 16
                                 color: parent.color
                             }
 
@@ -376,9 +404,9 @@ Window {
                                 font.italic: true
                                 font.pixelSize: {
                                     var cleanText = text || ""
-                                    return cleanText.length > 8 ? 18 : (cleanText.length > 6 ? 20 : 22) // Tăng cỡ chữ cực rõ
+                                    return cleanText.length > 8 ? 13 : (cleanText.length > 6 ? 15 : 17)
                                 }
-                                color: "white"
+                                color: model.tableNumberColor === "default" || !model.tableNumberColor ? "#7C8FB5" : "#FFFFFF"
                                 font.capitalization: Font.AllUppercase
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
@@ -390,14 +418,14 @@ Window {
                             id: playerInfoCard
                             anchors.left: tablePill.right
                             anchors.right: parent.right
-                            height: 160 // Tăng chiều cao từ 130 lên 160
+                            height: 120
                             color: "#172339"
-                            radius: 20  // Tăng bo góc từ 16 lên 20
+                            radius: 16
 
                             // Che góc bo tròn bên trái để phẳng seamless với tablePill
                             Rectangle {
-                                width: 20   // Tăng từ 16 lên 20
-                                height: 160  // Tăng từ 130 lên 160
+                                width: 16
+                                height: 120
                                 x: 0
                                 color: parent.color
                             }
@@ -405,18 +433,18 @@ Window {
                             // --- Player 1 Row ---
                             Item {
                                 width: parent.width
-                                height: 80 // Tăng chiều cao từ 65 lên 80 (để chia đều 160px thành 2 dòng)
+                                height: 60
                                 y: 0
 
                                 // Avatar hình tròn dùng Rectangle clip
                                 Rectangle {
                                     id: p1AvatarBg
-                                    width: 52  // Tăng chiều rộng từ 44 lên 52
-                                    height: 52 // Tăng chiều cao từ 44 lên 52
-                                    radius: 26 // Tăng bán kính bo góc từ 22 lên 26
+                                    width: 38
+                                    height: 38
+                                    radius: 19
                                     clip: true
                                     anchors.left: parent.left
-                                    anchors.leftMargin: 18 // Tăng lề trái từ 16 lên 18
+                                    anchors.leftMargin: 12
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: !model.player1IsBye
                                     color: "transparent"
@@ -424,9 +452,9 @@ Window {
                                     Image {
                                         id: p1AvatarImg
                                         anchors.fill: parent
-                                        source: model.player1Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
-                                        sourceSize.width: 104
-                                        sourceSize.height: 104
+                                        source: model.player1Avatar || (apiBaseUrl + "/images/generic-profile.png")
+                                        sourceSize.width: 76
+                                        sourceSize.height: 76
                                         cache: true
                                         asynchronous: true
                                         fillMode: Image.PreserveAspectCrop
@@ -439,14 +467,20 @@ Window {
                                 Text {
                                     text: model.player1Name + (model.player1Rank && !model.player1IsBye ? " - " + model.player1Rank : "")
                                     anchors.left: p1AvatarBg.visible ? p1AvatarBg.right : parent.left
-                                    anchors.leftMargin: 14 // Tăng từ 12 lên 14
+                                    anchors.leftMargin: 10
                                     anchors.right: p1ScoreText.left
-                                    anchors.rightMargin: 14 // Tăng từ 12 lên 14
+                                    anchors.rightMargin: 10
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
                                     font.bold: model.hasActiveResult ? model.player1IsWinner : false
                                     font.italic: model.player1IsBye
-                                    font.pixelSize: 24 // Tăng kích cỡ chữ tên lên 24
+                                    font.pixelSize: {
+                                        var len = text.length;
+                                        if (len > 24) return 14;
+                                        if (len > 20) return 16;
+                                        if (len > 16) return 18;
+                                        return 20;
+                                    }
                                     color: {
                                         if (model.hasActiveResult) {
                                             if (!model.player1IsWinner && model.player2IsWinner) return "#ACB3C3"
@@ -461,12 +495,12 @@ Window {
                                     id: p1ScoreText
                                     text: model.player1Score
                                     anchors.right: parent.right
-                                    anchors.rightMargin: 24 // Tăng từ 20 lên 24
+                                    anchors.rightMargin: 16
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
                                     font.bold: true
                                     font.italic: true
-                                    font.pixelSize: 34 // Tăng kích cỡ chữ điểm số cực to lên 34
+                                    font.pixelSize: 28
                                     property color baseColor: {
                                         if (model.hasActiveResult) {
                                             if (model.player1IsWinner) return "#ED1C1F"
@@ -477,16 +511,6 @@ Window {
                                     color: baseColor
                                     horizontalAlignment: Text.AlignRight
                                     transformOrigin: Item.Center
-
-                                    property bool isInitialized: false
-
-                                    onTextChanged: {
-                                        if (isInitialized) {
-                                            scoreFlashP1.start()
-                                        } else {
-                                            isInitialized = true
-                                        }
-                                    }
 
                                     SequentialAnimation {
                                         id: scoreFlashP1
@@ -518,18 +542,18 @@ Window {
                             // --- Player 2 Row ---
                             Item {
                                 width: parent.width
-                                height: 80 // Tăng chiều cao từ 65 lên 80 (để chia đều 160px thành 2 dòng)
-                                y: 80      // Điều chỉnh y từ 65 lên 80 để thẳng hàng với dòng dưới
+                                height: 60
+                                y: 60
 
                                 // Avatar hình tròn dùng Rectangle clip
                                 Rectangle {
                                     id: p2AvatarBg
-                                    width: 52  // Tăng chiều rộng từ 44 lên 52
-                                    height: 52 // Tăng chiều cao từ 44 lên 52
-                                    radius: 26 // Tăng bán kính bo góc từ 22 lên 26
+                                    width: 38
+                                    height: 38
+                                    radius: 19
                                     clip: true
                                     anchors.left: parent.left
-                                    anchors.leftMargin: 18 // Tăng lề trái từ 16 lên 18
+                                    anchors.leftMargin: 12
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: !model.player2IsBye
                                     color: "transparent"
@@ -537,9 +561,9 @@ Window {
                                     Image {
                                         id: p2AvatarImg
                                         anchors.fill: parent
-                                        source: model.player2Avatar || (imageProvider.apiBaseUrl + "/images/generic-profile.png")
-                                        sourceSize.width: 104
-                                        sourceSize.height: 104
+                                        source: model.player2Avatar || (apiBaseUrl + "/images/generic-profile.png")
+                                        sourceSize.width: 76
+                                        sourceSize.height: 76
                                         cache: true
                                         asynchronous: true
                                         fillMode: Image.PreserveAspectCrop
@@ -552,14 +576,20 @@ Window {
                                 Text {
                                     text: model.player2Name + (model.player2Rank && !model.player2IsBye ? " - " + model.player2Rank : "")
                                     anchors.left: p2AvatarBg.visible ? p2AvatarBg.right : parent.left
-                                    anchors.leftMargin: 14 // Tăng từ 12 lên 14
+                                    anchors.leftMargin: 10
                                     anchors.right: p2ScoreText.left
-                                    anchors.rightMargin: 14 // Tăng từ 12 lên 14
+                                    anchors.rightMargin: 10
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
                                     font.bold: model.hasActiveResult ? model.player2IsWinner : false
                                     font.italic: model.player2IsBye
-                                    font.pixelSize: 24 // Tăng kích cỡ chữ tên lên 24
+                                    font.pixelSize: {
+                                        var len = text.length;
+                                        if (len > 24) return 14;
+                                        if (len > 20) return 16;
+                                        if (len > 16) return 18;
+                                        return 20;
+                                    }
                                     color: {
                                         if (model.hasActiveResult) {
                                             if (!model.player2IsWinner && model.player1IsWinner) return "#ACB3C3"
@@ -574,12 +604,12 @@ Window {
                                     id: p2ScoreText
                                     text: model.player2Score
                                     anchors.right: parent.right
-                                    anchors.rightMargin: 24 // Tăng từ 20 lên 24
+                                    anchors.rightMargin: 16
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
                                     font.bold: true
                                     font.italic: true
-                                    font.pixelSize: 34 // Tăng kích cỡ chữ điểm số cực to lên 34
+                                    font.pixelSize: 28
                                     property color baseColor: {
                                         if (model.hasActiveResult) {
                                             if (model.player2IsWinner) return "#ED1C1F"
@@ -590,16 +620,6 @@ Window {
                                     color: baseColor
                                     horizontalAlignment: Text.AlignRight
                                     transformOrigin: Item.Center
-
-                                    property bool isInitialized: false
-
-                                    onTextChanged: {
-                                        if (isInitialized) {
-                                            scoreFlashP2.start()
-                                        } else {
-                                            isInitialized = true
-                                        }
-                                    }
 
                                     SequentialAnimation {
                                         id: scoreFlashP2

@@ -69,42 +69,49 @@ class BannerPoller(QObject):
     bannersFetched = Signal(list)
     matchesFetched = Signal(list)
 
-    def __init__(self, interval=10000):
+    def __init__(self, match_interval=2000, banner_interval=30000):
         super().__init__()
-        self.interval = interval
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.check_api)
-        
-    def start(self):
-        print(f"Bắt đầu theo dõi cập nhật API (Mỗi {self.interval/1000}s)...")
-        self.timer.start(self.interval)
+        # Timer riêng cho matches — cập nhật nhanh, không bị block bởi banner fetch
+        self.match_timer = QTimer(self)
+        self.match_timer.timeout.connect(self._check_matches)
+        self.match_interval = match_interval
+        # Timer riêng cho banners — ít thay đổi, không cần nhanh
+        self.banner_timer = QTimer(self)
+        self.banner_timer.timeout.connect(self._check_banners)
+        self.banner_interval = banner_interval
 
-    def check_api(self):
-        # Chạy trong luồng riêng để không đơ màn hình
-        t = threading.Thread(target=self._fetch_task)
+    def start(self):
+        print(f"Bắt đầu theo dõi: matches mỗi {self.match_interval/1000}s, banners mỗi {self.banner_interval/1000}s...")
+        self.match_timer.start(self.match_interval)
+        self.banner_timer.start(self.banner_interval)
+
+    def _check_matches(self):
+        t = threading.Thread(target=self._fetch_matches)
         t.daemon = True
         t.start()
 
-    def _fetch_task(self):
-        # 1. Fetch banners
+    def _check_banners(self):
+        t = threading.Thread(target=self._fetch_banners)
+        t.daemon = True
+        t.start()
+
+    def _fetch_matches(self):
+        try:
+            tournament, new_matches = fetch_active_matches(API_BASE_URL)
+            # Always emit — empty list clears display, exception keeps last known data
+            self.matchesFetched.emit(new_matches)
+        except Exception:
+            pass
+
+    def _fetch_banners(self):
         try:
             new_banners = fetch_banner_urls(silent=True)
             if new_banners:
                 self.bannersFetched.emit(new_banners)
         except Exception:
             pass
-            
-        # 2. Fetch active matches
-        try:
-            tournament, new_matches = fetch_active_matches(API_BASE_URL)
-            # If the API succeeds (doesn't raise an exception), we always emit the list of matches.
-            # If there is no ongoing tournament, new_matches is [] which clears the active matches.
-            # On network failures, fetch_active_matches raises an Exception, keeping last known data.
-            self.matchesFetched.emit(new_matches)
-        except Exception:
-            pass
 
-CACHE_DIR = os.path.expanduser("~/.azpool_banners")
+CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "banner_cache")
 
 def get_local_path(url):
     ext = os.path.splitext(url.split('?')[0])[1]
@@ -328,6 +335,105 @@ def dedupe_matches(matches):
             
     return sorted(list(match_map.values()), key=lambda x: x.get("match_no", 0))
 
+def get_bracket_layout(num_players):
+    if num_players > 32:
+        return {
+            "wr1": {"start": 1, "count": 32},
+            "lr1": {"start": 33, "count": 16},
+            "wr2": {"start": 49, "count": 16},
+            "lr2": {"start": 65, "count": 16},
+        }
+    elif num_players == 24:
+        return {
+            "wr1": {"start": 1, "count": 8},
+            "lr1": {"start": 17, "count": 8},
+            "wr2": {"start": 9, "count": 8},
+            "lr2": {"start": 0, "count": 0},
+        }
+    elif num_players > 16:
+        return {
+            "wr1": {"start": 1, "count": 16},
+            "lr1": {"start": 17, "count": 8},
+            "wr2": {"start": 25, "count": 8},
+            "lr2": {"start": 33, "count": 8},
+        }
+    else:
+        return {
+            "wr1": {"start": 1, "count": 8},
+            "lr1": {"start": 9, "count": 4},
+            "wr2": {"start": 13, "count": 4},
+            "lr2": {"start": 17, "count": 4},
+        }
+
+def is_source_match_bye(match_no, matches_map):
+    m = matches_map.get(match_no)
+    if not m:
+        return False
+    p1 = m.get("player1") or {}
+    p2 = m.get("player2") or {}
+    has_p1 = bool(p1.get("id") or m.get("player1_id"))
+    has_p2 = bool(p2.get("id") or m.get("player2_id"))
+    return (has_p1 != has_p2) and m.get("status") == "completed"
+
+def compute_player_fallbacks(match, num_players, matches_map):
+    bracket = match.get("bracket")
+    round_val = match.get("round", 1)
+    match_no = match.get("match_no", 0)
+    
+    p1_fallback = "Bye"
+    p2_fallback = "Bye"
+    
+    layout = get_bracket_layout(num_players)
+    if not layout:
+        return p1_fallback, p2_fallback
+        
+    bracket_matches = [m for m in matches_map.values() if m.get("bracket") == bracket and m.get("round") == round_val]
+    bracket_matches.sort(key=lambda x: x.get("match_no", 0))
+    try:
+        idx_in_round = [m.get("match_no") for m in bracket_matches].index(match_no)
+    except ValueError:
+        idx_in_round = 0
+        
+    wr1_start = layout["wr1"]["start"]
+    
+    if bracket == "winners" and round_val == 2:
+        if num_players == 24:
+            p1_fallback = f"Thắng trận {idx_in_round + 1}"
+            p2_fallback = "Bye"
+        else:
+            p1_fallback = f"Thắng trận {wr1_start + 2 * idx_in_round}"
+            p2_fallback = f"Thắng trận {wr1_start + 2 * idx_in_round + 1}"
+            
+    elif bracket == "losers" and round_val == 1:
+        if num_players == 24:
+            wr2_match_no = 33 - match_no
+            wr1_match_no = match_no - 16
+            p1_fallback = f"Thua trận {wr2_match_no}"
+            p2_fallback = f"Thua trận {wr1_match_no}"
+            if is_source_match_bye(wr1_match_no, matches_map):
+                p2_fallback = "Bye"
+        else:
+            src1 = wr1_start + 2 * idx_in_round
+            src2 = wr1_start + 2 * idx_in_round + 1
+            p1_fallback = "Bye" if is_source_match_bye(src1, matches_map) else f"Thua trận {src1}"
+            p2_fallback = "Bye" if is_source_match_bye(src2, matches_map) else f"Thua trận {src2}"
+            
+    elif bracket == "losers" and round_val == 2:
+        lr1_start = layout["lr1"]["start"]
+        wr2_start = layout["wr2"]["start"]
+        wr2_count = layout["wr2"]["count"]
+        
+        src1 = lr1_start + idx_in_round
+        src2 = wr2_start + wr2_count - 1 - idx_in_round
+        p1_fallback = f"Thắng trận {src1}"
+        p2_fallback = f"Thua trận {src2}"
+        
+    elif round_val > 2 or (bracket == "knockout" and round_val > 1):
+        p1_fallback = "Chờ..."
+        p2_fallback = "Chờ..."
+        
+    return p1_fallback, p2_fallback
+
 def fetch_active_matches(api_base_url):
     try:
         # 1. Fetch public tournaments
@@ -385,6 +491,9 @@ def fetch_active_matches(api_base_url):
         deduped_matches = dedupe_matches(matches)
         
         # 5. Filter and format active matches
+        matches_map = {m.get("match_no"): m for m in deduped_matches}
+        num_players = int(tournament.get("number_of_players") or 16)
+        
         active_matches = []
         for m in deduped_matches:
             status = m.get("status")
@@ -393,7 +502,8 @@ def fetch_active_matches(api_base_url):
             p1_id = p1.get("id") or m.get("player1_id")
             p2_id = p2.get("id") or m.get("player2_id")
             
-            if status in ["ongoing", "upcoming"] and p1_id is not None and p2_id is not None:
+            # Chỉ hiển thị trận đấu đang diễn ra hoặc sắp diễn ra mà có ít nhất 1 người chơi sẵn sàng
+            if status in ["ongoing", "upcoming"] and (p1_id is not None or p2_id is not None):
                 active_matches.append(m)
                 
         # Format them
@@ -406,8 +516,10 @@ def fetch_active_matches(api_base_url):
             p1_id = p1.get("id") or m.get("player1_id")
             p2_id = p2.get("id") or m.get("player2_id")
             
-            p1_name = p1.get("full_name") or m.get("player1_name") or "Bye"
-            p2_name = p2.get("full_name") or m.get("player2_name") or "Bye"
+            p1_fallback, p2_fallback = compute_player_fallbacks(m, num_players, matches_map)
+            
+            p1_name = p1.get("full_name") or m.get("player1_name") or p1_fallback
+            p2_name = p2.get("full_name") or m.get("player2_name") or p2_fallback
             
             p1_avatar = p1.get("avatar_url") or m.get("player1_avatar") or ""
             p2_avatar = p2.get("avatar_url") or m.get("player2_avatar") or ""
@@ -479,12 +591,17 @@ def fetch_active_matches(api_base_url):
                 "date": date_str
             })
             
-        # Sort matches by table number
+        # Sort matches by status (green -> yellow -> default), then table number, then match number
         def sort_key(item):
+            color_order = {"green": 1, "yellow": 2, "default": 3}
+            color_val = color_order.get(item.get("tableNumberColor"), 3)
+            
             table_num_str = item.get("tableNumber") or ""
             match_digits = re.findall(r'\d+', table_num_str)
             table_val = int(match_digits[0]) if match_digits else 999
-            return (table_val, int(item.get("matchNo") or 0))
+            
+            match_no_val = int(item.get("matchNo") or 0)
+            return (color_val, table_val, match_no_val)
             
         formatted_list.sort(key=sort_key)
         return tournament, formatted_list
@@ -541,7 +658,12 @@ def main():
         
     # 3. Fallback mặc định
     if not banners:
-        banners = ["https://via.placeholder.com/1920x1080?text=AZ+Poolarena+Default"]
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        default_img_path = os.path.join(current_dir, "default_banner.png")
+        if os.path.exists(default_img_path):
+            banners = ["file://" + default_img_path]
+        else:
+            banners = ["https://via.placeholder.com/1920x1080?text=AZ+Poolarena+Default"]
         print("Sử dụng ảnh mặc định.")
 
     print(f"API_BASE_URL: {API_BASE_URL}")
@@ -559,7 +681,7 @@ def main():
         except Exception:
             pass
 
-        poller = BannerPoller(interval=1000) # 1 giây check 1 lần
+        poller = BannerPoller(match_interval=2000, banner_interval=30000)
         poller.bannersFetched.connect(provider.update_banners)
         poller.matchesFetched.connect(provider.update_matches)
         poller.start()

@@ -67,6 +67,11 @@ interface TournamentInfo {
     tournament_type?: string | null;
 }
 
+interface RoundGroup {
+    title: string;
+    matches: FormattedMatch[];
+}
+
 // Rank ordering for handicap calculation
 const RANK_ORDER = ['K', 'I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A', 'S'];
 
@@ -369,6 +374,15 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
         return isWinner ? 700 : 500;
     };
 
+    const getPlayerFontSize = (name: string, rank?: string | null, isBye?: boolean) => {
+        const fullName = `${name}${rank && !isBye ? ` - ${rank}` : ""}`;
+        const len = fullName.length;
+        if (len > 24) return "10px";
+        if (len > 20) return "11.5px";
+        if (len > 16) return "13px";
+        return "14px";
+    };
+
     return (
         <div className="flex flex-col gap-0 w-full">
             {/* Meta row */}
@@ -448,7 +462,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                                 className="truncate"
                                 style={{
                                     fontFamily: "Montserrat, sans-serif",
-                                    fontSize: "14px",
+                                    fontSize: getPlayerFontSize(match.player1.name, match.player1.rank, match.player1.isBye),
                                     fontWeight: getPlayerNameWeight(match.player1.isWinner, match.player1.isBye),
                                     color: getPlayerNameColor(match.player1.isWinner, match.player2.isWinner),
                                     lineHeight: "20px",
@@ -504,7 +518,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
                                 className="truncate"
                                 style={{
                                     fontFamily: "Montserrat, sans-serif",
-                                    fontSize: "14px",
+                                    fontSize: getPlayerFontSize(match.player2.name, match.player2.rank, match.player2.isBye),
                                     fontWeight: getPlayerNameWeight(match.player2.isWinner, match.player2.isBye),
                                     color: getPlayerNameColor(match.player2.isWinner, match.player1.isWinner),
                                     lineHeight: "20px",
@@ -563,6 +577,575 @@ const dedupeMatches = (matches: ApiMatch[]): ApiMatch[] => {
     }
     return Array.from(map.values()).sort((a, b) => a.match_no - b.match_no);
 };
+
+function getRoundLabel(bracket: string, round: number, maxRound: number): string {
+    if (bracket === "winners") {
+        return `VÒNG ${round}`;
+    }
+    if (bracket === "losers") {
+        return `VÒNG ${round}: NHÁNH THUA`;
+    }
+    // knockout
+    if (round === maxRound) return "CHUNG KẾT";
+    if (round === maxRound - 1) return "BÁN KẾT";
+    if (round === maxRound - 2) return "TỨ KẾT";
+    if (round === maxRound - 3) return "VÒNG 1/8";
+    return `VÒNG ${round}`;
+}
+
+function createPlaceholderMatch(
+    matchNo: number,
+    bracket: string,
+    round: number,
+    tournamentId: number = 0,
+): ApiMatch {
+    return {
+        id: -matchNo,
+        tournament_id: tournamentId,
+        match_no: matchNo,
+        bracket,
+        round,
+        player1_id: null,
+        player1_name: null,
+        player1_avatar: null,
+        player1_rank: null,
+        player2_id: null,
+        player2_name: null,
+        player2_avatar: null,
+        player2_rank: null,
+        player1_score: 0,
+        player2_score: 0,
+        table_no: null,
+        match_time: null,
+        status: "pending",
+        player1_check_in: "unconfirmed",
+        player2_check_in: "unconfirmed",
+        winner_id: null,
+    };
+}
+
+function getBracketLayout(numberOfPlayers: number) {
+    if (numberOfPlayers > 32) {
+        return {
+            wr1: { start: 1, count: 32 },
+            lr1: { start: 33, count: 16 },
+            wr2: { start: 49, count: 16 },
+            lr2: { start: 65, count: 16 },
+            knockout: [
+                { start: 81, count: 16, round: 1 },  // R32
+                { start: 97, count: 8, round: 2 },   // R16
+                { start: 105, count: 4, round: 3 },  // QF
+                { start: 109, count: 2, round: 4 },  // SF
+                { start: 111, count: 1, round: 5 },  // Final
+            ],
+        };
+    } else if (numberOfPlayers === 24) {
+        return {
+            wr1: { start: 1, count: 8 },
+            lr1: { start: 17, count: 8 },
+            wr2: { start: 9, count: 8 },
+            lr2: { start: 0, count: 0 },
+            knockout: [
+                { start: 25, count: 8, round: 1 },  // R16
+                { start: 33, count: 4, round: 2 },  // QF
+                { start: 37, count: 2, round: 3 },  // SF
+                { start: 39, count: 1, round: 4 },  // Final
+            ],
+        };
+    } else if (numberOfPlayers > 16) {
+        return {
+            wr1: { start: 1, count: 16 },
+            lr1: { start: 17, count: 8 },
+            wr2: { start: 25, count: 8 },
+            lr2: { start: 33, count: 8 },
+            knockout: [
+                { start: 41, count: 8, round: 1 },  // R16
+                { start: 49, count: 4, round: 2 },  // QF
+                { start: 53, count: 2, round: 3 },  // SF
+                { start: 55, count: 1, round: 4 },  // Final
+            ],
+        };
+    } else {
+        return {
+            wr1: { start: 1, count: 8 },
+            lr1: { start: 9, count: 4 },
+            wr2: { start: 13, count: 4 },
+            lr2: { start: 17, count: 4 },
+            knockout: [
+                { start: 21, count: 4, round: 1 },  // QF
+                { start: 25, count: 2, round: 2 },  // SF
+                { start: 27, count: 1, round: 3 },  // Final
+            ],
+        };
+    }
+}
+
+function ensureMatchRange(
+    matchByNo: Map<number, ApiMatch>,
+    start: number,
+    count: number,
+    bracket: string,
+    round: number,
+): ApiMatch[] {
+    const result: ApiMatch[] = [];
+    for (let i = 0; i < count; i++) {
+        const matchNo = start + i;
+        result.push(matchByNo.get(matchNo) ?? createPlaceholderMatch(matchNo, bracket, round));
+    }
+    return result;
+}
+
+function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null) {
+    const matchByNo = new Map<number, ApiMatch>();
+    for (const m of allMatches) {
+        matchByNo.set(m.match_no, m);
+    }
+
+    const numberOfPlayers = tournament?.number_of_players || 16;
+    const isDoubleElimination = tournament?.tournament_type === "double_elimination";
+    const layout = getBracketLayout(numberOfPlayers);
+
+    const is64 = numberOfPlayers > 32;
+    const is32 = numberOfPlayers > 16 && numberOfPlayers <= 32;
+
+    function getWinnerOfMatch(mNo: number): ApiPlayerNested | null {
+        const m = matchByNo.get(mNo);
+        if (!m || m.status !== "completed") return null;
+        const wId = m.winner_id ?? m.winner?.id ?? null;
+        if (!wId) return null;
+        if (m.player1 && m.player1.id === wId) return m.player1;
+        if (m.player2 && m.player2.id === wId) return m.player2;
+        if (m.player1_id === wId) {
+            return { id: m.player1_id, full_name: m.player1_name, avatar_url: m.player1_avatar, rank: m.player1_rank };
+        }
+        if (m.player2_id === wId) {
+            return { id: m.player2_id, full_name: m.player2_name, avatar_url: m.player2_avatar, rank: m.player2_rank };
+        }
+        return null;
+    }
+
+    function getLoserOfMatch(mNo: number): ApiPlayerNested | null {
+        const m = matchByNo.get(mNo);
+        if (!m || m.status !== "completed") return null;
+        const wId = m.winner_id ?? m.winner?.id ?? null;
+        if (!wId) return null;
+        const p1Id = m.player1?.id || m.player1_id;
+        const p2Id = m.player2?.id || m.player2_id;
+        if (!p1Id || !p2Id) return null;
+        
+        if (wId === p1Id) {
+            return m.player2 || { id: m.player2_id!, full_name: m.player2_name, avatar_url: m.player2_avatar, rank: m.player2_rank };
+        }
+        if (wId === p2Id) {
+            return m.player1 || { id: m.player1_id!, full_name: m.player1_name, avatar_url: m.player1_avatar, rank: m.player1_rank };
+        }
+        return null;
+    }
+
+    function resolveDynamicPlayers(m: ApiMatch): ApiMatch {
+        const p1Id = m.player1?.id || m.player1_id;
+        const p2Id = m.player2?.id || m.player2_id;
+        
+        if (p1Id && p2Id) return m;
+        
+        let p1: ApiPlayerNested | null = m.player1 || null;
+        let p2: ApiPlayerNested | null = m.player2 || null;
+        
+        const size = numberOfPlayers;
+        
+        if (size === 24) {
+            if (m.bracket === "winners" && m.round === 2) {
+                const wr1MatchNo = m.match_no - 8;
+                if (!p1Id) p1 = getWinnerOfMatch(wr1MatchNo);
+            } else if (m.bracket === "losers" && m.round === 1) {
+                const wr2MatchNo = 33 - m.match_no;
+                const wr1MatchNo = m.match_no - 16;
+                if (!p1Id) p1 = getLoserOfMatch(wr2MatchNo);
+                if (!p2Id) p2 = getLoserOfMatch(wr1MatchNo);
+            }
+            return {
+                ...m,
+                player1: p1,
+                player2: p2,
+                player1_id: p1 ? p1.id : m.player1_id,
+                player2_id: p2 ? p2.id : m.player2_id,
+                player1_name: p1 ? p1.full_name : m.player1_name,
+                player2_name: p2 ? p2.full_name : m.player2_name,
+                player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+                player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+                player1_rank: p1 ? p1.rank : m.player1_rank,
+                player2_rank: p2 ? p2.rank : m.player2_rank,
+            };
+        }
+
+        if (m.bracket === "winners" && m.round === 2) {
+            const idx = m.match_no - layout.wr2.start;
+            const src1 = layout.wr1.start + 2 * idx;
+            const src2 = layout.wr1.start + 2 * idx + 1;
+            if (!p1Id) p1 = getWinnerOfMatch(src1);
+            if (!p2Id) p2 = getWinnerOfMatch(src2);
+        } else if (m.bracket === "losers" && m.round === 1) {
+            const idx = m.match_no - layout.lr1.start;
+            const src1 = layout.wr1.start + 2 * idx;
+            const src2 = layout.wr1.start + 2 * idx + 1;
+            if (!p1Id) p1 = getLoserOfMatch(src1);
+            if (!p2Id) p2 = getLoserOfMatch(src2);
+        } else if (m.bracket === "losers" && m.round === 2) {
+            const idx = m.match_no - layout.lr2.start;
+            let src1 = 0;
+            let src2 = 0;
+            if (size <= 16) {
+                const lr1Sources = [9, 10, 11, 12];
+                const wr2Sources = [16, 15, 14, 13];
+                src1 = lr1Sources[idx];
+                src2 = wr2Sources[idx];
+            } else if (size <= 32) {
+                src1 = 17 + idx;
+                src2 = 32 - idx;
+            } else {
+                src1 = 33 + idx;
+                src2 = 64 - idx;
+            }
+            if (!p1Id) p1 = getWinnerOfMatch(src1);
+            if (!p2Id) p2 = getLoserOfMatch(src2);
+        }
+        
+        return {
+            ...m,
+            player1: p1,
+            player2: p2,
+            player1_id: p1 ? p1.id : m.player1_id,
+            player2_id: p2 ? p2.id : m.player2_id,
+            player1_name: p1 ? p1.full_name : m.player1_name,
+            player2_name: p2 ? p2.full_name : m.player2_name,
+            player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+            player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+            player1_rank: p1 ? p1.rank : m.player1_rank,
+            player2_rank: p2 ? p2.rank : m.player2_rank,
+        };
+    }
+
+    function getLosersSourceLabels(
+        roundMatches: ApiMatch[],
+        round: number,
+    ): Map<number, [string, string]> {
+        const labels = new Map<number, [string, string]>();
+        const sorted = [...roundMatches].sort((a, b) => a.match_no - b.match_no);
+
+        if (round === 1) {
+            if (numberOfPlayers === 24) {
+                sorted.forEach((m) => {
+                    const wr2MatchNo = 33 - m.match_no;
+                    const wr1MatchNo = m.match_no - 16;
+                    labels.set(m.match_no, [`Thua trận ${wr2MatchNo}`, `Thua trận ${wr1MatchNo}`]);
+                });
+            } else {
+                sorted.forEach((m, i) => {
+                    const wr1Match1 = 1 + i * 2;
+                    const wr1Match2 = 1 + i * 2 + 1;
+                    labels.set(m.match_no, [`Thua trận ${wr1Match1}`, `Thua trận ${wr1Match2}`]);
+                });
+            }
+        } else if (round === 2) {
+            if (is64) {
+                sorted.forEach((m, i) => {
+                    labels.set(m.match_no, [
+                        `Thắng trận ${layout.lr1.start + i}`,
+                        `Thua trận ${layout.wr2.start + layout.wr2.count - 1 - i}`,
+                    ]);
+                });
+            } else if (is32) {
+                sorted.forEach((m, i) => {
+                    labels.set(m.match_no, [
+                        `Thắng trận ${layout.lr1.start + i}`,
+                        `Thua trận ${layout.wr2.start + layout.wr2.count - 1 - i}`,
+                    ]);
+                });
+            } else {
+                sorted.forEach((m, i) => {
+                    labels.set(m.match_no, [
+                        `Thắng trận ${layout.lr1.start + i}`,
+                        `Thua trận ${layout.wr2.start + layout.wr2.count - 1 - i}`,
+                    ]);
+                });
+            }
+        }
+        return labels;
+    }
+
+    function formatWinnersRound(
+        roundMatches: ApiMatch[],
+        isFirstRound: boolean,
+        prevRoundMatches: ApiMatch[] | undefined,
+        emptySlotFallback: string = "Bye",
+    ): FormattedMatch[] {
+        const sorted = [...roundMatches].sort((a, b) => a.match_no - b.match_no);
+        const prevSorted = prevRoundMatches
+            ? [...prevRoundMatches].sort((a, b) => a.match_no - b.match_no)
+            : undefined;
+
+        return sorted.map((match, index) => {
+            let p1Fallback = emptySlotFallback;
+            let p2Fallback = emptySlotFallback;
+
+            if (!isFirstRound && prevSorted) {
+                const is24WR2 = numberOfPlayers === 24
+                    && sorted.length > 0
+                    && sorted[0].bracket === "winners"
+                    && sorted[0].round === 2;
+                if (is24WR2) {
+                    const srcP1 = prevSorted[index];
+                    if (srcP1) p1Fallback = `Thắng trận ${srcP1.match_no}`;
+                } else {
+                    const srcP1 = prevSorted[2 * index];
+                    const srcP2 = prevSorted[2 * index + 1];
+                    if (srcP1) p1Fallback = `Thắng trận ${srcP1.match_no}`;
+                    if (srcP2) p2Fallback = `Thắng trận ${srcP2.match_no}`;
+                }
+            }
+
+            return formatMatch(match, tournament, p1Fallback, p2Fallback);
+        });
+    }
+
+    function isSourceMatchBye(mNo: number): boolean {
+        const m = matchByNo.get(mNo);
+        if (!m) return false;
+        const hasP1 = !!((m.player1 && m.player1.id) || m.player1_id);
+        const hasP2 = !!((m.player2 && m.player2.id) || m.player2_id);
+        return (hasP1 !== hasP2) && m.status === "completed";
+    }
+
+    function formatLosersRound(
+        roundMatches: ApiMatch[],
+        round: number,
+    ): FormattedMatch[] {
+        const sorted = [...roundMatches].sort((a, b) => a.match_no - b.match_no);
+        const sourceLabels = getLosersSourceLabels(roundMatches, round);
+
+        return sorted.map((match, index) => {
+            const labels = sourceLabels.get(match.match_no);
+            let p1Fallback = labels?.[0] ?? "Chờ...";
+            let p2Fallback = labels?.[1] ?? "Chờ...";
+
+            if (round === 1) {
+                if (numberOfPlayers === 24) {
+                    const wr1MatchNo = match.match_no - 16;
+                    if (isSourceMatchBye(wr1MatchNo)) p2Fallback = "Bye";
+                } else {
+                    const src1 = 1 + index * 2;
+                    const src2 = 1 + index * 2 + 1;
+                    if (isSourceMatchBye(src1)) p1Fallback = "Bye";
+                    if (isSourceMatchBye(src2)) p2Fallback = "Bye";
+                }
+            }
+
+            return formatMatch(match, tournament, p1Fallback, p2Fallback);
+        });
+    }
+
+    const groupRounds: RoundGroup[] = [];
+
+    if (isDoubleElimination) {
+        let wr1Matches = ensureMatchRange(matchByNo, layout.wr1.start, layout.wr1.count, "winners", 1);
+        let lr1Matches = ensureMatchRange(matchByNo, layout.lr1.start, layout.lr1.count, "losers", 1);
+        let wr2Matches = ensureMatchRange(matchByNo, layout.wr2.start, layout.wr2.count, "winners", 2);
+        let lr2Matches = ensureMatchRange(matchByNo, layout.lr2.start, layout.lr2.count, "losers", 2);
+
+        wr1Matches = wr1Matches.map(resolveDynamicPlayers);
+        lr1Matches = lr1Matches.map(resolveDynamicPlayers);
+        wr2Matches = wr2Matches.map(resolveDynamicPlayers);
+        lr2Matches = lr2Matches.map(resolveDynamicPlayers);
+
+        if (numberOfPlayers === 24) {
+            groupRounds.push({
+                title: "VÒNG 1",
+                matches: formatWinnersRound(wr1Matches, true, undefined),
+            });
+            groupRounds.push({
+                title: "VÒNG 2: NHÁNH THẮNG",
+                matches: formatWinnersRound(wr2Matches, false, wr1Matches),
+            });
+            groupRounds.push({
+                title: "VÒNG 2: NHÁNH THUA",
+                matches: formatLosersRound(lr1Matches, 1),
+            });
+        } else {
+            groupRounds.push({
+                title: "VÒNG 1",
+                matches: formatWinnersRound(wr1Matches, true, undefined),
+            });
+            groupRounds.push({
+                title: "VÒNG 1: NHÁNH THUA",
+                matches: formatLosersRound(lr1Matches, 1),
+            });
+            groupRounds.push({
+                title: "VÒNG 2: NHÁNH THẮNG",
+                matches: formatWinnersRound(wr2Matches, false, wr1Matches),
+            });
+            if (lr2Matches.length > 0) {
+                groupRounds.push({
+                    title: "VÒNG 2: NHÁNH THUA",
+                    matches: formatLosersRound(lr2Matches, 2),
+                });
+            }
+        }
+    } else {
+        const grpMatches = allMatches.filter(
+            (m) => m.bracket === "winners" || m.bracket === "losers",
+        );
+        const winnersMap = new Map<number, ApiMatch[]>();
+        const losersMap = new Map<number, ApiMatch[]>();
+
+        for (const m of grpMatches) {
+            const map = m.bracket === "winners" ? winnersMap : losersMap;
+            if (!map.has(m.round)) map.set(m.round, []);
+            map.get(m.round)!.push(m);
+        }
+
+        const winnersRounds = Array.from(winnersMap.keys()).sort((a, b) => a - b);
+        const losersRounds = Array.from(losersMap.keys()).sort((a, b) => a - b);
+        const maxRoundNum = Math.max(
+            winnersRounds.length > 0 ? winnersRounds[winnersRounds.length - 1] : 0,
+            losersRounds.length > 0 ? losersRounds[losersRounds.length - 1] : 0,
+        );
+
+        for (let round = 1; round <= maxRoundNum; round++) {
+            if (winnersMap.has(round)) {
+                const roundIdx = winnersRounds.indexOf(round);
+                const isFirstRound = roundIdx === 0;
+                const prevMatches = roundIdx > 0 ? winnersMap.get(winnersRounds[roundIdx - 1]) : undefined;
+                groupRounds.push({
+                    title: round === 1 ? `VÒNG ${round}` : `VÒNG ${round}: NHÁNH THẮNG`,
+                    matches: formatWinnersRound(winnersMap.get(round)!, isFirstRound, prevMatches),
+                });
+            }
+            if (losersMap.has(round)) {
+                groupRounds.push({
+                    title: `VÒNG ${round}: NHÁNH THUA`,
+                    matches: formatLosersRound(losersMap.get(round)!, round),
+                });
+            }
+        }
+    }
+
+    const knockoutRounds: RoundGroup[] = [];
+
+    if (isDoubleElimination && layout.knockout.length > 0) {
+        let prevKoMatches: ApiMatch[] | undefined;
+        const maxKoRound = layout.knockout[layout.knockout.length - 1].round;
+
+        for (let i = 0; i < layout.knockout.length; i++) {
+            const ko = layout.knockout[i];
+            let koMatches = ensureMatchRange(matchByNo, ko.start, ko.count, "knockout", ko.round);
+
+            let roundFormattedMatches: FormattedMatch[];
+
+            if (i === 0) {
+                const sortedKo = [...koMatches].sort((a, b) => a.match_no - b.match_no);
+                if (numberOfPlayers === 24) {
+                    koMatches = sortedKo.map((m, idx) => {
+                        const p1Id = m.player1?.id || m.player1_id;
+                        const p2Id = m.player2?.id || m.player2_id;
+                        if (p1Id && p2Id) return m;
+
+                        const wr2MatchNo = layout.wr2.start + idx;
+                        const lr1MatchNo = layout.lr1.start + idx;
+                        let p1 = m.player1 || null;
+                        let p2 = m.player2 || null;
+                        if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
+                        if (!p2Id) p2 = getWinnerOfMatch(lr1MatchNo);
+                        return {
+                            ...m,
+                            player1: p1,
+                            player2: p2,
+                            player1_id: p1 ? p1.id : m.player1_id,
+                            player2_id: p2 ? p2.id : m.player2_id,
+                            player1_name: p1 ? p1.full_name : m.player1_name,
+                            player2_name: p2 ? p2.full_name : m.player2_name,
+                            player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+                            player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+                            player1_rank: p1 ? p1.rank : m.player1_rank,
+                            player2_rank: p2 ? p2.rank : m.player2_rank,
+                        };
+                    });
+
+                    roundFormattedMatches = koMatches.map((match, idx) => {
+                        const p1Fallback = `Thắng trận ${layout.wr2.start + idx}`;
+                        const p2Fallback = `Thắng trận ${layout.lr1.start + idx}`;
+                        return formatMatch(match, tournament, p1Fallback, p2Fallback);
+                    });
+                } else {
+                    koMatches = sortedKo.map((m, idx) => {
+                        const p1Id = m.player1?.id || m.player1_id;
+                        const p2Id = m.player2?.id || m.player2_id;
+                        if (p1Id && p2Id) return m;
+
+                        const wr2MatchNo = layout.wr2.start + idx;
+                        const lr2MatchNo = layout.lr2.start + idx;
+                        let p1 = m.player1 || null;
+                        let p2 = m.player2 || null;
+                        if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
+                        if (!p2Id) p2 = getWinnerOfMatch(lr2MatchNo);
+                        return {
+                            ...m,
+                            player1: p1,
+                            player2: p2,
+                            player1_id: p1 ? p1.id : m.player1_id,
+                            player2_id: p2 ? p2.id : m.player2_id,
+                            player1_name: p1 ? p1.full_name : m.player1_name,
+                            player2_name: p2 ? p2.full_name : m.player2_name,
+                            player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+                            player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+                            player1_rank: p1 ? p1.rank : m.player1_rank,
+                            player2_rank: p2 ? p2.rank : m.player2_rank,
+                        };
+                    });
+
+                    roundFormattedMatches = koMatches.map((match, idx) => {
+                        const wr2MatchNo = layout.wr2.start + idx;
+                        const lr2MatchNo = layout.lr2.start + idx;
+                        const p1Fallback = `Thắng trận ${wr2MatchNo}`;
+                        const p2Fallback = `Thắng trận ${lr2MatchNo}`;
+                        return formatMatch(match, tournament, p1Fallback, p2Fallback);
+                    });
+                }
+            } else {
+                roundFormattedMatches = formatWinnersRound(koMatches, i === 0, prevKoMatches, "Chờ...");
+            }
+
+            knockoutRounds.push({
+                title: getRoundLabel("knockout", ko.round, maxKoRound),
+                matches: roundFormattedMatches,
+            });
+            prevKoMatches = koMatches;
+        }
+    } else {
+        const knockoutMatches = allMatches.filter((m) => m.bracket === "knockout");
+        const knockoutMap = new Map<number, ApiMatch[]>();
+        for (const m of knockoutMatches) {
+            if (!knockoutMap.has(m.round)) knockoutMap.set(m.round, []);
+            knockoutMap.get(m.round)!.push(m);
+        }
+
+        const knockoutRoundsNums = Array.from(knockoutMap.keys()).sort((a, b) => a - b);
+        const maxKoRound = knockoutRoundsNums.length > 0
+            ? knockoutRoundsNums[knockoutRoundsNums.length - 1]
+            : 0;
+
+        for (let i = 0; i < knockoutRoundsNums.length; i++) {
+            const round = knockoutRoundsNums[i];
+            const isFirstRound = i === 0;
+            const prevMatches = i > 0 ? knockoutMap.get(knockoutRoundsNums[i - 1]) : undefined;
+            knockoutRounds.push({
+                title: getRoundLabel("knockout", round, maxKoRound),
+                matches: formatWinnersRound(knockoutMap.get(round)!, isFirstRound, prevMatches),
+            });
+        }
+    }
+
+    return { groupRounds, knockoutRounds };
+}
 
 // ---------- Main Page Component ----------
 export default function TournamentLivePage() {
@@ -647,18 +1230,40 @@ export default function TournamentLivePage() {
         if (!matches) return [];
         
         // Deduplicate matches in case there are duplicates in the DB
-        const deduped = dedupeMatches(matches);
+        const dedupedAll = dedupeMatches(matches);
 
-        return deduped
-            .filter(m => m.status === 'ongoing' || m.status === 'upcoming')
-            // Only show matches that have both players ready (not waiting on feeder results or empty byes)
-            .filter(m => m.player1_id !== null && m.player2_id !== null)
-            .map(m => formatMatch(m, tournament))
+        // Group matches using the tournament bracket logic to resolve dynamic players and fallback labels ("Thắng trận X", "Thua trận X")
+        const { groupRounds, knockoutRounds } = groupMatches(dedupedAll, tournament);
+
+        // Flatten all formatted matches from all rounds
+        const allFormatted = [
+            ...groupRounds.flatMap(r => r.matches),
+            ...knockoutRounds.flatMap(r => r.matches)
+        ];
+
+        // Create a map of match ID to status from the deduplicated list of matches
+        const statusMap = new Map(dedupedAll.map(m => [m.id, m.status]));
+
+        return allFormatted
+            .filter(m => {
+                const status = statusMap.get(m.id);
+                return status === 'ongoing' || status === 'upcoming';
+            })
+            // Only show matches that have at least one player ready
+            .filter(m => !m.player1.isBye || !m.player2.isBye)
             .sort((a, b) => {
-                // Parse table numbers for sorting
+                // Sort by status first: ongoing (green) before upcoming (yellow)
+                const colorOrder = { green: 1, yellow: 2, default: 3 };
+                const orderA = colorOrder[a.tableNumberColor] || 3;
+                const orderB = colorOrder[b.tableNumberColor] || 3;
+                if (orderA !== orderB) return orderA - orderB;
+
+                // Then sort by table number
                 const tableA = parseInt(String(a.tableNumber).replace(/[^\d]/g, "")) || 999;
                 const tableB = parseInt(String(b.tableNumber).replace(/[^\d]/g, "")) || 999;
                 if (tableA !== tableB) return tableA - tableB;
+
+                // Finally sort by match number
                 return Number(a.meta.matchNo || 0) - Number(b.meta.matchNo || 0);
             });
     }, [matches, tournament]);

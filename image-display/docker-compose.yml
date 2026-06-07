@@ -6,7 +6,7 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
-      - POOLARENA_API_BASE_URL=${POOLARENA_API_BASE_URL:-http://backend:8000}
+      - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
     volumes:
       # Mount X11 socket
       - /tmp/.X11-unix:/tmp/.X11-unix
@@ -18,7 +18,8 @@ services:
       - azpool-network
     restart: always
     profiles:
-      - displaynetworks:
+      - display
+networks:
   azpool-network:
     external: true
     name: azpool-dev-network

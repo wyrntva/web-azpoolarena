@@ -136,34 +136,6 @@ services:
     networks:
       - azpool-network
 
-  # POS Desktop Application (Electron)
-  pos-app:
-    build:
-      context: ./pos-app
-      dockerfile: Dockerfile
-      target: development
-    container_name: azpool-pos-app-dev
-    restart: "no"
-    depends_on:
-      - backend
-    environment:
-      VITE_API_BASE_URL: ${POS_API_URL:-http://backend:8000}
-      VITE_DEVICE_ID: ${POS_DEVICE_ID:-POS01}
-      DISPLAY: ${DISPLAY:-:0}
-      XAUTHORITY: /root/.Xauthority
-      ELECTRON_DISABLE_SANDBOX: 1
-      TZ: ${TZ:-Asia/Ho_Chi_Minh}
-    volumes:
-      - ./pos-app:/app:delegated
-      - /app/node_modules
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY_HOST:-/dev/null}:/root/.Xauthority:ro
-    ports:
-      - "${POS_PORT:-5175}:5173"
-    networks:
-      - azpool-network
-    profiles:
-      - pos-app
 
   # Scoreboard Desktop Application (PySide6/Qt)
   # NOTE: This is a GUI application that requires X11 forwarding

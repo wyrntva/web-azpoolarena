@@ -238,8 +238,20 @@ export class TournamentsService {
     if (enabled_tables !== undefined) updates.enabled_tables = enabled_tables ? JSON.stringify(enabled_tables) : null;
     if (priority_tables !== undefined) updates.priority_tables = priority_tables ? JSON.stringify(priority_tables) : null;
 
+    const playerCountChanged =
+      dto.number_of_players !== undefined &&
+      dto.number_of_players !== tour.number_of_players;
+
     Object.assign(tour, updates);
     await this.tourRepo.save(tour);
+
+    // When player count changes, delete all matches and re-generate bracket + re-seed players
+    if (playerCountChanged) {
+      await this.matchRepo.delete({ tournament_id: id });
+      await this.autoGenerateRound1Matches(id);
+      await this.assignAllRegisteredPlayersToRound1(id);
+    }
+
     return this.mapTournament(tour);
   }
 
@@ -877,6 +889,52 @@ export class TournamentsService {
     }
   }
 
+  private async applyMatchStateAndTimerLogic(match: TournamentMatchEntity): Promise<void> {
+    const isNewLogic = !(match.round === 1 && (match.bracket === 'winners' || match.bracket === 'knockout'));
+    if (isNewLogic) {
+      // Transition from PENDING to UPCOMING if we have >= 1 player and a table assigned
+      if (match.status === TournamentMatchStatus.PENDING && (match.player1_id || match.player2_id) && match.table_no) {
+        match.status = TournamentMatchStatus.UPCOMING;
+      }
+
+      // Auto-assign or reset match time for UPCOMING state in new logic rounds
+      if (match.status === TournamentMatchStatus.UPCOMING) {
+        if (match.player1_id && match.player2_id) {
+          if (!match.match_time) {
+            const isTableBusy = await this.matchRepo.findOne({
+              where: {
+                tournament_id: match.tournament_id,
+                table_no: match.table_no,
+                id: Not(match.id || -1),
+                status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
+              },
+            });
+            if (!isTableBusy) {
+              match.match_time = new Date(Date.now() + 3 * 60 * 1000);
+            }
+          }
+        } else {
+          match.match_time = null as any;
+        }
+      }
+    } else {
+      // Original round 1 winners / knockout logic
+      if (match.player1_id && match.player2_id && match.table_no && !match.match_time) {
+        const isTableBusy = await this.matchRepo.findOne({
+          where: {
+            tournament_id: match.tournament_id,
+            table_no: match.table_no,
+            id: Not(match.id || -1),
+            status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
+          },
+        });
+        if (!isTableBusy) {
+          match.match_time = new Date(Date.now() + 3 * 60 * 1000);
+        }
+      }
+    }
+  }
+
   async upsertMatch(tournamentId: number, matchNo: number, dto: UpdateMatchDto) {
     let match = await this.matchRepo.findOne({
       where: { tournament_id: tournamentId, match_no: matchNo },
@@ -973,20 +1031,7 @@ export class TournamentsService {
       await this.calculateAndApplyRating(match, match.winner_id);
     }
 
-    // Auto-assign match time if eligible (both players present, table assigned, table not busy, no match_time set yet)
-    if (match.player1_id && match.player2_id && match.table_no && !match.match_time) {
-      const isTableBusy = await this.matchRepo.findOne({
-        where: {
-          tournament_id: tournamentId,
-          table_no: match.table_no,
-          id: Not(match.id || -1),
-          status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
-        },
-      });
-      if (!isTableBusy) {
-        match.match_time = new Date(Date.now() + 3 * 60 * 1000);
-      }
-    }
+    await this.applyMatchStateAndTimerLogic(match);
 
     await this.freezeOrUnfreezeMatchRanks(match);
     const isNew = !match.id;
@@ -1326,6 +1371,7 @@ export class TournamentsService {
       m.player1_score = 0;
       m.player2_score = 0;
     }
+    await this.applyMatchStateAndTimerLogic(m);
     const seedIsNew = !m.id;
     try {
       await this.matchRepo.save(m);
@@ -1334,6 +1380,7 @@ export class TournamentsService {
         const existing = await this.matchRepo.findOne({ where: { tournament_id: tournamentId, match_no: matchNo } });
         if (!existing) throw err;
         if (slot === 1) existing.player1_id = playerId; else existing.player2_id = playerId;
+        await this.applyMatchStateAndTimerLogic(existing);
         await this.matchRepo.save(existing);
         m = existing;
       } else {
@@ -1429,8 +1476,13 @@ export class TournamentsService {
     const targetWinnerId =
       match.status === TournamentMatchStatus.COMPLETED ? match.winner_id : null;
 
+    // Only propagate when match is completed with a winner.
+    // During score updates (ongoing, no winner), we must NOT clear the next match's
+    // player slots — doing so would cause the scoreboard device to detect a "player
+    // changed" event and incorrectly reset accumulated scores.
+    if (!targetWinnerId) return;
+
     if (!nextMatch) {
-      if (!targetWinnerId) return; // No need to create a next match just to set null players
       nextMatch = this.matchRepo.create({
         tournament_id: match.tournament_id,
         match_no: nextMatchInfo.nextMatchNo,
@@ -1462,20 +1514,7 @@ export class TournamentsService {
         nextMatch.player2_score = 0;
       }
 
-      // Auto-assign match time if eligible (both players present, table assigned, table not busy, no match_time set yet)
-      // Table is considered busy if any other match in this tournament uses the same table and is PENDING (with table set), UPCOMING, or ONGOING
-      if (nextMatch.player1_id && nextMatch.player2_id && nextMatch.table_no && !nextMatch.match_time) {
-        const isTableBusy = await this.matchRepo.findOne({
-          where: [
-            { tournament_id: match.tournament_id, table_no: nextMatch.table_no, id: Not(nextMatch.id), status: TournamentMatchStatus.ONGOING },
-            { tournament_id: match.tournament_id, table_no: nextMatch.table_no, id: Not(nextMatch.id), status: TournamentMatchStatus.UPCOMING },
-            { tournament_id: match.tournament_id, table_no: nextMatch.table_no, id: Not(nextMatch.id), status: TournamentMatchStatus.PENDING },
-          ],
-        });
-        if (!isTableBusy) {
-          nextMatch.match_time = new Date(Date.now() + 3 * 60 * 1000);
-        }
-      }
+      await this.applyMatchStateAndTimerLogic(nextMatch);
 
       await this.matchRepo.save(nextMatch);
       const reloadedNext = await this.matchRepo.findOne({

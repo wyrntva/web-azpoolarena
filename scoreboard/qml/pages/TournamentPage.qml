@@ -375,11 +375,17 @@ Item {
             
             page.updateMatchRules(m)
 
-            // Detect if players changed (backend swapped or replaced players)
+            // Detect if players changed (backend swapped or replaced players).
+            // Only trigger when we previously had a real assigned player (> 0).
+            // This prevents a false positive when a player goes from TBD (null/0) to
+            // an assigned ID, which would otherwise reset accumulated scores.
             var p1Id = m.player1_id || 0
             var p2Id = m.player2_id || 0
             var playersChanged = page.matchLoaded &&
-                (p1Id !== page._lastP1Id || p2Id !== page._lastP2Id)
+                (
+                    (page._lastP1Id > 0 && p1Id !== page._lastP1Id) ||
+                    (page._lastP2Id > 0 && p2Id !== page._lastP2Id)
+                )
 
             if (playersChanged) {
                 console.log("[TournamentPage] Players changed! Resetting scores with new handicap.",

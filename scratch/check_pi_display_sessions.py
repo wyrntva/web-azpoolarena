@@ -11,7 +11,7 @@ def main():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     connected = False
-    max_attempts = 15
+    max_attempts = 20
     
     for attempt in range(1, max_attempts + 1):
         try:
@@ -33,7 +33,9 @@ def main():
         print("STDOUT:", out.strip())
         print("STDERR:", err.strip())
 
-    run_cmd("cat /opt/azpool-imagedisplay/kiosk-run.sh")
+    run_cmd("w")
+    run_cmd("ps aux | grep -iE 'Xorg|Xwayland|wayland|session|dm|lightdm|gdm'")
+    run_cmd("ls -la /tmp/.X11-unix")
     ssh.close()
 
 if __name__ == "__main__":

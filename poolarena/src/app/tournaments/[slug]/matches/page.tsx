@@ -310,12 +310,15 @@ function formatMatch(
         match.status === "ongoing" ||
         match.status === "completed";
 
-    const tableNumber = isMatchActiveOrCompleted && match.table_no
+    const isFirstRound = match.round === 1 && (match.bracket === "winners" || match.bracket === "knockout");
+    const showTable = isMatchActiveOrCompleted || isFirstRound;
+
+    const tableNumber = showTable && match.table_no
         ? match.table_no.replace(/[^\d]/g, "") || match.table_no
         : "-";
 
     // Compute race info from player ranks + tournament settings
-    const raceText = isMatchActiveOrCompleted ? computeRaceText(p1Rank, p2Rank, tournament) : "";
+    const raceText = showTable ? computeRaceText(p1Rank, p2Rank, tournament) : "";
 
     return {
         id: match.id,
@@ -892,43 +895,75 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
 
             let roundFormattedMatches: FormattedMatch[];
 
-            if (i === 0 && numberOfPlayers === 24) {
-                // 24-player knockout R16 (matches 25-32):
-                // p1 = winner of WR2 match (9+idx), p2 = winner of LR1 match (17+idx)
+            if (i === 0) {
                 const sortedKo = [...koMatches].sort((a, b) => a.match_no - b.match_no);
+                if (numberOfPlayers === 24) {
+                    koMatches = sortedKo.map((m, idx) => {
+                        const p1Id = m.player1?.id || m.player1_id;
+                        const p2Id = m.player2?.id || m.player2_id;
+                        if (p1Id && p2Id) return m;
 
-                // Dynamically resolve players when not yet in DB
-                koMatches = sortedKo.map((m, idx) => {
-                    const p1Id = m.player1?.id || m.player1_id;
-                    const p2Id = m.player2?.id || m.player2_id;
-                    if (p1Id && p2Id) return m;
+                        const wr2MatchNo = layout.wr2.start + idx;
+                        const lr1MatchNo = layout.lr1.start + idx;
+                        let p1 = m.player1 || null;
+                        let p2 = m.player2 || null;
+                        if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
+                        if (!p2Id) p2 = getWinnerOfMatch(lr1MatchNo);
+                        return {
+                            ...m,
+                            player1: p1,
+                            player2: p2,
+                            player1_id: p1 ? p1.id : m.player1_id,
+                            player2_id: p2 ? p2.id : m.player2_id,
+                            player1_name: p1 ? p1.full_name : m.player1_name,
+                            player2_name: p2 ? p2.full_name : m.player2_name,
+                            player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+                            player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+                            player1_rank: p1 ? p1.rank : m.player1_rank,
+                            player2_rank: p2 ? p2.rank : m.player2_rank,
+                        };
+                    });
 
-                    const wr2MatchNo = layout.wr2.start + idx;
-                    const lr1MatchNo = layout.lr1.start + idx;
-                    let p1 = m.player1 || null;
-                    let p2 = m.player2 || null;
-                    if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
-                    if (!p2Id) p2 = getWinnerOfMatch(lr1MatchNo);
-                    return {
-                        ...m,
-                        player1: p1,
-                        player2: p2,
-                        player1_id: p1 ? p1.id : m.player1_id,
-                        player2_id: p2 ? p2.id : m.player2_id,
-                        player1_name: p1 ? p1.full_name : m.player1_name,
-                        player2_name: p2 ? p2.full_name : m.player2_name,
-                        player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
-                        player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
-                        player1_rank: p1 ? p1.rank : m.player1_rank,
-                        player2_rank: p2 ? p2.rank : m.player2_rank,
-                    };
-                });
+                    roundFormattedMatches = koMatches.map((match, idx) => {
+                        const p1Fallback = `Thắng trận ${layout.wr2.start + idx}`;
+                        const p2Fallback = `Thắng trận ${layout.lr1.start + idx}`;
+                        return formatMatch(match, tournament, p1Fallback, p2Fallback);
+                    });
+                } else {
+                    koMatches = sortedKo.map((m, idx) => {
+                        const p1Id = m.player1?.id || m.player1_id;
+                        const p2Id = m.player2?.id || m.player2_id;
+                        if (p1Id && p2Id) return m;
 
-                roundFormattedMatches = koMatches.map((match, idx) => {
-                    const p1Fallback = `Thắng trận ${layout.wr2.start + idx}`;
-                    const p2Fallback = `Thắng trận ${layout.lr1.start + idx}`;
-                    return formatMatch(match, tournament, p1Fallback, p2Fallback);
-                });
+                        const wr2MatchNo = layout.wr2.start + idx;
+                        const lr2MatchNo = layout.lr2.start + idx;
+                        let p1 = m.player1 || null;
+                        let p2 = m.player2 || null;
+                        if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
+                        if (!p2Id) p2 = getWinnerOfMatch(lr2MatchNo);
+                        return {
+                            ...m,
+                            player1: p1,
+                            player2: p2,
+                            player1_id: p1 ? p1.id : m.player1_id,
+                            player2_id: p2 ? p2.id : m.player2_id,
+                            player1_name: p1 ? p1.full_name : m.player1_name,
+                            player2_name: p2 ? p2.full_name : m.player2_name,
+                            player1_avatar: p1 ? p1.avatar_url : m.player1_avatar,
+                            player2_avatar: p2 ? p2.avatar_url : m.player2_avatar,
+                            player1_rank: p1 ? p1.rank : m.player1_rank,
+                            player2_rank: p2 ? p2.rank : m.player2_rank,
+                        };
+                    });
+
+                    roundFormattedMatches = koMatches.map((match, idx) => {
+                        const wr2MatchNo = layout.wr2.start + idx;
+                        const lr2MatchNo = layout.lr2.start + idx;
+                        const p1Fallback = `Thắng trận ${wr2MatchNo}`;
+                        const p2Fallback = `Thắng trận ${lr2MatchNo}`;
+                        return formatMatch(match, tournament, p1Fallback, p2Fallback);
+                    });
+                }
             } else {
                 roundFormattedMatches = formatWinnersRound(koMatches, i === 0, prevKoMatches, "Chờ...");
             }
@@ -1300,8 +1335,8 @@ export default function TournamentMatchesPage() {
 
     // Own match always shows real names; other matches hidden as "Bye" until revealed phase
     const sanitizeRoundsForUser = (rounds: RoundGroup[]): RoundGroup[] => {
-        if (!isRegistered) return [];
         if (isRevealedPhase) return rounds;
+        if (!isRegistered) return [];
 
         const isPlaceholderName = (name: string) =>
             !name ||
@@ -1350,6 +1385,12 @@ export default function TournamentMatchesPage() {
             })
             .catch(() => setIsRegistered(false));
     }, [slug, user]);
+
+    useEffect(() => {
+        if (isRegistered === false && isRevealedPhase === false && !loading) {
+            router.replace(`/tournaments/${slug}`);
+        }
+    }, [isRegistered, isRevealedPhase, loading, router, slug]);
 
     useEffect(() => {
         if (!slug) return;
@@ -1558,7 +1599,7 @@ export default function TournamentMatchesPage() {
             );
         }
 
-        if (!isRegistered) return renderAccessDenied(true);
+        if (!isRegistered && !isRevealedPhase) return renderAccessDenied(true);
 
         const rounds = activeStage === "group" ? visibleGroupRounds : visibleKnockoutRounds;
         const emptyMsg =
@@ -1632,7 +1673,7 @@ export default function TournamentMatchesPage() {
                                 <p className="mt-4 text-gray-600">Đang tải trận đấu...</p>
                             </div>
                         </div>
-                    ) : !isRegistered ? (
+                    ) : (!isRegistered && !isRevealedPhase) ? (
                         renderAccessDenied()
                     ) : (
                         <>

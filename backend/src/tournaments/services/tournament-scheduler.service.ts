@@ -34,25 +34,29 @@ export class TournamentSchedulerService {
   async autoUpdateMatchStatus() {
     const now = new Date();
 
-    // 1a. Reset vòng 2+ UPCOMING → PENDING nếu thiếu bất kỳ điều kiện nào
+    // 1a. Reset vòng mới (Vòng 2+ & Vòng 1 nhánh thua) UPCOMING → PENDING nếu không có người chơi nào hoặc không có bàn
     await this.matchRepo
       .createQueryBuilder()
       .update(TournamentMatchEntity)
-      .set({ status: TournamentMatchStatus.PENDING })
+      .set({ status: TournamentMatchStatus.PENDING, match_time: () => 'NULL' })
       .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
-      .andWhere('round > 1')
       .andWhere(
-        '(player1_id IS NULL OR player2_id IS NULL OR table_no IS NULL OR match_time IS NULL)',
+        '(round > 1 OR (round = 1 AND bracket = :loserBracket))',
+        { loserBracket: TournamentMatchBracket.LOSERS }
+      )
+      .andWhere(
+        '((player1_id IS NULL AND player2_id IS NULL) OR table_no IS NULL)',
       )
       .execute();
 
-    // 1b. Reset vòng 1 UPCOMING → PENDING nếu chưa hết hạn đăng kí HOẶC thiếu người chơi
+    // 1b. Reset vòng 1 nhánh thắng/knockout UPCOMING → PENDING nếu chưa hết hạn đăng kí HOẶC thiếu người chơi
     await this.matchRepo
       .createQueryBuilder()
       .update(TournamentMatchEntity)
       .set({ status: TournamentMatchStatus.PENDING })
       .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
       .andWhere('round = 1')
+      .andWhere("bracket IN ('winners', 'knockout')")
       .andWhere(
         `(player1_id IS NULL OR player2_id IS NULL
           OR tournament_id NOT IN (
@@ -91,6 +95,7 @@ export class TournamentSchedulerService {
         .createQueryBuilder('m')
         .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
         .andWhere('m.round = 1')
+        .andWhere("m.bracket IN ('winners', 'knockout')")
         .andWhere('m.player1_id IS NOT NULL')
         .andWhere('m.player2_id IS NOT NULL')
         .andWhere('m.table_no IS NOT NULL')
@@ -135,32 +140,31 @@ export class TournamentSchedulerService {
       }
     }
 
-    // 3. Vòng 2+: PENDING → UPCOMING khi đủ 2 người + có bàn + bàn không bận + có giờ trong vòng 15 phút
-    const upcomingWindow = new Date(now.getTime() + 15 * 60 * 1000);
-    const pendingToUpcomingRaw = await this.matchRepo
+    // 3. Vòng 2+ & Vòng 1 nhánh thua: PENDING → UPCOMING khi có ít nhất 1 người chơi + có bàn
+    const pendingToUpcoming = await this.matchRepo
       .createQueryBuilder('m')
       .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
-      .andWhere('m.round > 1')
-      .andWhere('m.player1_id IS NOT NULL')
-      .andWhere('m.player2_id IS NOT NULL')
+      .andWhere(
+        '(m.round > 1 OR (m.round = 1 AND m.bracket = :loserBracket))',
+        { loserBracket: TournamentMatchBracket.LOSERS }
+      )
+      .andWhere('(m.player1_id IS NOT NULL OR m.player2_id IS NOT NULL)')
       .andWhere('m.table_no IS NOT NULL')
-      .andWhere('m.match_time IS NOT NULL')
-      .andWhere('m.match_time > :now', { now })
-      .andWhere('m.match_time <= :upcomingWindow', { upcomingWindow })
       .getMany();
-
-    const pendingToUpcoming: typeof pendingToUpcomingRaw = [];
-    for (const m of pendingToUpcomingRaw) {
-      if (await isTableBusy(m.table_no, m.id)) {
-        this.logger.log(`Match ${m.match_no}: bàn ${m.table_no} đang bận — bỏ qua UPCOMING`);
-        continue;
-      }
-      pendingToUpcoming.push(m);
-    }
 
     if (pendingToUpcoming.length > 0) {
       for (const m of pendingToUpcoming) {
         m.status = TournamentMatchStatus.UPCOMING;
+        // Nếu đủ 2 người chơi, tự động đặt match_time = now + 3 phút (nếu bàn không bận)
+        if (m.player1_id && m.player2_id) {
+          if (!m.match_time) {
+            if (!(await isTableBusy(m.table_no, m.id))) {
+              m.match_time = new Date(now.getTime() + 3 * 60 * 1000);
+            }
+          }
+        } else {
+          m.match_time = null as any;
+        }
         this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) → upcoming`);
       }
       await this.matchRepo.save(pendingToUpcoming);
@@ -171,11 +175,54 @@ export class TournamentSchedulerService {
       }
     }
 
-    // 4. UPCOMING → ONGOING: giờ đã đến + có bàn + bàn không đang có trận ongoing khác
+    // 3b. Cập nhật đếm ngược cho các trận UPCOMING thuộc vòng mới:
+    // - Đủ 2 người chơi mà chưa có match_time -> đặt match_time = now + 3 phút (nếu bàn không bận)
+    // - Chỉ có 1 người chơi mà đang có match_time -> reset match_time = null
+    const upcomingCandidates = await this.matchRepo
+      .createQueryBuilder('m')
+      .where('m.status = :status', { status: TournamentMatchStatus.UPCOMING })
+      .andWhere(
+        '(m.round > 1 OR (m.round = 1 AND m.bracket = :loserBracket))',
+        { loserBracket: TournamentMatchBracket.LOSERS }
+      )
+      .getMany();
+
+    const upcomingToSave: typeof upcomingCandidates = [];
+    for (const m of upcomingCandidates) {
+      if (m.player1_id && m.player2_id) {
+        if (!m.match_time) {
+          if (!(await isTableBusy(m.table_no, m.id))) {
+            m.match_time = new Date(now.getTime() + 3 * 60 * 1000);
+            upcomingToSave.push(m);
+            this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) đủ 2 người chơi -> đặt match_time = +3 phút`);
+          }
+        }
+      } else {
+        if (m.match_time) {
+          m.match_time = null as any;
+          upcomingToSave.push(m);
+          this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) thiếu người chơi -> reset match_time = null`);
+        }
+      }
+    }
+
+    if (upcomingToSave.length > 0) {
+      await this.matchRepo.save(upcomingToSave);
+      for (const m of upcomingToSave) {
+        await this.tournamentsService.emitMatchUpdate(m.id).catch((err) =>
+          this.logger.error(`Emit upcoming update failed for match ${m.match_no}: ${err.message}`),
+        );
+      }
+    }
+
+    // 4. UPCOMING → ONGOING: giờ đã đến + có bàn + bàn không đang có trận ongoing khác + đủ 2 người chơi
     const upcomingToOngoingRaw = await this.matchRepo
       .createQueryBuilder('m')
       .where('m.status = :status', { status: TournamentMatchStatus.UPCOMING })
       .andWhere('m.table_no IS NOT NULL')
+      .andWhere('m.player1_id IS NOT NULL')
+      .andWhere('m.player2_id IS NOT NULL')
+      .andWhere('m.match_time IS NOT NULL')
       .andWhere('m.match_time <= :now', { now })
       .getMany();
 
