@@ -70,6 +70,9 @@ interface TournamentInfo {
     draw_touch?: string | null;
     handicap_1_touch?: string | null;
     handicap_2_touch?: string | null;
+    semi_final?: string | null;
+    final?: string | null;
+    quarter_final?: string | null;
     number_of_players?: number | null;
     tournament_type?: string | null;
     registration_end_date?: string | null;
@@ -92,8 +95,21 @@ function computeRaceText(
     p1Rank: string | null,
     p2Rank: string | null,
     tournament: TournamentInfo | null,
+    koRoundInfo?: { round: number; maxKoRound: number },
 ): string {
-    if (!tournament || !p1Rank || !p2Rank) return "";
+    if (!tournament) return "";
+
+    // Knockout round override: use final/semi_final/quarter_final regardless of rank diff
+    if (koRoundInfo && koRoundInfo.maxKoRound > 0) {
+        const roundsFromEnd = koRoundInfo.maxKoRound - koRoundInfo.round;
+        let koRaceTo: number | null = null;
+        if (roundsFromEnd === 0 && tournament.final) koRaceTo = parseInt(tournament.final, 10);
+        else if (roundsFromEnd === 1 && tournament.semi_final) koRaceTo = parseInt(tournament.semi_final, 10);
+        else if (roundsFromEnd === 2 && tournament.quarter_final) koRaceTo = parseInt(tournament.quarter_final, 10);
+        if (koRaceTo) return `chạm ${koRaceTo}`;
+    }
+
+    if (!p1Rank || !p2Rank) return "";
     const r1 = getRankIndex(p1Rank);
     const r2 = getRankIndex(p2Rank);
     if (r1 < 0 || r2 < 0) return "";
@@ -280,6 +296,7 @@ function formatMatch(
     tournament: TournamentInfo | null,
     p1Fallback: string = "Bye",
     p2Fallback: string = "Bye",
+    maxKoRound?: number,
 ): FormattedMatch {
     // Resolve player IDs (support both nested objects and flat fields)
     const p1Id = resolvePlayerId(match, 'player1');
@@ -318,7 +335,10 @@ function formatMatch(
         : "-";
 
     // Compute race info from player ranks + tournament settings
-    const raceText = showTable ? computeRaceText(p1Rank, p2Rank, tournament) : "";
+    const koRoundInfo = (match.bracket === 'knockout' && maxKoRound)
+        ? { round: match.round, maxKoRound }
+        : undefined;
+    const raceText = showTable ? computeRaceText(p1Rank, p2Rank, tournament, koRoundInfo) : "";
 
     return {
         id: match.id,
@@ -715,6 +735,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
         isFirstRound: boolean,
         prevRoundMatches: ApiMatch[] | undefined,
         emptySlotFallback: string = "Bye",
+        maxKoRound?: number,
     ): FormattedMatch[] {
         const sorted = [...roundMatches].sort((a, b) => a.match_no - b.match_no);
         const prevSorted = prevRoundMatches
@@ -743,7 +764,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                 }
             }
 
-            return formatMatch(match, tournament, p1Fallback, p2Fallback);
+            return formatMatch(match, tournament, p1Fallback, p2Fallback, maxKoRound);
         });
     }
 
@@ -927,7 +948,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                     roundFormattedMatches = koMatches.map((match, idx) => {
                         const p1Fallback = `Thắng trận ${layout.wr2.start + idx}`;
                         const p2Fallback = `Thắng trận ${layout.lr1.start + idx}`;
-                        return formatMatch(match, tournament, p1Fallback, p2Fallback);
+                        return formatMatch(match, tournament, p1Fallback, p2Fallback, maxKoRound);
                     });
                 } else {
                     koMatches = sortedKo.map((m, idx) => {
@@ -961,11 +982,11 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                         const lr2MatchNo = layout.lr2.start + idx;
                         const p1Fallback = `Thắng trận ${wr2MatchNo}`;
                         const p2Fallback = `Thắng trận ${lr2MatchNo}`;
-                        return formatMatch(match, tournament, p1Fallback, p2Fallback);
+                        return formatMatch(match, tournament, p1Fallback, p2Fallback, maxKoRound);
                     });
                 }
             } else {
-                roundFormattedMatches = formatWinnersRound(koMatches, i === 0, prevKoMatches, "Chờ...");
+                roundFormattedMatches = formatWinnersRound(koMatches, i === 0, prevKoMatches, "Chờ...", maxKoRound);
             }
 
             knockoutRounds.push({
@@ -994,7 +1015,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
             const prevMatches = i > 0 ? knockoutMap.get(knockoutRoundsNums[i - 1]) : undefined;
             knockoutRounds.push({
                 title: getRoundLabel("knockout", round, maxKoRound),
-                matches: formatWinnersRound(knockoutMap.get(round)!, isFirstRound, prevMatches),
+                matches: formatWinnersRound(knockoutMap.get(round)!, isFirstRound, prevMatches, "Chờ...", maxKoRound),
             });
         }
     }
