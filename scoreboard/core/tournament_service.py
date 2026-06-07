@@ -129,7 +129,15 @@ class TournamentService(QObject):
         
         body = json.dumps(payload).encode("utf-8")
         reply = self._network.put(request, body)
-        reply.finished.connect(self.fetchActiveMatch)
+        # NOTE: Do NOT call fetchActiveMatch here after score updates.
+        # The local Controller already holds the correct score, and calling
+        # fetchActiveMatch immediately can cause a race condition where an
+        # older server response overwrites the current local score (especially
+        # when the user taps quickly). The periodic 10s timer handles sync.
+        # Only fetch after a winner is decided (match completed) so the page
+        # can detect the completed state and navigate away if needed.
+        if winner_id > 0:
+            reply.finished.connect(self.fetchActiveMatch)
         reply.finished.connect(reply.deleteLater)
 
     @Slot(int, str, str)

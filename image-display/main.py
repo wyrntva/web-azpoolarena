@@ -449,17 +449,21 @@ def fetch_active_matches(api_base_url):
         else:
             tours_data = []
         
-        # 2. Find ongoing tournament
-        ongoing_tour = None
-        for t in tours_data:
-            if isinstance(t, dict) and t.get("status") == "ongoing":
-                ongoing_tour = t
+        # 2. Find active tournament (ongoing or upcoming)
+        # Ưu tiên: ongoing > upcoming — hiển thị live ngay khi giải sắp diễn ra
+        active_tour = None
+        for status_priority in ["ongoing", "upcoming"]:
+            for t in tours_data:
+                if isinstance(t, dict) and t.get("status") == status_priority:
+                    active_tour = t
+                    break
+            if active_tour:
                 break
                 
-        if not ongoing_tour:
+        if not active_tour:
             return None, []
             
-        slug = ongoing_tour.get("slug")
+        slug = active_tour.get("slug")
         if not slug:
             return None, []
             
@@ -470,9 +474,9 @@ def fetch_active_matches(api_base_url):
         
         det_json = r_det.json()
         if isinstance(det_json, dict):
-            tournament = det_json.get("data", ongoing_tour)
+            tournament = det_json.get("data", active_tour)
         else:
-            tournament = ongoing_tour
+            tournament = active_tour
         
         # 4. Fetch matches
         matches_url = f"{api_base_url}/api/tournaments/slug/{slug}/matches"

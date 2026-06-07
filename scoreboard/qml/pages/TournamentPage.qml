@@ -285,8 +285,8 @@ Item {
                 
                 page.updateMatchRules(m)
 
-                Controller.leftScore = m.player1_score || page.leftMinScore
-                Controller.rightScore = m.player2_score || page.rightMinScore
+                Controller.leftScore = Math.max(m.player1_score != null ? m.player1_score : 0, page.leftMinScore)
+                Controller.rightScore = Math.max(m.player2_score != null ? m.player2_score : 0, page.rightMinScore)
                 page._lastP1Id = m.player1_id || 0
                 page._lastP2Id = m.player2_id || 0
                 page.matchLoaded = true
@@ -400,8 +400,8 @@ Item {
 
             if (!page.matchLoaded) {
                 // First load: use backend scores, fallback to handicap min scores
-                Controller.leftScore = m.player1_score || page.leftMinScore
-                Controller.rightScore = m.player2_score || page.rightMinScore
+                Controller.leftScore = Math.max(m.player1_score != null ? m.player1_score : 0, page.leftMinScore)
+                Controller.rightScore = Math.max(m.player2_score != null ? m.player2_score : 0, page.rightMinScore)
                 page._lastP1Id = p1Id
                 page._lastP2Id = p2Id
                 page.matchLoaded = true
