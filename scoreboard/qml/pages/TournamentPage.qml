@@ -78,6 +78,16 @@ Item {
             else if (r2 < r1) hcP2 = true;
         }
 
+        // Round-specific override (semi-final / final / quarter-final) — no handicap applied.
+        if (m.effective_race_to && parseInt(m.effective_race_to)) {
+            const rt = parseInt(m.effective_race_to);
+            page.leftMinScore = 0;
+            page.rightMinScore = 0;
+            Controller.raceTo = rt;
+            page.matchHandicapText = "Chạm " + rt;
+            return;
+        }
+
         page.leftMinScore = hcP1 ? hc : 0;
         page.rightMinScore = hcP2 ? hc : 0;
 
@@ -381,10 +391,12 @@ Item {
             // an assigned ID, which would otherwise reset accumulated scores.
             var p1Id = m.player1_id || 0
             var p2Id = m.player2_id || 0
+            // Only trigger when BOTH old AND new IDs are real (> 0) and different.
+            // If server returns player1_id: null → p1Id = 0, that is NOT a player change.
             var playersChanged = page.matchLoaded &&
                 (
-                    (page._lastP1Id > 0 && p1Id !== page._lastP1Id) ||
-                    (page._lastP2Id > 0 && p2Id !== page._lastP2Id)
+                    (page._lastP1Id > 0 && p1Id > 0 && p1Id !== page._lastP1Id) ||
+                    (page._lastP2Id > 0 && p2Id > 0 && p2Id !== page._lastP2Id)
                 )
 
             if (playersChanged) {

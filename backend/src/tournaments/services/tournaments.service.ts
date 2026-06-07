@@ -511,14 +511,34 @@ export class TournamentsService {
       
     if (!match) return null;
 
-    const [reg1, reg2] = await Promise.all([
+    const [reg1, reg2, maxRoundResult] = await Promise.all([
       match.player1_id
         ? this.regRepo.findOne({ where: { tournament_id: match.tournament_id, user_id: match.player1_id } })
         : null,
       match.player2_id
         ? this.regRepo.findOne({ where: { tournament_id: match.tournament_id, user_id: match.player2_id } })
         : null,
+      match.bracket === 'knockout'
+        ? this.matchRepo
+            .createQueryBuilder('m')
+            .select('MAX(m.round)', 'maxRound')
+            .where('m.tournament_id = :tid', { tid: match.tournament_id })
+            .andWhere('m.bracket = :bracket', { bracket: 'knockout' })
+            .getRawOne()
+        : Promise.resolve(null),
     ]);
+
+    // Compute flat race_to for round-specific configs (semi-final, final, quarter-final).
+    // When set, QML should skip rank-based handicap calculation entirely.
+    let effective_race_to: number | null = null;
+    if (match.bracket === 'knockout' && maxRoundResult?.maxRound) {
+      const maxRound = parseInt(maxRoundResult.maxRound);
+      const roundsFromEnd = maxRound - match.round;
+      const t = match.tournament;
+      if (roundsFromEnd === 0 && t?.final) effective_race_to = parseInt(t.final);
+      else if (roundsFromEnd === 1 && t?.semi_final) effective_race_to = parseInt(t.semi_final);
+      else if (roundsFromEnd === 2 && t?.quarter_final) effective_race_to = parseInt(t.quarter_final);
+    }
 
     // Formatting for the exact keys QML expects payload
     return {
@@ -532,6 +552,7 @@ export class TournamentsService {
       round: match.round,
       match_time: match.match_time ? match.match_time.toISOString() : null,
       status: match.status,
+      effective_race_to: effective_race_to,
       race_to: (match.tournament as any)?.race_to || null,
       draw_touch: match.tournament?.draw_touch || null,
       handicap_1_touch: match.tournament?.handicap_1_touch || null,
