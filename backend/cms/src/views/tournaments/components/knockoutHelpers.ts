@@ -1,4 +1,5 @@
 import type { TournamentMatch } from '../../../api/tournament.api';
+import { toDatetimeLocal } from '../utils/bracketUtils';
 
 export type PlayerIdStr = string;
 export type Status = 'pending' | 'upcoming' | 'ongoing' | 'completed';
@@ -40,7 +41,7 @@ export const createEmptyMatch = (matchNo: number, bracket: Bracket, round: numbe
 export const toVM = (m: TournamentMatch): MatchVM => ({
     match_no: m.match_no,
     table_no: m.table_no || '',
-    match_time: m.match_time ? m.match_time.slice(0, 16) : '',
+    match_time: m.match_time ? toDatetimeLocal(m.match_time) : '',
     player1_id: m.player1_id ? String(m.player1_id) : '',
     player2_id: m.player2_id ? String(m.player2_id) : '',
     player1_score: String(m.player1_score ?? 0),
