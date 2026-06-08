@@ -1,0 +1,126 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:          # cho phép trigger thủ công từ GitHub UI
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false   # không cancel deploy đang chạy — chờ xong rồi chạy tiếp
+
+jobs:
+  detect:
+    name: Detect changed services
+    runs-on: ubuntu-latest
+    outputs:
+      backend:   ${{ steps.diff.outputs.backend }}
+      poolarena: ${{ steps.diff.outputs.poolarena }}
+      migration: ${{ steps.diff.outputs.migration }}
+      infra:     ${{ steps.diff.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Diff changed paths
+        id: diff
+        run: |
+          # Lấy danh sách file thay đổi so với commit trước
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          backend=false
+          poolarena=false
+          migration=false
+          infra=false
+
+          echo "$CHANGED" | grep -qE '^backend/'                     && backend=true
+          echo "$CHANGED" | grep -qE '^backend/src/migrations/'      && migration=true
+          echo "$CHANGED" | grep -qE '^poolarena/'                   && poolarena=true
+          echo "$CHANGED" | grep -qE '^(docker-compose\.prod\.yml|mosquitto/|nginx/)' && infra=true
+
+          echo "backend=$backend"     >> $GITHUB_OUTPUT
+          echo "poolarena=$poolarena" >> $GITHUB_OUTPUT
+          echo "migration=$migration" >> $GITHUB_OUTPUT
+          echo "infra=$infra"         >> $GITHUB_OUTPUT
+
+          echo "--- Summary ---"
+          echo "backend:   $backend"
+          echo "poolarena: $poolarena"
+          echo "migration: $migration"
+          echo "infra:     $infra"
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: detect
+    environment: production
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          REBUILD_BACKEND:   ${{ needs.detect.outputs.backend }}
+          REBUILD_POOLARENA: ${{ needs.detect.outputs.poolarena }}
+          RUN_MIGRATION:     ${{ needs.detect.outputs.migration }}
+          INFRA_CHANGED:     ${{ needs.detect.outputs.infra }}
+        with:
+          host:     ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key:      ${{ secrets.SERVER_SSH_KEY }}
+          envs:     REBUILD_BACKEND,REBUILD_POOLARENA,RUN_MIGRATION,INFRA_CHANGED
+          command_timeout: 30m
+          script: |
+            set -e
+            REPO=/www/wwwroot/cms.poolarena.vn
+            POOLARENA_REPO=/www/wwwroot/poolarena.vn
+            COMPOSE="docker compose -f $REPO/docker-compose.prod.yml"
+
+            echo "=== [1/5] Git pull ==="
+            cd $REPO && git stash 2>/dev/null | true && git pull origin master
+            cd $POOLARENA_REPO && git stash 2>/dev/null | true && git pull origin master
+
+            echo "=== [2/5] Build images ==="
+            cd $REPO
+
+            if [ "$REBUILD_BACKEND" = "true" ] || [ "$INFRA_CHANGED" = "true" ]; then
+              echo "Building backend..."
+              $COMPOSE build backend
+            else
+              echo "Backend unchanged — skip build"
+            fi
+
+            if [ "$REBUILD_POOLARENA" = "true" ] || [ "$INFRA_CHANGED" = "true" ]; then
+              echo "Building poolarena..."
+              $COMPOSE build poolarena
+            else
+              echo "Poolarena unchanged — skip build"
+            fi
+
+            echo "=== [3/5] Start / update containers ==="
+            $COMPOSE up -d
+
+            echo "=== [4/5] Run migrations ==="
+            if [ "$RUN_MIGRATION" = "true" ]; then
+              echo "Running TypeORM migrations..."
+              sleep 5   # chờ backend sẵn sàng
+              docker exec azpool-backend-prod \
+                sh -c "export PATH=/root/.nvm/versions/node/v20.20.2/bin:\$PATH 2>/dev/null; npm run migration:run" \
+                2>&1 || docker exec -w /app azpool-backend-prod npm run migration:run
+            else
+              echo "No new migrations"
+            fi
+
+            echo "=== [5/5] Health check ==="
+            sleep 8
+            curl -sf http://127.0.0.1:8000/api/areas > /dev/null \
+              && echo "✓ Backend OK" \
+              || (echo "✗ Backend FAILED" && exit 1)
+            curl -sf http://127.0.0.1:3000/ > /dev/null \
+              && echo "✓ Poolarena OK" \
+              || (echo "✗ Poolarena FAILED" && exit 1)
+
+            echo ""
+            $COMPOSE ps --format table
+            echo "=== Deploy complete ==="

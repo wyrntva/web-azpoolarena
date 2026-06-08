@@ -1,5 +1,38 @@
 # Deploy Guide — AZ PoolArena VPS
 
+## CI/CD tự động (GitHub Actions)
+
+Mỗi khi push lên `master` → GitHub Actions tự SSH vào server, build image, restart containers.
+
+### Setup một lần (GitHub Secrets)
+
+**Bước 1 — Tạo SSH key trên server:**
+```bash
+ssh root@103.90.225.8
+ssh-keygen -t ed25519 -C "github-actions@azpoolarena" -f ~/.ssh/github_actions -N ""
+cat ~/.ssh/github_actions.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+cat ~/.ssh/github_actions   # copy toàn bộ nội dung này
+```
+
+**Bước 2 — Thêm Secrets vào GitHub:**
+
+Vào repo → **Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret name | Giá trị |
+|---|---|
+| `SERVER_HOST` | `103.90.225.8` |
+| `SERVER_USER` | `root` |
+| `SERVER_SSH_KEY` | Nội dung file `~/.ssh/github_actions` (private key, bắt đầu bằng `-----BEGIN`) |
+
+**Bước 3 — Tạo GitHub Environment (tùy chọn, thêm bảo vệ):**
+
+Vào repo → **Settings → Environments → New environment** → đặt tên `production`.
+
+Sau khi setup, mỗi `git push origin master` sẽ tự deploy. Xem kết quả tại tab **Actions** trên GitHub.
+
+---
+
 ## Thông tin server
 
 | | |
