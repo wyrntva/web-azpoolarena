@@ -327,12 +327,18 @@ ApplicationWindow {
             if (typeof TournamentService !== "undefined" && TournamentService.activeMatch) {
                 var m = TournamentService.activeMatch
                 if (m.match_id && win.lastAutoNavigatedMatchId !== m.match_id) {
-                    console.log("[Tournament] Delayed auto-navigating to TournamentPage for match:", m.match_id)
-                    win.lastAutoNavigatedMatchId = m.match_id
-                    Qt.callLater(function() {
-                        if (stack.depth > 1) stack.pop(null, StackView.Immediate)
-                        stack.push(Qt.resolvedUrl("pages/TournamentPage.qml"), { routeName: "tournamentPage", backTo: "home" }, StackView.Immediate)
-                    })
+                    var curRoute = stack.currentItem ? stack.currentItem.routeName : ""
+                    var curIsScoring = (curRoute === "score" || curRoute === "multiScore" || curRoute === "QuickScore")
+                    if (!curIsScoring && curRoute !== "activation" && curRoute !== "tournamentPage") {
+                        console.log("[Tournament] Delayed auto-navigating to TournamentPage for match:", m.match_id)
+                        win.lastAutoNavigatedMatchId = m.match_id
+                        Qt.callLater(function() {
+                            if (stack.depth > 1) stack.pop(null, StackView.Immediate)
+                            stack.push(Qt.resolvedUrl("pages/TournamentPage.qml"), { routeName: "tournamentPage", backTo: "home" }, StackView.Immediate)
+                        })
+                    } else {
+                        console.log("[Tournament] Delayed auto-nav skipped - user is on", curRoute, "for match:", m.match_id)
+                    }
                 }
             }
         }
@@ -357,11 +363,18 @@ ApplicationWindow {
                 
                 // If this is a new active match that we haven't navigated to yet
                 if (win.lastAutoNavigatedMatchId !== m.match_id) {
+
+                    var currentRoute = stack.currentItem ? stack.currentItem.routeName : ""
+                    // Do NOT interrupt user while they are actively scoring
+                    var isOnScorePage = (currentRoute === "score" 
+                                        || currentRoute === "multiScore" 
+                                        || currentRoute === "QuickScore")
                     
-                    // Navigate only if not on Activation or already on TournamentPage
+                    // Navigate only if not on Activation, already on TournamentPage, or actively scoring
                     if (stack.currentItem 
-                        && stack.currentItem.routeName !== "activation" 
-                        && stack.currentItem.routeName !== "tournamentPage") {
+                        && currentRoute !== "activation" 
+                        && currentRoute !== "tournamentPage"
+                        && !isOnScorePage) {
                         
                         // Don't auto-navigate during startup grace period (first 6 seconds)
                         if (win._startupGracePeriod) {
@@ -382,6 +395,8 @@ ApplicationWindow {
                                 backTo: "home"
                             }, StackView.Immediate)
                         })
+                    } else if (isOnScorePage) {
+                        console.log("[Tournament] User is actively scoring on", currentRoute, "- skipping auto-nav for match:", m.match_id)
                     }
                 }
             } else {
@@ -437,10 +452,16 @@ ApplicationWindow {
     }
 
     function backTo(routeName) {
+        console.log("[Navigation] backTo requested to route:", routeName, "current stack depth:", stack.depth)
         for (var i = stack.depth - 1; i >= 0; --i) {
             var it = stack.get(i)
-            if (it && it.routeName === routeName) { stack.pop(it); return }
+            if (it && it.routeName === routeName) {
+                console.log("[Navigation] Found route", routeName, "at index", i, "- popping to it")
+                stack.pop(it)
+                return
+            }
         }
+        console.log("[Navigation] Route", routeName, "not found, popping top page")
         stack.pop()
     }
     function pushPage(url, props) { 

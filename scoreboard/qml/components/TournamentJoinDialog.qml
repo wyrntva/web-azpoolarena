@@ -71,6 +71,11 @@ DialogShell {
     }
 
     function checkLatePenalties() {
+        // Không áp dụng phạt và không reset điểm khi cả hai đã xác nhận.
+        // countdownTimer có thể vẫn chạy sau khi dialog đóng — guard này
+        // ngăn nó ghi đè điểm user đang thi đấu.
+        if (leftConfirmed && rightConfirmed) return
+
         if (typeof TournamentService === "undefined" || !TournamentService) return
         var m = TournamentService.activeMatch
         if (!m || !m.match_id) return
@@ -279,6 +284,7 @@ DialogShell {
 
     function checkBoth() {
         if (root.leftConfirmed && root.rightConfirmed) {
+            countdownTimer.stop()
             autoCloseTimer.start()
         }
     }

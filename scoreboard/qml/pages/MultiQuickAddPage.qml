@@ -157,14 +157,21 @@ Item {
     // ==== idle timer ====
     readonly property int idleMs: 40 * 60 * 1000  // 40 phút
     Timer {
-        id: inactivityTimer; interval: page.idleMs; repeat: false; running: true
+        id: inactivityTimer
+        interval: page.idleMs
+        repeat: false
+        running: page.pageActive
         onTriggered: {
+            console.log("[MultiQuickAddPage] inactivityTimer triggered! Returning to home. idleMs:", page.idleMs)
             page._flushAgg(true)
             resetMatchAndState(); persistHistory()
             win.backTo(page.backTo || "home")
         }
     }
-    function bumpActivity() { inactivityTimer.restart() }
+    function bumpActivity() {
+        console.log("[MultiQuickAddPage] bumpActivity called, restarting inactivityTimer")
+        inactivityTimer.restart()
+    }
 
     focus: true
     Keys.onPressed:  bumpActivity()
@@ -188,6 +195,7 @@ Item {
     function fmtTime(sec) { return Helpers.formatTime(sec) }
     Timer { id: matchTicker; interval: 1000; repeat: true; running: page.matchTimerRunning; onTriggered: page.matchElapsedSec += 1 }
     Component.onCompleted: {
+        console.log("[MultiQuickAddPage] Component.onCompleted. idleMs:", page.idleMs, "timer interval:", inactivityTimer.interval, "timer running:", inactivityTimer.running)
         startMatchTimer()
         restoreHistory()
     }

@@ -35,6 +35,12 @@ log "=== AZ Scoreboard Kiosk starting ==="
 log "  APP_DIR: $APP_DIR"
 log "  DISPLAY: ${DISPLAY:-unset}"
 
+# ─── Tắt screensaver & DPMS để màn hình không tự tắt ────────────────────────
+xset s off          # Tắt screensaver
+xset -dpms          # Tắt DPMS (Display Power Management)
+xset s noblank      # Không blank màn hình
+log "Screensaver and DPMS disabled"
+
 # Camera relay is handled by systemd azpool-cam-delay.service
 # Do NOT start it here — duplicate processes cause HLS segment conflicts and video stutter
 
