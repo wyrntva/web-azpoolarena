@@ -78,7 +78,7 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
       // Frontend CMS SPA — serves index.html as fallback for all non-api routes
       {
         rootPath: join(__dirname, '..', 'public'),
-        exclude: ['/api/(.*)', '/uploads/(.*)', '/facebook/(.*)'],
+        exclude: ['/api/*catchAll', '/uploads/*catchAll', '/facebook/*catchAll'],
         serveStaticOptions: {
           index: false,
           setHeaders: (res: any, filePath: string) => {
