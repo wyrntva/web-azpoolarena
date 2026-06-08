@@ -1,25 +1,41 @@
+# =============================================================
+# AZ PoolArena — Production Docker Compose
+#
+# Nginx: dùng BT Panel nginx sẵn có (không Dockerize nginx)
+#   → backend bind 127.0.0.1:8000, poolarena bind 127.0.0.1:3000
+#   → BT Panel nginx proxy đến localhost:8000 và :3000 (không đổi config)
+#
+# Migration từ PM2:
+#   1. Dump DB: pg_dump -U poolarena poolarena > /tmp/dump.sql
+#   2. Tạo .env (copy từ .env.prod.example, điền giá trị thực)
+#   3. docker compose -f docker-compose.prod.yml up -d db mqtt
+#   4. Restore: docker exec -i azpool-db-prod psql -U poolarena poolarena < /tmp/dump.sql
+#   5. docker compose -f docker-compose.prod.yml up -d
+#   6. pm2 stop azpool-api poolarena-nextjs
+# =============================================================
+
 services:
-  # PostgreSQL Database
+  # ---- PostgreSQL ----
   db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: azpool-db-prod
     restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-poolarena}
+      POSTGRES_USER: ${POSTGRES_USER:-poolarena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       TZ: Asia/Ho_Chi_Minh
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-poolarena} -d ${POSTGRES_DB:-poolarena}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - azpool-network
+      - azpool-prod
 
-  # MQTT Broker
+  # ---- MQTT Broker ----
   mqtt:
     image: eclipse-mosquitto:2
     container_name: azpool-mqtt-prod
@@ -29,16 +45,15 @@ services:
       - mosquitto_data_prod:/mosquitto/data
       - mosquitto_log_prod:/mosquitto/log
     networks:
-      - azpool-network
+      - azpool-prod
 
-  # Backend + CMS (unified image — NestJS serve cả API lẫn React SPA)
+  # ---- NestJS Backend + CMS (production bundle) ----
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
       target: production
-      args:
-        VITE_API_URL: ""
+    image: azpool-backend:prod
     container_name: azpool-backend-prod
     restart: always
     depends_on:
@@ -46,84 +61,54 @@ services:
         condition: service_healthy
       mqtt:
         condition: service_started
+    env_file:
+      - ./backend/.env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: ${ALGORITHM:-HS256}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
-      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
-      CORS_ORIGINS: ${CORS_ORIGINS}
-      ENV: ${ENV:-production}
-      PORT: 8000
+      # Override để dùng tên service Docker thay vì localhost
+      DATABASE_URL: postgresql://${POSTGRES_USER:-poolarena}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-poolarena}
       MQTT_URL: mqtt://mqtt:1883
-      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-      FORCE_HTTPS: ${FORCE_HTTPS:-true}
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
-      FRONTEND_URL: ${FRONTEND_URL}
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USER: ${MAIL_USER}
-      MAIL_PASS: ${MAIL_PASS}
-      MAIL_FROM: ${MAIL_FROM}
-      CASSO_SECURE_TOKEN: ${CASSO_SECURE_TOKEN}
+      NODE_ENV: production
+      ENV: production
+      PORT: 8000
       TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "127.0.0.1:8000:8000"
     volumes:
-      - uploads_prod:/app/uploads
+      - ./backend/uploads:/app/uploads
     networks:
-      - azpool-network
+      - azpool-prod
 
-  # PoolArena Customer App (Next.js — giữ nguyên)
+  # ---- Next.js Poolarena (production standalone) ----
   poolarena:
     build:
       context: ./poolarena
       dockerfile: Dockerfile
       target: production
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://cms.poolarena.vn}
+    image: azpool-poolarena:prod
     container_name: azpool-poolarena-prod
     restart: always
     depends_on:
       - backend
-    networks:
-      - azpool-network
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: azpool-nginx-prod
-    restart: always
-    depends_on:
-      - backend
-      - poolarena
-    ports:
-      - "80:80"
-      - "443:443"
-    # nginx:alpine tự động chạy envsubst trên files trong /etc/nginx/templates/*.template
-    # và output ra /etc/nginx/conf.d/ trước khi nginx khởi động
     environment:
-      DOMAIN: ${DOMAIN}
-      API_DOMAIN: ${API_DOMAIN}
-      POOLARENA_DOMAIN: ${POOLARENA_DOMAIN}
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./nginx/logs:/var/log/nginx
-      - uploads_prod:/var/www/uploads:ro
+      NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      PORT: 3000
+    ports:
+      - "127.0.0.1:3000:3000"
     networks:
-      - azpool-network
+      - azpool-prod
 
 volumes:
   postgres_data_prod:
     name: azpool_postgres_prod
-  uploads_prod:
-    name: azpool_uploads_prod
   mosquitto_data_prod:
     name: azpool_mosquitto_data_prod
   mosquitto_log_prod:
     name: azpool_mosquitto_log_prod
 
 networks:
-  azpool-network:
+  azpool-prod:
     name: azpool-prod-network
     driver: bridge
