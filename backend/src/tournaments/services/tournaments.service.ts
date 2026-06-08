@@ -497,6 +497,28 @@ export class TournamentsService {
 
   // ==== DEVICE API ==== //
 
+  private computeRoundName(round: number, numberOfPlayers: number): string {
+    const totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
+    const fromFinal = totalRounds - round;
+    if (fromFinal <= 0) return 'Chung Kết';
+    if (fromFinal === 1) return 'Bán Kết';
+    if (fromFinal === 2) return 'Tứ Kết';
+    if (fromFinal === 3) return 'Vòng 1/8';
+    if (fromFinal === 4) return 'Vòng 1/16';
+    if (fromFinal === 5) return 'Vòng 1/32';
+    return `Vòng ${round}`;
+  }
+
+  private computeRaceTo(round: number, numberOfPlayers: number, t: TournamentEntity): number | null {
+    const totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
+    const fromFinal = totalRounds - round;
+    const parse = (v: string | null | undefined) => v ? (parseInt(v, 10) || null) : null;
+    if (fromFinal <= 0) return parse(t.final);
+    if (fromFinal === 1) return parse(t.semi_final);
+    if (fromFinal === 2) return parse(t.quarter_final);
+    return parse(t.draw_touch);
+  }
+
   async getActiveMatchForDevice(tableName: string) {
     if (!tableName) return null;
     const match = await this.matchRepo
@@ -508,7 +530,7 @@ export class TournamentsService {
       .andWhere('m.status = :status', { status: TournamentMatchStatus.ONGOING })
       .orderBy('m.match_time', 'ASC')
       .getOne();
-      
+
     if (!match) return null;
 
     const [reg1, reg2, maxRoundResult] = await Promise.all([
@@ -528,35 +550,27 @@ export class TournamentsService {
         : Promise.resolve(null),
     ]);
 
-    // Compute flat race_to for round-specific configs (semi-final, final, quarter-final).
-    // When set, QML should skip rank-based handicap calculation entirely.
-    let effective_race_to: number | null = null;
-    if (match.bracket === 'knockout' && maxRoundResult?.maxRound) {
-      const maxRound = parseInt(maxRoundResult.maxRound ?? maxRoundResult.maxround ?? 0);
-      const roundsFromEnd = maxRound - match.round;
-      const t = match.tournament;
-      if (roundsFromEnd === 0 && t?.final) effective_race_to = parseInt(t.final);
-      else if (roundsFromEnd === 1 && t?.semi_final) effective_race_to = parseInt(t.semi_final);
-      else if (roundsFromEnd === 2 && t?.quarter_final) effective_race_to = parseInt(t.quarter_final);
-    }
+    const t = match.tournament;
+    const numPlayers = t?.number_of_players || 32;
 
     // Formatting for the exact keys QML expects payload
     return {
       id: match.id,
       match_id: match.id,  // QML checks m.match_id to detect active match
       tournament_id: match.tournament_id,
-      tournament_name: match.tournament?.name || '',
-      banner: match.tournament?.banner || '',
-      sponsor_logos: match.tournament?.sponsor_logos || '',
+      tournament_name: t?.name || '',
+      banner: t?.banner || '',
+      sponsor_logos: t?.sponsor_logos || '',
       match_no: match.match_no,
       round: match.round,
+      bracket: match.bracket,
+      round_name: this.computeRoundName(match.round, numPlayers),
+      race_to: this.computeRaceTo(match.round, numPlayers, t),
       match_time: match.match_time ? match.match_time.toISOString() : null,
       status: match.status,
-      effective_race_to: effective_race_to,
-      race_to: (match.tournament as any)?.race_to || null,
-      draw_touch: match.tournament?.draw_touch || null,
-      handicap_1_touch: match.tournament?.handicap_1_touch || null,
-      handicap_2_touch: match.tournament?.handicap_2_touch || null,
+      draw_touch: t?.draw_touch || null,
+      handicap_1_touch: t?.handicap_1_touch || null,
+      handicap_2_touch: t?.handicap_2_touch || null,
       player1_id: match.player1_id,
       player1_name: match.player1?.full_name || 'Waiting...',
       player1_avatar: match.player1?.avatar_url || '',

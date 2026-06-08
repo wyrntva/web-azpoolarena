@@ -1,6 +1,10 @@
 import os
 import sys
 import math
+import json
+import threading
+import urllib.request
+import urllib.parse
 
 # Ép buộc Qt6 sử dụng công cụ dựng hình bằng phần mềm (Software Rendering)
 # Giúp OBS dễ dàng bắt hình ảnh (Window Capture) mà không bị lỗi màn hình đen do tăng tốc phần cứng GPU.
@@ -13,7 +17,7 @@ from PyQt6.QtWidgets import (
     QDialog, QTabWidget
 )
 from PyQt6.QtGui import QPixmap, QPainter, QColor, QFont, QPen, QBrush, QShortcut, QKeySequence
-from PyQt6.QtCore import Qt, QPoint, QRect
+from PyQt6.QtCore import Qt, QPoint, QRect, QTimer, pyqtSignal, QObject
 
 # Thư mục chứa tài nguyên
 ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
@@ -94,6 +98,12 @@ def generate_default_assets():
         painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "8")
         painter.end()
         pixmap.save(logo_path)
+
+
+class WorkerSignals(QObject):
+    match_data = pyqtSignal(dict)
+    error = pyqtSignal(str)
+    tables_loaded = pyqtSignal(list)
 
 
 class ScoreboardOverlay(QWidget):
@@ -206,9 +216,7 @@ class ScoreboardOverlay(QWidget):
         font_score = QFont("Montserrat", 14, QFont.Weight.Bold)
         font_tour = QFont("Segoe UI", 10, QFont.Weight.Bold)
         font_round = QFont("Segoe UI", 7, QFont.Weight.Bold)
-
         # ---------------- NGƯỜI CHƠI 1 (Bên trái) ----------------
-        # Khung viền cam bao quanh Flag + Name + Score của P1
         p1_box = QRect(x_start + 10, y_start + 7, 280, 36)
         painter.setPen(QPen(theme_color, 1.5))
         painter.setBrush(QBrush(QColor(30, 32, 34, 150)))
@@ -220,11 +228,12 @@ class ScoreboardOverlay(QWidget):
         if not flag_pix_1.isNull():
             painter.drawPixmap(flag_rect_1, flag_pix_1)
 
-        # Vẽ Tên Player 1
+        # Vẽ Tên + Rank Player 1
         painter.setPen(QPen(QColor("#ffffff")))
+        p1_rank = cfg.get("p1_rank", "")
+        p1_display = f"{cfg['p1_name']}  {p1_rank}" if p1_rank else cfg["p1_name"]
         painter.setFont(font_name)
-        name_rect_1 = QRect(x_start + 55, y_start + 7, 175, 36)
-        painter.drawText(name_rect_1, Qt.AlignmentFlag.AlignCenter, cfg["p1_name"])
+        painter.drawText(QRect(x_start + 55, y_start + 7, 175, 36), Qt.AlignmentFlag.AlignCenter, p1_display)
 
         # Vẽ Điểm số Player 1
         painter.setFont(font_score)
@@ -270,10 +279,12 @@ class ScoreboardOverlay(QWidget):
         score_rect_2 = QRect(x_start + 615, y_start + 7, 50, 36)
         painter.drawText(score_rect_2, Qt.AlignmentFlag.AlignCenter, str(cfg["p2_score"]))
 
-        # Vẽ Tên Player 2
+        # Vẽ Tên + Rank Player 2
+        p2_rank = cfg.get("p2_rank", "")
+        p2_display = f"{cfg['p2_name']}  {p2_rank}" if p2_rank else cfg["p2_name"]
         painter.setFont(font_name)
-        name_rect_2 = QRect(x_start + 670, y_start + 7, 175, 36)
-        painter.drawText(name_rect_2, Qt.AlignmentFlag.AlignCenter, cfg["p2_name"])
+        painter.setPen(QPen(QColor("#ffffff")))
+        painter.drawText(QRect(x_start + 670, y_start + 7, 175, 36), Qt.AlignmentFlag.AlignCenter, p2_display)
 
         # Vẽ Quốc kỳ Player 2
         flag_rect_2 = QRect(x_start + 852, y_start + 15, 30, 20)
@@ -281,11 +292,10 @@ class ScoreboardOverlay(QWidget):
         if not flag_pix_2.isNull():
             painter.drawPixmap(flag_rect_2, flag_pix_2)
 
-        # Mũi tên chỉ lượt cơ bên trái Player 2 (vẽ hình tam giác hướng sang phải chỉ vào điểm số P2)
+        # Mũi tên chỉ lượt cơ bên trái Player 2
         if cfg["active_player"] == 2:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QBrush(QColor("#ffffff")))
-            # Vẽ tam giác hướng sang phải ▶ (chỉ vào điểm P2)
             arrow_x = x_start + 594
             arrow_y = y_start + 20
             points = [
@@ -768,49 +778,51 @@ class ScoreboardOverlay(QWidget):
         center_width = 160
         side_width = 300
         
-        font_name = QFont("Segoe UI", 16, QFont.Weight.Bold)
+        font_name = QFont("Segoe UI", 14, QFont.Weight.Bold)
         font_score = QFont("Montserrat", 18, QFont.Weight.Bold)
         font_race = QFont("Segoe UI", 12, QFont.Weight.Bold)
-        
+        p1_rank = cfg.get("p1_rank", "")
+        p2_rank = cfg.get("p2_rank", "")
+
         # --- LEFT BLOCK (P1) - Đỏ đậm ---
         rect_p1 = QRect(x_start, y_start, side_width, height)
         painter.fillRect(rect_p1, QBrush(QColor("#8B0000")))
-        
+
         painter.setPen(QColor("#ffffff"))
-        
-        # P1 Name
-        rect_p1_name = QRect(x_start + 10, y_start, side_width - 70, height)
+        p1_display = f"{cfg['p1_name']}  {p1_rank}" if p1_rank else cfg["p1_name"]
         painter.setFont(font_name)
-        painter.drawText(rect_p1_name, Qt.AlignmentFlag.AlignCenter, cfg["p1_name"])
-        
+        painter.drawText(QRect(x_start + 10, y_start, side_width - 70, height),
+                         Qt.AlignmentFlag.AlignCenter, p1_display)
+
         # P1 Score
         rect_p1_score = QRect(x_start + side_width - 50, y_start, 40, height)
         painter.setFont(font_score)
         painter.drawText(rect_p1_score, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, str(cfg["p1_score"]))
-        
+
         # --- CENTER BLOCK (RACE TO) - Đen ---
         rect_center = QRect(x_start + side_width, y_start, center_width, height)
         painter.fillRect(rect_center, QBrush(QColor("#000000")))
-        
+
         info_text = f"RACE TO {cfg['race_to']}" if cfg.get("show_tour", True) else ""
         painter.setPen(QColor("#ffffff"))
         painter.setFont(font_race)
         painter.drawText(rect_center, Qt.AlignmentFlag.AlignCenter, info_text)
-        
+
         # --- RIGHT BLOCK (P2) - Xanh đậm ---
         rect_p2 = QRect(x_start + side_width + center_width, y_start, side_width, height)
         painter.fillRect(rect_p2, QBrush(QColor("#0047AB")))
-        
+
         painter.setPen(QColor("#ffffff"))
         # P2 Score
         rect_p2_score = QRect(x_start + side_width + center_width + 10, y_start, 40, height)
         painter.setFont(font_score)
         painter.drawText(rect_p2_score, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, str(cfg["p2_score"]))
-        
-        # P2 Name
-        rect_p2_name = QRect(x_start + side_width + center_width + 60, y_start, side_width - 70, height)
+
+        # P2 Name + Rank
+        p2_display = f"{cfg['p2_name']}  {p2_rank}" if p2_rank else cfg["p2_name"]
         painter.setFont(font_name)
-        painter.drawText(rect_p2_name, Qt.AlignmentFlag.AlignCenter, cfg["p2_name"])
+        painter.drawText(QRect(x_start + side_width + center_width + 60, y_start, side_width - 70, height),
+                         Qt.AlignmentFlag.AlignCenter, p2_display)
 
 
 
@@ -1039,11 +1051,23 @@ class ControlPanel(QMainWindow):
         self.overlay2.move(self.overlay1.x(), self.overlay1.y() + 250)
         self.overlay2.hide()
 
+        # Tự động tải danh sách bàn khi khởi động
+        self.fetch_tables()
+
     def init_variables(self):
         # Thiết lập các tài nguyên và đường dẫn mặc định
         self.default_avatar = os.path.join(ASSETS_DIR, "default_avatar.png")
         self.default_flag = os.path.join(ASSETS_DIR, "flag_vn.png")
         self.default_logo = os.path.join(ASSETS_DIR, "default_logo.png")
+
+        # API polling
+        self.api_signals = WorkerSignals()
+        self.api_signals.match_data.connect(self.apply_match_data)
+        self.api_signals.error.connect(self.on_api_error)
+        self.api_signals.tables_loaded.connect(self.on_tables_loaded)
+        self.api_timer = QTimer()
+        self.api_timer.timeout.connect(self.poll_active_match)
+        self.avatar_cache = {}  # {cache_key: local_path}
 
         # Khởi tạo các giá trị cấu hình mặc định
         self.config = {
@@ -1055,6 +1079,8 @@ class ControlPanel(QMainWindow):
             "p2_avatar": self.default_avatar,
             "p2_flag": self.default_flag,
             "p2_score": 0,
+            "p1_rank": "",
+            "p2_rank": "",
             "active_player": 1, # 1: P1, 2: P2, 0: Không ai cả
             "tour_name": "PoolArena.vn Championship",
             "round_name": "Chung Kết (Final)",
@@ -1229,7 +1255,39 @@ class ControlPanel(QMainWindow):
         main_layout.addLayout(grid)
         self.set_active_player(1)
         
-        main_layout.addSpacing(20)
+        main_layout.addSpacing(10)
+
+        # ---------------- KẾT NỐI API / CHỌN BÀN ----------------
+        group_api = QGroupBox("Kết nối API – Chọn Bàn")
+        layout_api = QGridLayout()
+        layout_api.setSpacing(6)
+
+        self.input_api_url = QLineEdit("https://cms.poolarena.vn")
+
+        self.btn_load_tables = QPushButton("Tải Bàn Đang Thi Đấu")
+        self.btn_load_tables.setStyleSheet("background-color: #2980b9; color: white; font-weight: bold; padding: 5px 10px;")
+        self.btn_load_tables.clicked.connect(self.fetch_tables)
+        layout_api.addWidget(self.btn_load_tables, 0, 3)
+
+        layout_api.addWidget(QLabel("Chọn Bàn:"), 0, 0)
+        self.combo_table = QComboBox()
+        self.combo_table.setMinimumWidth(160)
+        self.combo_table.currentTextChanged.connect(self.on_table_changed)
+        layout_api.addWidget(self.combo_table, 0, 1, 1, 2)
+
+        self.btn_connect = QPushButton("Kết Nối")
+        self.btn_connect.setStyleSheet("background-color: #27ae60; color: white; font-weight: bold; padding: 5px 10px;")
+        self.btn_connect.clicked.connect(self.toggle_connection)
+        layout_api.addWidget(self.btn_connect, 0, 3)
+
+        self.lbl_api_status = QLabel("● Chưa kết nối")
+        self.lbl_api_status.setStyleSheet("color: #7f8c8d; font-weight: bold;")
+        layout_api.addWidget(self.lbl_api_status, 1, 0, 1, 4)
+
+        group_api.setLayout(layout_api)
+        main_layout.addWidget(group_api)
+
+        main_layout.addSpacing(6)
 
         # ---------------- NÚT CÀI ĐẶT VÀ RESET ----------------
         layout_buttons = QHBoxLayout()
@@ -1332,8 +1390,208 @@ class ControlPanel(QMainWindow):
         if hasattr(self, 'overlay1'): self.overlay1.setWindowTitle(text + " - Bảng 1")
         if hasattr(self, 'overlay2'): self.overlay2.setWindowTitle(text + " - Bảng 2")
 
+    # ---------------- API / TABLE METHODS ----------------
+
+    def fetch_tables(self):
+        base_url = self.input_api_url.text().rstrip('/')
+        self.lbl_api_status.setText("● Đang tải danh sách bàn...")
+        self.lbl_api_status.setStyleSheet("color: #f39c12; font-weight: bold;")
+        thread = threading.Thread(target=self._fetch_tables_worker, args=(base_url,), daemon=True)
+        thread.start()
+
+    def _fetch_tables_worker(self, base_url):
+        try:
+            req = urllib.request.urlopen(f"{base_url}/api/tournaments", timeout=8)
+            raw = json.loads(req.read().decode())
+            tournaments = raw if isinstance(raw, list) else raw.get("data", raw.get("items", []))
+
+            active_tour_statuses = {"ongoing", "active", "in_progress", "started", "running"}
+            active_tours = [t for t in tournaments if (t.get("status") or "").lower() in active_tour_statuses]
+            if not active_tours:
+                # fallback: tất cả chưa kết thúc
+                active_tours = [t for t in tournaments if (t.get("status") or "").lower() not in {"completed", "cancelled", "canceled", "finished"}]
+
+            active_match_statuses = {"in_progress", "ongoing", "active", "playing", "started", "running"}
+            seen = set()
+            table_names = []
+
+            for tour in active_tours:
+                tid = tour.get("id")
+                if not tid:
+                    continue
+                try:
+                    req2 = urllib.request.urlopen(f"{base_url}/api/tournaments/{tid}/matches", timeout=8)
+                    matches_raw = json.loads(req2.read().decode())
+                    matches = matches_raw if isinstance(matches_raw, list) else matches_raw.get("data", matches_raw.get("items", []))
+                    for match in matches:
+                        status = (match.get("status") or "").lower()
+                        table_no = match.get("table_no") or match.get("table_name") or match.get("table")
+                        if table_no and status in active_match_statuses and table_no not in seen:
+                            seen.add(table_no)
+                            table_names.append(table_no)
+                except Exception:
+                    continue
+
+            self.api_signals.tables_loaded.emit(table_names)
+        except Exception as e:
+            self.api_signals.error.emit(f"Tải bàn thất bại: {str(e)[:60]}")
+
+    def on_tables_loaded(self, tables):
+        self.combo_table.clear()
+        if tables:
+            self.combo_table.addItems(tables)
+            self.lbl_api_status.setText(f"● Tìm thấy {len(tables)} bàn đang thi đấu")
+            self.lbl_api_status.setStyleSheet("color: #27ae60; font-weight: bold;")
+            # Tự động kết nối nếu chưa đang kết nối
+            if not self.api_timer.isActive():
+                self.toggle_connection()
+        else:
+            self.lbl_api_status.setText("● Không có bàn nào đang thi đấu")
+            self.lbl_api_status.setStyleSheet("color: #e74c3c; font-weight: bold;")
+
+    def on_table_changed(self, table_name):
+        if self.api_timer.isActive() and table_name:
+            self.poll_active_match()
+
+    def toggle_connection(self):
+        if self.api_timer.isActive():
+            self.api_timer.stop()
+            self.btn_connect.setText("Kết Nối")
+            self.btn_connect.setStyleSheet("background-color: #27ae60; color: white; font-weight: bold; padding: 5px 10px;")
+            self.lbl_api_status.setText("● Đã ngắt kết nối")
+            self.lbl_api_status.setStyleSheet("color: #7f8c8d; font-weight: bold;")
+        else:
+            table_name = self.combo_table.currentText()
+            if not table_name:
+                self.lbl_api_status.setText("● Vui lòng tải và chọn bàn trước!")
+                self.lbl_api_status.setStyleSheet("color: #e74c3c; font-weight: bold;")
+                return
+            self.poll_active_match()
+            self.api_timer.start(3000)
+            self.btn_connect.setText("Ngắt Kết Nối")
+            self.btn_connect.setStyleSheet("background-color: #e74c3c; color: white; font-weight: bold; padding: 5px 10px;")
+            self.lbl_api_status.setText(f"● Đang kết nối bàn: {table_name}...")
+            self.lbl_api_status.setStyleSheet("color: #f39c12; font-weight: bold;")
+
+    def poll_active_match(self):
+        table_name = self.combo_table.currentText()
+        if not table_name:
+            return
+        base_url = self.input_api_url.text().rstrip('/')
+        thread = threading.Thread(
+            target=self._fetch_match_worker,
+            args=(base_url, table_name),
+            daemon=True
+        )
+        thread.start()
+
+    def _fetch_match_worker(self, base_url, table_name):
+        try:
+            encoded = urllib.parse.quote(table_name)
+            url = f"{base_url}/api/tournaments/device/active-match?table_name={encoded}"
+            req = urllib.request.urlopen(url, timeout=5)
+            data = json.loads(req.read().decode())
+
+            # Download avatars (flat fields: player1_avatar, player2_avatar)
+            for num in ("1", "2"):
+                avatar_url = data.get(f"player{num}_avatar") or ""
+                player_id = data.get(f"player{num}_id") or f"player{num}"
+                if not avatar_url:
+                    continue
+                if avatar_url.startswith("/"):
+                    avatar_url = base_url + avatar_url
+                local = self._download_avatar(avatar_url, player_id)
+                if local:
+                    data[f"player{num}_local_avatar"] = local
+
+            self.api_signals.match_data.emit(data)
+        except Exception as e:
+            self.api_signals.error.emit(str(e)[:80])
+
+    def _download_avatar(self, url, player_id):
+        cache_key = f"{player_id}_{url}"
+        if cache_key in self.avatar_cache:
+            cached = self.avatar_cache[cache_key]
+            if os.path.exists(cached):
+                return cached
+
+        cache_dir = os.path.join(ASSETS_DIR, "cache")
+        os.makedirs(cache_dir, exist_ok=True)
+
+        ext = url.rsplit(".", 1)[-1].split("?")[0].lower()
+        if ext not in ("png", "jpg", "jpeg", "webp"):
+            ext = "png"
+        local_path = os.path.join(cache_dir, f"avatar_{player_id}.{ext}")
+
+        try:
+            urllib.request.urlretrieve(url, local_path)
+            self.avatar_cache[cache_key] = local_path
+            return local_path
+        except Exception:
+            return None
+
+    def apply_match_data(self, data):
+        # API trả về flat fields: player1_name, player1_rank, player1_avatar, ...
+        p1_name = data.get("player1_name") or "Player 1"
+        p2_name = data.get("player2_name") or "Player 2"
+        p1_score = int(data.get("player1_score") or 0)
+        p2_score = int(data.get("player2_score") or 0)
+        p1_rank = data.get("player1_rank") or ""
+        p2_rank = data.get("player2_rank") or ""
+
+        if self.input_p1_name.text() != p1_name:
+            self.input_p1_name.blockSignals(True)
+            self.input_p1_name.setText(p1_name)
+            self.input_p1_name.blockSignals(False)
+
+        if self.input_p2_name.text() != p2_name:
+            self.input_p2_name.blockSignals(True)
+            self.input_p2_name.setText(p2_name)
+            self.input_p2_name.blockSignals(False)
+
+        if self.spin_p1_score.value() != p1_score:
+            self.spin_p1_score.blockSignals(True)
+            self.spin_p1_score.setValue(p1_score)
+            self.spin_p1_score.blockSignals(False)
+
+        if self.spin_p2_score.value() != p2_score:
+            self.spin_p2_score.blockSignals(True)
+            self.spin_p2_score.setValue(p2_score)
+            self.spin_p2_score.blockSignals(False)
+
+        self.config["p1_name"] = p1_name
+        self.config["p2_name"] = p2_name
+        self.config["p1_score"] = p1_score
+        self.config["p2_score"] = p2_score
+        self.config["p1_rank"] = p1_rank
+        self.config["p2_rank"] = p2_rank
+
+        # Race to & tên vòng đấu từ backend (đã tính sẵn)
+        race_to = data.get("race_to")
+        if race_to is not None:
+            self.config["race_to"] = int(race_to)
+
+        round_name = (data.get("round_name") or "").strip()
+        if round_name:
+            self.config["round_name"] = round_name
+
+        # Avatar từ server (đã download local)
+        self.config["p1_avatar"] = data.get("player1_local_avatar") or self.default_avatar
+        self.config["p2_avatar"] = data.get("player2_local_avatar") or self.default_avatar
+
+        table = self.combo_table.currentText()
+        self.lbl_api_status.setText(f"● Live: {table}  |  {p1_name} {p1_score} – {p2_score} {p2_name}")
+        self.lbl_api_status.setStyleSheet("color: #27ae60; font-weight: bold;")
+
+        self.update_overlay()
+
+    def on_api_error(self, msg):
+        self.lbl_api_status.setText(f"● Lỗi: {msg}")
+        self.lbl_api_status.setStyleSheet("color: #e74c3c; font-weight: bold;")
+
     def closeEvent(self, event):
         # Đóng cả cửa sổ phụ khi tắt bộ điều khiển chính
+        self.api_timer.stop()
         if hasattr(self, 'overlay1'): self.overlay1.close()
         if hasattr(self, 'overlay2'): self.overlay2.close()
         event.accept()

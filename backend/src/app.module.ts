@@ -33,6 +33,9 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      // Khi chạy trong Docker, biến môi trường đã được set bởi docker-compose
+      // → bỏ qua file .env để tránh xung đột
+      ignoreEnvFile: process.env.DOCKER === 'true',
     }),
 
     // TypeORM (replaces SQLAlchemy)
@@ -75,7 +78,7 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
       // Frontend CMS SPA — serves index.html as fallback for all non-api routes
       {
         rootPath: join(__dirname, '..', 'public'),
-        exclude: ['/api/*', '/uploads/*', '/facebook/*'],
+        exclude: ['/api/(.*)', '/uploads/(.*)', '/facebook/(.*)'],
         serveStaticOptions: {
           index: false,
           setHeaders: (res: any, filePath: string) => {

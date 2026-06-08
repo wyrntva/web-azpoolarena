@@ -4,7 +4,7 @@ import "./globals.css";
 import ClientProviders from "@/components/ClientProviders";
 
 const montserrat = Montserrat({
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
   variable: "--font-montserrat",
   weight: ["400", "500", "700"],
 });

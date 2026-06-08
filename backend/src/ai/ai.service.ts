@@ -62,9 +62,10 @@ export class AiService implements OnModuleInit {
     const apiKey = this.config.get<string>('OPENAI_API_KEY');
 
     if (!apiKey || apiKey.trim() === '') {
-      throw new Error(
-        '[AiService] OPENAI_API_KEY chưa được cấu hình. Vui lòng thêm vào file .env',
+      this.logger.warn(
+        '[AiService] OPENAI_API_KEY chưa được cấu hình — tính năng AI bị vô hiệu hoá',
       );
+      return;
     }
 
     if (!apiKey.startsWith('sk-')) {
@@ -79,6 +80,15 @@ export class AiService implements OnModuleInit {
     );
   }
 
+  private ensureOpenAI() {
+    if (!this.openai) {
+      throw new HttpException(
+        'Tính năng AI chưa được cấu hình (thiếu OPENAI_API_KEY)',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
+
   // ─────────────────────────────────────────────────────────
   // PUBLIC METHODS
   // ─────────────────────────────────────────────────────────
@@ -87,6 +97,7 @@ export class AiService implements OnModuleInit {
    * Chat thông thường cho nhân viên/quản lý (không có DB context)
    */
   async chat(message: string, sessionId?: string): Promise<ChatResponseDto> {
+    this.ensureOpenAI();
     const sid = sessionId || uuidv4();
     const startTime = Date.now();
 
@@ -130,6 +141,7 @@ export class AiService implements OnModuleInit {
     message: string,
     sessionId?: string,
   ): Promise<ChatResponseDto> {
+    this.ensureOpenAI();
     const sid = sessionId || uuidv4();
     const startTime = Date.now();
 
@@ -206,6 +218,7 @@ export class AiService implements OnModuleInit {
     message: string,
     history: Array<{ role: string; content: string }> = [],
   ): Promise<FbAiResponseDto> {
+    this.ensureOpenAI();
     const startTime = Date.now();
     this.logger.log(`[FB:AI] PSID=${psid} | "${message.slice(0, 80)}"`);
 

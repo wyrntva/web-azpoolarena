@@ -6,6 +6,7 @@
 |---|---|
 | IP | `103.90.225.8` |
 | User | `root` |
+| Password | `hJHCQ8h1j0WjoctKwfpU` |
 | Panel | BT Panel (宝塔) |
 | SSH | `ssh root@103.90.225.8` |
 
