@@ -288,8 +288,7 @@ khi `window.location.protocol === 'https:'` → dùng `NEXT_PUBLIC_API_URL` (`ht
 │   ├── backend/
 │   │   ├── .env               ← NestJS production env
 │   │   └── uploads/           ← File uploads (volume mount)
-│   ├── mosquitto/config/      ← MQTT config
-│   └── poolarena -> /www/wwwroot/poolarena.vn/poolarena  ← symlink
+│   └── mosquitto/config/      ← MQTT config
 │
 └── poolarena.vn/              ← Repo clone riêng (Next.js source)
     └── poolarena/             ← Next.js app source

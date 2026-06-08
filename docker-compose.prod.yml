@@ -81,7 +81,9 @@ services:
   # ---- Next.js Poolarena (production standalone) ----
   poolarena:
     build:
-      context: ./poolarena
+      # Absolute path: poolarena source lives in a separate clone on server
+      # (sparse checkout of cms.poolarena.vn doesn't include poolarena/ dir)
+      context: ${POOLARENA_CONTEXT:-/www/wwwroot/poolarena.vn/poolarena}
       dockerfile: Dockerfile
       target: production
       args:
