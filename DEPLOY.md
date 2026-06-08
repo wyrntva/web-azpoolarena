@@ -31,35 +31,53 @@
 
 ---
 
-## Cách apps chạy
+## Cách apps chạy (Docker — hiện tại)
 
-| App | PM2 name | Port | Cách chạy |
+| App | Container | Port | Image |
 |---|---|---|---|
-| NestJS backend | `azpool-api` | 8000 | `npm run start:prod` → `node dist/main` |
-| Next.js frontend | `poolarena-nextjs` | 3000 | `next start` |
-| PostgreSQL | systemd | 5432 | `postgresql@16-main.service` |
-| Mosquitto MQTT | systemd | 1883 | `mosquitto.service` |
-| Nginx | systemd | 80/443 | reverse proxy → port 8000 & 3000 |
+| NestJS backend + CMS | `azpool-backend-prod` | 127.0.0.1:8000 | `azpool-backend:prod` |
+| Next.js frontend | `azpool-poolarena-prod` | 127.0.0.1:3000 | `azpool-poolarena:prod` |
+| PostgreSQL 16 | `azpool-db-prod` | internal only | `postgres:16-alpine` |
+| Mosquitto MQTT | `azpool-mqtt-prod` | internal only | `eclipse-mosquitto:2` |
+| Nginx | BT Panel (systemd) | 80/443 | reverse proxy → :8000 & :3000 |
 
-**PM2 binary:** `/root/.nvm/versions/node/v20.20.2/bin/pm2`  
-**Node/npm:** `/root/.nvm/versions/node/v20.20.2/bin/`
+```bash
+# Xem trạng thái
+docker compose -f /www/wwwroot/cms.poolarena.vn/docker-compose.prod.yml ps
+
+# Xem log
+docker logs azpool-backend-prod --tail 50
+docker logs azpool-poolarena-prod --tail 50
+```
+
+> PM2 `azpool-api` và `poolarena-nextjs` đã **stopped** — chỉ dùng làm fallback khi cần.
+
+**PM2 binary (fallback):** `/root/.nvm/versions/node/v20.20.2/bin/pm2`
 
 ---
 
 ## Database
 
 ```
-Host:     localhost:5432
+Host (Docker internal):  db:5432
 DB:       poolarena
 User:     poolarena
-Password: ysH63sy6
-URL:      postgresql://poolarena:ysH63sy6@localhost:5432/poolarena
+Password: (xem /www/wwwroot/cms.poolarena.vn/.env → POSTGRES_PASSWORD)
 ```
 
-Xem migrations đã chạy:
 ```bash
-PGPASSWORD=ysH63sy6 psql -U poolarena -d poolarena -h localhost \
+# Kết nối vào Docker PostgreSQL
+docker exec -it azpool-db-prod psql -U poolarena -d poolarena
+
+# Xem migrations đã chạy
+docker exec -it azpool-db-prod psql -U poolarena -d poolarena \
   -c 'SELECT name, timestamp FROM migrations ORDER BY timestamp;'
+
+# Backup
+docker exec azpool-db-prod pg_dump -U poolarena poolarena -F c > /tmp/backup_$(date +%Y%m%d).dump
+
+# Restore từ backup
+docker exec -i azpool-db-prod pg_restore --no-owner -U poolarena -d poolarena < /tmp/backup.dump
 ```
 
 ---
@@ -74,7 +92,7 @@ Nginx config: `/www/server/panel/vhost/nginx/`
 
 ---
 
-## Quy trình deploy đầy đủ
+## Quy trình deploy Docker (hiện tại)
 
 ### Bước 0 — Từ máy dev: commit & push
 
@@ -88,151 +106,123 @@ git push origin master
 
 ```bash
 ssh root@103.90.225.8
-# hoặc qua Python paramiko nếu không có sshpass
 ```
 
 ### Bước 2 — Git pull (2 repo)
 
 ```bash
-# Repo 1: backend + cms
+cd /www/wwwroot/cms.poolarena.vn && git stash && git pull origin master
+cd /www/wwwroot/poolarena.vn && git stash && git pull origin master
+```
+
+### Bước 3 — Chạy migration (nếu có file migration mới)
+
+```bash
+# Chạy migration trong container backend đang chạy
+docker exec azpool-backend-prod node dist/main --migration
+# HOẶC nếu migration script riêng:
+docker exec -w /app azpool-backend-prod npx typeorm migration:run -d dist/data-source.js
+```
+
+> Khi nào cần? Khi có file mới trong `backend/src/migrations/`.
+
+### Bước 4 — Rebuild và restart Docker services
+
+```bash
 cd /www/wwwroot/cms.poolarena.vn
-git stash && git pull origin master   # git stash nếu có local changes
 
-# Repo 2: Next.js
-cd /www/wwwroot/poolarena.vn
-git stash && git pull origin master
-```
+# Build lại image (chỉ service nào thay đổi)
+docker compose -f docker-compose.prod.yml build backend
+docker compose -f docker-compose.prod.yml build poolarena
 
-### Bước 3 — Build backend (NestJS)
-
-```bash
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-cd /www/wwwroot/cms.poolarena.vn/backend
-
-npm install --legacy-peer-deps   # chỉ khi có thay đổi package.json
-npm run build
-```
-
-### Bước 4 — Chạy migration (nếu có file migration mới)
-
-```bash
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-cd /www/wwwroot/cms.poolarena.vn/backend
-npm run migration:run
-```
-
-> **Khi nào cần chạy?** Khi có file mới trong `backend/src/migrations/` so với lần deploy trước.
-
-### Bước 5 — Build CMS frontend (React/Vite)
-
-```bash
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-cd /www/wwwroot/cms.poolarena.vn/backend/cms
-
-npm install --legacy-peer-deps   # chỉ khi có thay đổi package.json
-npm run build
-# Output → backend/cms/dist/ (nginx tự serve, không cần restart)
-```
-
-### Bước 6 — Build Next.js (poolarena)
-
-```bash
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-cd /www/wwwroot/poolarena.vn/poolarena
-
-npm install --legacy-peer-deps   # chỉ khi có thay đổi package.json
-npm run build
-```
-
-### Bước 7 — Restart services qua PM2
-
-```bash
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-
-# Restart backend (bắt buộc sau khi build backend)
-pm2 restart azpool-api
-
-# Restart Next.js (bắt buộc sau khi build Next.js)
-pm2 restart poolarena-nextjs
-
-# Kiểm tra
-pm2 list
+# Restart
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml ps
 ```
 
 ---
 
-## Cheat sheet — deploy nhanh (chỉ code thay đổi, không có migration)
+## Cheat sheet — deploy nhanh (Docker)
 
 ```bash
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-
 # Pull
 cd /www/wwwroot/cms.poolarena.vn && git stash && git pull origin master
 cd /www/wwwroot/poolarena.vn && git stash && git pull origin master
 
-# Build
-cd /www/wwwroot/cms.poolarena.vn/backend && npm run build
-cd /www/wwwroot/cms.poolarena.vn/backend/cms && npm run build
-cd /www/wwwroot/poolarena.vn/poolarena && npm run build
-
-# Restart
-pm2 restart azpool-api poolarena-nextjs && pm2 list
+# Rebuild và restart
+cd /www/wwwroot/cms.poolarena.vn
+docker compose -f docker-compose.prod.yml build backend poolarena
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml ps
 ```
 
 ---
 
-## Cheat sheet — deploy đầy đủ (có migration)
+## Cheat sheet — deploy đầy đủ (có migration, Docker)
 
 ```bash
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-
 cd /www/wwwroot/cms.poolarena.vn && git stash && git pull origin master
 cd /www/wwwroot/poolarena.vn && git stash && git pull origin master
 
-cd /www/wwwroot/cms.poolarena.vn/backend && npm run build && npm run migration:run
-cd /www/wwwroot/cms.poolarena.vn/backend/cms && npm run build
-cd /www/wwwroot/poolarena.vn/poolarena && npm run build
+cd /www/wwwroot/cms.poolarena.vn
+docker compose -f docker-compose.prod.yml build backend poolarena
+docker compose -f docker-compose.prod.yml up -d
 
-pm2 restart azpool-api poolarena-nextjs && pm2 list
+# Chạy migration
+docker exec azpool-backend-prod npx typeorm migration:run -d dist/data-source.js
+
+docker compose -f docker-compose.prod.yml ps
 ```
 
 ---
 
 ## Troubleshooting
 
-### PM2 không nhận lệnh
+### Xem log containers
 ```bash
-# Phải export PATH trước khi gọi pm2
-export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
-pm2 list
+docker logs azpool-backend-prod --tail 50 -f
+docker logs azpool-poolarena-prod --tail 50 -f
+docker logs azpool-db-prod --tail 20
+docker logs azpool-mqtt-prod --tail 20
+```
+
+### Restart một container
+```bash
+cd /www/wwwroot/cms.poolarena.vn
+docker compose -f docker-compose.prod.yml restart backend
+docker compose -f docker-compose.prod.yml restart poolarena
+```
+
+### Container bị lỗi / không khởi động
+```bash
+# Xem lỗi
+docker compose -f docker-compose.prod.yml ps
+docker inspect azpool-backend-prod | grep -A5 State
+
+# Rebuild không cache nếu build lỗi
+docker compose -f docker-compose.prod.yml build --no-cache backend
 ```
 
 ### Git pull bị conflict (local changes trên server)
 ```bash
-git stash        # lưu tạm local changes
+git stash
 git pull origin master
-# git stash pop  # nếu muốn áp lại — thường KHÔNG cần
 ```
 
-### Xem log backend
+### Fallback về PM2 (khẩn cấp)
 ```bash
-pm2 logs azpool-api --lines 50
-# hoặc
-tail -f /root/.pm2/logs/azpool-api-out.log
-tail -f /root/.pm2/logs/azpool-api-error.log
+export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
+# Stop Docker
+docker compose -f /www/wwwroot/cms.poolarena.vn/docker-compose.prod.yml stop backend poolarena
+# Start PM2
+pm2 start azpool-api
+pm2 start poolarena-nextjs
+pm2 list
 ```
 
-### Xem log Next.js
+### Kiểm tra port
 ```bash
-pm2 logs poolarena-nextjs --lines 50
-# hoặc
-tail -f /root/.pm2/logs/poolarena-nextjs-error.log
-```
-
-### Kiểm tra backend có đang chạy không
-```bash
-ss -tlnp | grep ':8000'
-ps aux | grep 'node dist/main'
+ss -tlnp | grep -E ':8000|:3000|:1883'
 ```
 
 ### Mixed Content lỗi (HTTPS gọi HTTP)
@@ -245,8 +235,29 @@ khi `window.location.protocol === 'https:'` → dùng `NEXT_PUBLIC_API_URL` (`ht
 
 | File | Mô tả |
 |---|---|
-| `/www/wwwroot/cms.poolarena.vn/backend/.env` | Env NestJS production (DB, JWT, MQTT...) |
-| `/www/wwwroot/poolarena.vn/poolarena/.env` | Env Next.js (`NEXT_PUBLIC_API_URL=https://cms.poolarena.vn`) |
-| `/www/server/panel/vhost/nginx/cms.poolarena.vn.conf` | Nginx config CMS |
-| `/www/server/panel/vhost/nginx/poolarena.vn.conf` | Nginx config poolarena |
-| `/root/.pm2/logs/` | PM2 logs tất cả apps |
+| `/www/wwwroot/cms.poolarena.vn/backend/.env` | Env NestJS production (DB, JWT, MQTT, OpenAI...) |
+| `/www/wwwroot/cms.poolarena.vn/.env` | Root env Docker Compose (POSTGRES_DB/USER/PASSWORD, NEXT_PUBLIC_API_URL) |
+| `/www/wwwroot/cms.poolarena.vn/docker-compose.prod.yml` | Docker Compose production config |
+| `/www/wwwroot/cms.poolarena.vn/mosquitto/config/mosquitto.conf` | Cấu hình MQTT broker |
+| `/www/wwwroot/cms.poolarena.vn/backend/uploads/` | File uploads (mounted vào container) |
+| `/www/server/panel/vhost/nginx/cms.poolarena.vn.conf` | BT Panel nginx config CMS |
+| `/www/server/panel/vhost/nginx/poolarena.vn.conf` | BT Panel nginx config poolarena |
+| `/www/server/panel/vhost/cert/cms.poolarena.vn/` | SSL cert CMS |
+| `/www/server/panel/vhost/cert/poolarena.vn/` | SSL cert poolarena |
+
+## Cấu trúc trên VPS (Docker)
+
+```
+/www/wwwroot/
+├── cms.poolarena.vn/          ← Repo chính (backend + docker-compose)
+│   ├── .env                   ← Root env cho docker-compose.prod.yml
+│   ├── docker-compose.prod.yml
+│   ├── backend/
+│   │   ├── .env               ← NestJS production env
+│   │   └── uploads/           ← File uploads (volume mount)
+│   ├── mosquitto/config/      ← MQTT config
+│   └── poolarena -> /www/wwwroot/poolarena.vn/poolarena  ← symlink
+│
+└── poolarena.vn/              ← Repo clone riêng (Next.js source)
+    └── poolarena/             ← Next.js app source
+```
