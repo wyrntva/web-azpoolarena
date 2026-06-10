@@ -158,9 +158,11 @@ def main():
     else:
         print("[App] WARNING: Failed to load Montserrat for global font")
 
-    # Cài đặt Kiosk Event Filter - chặn phím tắt hệ thống
-    kiosk_filter = KioskEventFilter(app)
-    app.installEventFilter(kiosk_filter)
+    # Kiosk Event Filter chỉ bật ở production (/opt/) — dev mode cho phép Alt+Tab, Alt+F4, etc.
+    is_production = "/opt/" in os.path.abspath(__file__)
+    if is_production:
+        kiosk_filter = KioskEventFilter(app)
+        app.installEventFilter(kiosk_filter)
 
     # CWD là thư mục app để QML tìm đường dẫn tương đối đúng
     os.chdir(Path(__file__).resolve().parent)
@@ -169,10 +171,14 @@ def main():
     engine = QQmlApplicationEngine()
     engine.addImportPath(resource_path("qml"))
 
+    # Expose production flag to QML — dev mode disables kiosk window behaviors
+    is_production = "/opt/" in os.path.abspath(__file__)
+    engine.rootContext().setContextProperty("IsProduction", is_production)
+
     # Context singletons
     ctrl = Controller()
     engine.rootContext().setContextProperty("Controller", ctrl)
-    
+
     api_base_url = os.environ.get("POOLARENA_API_BASE_URL", "http://localhost:8000")
     engine.rootContext().setContextProperty("ApiBaseUrl", api_base_url)
 

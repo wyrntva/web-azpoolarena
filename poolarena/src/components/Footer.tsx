@@ -32,7 +32,7 @@ export const Footer = () => {
                 Giải đấu
               </Link>
               <Link
-                href="/leaderboard"
+                href="/rankings"
                 className="!text-gray-300 hover:!text-white"
               >
                 Bảng xếp hạng

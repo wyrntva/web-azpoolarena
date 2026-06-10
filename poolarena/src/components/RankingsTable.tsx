@@ -31,7 +31,7 @@ const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, i
             onClick={handlePlayerClick}
             className={`w-full flex items-center bg-white rounded-xl overflow-hidden transition-all duration-300 group border ${
                 isTop1
-                    ? "h-[200px] pt-3 pb-0 pl-6 pr-[90px] gap-6 self-stretch border-4 border-[#FAC600] shadow-[0_4px_6px_0_rgba(138,138,138,0.10)] hover:-translate-y-1 hover:shadow-xl hover:bg-[#F4F8FF]"
+                    ? "h-[140px] pt-2 pb-0 pl-4 pr-4 gap-4 sm:h-[200px] sm:pt-3 sm:pl-6 sm:pr-[90px] sm:gap-6 self-stretch border-4 border-[#FAC600] shadow-[0_4px_6px_0_rgba(138,138,138,0.10)] hover:-translate-y-1 hover:shadow-xl hover:bg-[#F4F8FF]"
                     : "h-auto py-3 px-4 gap-2 sm:h-[90px] sm:pt-1 sm:pb-0 sm:px-6 sm:gap-6 border-transparent shadow-[0_4px_6px_0_rgba(138,138,138,0.10)] hover:-translate-y-1 hover:shadow-lg hover:bg-[#F4F8FF]"
             } ${data.player.id ? "cursor-pointer" : ""}`}
         >
@@ -45,13 +45,13 @@ const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, i
             {/* Player Info */}
             <div className="flex flex-1 items-center gap-2 sm:gap-6 h-full min-w-0">
                 <div className="self-center sm:self-end">
-                    <div className={`${isTop1 ? "w-[144px] h-[180px]" : "w-[48px] h-[60px] sm:w-[68px] sm:h-[85px]"} flex-shrink-0 relative transition-transform duration-300 group-hover:scale-105`}>
+                    <div className={`${isTop1 ? "w-[96px] h-[120px] sm:w-[144px] sm:h-[180px]" : "w-[48px] h-[60px] sm:w-[68px] sm:h-[85px]"} flex-shrink-0 relative transition-transform duration-300 group-hover:scale-105`}>
                         <Image
                             src={data.player.avatar || '/images/imageprofile.png'}
                             alt={data.player.name}
                             fill
                             unoptimized
-                            sizes={isTop1 ? "144px" : "68px"}
+                            sizes={isTop1 ? "(max-width: 640px) 96px, 144px" : "68px"}
                             className="object-contain object-bottom"
                             onError={(e) => {
                                 e.currentTarget.src = '/images/imageprofile.png';

@@ -107,6 +107,7 @@ export default function TournamentsPage() {
             max: tournament.number_of_players || 16,
           },
           isRegistered: false,
+          canRegister: (tournament as any).can_register ?? true,
           _startDate: startDate,
         };
 

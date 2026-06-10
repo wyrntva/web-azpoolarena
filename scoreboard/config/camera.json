@@ -8,7 +8,7 @@
     },
     "liveStream": {
         "_comment": "Channel for live display",
-        "rtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1602",
+        "rtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/2502",
         "delaySec": 7,
         "hlsPort": 8554,
         "delayServerPort": 8555,
@@ -19,7 +19,7 @@
     "recording": {
         "_comment": "Channel 801 = main stream (higher quality, for DVR recording)",
         "channel": 801,
-        "rtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1601",
+        "rtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/2501",
         "outputDir": "runtime/recordings",
         "segmentSec": 12,
         "maxHours": 6,
@@ -31,8 +31,8 @@
     },
     "_legacy": {
         "_comment": "Legacy keys for backward compatibility",
-        "cameraRtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1602",
-        "dvrCameraRtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/1601",
+        "cameraRtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/2502",
+        "dvrCameraRtspUrl": "rtsp://admin:ysH63sy6@192.168.1.7:554/Streaming/Channels/2501",
         "recordingsDir": "runtime/recordings",
         "recordSegSec": 12,
         "delaySec": 7,

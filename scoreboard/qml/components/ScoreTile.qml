@@ -18,16 +18,6 @@ Item {
     signal rightClicked()
     signal editTitleRequested()
 
-    // Debounce: chặn ghost touch / double-tap trên màn hình cảm ứng
-    property bool _clickReady: true
-    property int  clickCooldownMs: 400
-    Timer {
-        id: clickCooldown
-        interval: wrapper.clickCooldownMs
-        repeat: false
-        onTriggered: wrapper._clickReady = true
-    }
-
     property color titleStripColor: "#172339"
     property color titleStripTextColor: "white"
     property int   titleStripHeight: 48
@@ -155,9 +145,6 @@ Item {
             acceptedButtons: Qt.LeftButton
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                if (!wrapper._clickReady) return
-                wrapper._clickReady = false
-                clickCooldown.restart()
                 wrapper.clicked()
             }
         }
@@ -206,9 +193,6 @@ Item {
                 onEntered:  minusBtn.hovered = true
                 onExited:   minusBtn.hovered = false
                 onClicked: {
-                    if (!wrapper._clickReady) return
-                    wrapper._clickReady = false
-                    clickCooldown.restart()
                     wrapper.rightClicked()
                 }
             }

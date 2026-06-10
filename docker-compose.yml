@@ -98,19 +98,22 @@ services:
     build:
       context: ./poolarena
       dockerfile: Dockerfile
-      target: production
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://192.168.1.187:8000}
+      target: development
     container_name: azpool-poolarena-dev
     restart: unless-stopped
     depends_on:
       - backend
     environment:
-      NODE_ENV: production
-      HOSTNAME: "0.0.0.0"
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       PORT: 3000
+      DOCKER: "true"
     ports:
       - "${POOLARENA_PORT:-5174}:3000"
+    volumes:
+      - ./poolarena:/app:delegated
+      - /app/node_modules
+      - /app/.next
     networks:
       - azpool-network
 

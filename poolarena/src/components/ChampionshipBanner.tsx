@@ -55,7 +55,7 @@ export default function ChampionshipBanner({
 
   return (
     <div
-      className={`relative w-full h-[144px] overflow-hidden rounded-xl ${className}`}
+      className={`relative w-full h-auto aspect-[361/74] sm:aspect-auto sm:h-[144px] overflow-hidden rounded-xl ${className}`}
       style={style}
     >
       {displayUrls.map((url, i) => (

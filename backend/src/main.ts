@@ -92,7 +92,7 @@ async function bootstrap() {
   await app.startAllMicroservices();
 
   const port = configService.get<number>('PORT', 8000);
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`🚀 AZ POOLARENA API running on http://localhost:${port}`);
   console.log(`📡 MQTT connected to ${mqttUrl}`);
 }

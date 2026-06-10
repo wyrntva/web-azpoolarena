@@ -179,7 +179,7 @@ const PlayerRow = memo(function PlayerRow({
   );
 });
 
-const ITEMS_PER_PAGE = 50;
+const ITEMS_PER_PAGE = 10000;
 
 export default function LeaderboardPage() {
   const [players, setPlayers] = useState<PoolArenaUser[]>([]);

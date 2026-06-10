@@ -12,6 +12,7 @@ interface RegisterTournamentModalProps {
     id: string;
     title: string;
     registrationFeeAmount: number;
+    freeRegistrationFee?: boolean;
   };
   user: {
     id: number;
@@ -173,7 +174,7 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
           >
             <SuccessIcon />
             <span style={{ fontFamily: 'Montserrat, sans-serif', color: '#00B814', fontSize: '16px', fontWeight: 700, lineHeight: '24px' }}>
-              THANH TOÁN THÀNH CÔNG
+              {tournament.freeRegistrationFee ? "ĐĂNG KÝ THÀNH CÔNG" : "THANH TOÁN THÀNH CÔNG"}
             </span>
             <span style={{ fontFamily: 'Montserrat, sans-serif', color: '#37393E', fontSize: '16px', fontWeight: 500, lineHeight: '24px', textAlign: 'center' }}>
               Bạn đã đăng ký thành công giải đấu {tournament.title}. Hệ thống sẽ tự động xếp lịch thi đấu cho bạn, vui lòng truy cập trang trận đấu để xem thông tin về trận đấu của mình (Thời gian, bàn thi đấu, đối thủ...)

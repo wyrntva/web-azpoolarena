@@ -26,6 +26,7 @@ interface PrizeSectionProps {
     max: number;
   };
   status?: string;
+  canRegister?: boolean;
 }
 
 export const PrizeSection: React.FC<PrizeSectionProps> = ({
@@ -36,6 +37,7 @@ export const PrizeSection: React.FC<PrizeSectionProps> = ({
   className = "",
   participants,
   status,
+  canRegister = true,
 }) => {
   const isFull = participants ? participants.current >= participants.max : false;
 
@@ -95,7 +97,7 @@ export const PrizeSection: React.FC<PrizeSectionProps> = ({
             className={`!w-[398px] !h-[40px] !text-white !border-none !rounded-full transition-all duration-300 ${
               isRegistered
                 ? "!bg-[#00B814] !cursor-not-allowed"
-                : isFull
+                : (!canRegister || isFull)
                 ? "!bg-[#808996] !cursor-not-allowed"
                 : "!bg-[#C6010B] hover:!bg-[#8B0007] !cursor-pointer"
             }`}
@@ -106,10 +108,10 @@ export const PrizeSection: React.FC<PrizeSectionProps> = ({
               fontWeight: 500,
               lineHeight: '24px',
             }}
-            disabled={isRegistered || isFull}
+            disabled={isRegistered || !canRegister || isFull}
             onClick={onRegister}
           >
-            {isRegistered ? "Đã đăng ký" : isFull ? "Đã đầy" : "Đăng ký ngay"}
+            {isRegistered ? "Đã đăng ký" : !canRegister ? "Khóa đăng ký" : isFull ? "Đã đầy" : "Đăng ký ngay"}
           </Button>
         </div>
       </div>

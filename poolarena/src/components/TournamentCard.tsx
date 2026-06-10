@@ -16,6 +16,7 @@ export interface Tournament {
   time: string;
   participants: { current: number; max: number };
   isRegistered: boolean;
+  canRegister?: boolean;
   _startDate?: Date | null;
 }
 
@@ -73,13 +74,13 @@ const TournamentCard = memo(function TournamentCard({
         <div className="absolute inset-0 flex flex-col items-center justify-between py-4 sm:py-6">
 
           {/* Top: Logo giải đấu */}
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center mt-[30px]">
             {tournament.category && (tournament.category.startsWith('http') || tournament.category.startsWith('/')) ? (
               <div className="mb-1 sm:mb-2">
                 <img
                   src={tournament.category}
                   alt="Logo giải đấu"
-                  className="w-auto object-contain max-w-[180px] sm:max-w-[280px] h-[60px] sm:h-[85px]"
+                  className="w-auto object-contain max-w-[180px] sm:max-w-[220px] h-[60px] sm:h-[72px]"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
@@ -87,29 +88,20 @@ const TournamentCard = memo(function TournamentCard({
                 />
               </div>
             ) : tournament.category ? (
-              <h4 className="text-[#FFC107] font-bold text-base sm:text-xl uppercase tracking-wider">
+              <h4 className="text-[#FFC107] font-bold text-[22px] sm:text-[26px] uppercase tracking-wider">
                 {tournament.category}
               </h4>
             ) : null}
           </div>
 
           {/* Middle: Title */}
-          <div className="text-center px-3 sm:px-4">
-            <h3
-              className="mb-1 sm:mb-2"
-              style={{
-                color: '#FFF',
-                textAlign: 'center',
-                fontFamily: 'Montserrat',
-                fontSize: 'clamp(14px, 4vw, 20px)',
-                fontStyle: 'italic',
-                fontWeight: 700,
-                lineHeight: '1.4',
-              }}
-            >
-              {tournament.title}
-            </h3>
-            <p className="text-base sm:text-2xl text-white font-bold italic uppercase leading-tight">
+          <div className="text-center px-3 sm:px-4 w-full max-w-full overflow-hidden mb-6 sm:mb-[40px]">
+            {tournament.title && (
+              <p className="text-[22px] sm:text-[24px] text-white font-bold italic uppercase leading-tight sm:truncate mb-1">
+                {tournament.title}
+              </p>
+            )}
+            <p className="text-[24px] sm:text-[28px] text-white font-bold italic uppercase leading-tight sm:truncate">
               {tournament.subtitle}
             </p>
           </div>
@@ -157,11 +149,12 @@ const TournamentCard = memo(function TournamentCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (tournament.canRegister === false) return;
                 onRegister?.(tournament.id);
               }}
-              disabled={isFull}
+              disabled={isFull || tournament.canRegister === false}
               className={`rounded-full shadow-none flex items-center justify-center transition-all duration-300
-                ${isFull
+                ${(isFull || tournament.canRegister === false)
                   ? "bg-[#808996] cursor-not-allowed"
                   : "bg-[#37393E] hover:bg-[#37393E]/90 hover:scale-105 hover:shadow-lg active:scale-95 cursor-pointer"}`}
               style={{
@@ -176,7 +169,13 @@ const TournamentCard = memo(function TournamentCard({
                 letterSpacing: '0.28px',
               }}
             >
-              {isFull ? "Đã đầy" : "Đăng ký ngay"}
+              {tournament.isRegistered
+                ? "Đã đăng ký"
+                : tournament.canRegister === false
+                ? "Khóa đăng ký"
+                : isFull
+                ? "Đã đầy"
+                : "Đăng ký ngay"}
             </button>
           ) : variant === "ongoing" ? (
             <button

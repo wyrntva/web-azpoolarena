@@ -35,6 +35,7 @@ export class CreateTournamentDto {
   @IsOptional() @IsString() organizer?: string | null;
   @IsOptional() @IsString() support_phone?: string | null;
   @IsOptional() @IsBoolean() can_register?: boolean;
+  @IsOptional() @IsBoolean() free_registration_fee?: boolean;
   @IsOptional() @IsBoolean() free_table_fee?: boolean;
   @IsOptional() @IsBoolean() pre_payment?: boolean;
   @IsOptional() @IsNumber() registration_fee?: number | null;
@@ -86,6 +87,7 @@ export class UpdateTournamentDto {
   @IsOptional() @IsString() organizer?: string | null;
   @IsOptional() @IsString() support_phone?: string | null;
   @IsOptional() @IsBoolean() can_register?: boolean;
+  @IsOptional() @IsBoolean() free_registration_fee?: boolean;
   @IsOptional() @IsBoolean() free_table_fee?: boolean;
   @IsOptional() @IsBoolean() pre_payment?: boolean;
   @IsOptional() @IsNumber() registration_fee?: number | null;

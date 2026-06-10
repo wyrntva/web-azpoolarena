@@ -21,6 +21,15 @@ export default function FeesPrizesSection({
             </h3>
             <div className="flex items-center gap-6 pb-2">
                 <ToggleSwitch
+                    checked={formData.free_registration_fee}
+                    onChange={(checked) => setFormData({
+                        ...formData,
+                        free_registration_fee: checked,
+                        registration_fee: checked ? '0' : formData.registration_fee
+                    })}
+                    label="FREE lệ phí"
+                />
+                <ToggleSwitch
                     checked={formData.free_table_fee}
                     onChange={(checked) => setFormData({ ...formData, free_table_fee: checked })}
                     label="FREE tiền bàn"
@@ -32,15 +41,17 @@ export default function FeesPrizesSection({
                 />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor="registration_fee" className="mb-2 block">Lệ phí tham gia</Label>
-                    <TextInput
-                        id="registration_fee" type="text"
-                        value={getFormattedValue(formData.registration_fee)}
-                        onChange={(e) => handleCurrencyChange('registration_fee', e.target.value)}
-                        placeholder="Nhập lệ phí tham gia"
-                    />
-                </div>
+                {!formData.free_registration_fee && (
+                    <div>
+                        <Label htmlFor="registration_fee" className="mb-2 block">Lệ phí tham gia</Label>
+                        <TextInput
+                            id="registration_fee" type="text"
+                            value={getFormattedValue(formData.registration_fee)}
+                            onChange={(e) => handleCurrencyChange('registration_fee', e.target.value)}
+                            placeholder="Nhập lệ phí tham gia"
+                        />
+                    </div>
+                )}
                 <div>
                     <Label htmlFor="total_prize" className="mb-2 block">Tổng giải thưởng</Label>
                     <TextInput

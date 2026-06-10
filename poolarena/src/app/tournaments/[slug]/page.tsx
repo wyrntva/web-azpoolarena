@@ -59,6 +59,8 @@ interface TournamentDetail {
   phone: string;
   registrationFee: string;
   registrationFeeAmount: number;
+  freeRegistrationFee?: boolean;
+  canRegister?: boolean;
   logo?: string | null;
   banner?: string;
   sponsorLogos?: string[];
@@ -240,8 +242,12 @@ export default function TournamentDetailPage() {
         format: COMPETITION_FORMAT_MAP[competitionFormat] ?? competitionFormat ?? 'Chưa xác định',
         rank: sortedRanks.length > 0 ? `Hạng ${sortedRanks.join('-')}` : 'Tất cả hạng',
         phone: data.support_phone || 'Chưa có',
-        registrationFee: `${formatCurrency(data.registration_fee)}${data.free_table_fee ? ' - FREE tiền bàn' : ' - Thua trả tiền bàn'}`,
+        registrationFee: data.free_registration_fee
+          ? `FREE lệ phí${data.free_table_fee ? ' - FREE tiền bàn' : ' - Thua trả tiền bàn'}`
+          : `${formatCurrency(data.registration_fee)}${data.free_table_fee ? ' - FREE tiền bàn' : ' - Thua trả tiền bàn'}`,
         registrationFeeAmount: data.registration_fee || 0,
+        freeRegistrationFee: data.free_registration_fee || false,
+        canRegister: data.can_register ?? true,
         logo: resolveImageUrl(data.detail_logo, ''),
         banner: resolveImageUrl(data.banner, '/images/tour_banner.png'),
         sponsorLogos: Array.isArray(data.sponsor_logos)
@@ -563,7 +569,7 @@ export default function TournamentDetailPage() {
           </div>
 
           {/* 2. PRIZE & COUNTDOWN & BUTTON CARD */}
-          <div className="bg-[#172339] text-white rounded-2xl p-4 aspect-[361/476] w-full h-auto flex flex-col justify-between shadow-[0_10px_30px_rgba(23,35,57,0.15)] relative overflow-hidden -mt-[36px]">
+          <div className="bg-[#172339] text-white rounded-2xl p-4 w-full h-auto flex flex-col justify-between shadow-[0_10px_30px_rgba(23,35,57,0.15)] relative overflow-hidden -mt-[36px] pb-6">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -z-10" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-red-500/10 rounded-full blur-2xl -z-10" />
 
@@ -617,11 +623,11 @@ export default function TournamentDetailPage() {
             {/* Button */}
             <button
               onClick={handleRegisterClick}
-              disabled={isAlreadyRegistered || tournament.participants.current >= tournament.participants.max}
+              disabled={isAlreadyRegistered || tournament.canRegister === false || tournament.participants.current >= tournament.participants.max}
               className={`w-full text-white font-medium text-[16px] leading-[24px] h-[40px] py-2 px-6 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
                 isAlreadyRegistered
                   ? "bg-[#00B814] cursor-not-allowed"
-                  : tournament.participants.current >= tournament.participants.max
+                  : (tournament.canRegister === false || tournament.participants.current >= tournament.participants.max)
                   ? "bg-[#808996] cursor-not-allowed"
                   : "bg-[#D22E39] hover:bg-[#b5242e] hover:shadow-lg active:scale-[0.98]"
               }`}
@@ -629,6 +635,8 @@ export default function TournamentDetailPage() {
             >
               {isAlreadyRegistered
                 ? "Đã đăng ký"
+                : tournament.canRegister === false
+                ? "Khóa đăng ký"
                 : tournament.participants.current >= tournament.participants.max
                 ? "Đã đầy"
                 : "Đăng ký ngay"}
@@ -691,6 +699,7 @@ export default function TournamentDetailPage() {
               status={tournament.status}
               onRegister={handleRegisterClick}
               isRegistered={isAlreadyRegistered}
+              canRegister={tournament.canRegister}
               className="-mt-[30px] relative z-20"
             />
 
@@ -716,6 +725,7 @@ export default function TournamentDetailPage() {
           id: tournament.id,
           title: tournament.title,
           registrationFeeAmount: tournament.registrationFeeAmount,
+          freeRegistrationFee: tournament.freeRegistrationFee,
         }}
         user={
           user

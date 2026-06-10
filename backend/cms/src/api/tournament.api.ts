@@ -24,6 +24,7 @@ export interface Tournament {
     organizer: string | null;
     support_phone: string | null;
     can_register: boolean;
+    free_registration_fee: boolean;
     free_table_fee: boolean;
     pre_payment: boolean;
     registration_fee: number | null;
@@ -78,6 +79,7 @@ export interface TournamentCreate {
     organizer?: string | null;
     support_phone?: string | null;
     can_register?: boolean;
+    free_registration_fee?: boolean;
     free_table_fee?: boolean;
     pre_payment?: boolean;
     registration_fee?: number | null;

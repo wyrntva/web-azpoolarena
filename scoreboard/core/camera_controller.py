@@ -5,6 +5,7 @@ import glob
 import json
 import subprocess
 import os
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -27,6 +28,9 @@ class CameraController(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # Linux-only features (camera relay, recording, systemd services)
+        self._is_linux = sys.platform.startswith("linux")
 
         # Paths
         self._app_dir = Path(__file__).resolve().parent.parent
@@ -70,10 +74,12 @@ class CameraController(QObject):
 
     def _auto_start_relay(self):
         """Auto-start relay with correct URL from camera.json.
-        
+
         On kiosk machines, systemd may have started relay with default camera.env URL
         which could be wrong for this table. Always restart to sync with camera.json.
         """
+        if not self._is_linux:
+            return
         if not self._camera_url:
             return
         if self.checkRelayStatus():
@@ -87,6 +93,8 @@ class CameraController(QObject):
 
     def _startup_restart_recording(self):
         """One-time recording service restart on app startup to sync with camera.json."""
+        if not self._is_linux:
+            return
         if self._startup_record_restart_done:
             return
         self._startup_record_restart_done = True
@@ -332,6 +340,9 @@ USE_VAAPI={self._use_vaapi}
     @Slot()
     def startRelay(self):
         """Start the camera delay relay service"""
+        if not self._is_linux:
+            print("[CameraController] startRelay: skipped (not Linux)")
+            return
         self._save_config()
         try:
             env = os.environ.copy()
@@ -360,6 +371,9 @@ USE_VAAPI={self._use_vaapi}
     @Slot()
     def stopRelay(self):
         """Stop the camera delay relay service"""
+        if not self._is_linux:
+            print("[CameraController] stopRelay: skipped (not Linux)")
+            return
         try:
             subprocess.run(
                 [str(self._relay_script), "stop"],
@@ -402,6 +416,8 @@ USE_VAAPI={self._use_vaapi}
     @Slot(result=bool)
     def checkRelayStatus(self) -> bool:
         """Check if relay is running"""
+        if not self._is_linux:
+            return False
         try:
             result = subprocess.run(
                 [str(self._relay_script), "status"],
@@ -415,6 +431,8 @@ USE_VAAPI={self._use_vaapi}
     @Slot(result=str)
     def restartRecordService(self) -> str:
         """Restart the recording service - returns status message"""
+        if not self._is_linux:
+            return "Recording service not available (not Linux)"
         try:
             restart_script = self._app_dir / "scripts" / "restart_services.sh"
             
@@ -454,6 +472,8 @@ USE_VAAPI={self._use_vaapi}
     @Slot(result=str)
     def stopRecordService(self) -> str:
         """Stop the recording service"""
+        if not self._is_linux:
+            return "Recording service not available (not Linux)"
         try:
             # Try to stop systemd service if active
             result = subprocess.run(
@@ -488,6 +508,8 @@ USE_VAAPI={self._use_vaapi}
         If GStreamer doesn't exit within 10s (EOS stuck on live RTSP), force-kill it.
         The recording loop script will then restart and pick up the new URL.
         """
+        if not self._is_linux:
+            return "Recording not available (not Linux)"
         import signal
         import threading
 

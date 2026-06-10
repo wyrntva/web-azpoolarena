@@ -84,9 +84,18 @@ export class TournamentsService {
       throw new NotFoundException('Tournament not found');
     }
 
+    if (!tournament.can_register) {
+      throw new BadRequestException('Giải đấu không hỗ trợ đăng ký trực tuyến');
+    }
+
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (tournament.free_registration_fee || tournament.registration_fee === 0) {
+      await this.registerPlayer(tournamentId, userId, 0);
+      throw new BadRequestException('User already registered for this tournament');
     }
 
     let allowedRanks: string[] = [];

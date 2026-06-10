@@ -17,8 +17,8 @@ ApplicationWindow {
     minimumWidth: 1024
     minimumHeight: 600
 
-    // ===== Kiosk Mode - Khóa ứng dụng fullscreen =====
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    // ===== Kiosk Mode - Khóa ứng dụng fullscreen (production only) =====
+    flags: IsProduction ? (Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint) : Qt.Window
 
     Timer {
         id: raiseTimer
@@ -30,14 +30,14 @@ ApplicationWindow {
         }
     }
 
-    // Chặn các phím tắt hệ thống
-    Shortcut { sequences: ["Alt+F4"];       onActivated: {} }  // Chặn đóng
-    Shortcut { sequences: ["Alt+Tab"];      onActivated: {} }  // Chặn chuyển app
-    Shortcut { sequences: ["Alt+Escape"];   onActivated: {} }
-    Shortcut { sequences: ["Meta+D"];       onActivated: {} }  // Windows: Show desktop
-    Shortcut { sequences: ["Meta+Tab"];     onActivated: {} }
-    Shortcut { sequences: ["Ctrl+Alt+Del"]; onActivated: {} }
-    Shortcut { sequences: ["Ctrl+Escape"];  onActivated: {} }  // Start menu
+    // Chặn các phím tắt hệ thống (production only — dev mode cho phép Alt+Tab, Alt+F4, etc.)
+    Shortcut { sequences: ["Alt+F4"];       enabled: IsProduction; onActivated: {} }
+    Shortcut { sequences: ["Alt+Tab"];      enabled: IsProduction; onActivated: {} }
+    Shortcut { sequences: ["Alt+Escape"];   enabled: IsProduction; onActivated: {} }
+    Shortcut { sequences: ["Meta+D"];       enabled: IsProduction; onActivated: {} }
+    Shortcut { sequences: ["Meta+Tab"];     enabled: IsProduction; onActivated: {} }
+    Shortcut { sequences: ["Ctrl+Alt+Del"]; enabled: IsProduction; onActivated: {} }
+    Shortcut { sequences: ["Ctrl+Escape"];  enabled: IsProduction; onActivated: {} }
 
     property real uiScale: Math.min(width / 1920, height / 1080)
     function px(v)  { return Math.round(v * uiScale) }
@@ -302,8 +302,8 @@ ApplicationWindow {
             })
         }
 
-        // Existing kiosk mode logic
-        if (!active) {
+        // Kiosk: auto-raise khi mất focus (production only)
+        if (!active && IsProduction) {
             raiseTimer.start()
         }
     }

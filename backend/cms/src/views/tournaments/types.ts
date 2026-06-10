@@ -21,6 +21,7 @@ export interface TournamentFormData {
     support_phone: string;
     can_register: boolean;
     // Lệ phí và giải thưởng
+    free_registration_fee: boolean;
     free_table_fee: boolean;
     pre_payment: boolean;
     registration_fee: string;

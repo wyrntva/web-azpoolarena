@@ -178,6 +178,9 @@ export class TournamentEntity {
   can_register: boolean;
 
   @Column({ type: 'boolean', default: false })
+  free_registration_fee: boolean;
+
+  @Column({ type: 'boolean', default: false })
   free_table_fee: boolean;
 
   @Column({ type: 'boolean', default: false })

@@ -11,6 +11,10 @@ const getApiBaseURL = () => {
     // Dev: connect directly to backend port
     return `http://${window.location.hostname}:8000`;
   }
+  // Server-side (SSR)
+  if (process.env.DOCKER === 'true') {
+    return 'http://backend:8000';
+  }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 };
 
