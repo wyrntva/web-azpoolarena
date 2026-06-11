@@ -178,14 +178,19 @@ docker compose -f docker-compose.prod.yml ps
 ## Cheat sheet — deploy nhanh (Docker)
 
 ```bash
-# Pull
+# 1. Pull code mới
 cd /www/wwwroot/cms.poolarena.vn && git stash && git pull origin master
 cd /www/wwwroot/poolarena.vn && git stash && git pull origin master
 
-# Rebuild và restart
+# 2. Rebuild và restart (Nếu bị lỗi Conflict container name, hãy chạy docker compose -f docker-compose.prod.yml down trước)
 cd /www/wwwroot/cms.poolarena.vn
 docker compose -f docker-compose.prod.yml build backend poolarena
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.prod.yml up -d
+
+# 3. Đồng bộ CMS build sang host (Nginx serve CMS ở host, backend build ở container)
+docker cp azpool-backend-prod:/app/public/. /www/wwwroot/cms.poolarena.vn/backend/cms/dist/
+
+# 4. Kiểm tra trạng thái
 docker compose -f docker-compose.prod.yml ps
 ```
 
@@ -194,16 +199,22 @@ docker compose -f docker-compose.prod.yml ps
 ## Cheat sheet — deploy đầy đủ (có migration, Docker)
 
 ```bash
+# 1. Pull code mới
 cd /www/wwwroot/cms.poolarena.vn && git stash && git pull origin master
 cd /www/wwwroot/poolarena.vn && git stash && git pull origin master
 
+# 2. Rebuild và restart
 cd /www/wwwroot/cms.poolarena.vn
 docker compose -f docker-compose.prod.yml build backend poolarena
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.prod.yml up -d
 
-# Chạy migration
+# 3. Chạy migration
 docker exec azpool-backend-prod npx typeorm migration:run -d dist/data-source.js
 
+# 4. Đồng bộ CMS build sang host
+docker cp azpool-backend-prod:/app/public/. /www/wwwroot/cms.poolarena.vn/backend/cms/dist/
+
+# 5. Kiểm tra trạng thái
 docker compose -f docker-compose.prod.yml ps
 ```
 
