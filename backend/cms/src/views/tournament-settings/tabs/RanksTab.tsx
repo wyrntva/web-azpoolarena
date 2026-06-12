@@ -17,7 +17,6 @@ const RanksTab = () => {
         min_score: 0,
         max_score: 0,
         default_score: 0,
-        coefficient: 1.0,
     });
 
     useEffect(() => {
@@ -53,7 +52,6 @@ const RanksTab = () => {
             min_score: 0,
             max_score: 0,
             default_score: 0,
-            coefficient: 1.0,
         });
         setModalOpen(true);
     };
@@ -66,7 +64,6 @@ const RanksTab = () => {
             min_score: rank.min_score,
             max_score: rank.max_score,
             default_score: rank.default_score,
-            coefficient: rank.coefficient ?? 1.0,
         });
         setModalOpen(true);
     };
@@ -136,19 +133,18 @@ const RanksTab = () => {
                         <Table.HeadCell>ĐIỂM TỐI THIỂU</Table.HeadCell>
                         <Table.HeadCell>ĐIỂM TỐI ĐA</Table.HeadCell>
                         <Table.HeadCell>ĐIỂM MẶC ĐỊNH</Table.HeadCell>
-                        <Table.HeadCell>HỆ SỐ</Table.HeadCell>
                         <Table.HeadCell>HÀNH ĐỘNG</Table.HeadCell>
                     </Table.Head>
                     <Table.Body className="divide-y">
                         {loading ? (
                             <Table.Row>
-                                <Table.Cell colSpan={8} className="text-center py-8">
+                                <Table.Cell colSpan={7} className="text-center py-8">
                                     <Spinner />
                                 </Table.Cell>
                             </Table.Row>
                         ) : currentRanks.length === 0 ? (
                             <Table.Row>
-                                <Table.Cell colSpan={8} className="text-center py-8 text-gray-500">
+                                <Table.Cell colSpan={7} className="text-center py-8 text-gray-500">
                                     Chưa có hạng nào
                                 </Table.Cell>
                             </Table.Row>
@@ -161,7 +157,6 @@ const RanksTab = () => {
                                     <Table.Cell>{rank.min_score.toLocaleString()}</Table.Cell>
                                     <Table.Cell>{rank.max_score.toLocaleString()}</Table.Cell>
                                     <Table.Cell>{rank.default_score.toLocaleString()}</Table.Cell>
-                                    <Table.Cell>{(rank.coefficient ?? 1).toFixed(2)}</Table.Cell>
                                     <Table.Cell>
                                         <div className="flex items-center gap-2">
                                             <Button
@@ -268,19 +263,6 @@ const RanksTab = () => {
                                         required
                                     />
                                 </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="coefficient" value="Hệ số" />
-                                <TextInput
-                                    id="coefficient"
-                                    type="number"
-                                    min={0}
-                                    step={0.01}
-                                    placeholder="VD: 1.0, 1.5, 2.0"
-                                    value={formData.coefficient}
-                                    onChange={(e) => setFormData({ ...formData, coefficient: parseFloat(e.target.value) || 1.0 })}
-                                    required
-                                />
                             </div>
                         </div>
                     </Modal.Body>

@@ -1,6 +1,6 @@
 import axiosClient from './axiosClient';
 import type { AxiosResponse } from 'axios';
-import type { ScoringRule, TournamentRank } from '../types/api';
+import type { ScoringRule, TournamentRank, TournamentCoefficient } from '../types/api';
 
 export interface RankPayload {
     order: number;
@@ -8,8 +8,16 @@ export interface RankPayload {
     min_score: number;
     max_score: number;
     default_score: number;
-    coefficient: number;
 }
+
+export interface CoefficientPayload {
+    order: number;
+    name: string;
+    value: number;
+    description?: string;
+}
+
+export type CoefficientUpdatePayload = Partial<CoefficientPayload>;
 
 export type RankUpdatePayload = Partial<RankPayload>;
 
@@ -72,5 +80,26 @@ export const tournamentSettingsAPI = {
 
     saveRatingMatrix: (data: any[]): Promise<AxiosResponse<void>> => {
         return axiosClient.post('/api/tournament-settings/scoring-rules/matrix', data);
+    },
+
+    // Coefficients
+    getCoefficients: (): Promise<AxiosResponse<TournamentCoefficient[]>> => {
+        return axiosClient.get('/api/tournament-settings/coefficients');
+    },
+
+    getCoefficient: (id: number): Promise<AxiosResponse<TournamentCoefficient>> => {
+        return axiosClient.get(`/api/tournament-settings/coefficients/${id}`);
+    },
+
+    createCoefficient: (data: CoefficientPayload): Promise<AxiosResponse<TournamentCoefficient>> => {
+        return axiosClient.post('/api/tournament-settings/coefficients', data);
+    },
+
+    updateCoefficient: (id: number, data: CoefficientUpdatePayload): Promise<AxiosResponse<TournamentCoefficient>> => {
+        return axiosClient.put(`/api/tournament-settings/coefficients/${id}`, data);
+    },
+
+    deleteCoefficient: (id: number): Promise<AxiosResponse<void>> => {
+        return axiosClient.delete(`/api/tournament-settings/coefficients/${id}`);
     },
 };

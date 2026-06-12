@@ -7,6 +7,7 @@ import {
   TournamentRankEntity,
   TournamentRoundEntity,
   ScoringRuleEntity,
+  CoefficientEntity,
 } from '../entities';
 
 @Injectable()
@@ -18,6 +19,8 @@ export class TournamentSettingsService {
     private readonly roundRepo: Repository<TournamentRoundEntity>,
     @InjectRepository(ScoringRuleEntity)
     private readonly ruleRepo: Repository<ScoringRuleEntity>,
+    @InjectRepository(CoefficientEntity)
+    private readonly coefficientRepo: Repository<CoefficientEntity>,
   ) {}
 
   // Ranks
@@ -84,6 +87,28 @@ export class TournamentSettingsService {
   async deleteScoringRule(id: number) {
     const rule = await this.getScoringRule(id);
     await this.ruleRepo.remove(rule);
+  }
+
+  // Coefficients
+  async getCoefficients() {
+    return this.coefficientRepo.find({ order: { order: 'ASC' } });
+  }
+  async getCoefficient(id: number) {
+    const item = await this.coefficientRepo.findOne({ where: { id } });
+    if (!item) throw new NotFoundException('Coefficient not found');
+    return item;
+  }
+  async createCoefficient(data: any) {
+    return this.coefficientRepo.save(this.coefficientRepo.create(data));
+  }
+  async updateCoefficient(id: number, data: any) {
+    const item = await this.getCoefficient(id);
+    Object.assign(item, data);
+    return this.coefficientRepo.save(item);
+  }
+  async deleteCoefficient(id: number) {
+    const item = await this.getCoefficient(id);
+    await this.coefficientRepo.remove(item);
   }
 
   private getMatrixFilePath() {

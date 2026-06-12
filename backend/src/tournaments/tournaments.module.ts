@@ -8,6 +8,7 @@ import {
   TournamentRoundEntity,
   ScoringRuleEntity,
   PaymentCodeEntity,
+  CoefficientEntity,
 } from './entities';
 import { TournamentsService } from './services/tournaments.service';
 import { TournamentsController } from './controllers/tournaments.controller';
@@ -27,6 +28,7 @@ import { TableEntity } from '../areas/entities/area.entity';
       TournamentRoundEntity,
       ScoringRuleEntity,
       PaymentCodeEntity,
+      CoefficientEntity,
       UserEntity,
       TableEntity,
     ]),

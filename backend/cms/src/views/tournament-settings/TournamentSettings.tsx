@@ -1,6 +1,7 @@
 import { Card, Tabs } from 'flowbite-react';
 import RanksTab from './tabs/RanksTab';
 import ScoringRulesTab from './tabs/ScoringRulesTab';
+import CoefficientTab from './tabs/CoefficientTab';
 
 const TournamentSettings = () => {
     return (
@@ -11,7 +12,7 @@ const TournamentSettings = () => {
                     Cài đặt giải đấu
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    Quản lý hạng và quy tắc điểm
+                    Quản lý hạng, hệ số và quy tắc điểm
                 </p>
             </div>
 
@@ -20,6 +21,9 @@ const TournamentSettings = () => {
                 <Tabs aria-label="Cài đặt giải đấu" variant="underline">
                     <Tabs.Item active title="Hạng">
                         <RanksTab />
+                    </Tabs.Item>
+                    <Tabs.Item title="Hệ số">
+                        <CoefficientTab />
                     </Tabs.Item>
                     <Tabs.Item title="Quy tắc điểm">
                         <ScoringRulesTab />

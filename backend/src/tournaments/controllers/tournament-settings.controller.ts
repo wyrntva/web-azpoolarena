@@ -95,4 +95,26 @@ export class TournamentSettingsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
   async deleteScoringRule(@Param('id', ParseIntPipe) id: number) { return this.service.deleteScoringRule(id); }
+
+  // Coefficients
+  @Get('coefficients')
+  async getCoefficients() { return this.service.getCoefficients(); }
+
+  @Get('coefficients/:id')
+  async getCoefficient(@Param('id', ParseIntPipe) id: number) { return this.service.getCoefficient(id); }
+
+  @Post('coefficients')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async createCoefficient(@Body() dto: any) { return this.service.createCoefficient(dto); }
+
+  @Put('coefficients/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async updateCoefficient(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateCoefficient(id, dto); }
+
+  @Delete('coefficients/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async deleteCoefficient(@Param('id', ParseIntPipe) id: number) { return this.service.deleteCoefficient(id); }
 }

@@ -32,9 +32,6 @@ export class TournamentRankEntity {
   @Column({ type: 'int', default: 0 })
   default_score: number;
 
-  @Column({ type: 'float', default: 1.0 })
-  coefficient: number;
-
   @CreateDateColumn()
   created_at: Date;
 
@@ -102,6 +99,30 @@ export class ScoringRuleEntity {
 
   @Column({ type: 'enum', enum: ScoringRuleType })
   rule_type: ScoringRuleType;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
+}
+
+@Entity('tournament_coefficients')
+export class CoefficientEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'int', default: 0 })
+  order: number;
+
+  @Column({ type: 'varchar', length: 100 })
+  name: string;
+
+  @Column({ type: 'float', default: 1.0 })
+  value: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  description: string;
 
   @CreateDateColumn()
   created_at: Date;
