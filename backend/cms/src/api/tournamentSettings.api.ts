@@ -8,6 +8,7 @@ export interface RankPayload {
     min_score: number;
     max_score: number;
     default_score: number;
+    coefficient: number;
 }
 
 export type RankUpdatePayload = Partial<RankPayload>;

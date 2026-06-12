@@ -292,6 +292,7 @@ export interface TournamentRank {
     min_score: number;
     max_score: number;
     default_score: number;
+    coefficient: number;
     created_at?: string;
     updated_at?: string;
 }

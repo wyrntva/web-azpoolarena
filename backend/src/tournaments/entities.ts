@@ -32,6 +32,9 @@ export class TournamentRankEntity {
   @Column({ type: 'int', default: 0 })
   default_score: number;
 
+  @Column({ type: 'float', default: 1.0 })
+  coefficient: number;
+
   @CreateDateColumn()
   created_at: Date;
 
