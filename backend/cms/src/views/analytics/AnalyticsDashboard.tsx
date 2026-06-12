@@ -12,6 +12,48 @@ import {
 
 const fmt = (n: number) => n.toLocaleString('vi-VN');
 
+const SOURCE_MAP: Record<string, string> = {
+  '(direct)':  'Trực tiếp',
+  '(not set)': 'Không xác định',
+  google:      'Google',
+  facebook:    'Facebook',
+  youtube:     'YouTube',
+  instagram:   'Instagram',
+  bing:        'Bing',
+  yahoo:       'Yahoo',
+  twitter:     'Twitter / X',
+  tiktok:      'TikTok',
+  zalo:        'Zalo',
+};
+
+const MEDIUM_MAP: Record<string, string> = {
+  '(none)':    '—',
+  '(not set)': '—',
+  organic:     'Tìm kiếm tự nhiên',
+  cpc:         'Quảng cáo CPC',
+  referral:    'Liên kết ngoài',
+  email:       'Email',
+  social:      'Mạng xã hội',
+  direct:      'Trực tiếp',
+};
+
+const SOURCE_ICON: Record<string, string> = {
+  '(direct)':  'solar:link-minimalistic-2-bold-duotone',
+  '(not set)': 'solar:question-circle-bold-duotone',
+  google:      'logos:google-icon',
+  facebook:    'logos:facebook',
+  youtube:     'logos:youtube-icon',
+  instagram:   'skill-icons:instagram',
+  bing:        'logos:bing',
+  twitter:     'logos:twitter',
+  tiktok:      'logos:tiktok-icon',
+  zalo:        'solar:chat-square-bold-duotone',
+};
+
+const fmtSource = (s: string) => SOURCE_MAP[s.toLowerCase()] ?? s;
+const fmtMedium = (m: string) => MEDIUM_MAP[m.toLowerCase()] ?? m;
+const sourceIcon = (s: string) => SOURCE_ICON[s.toLowerCase()] ?? 'solar:routing-bold-duotone';
+
 const fmtDur = (s: number) => {
   const m = Math.floor(s / 60);
   const sec = s % 60;
@@ -278,18 +320,31 @@ const AnalyticsDashboard = () => {
                   </div>
                   {data.ga4.traffic_sources.length > 0 ? (
                     <div className="divide-y divide-gray-100">
-                      {data.ga4.traffic_sources.map((s, i) => (
-                        <div key={i} className="px-5 py-3 flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-dark truncate">{s.source}</p>
-                            <p className="text-xs text-gray-400">{s.medium}</p>
+                      {data.ga4.traffic_sources.map((s, i) => {
+                        const total = data.ga4!.traffic_sources.reduce((a, x) => a + x.sessions, 0);
+                        const pct = total > 0 ? Math.round((s.sessions / total) * 100) : 0;
+                        return (
+                          <div key={i} className="px-5 py-3">
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Icon icon={sourceIcon(s.source)} className="text-base shrink-0 text-blue-400" />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-dark truncate">{fmtSource(s.source)}</p>
+                                  <p className="text-xs text-gray-400">{fmtMedium(s.medium)}</p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-sm font-semibold">{fmt(s.sessions)}</p>
+                                <p className="text-xs text-gray-400">{fmt(s.users)} users</p>
+                              </div>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-1.5">
+                              <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
+                            </div>
+                            <p className="text-xs text-gray-400 mt-0.5">{pct}% tổng phiên</p>
                           </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-semibold">{fmt(s.sessions)}</p>
-                            <p className="text-xs text-gray-400">{fmt(s.users)} users</p>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="px-5 py-4 text-sm text-gray-400">Chưa có dữ liệu</p>
