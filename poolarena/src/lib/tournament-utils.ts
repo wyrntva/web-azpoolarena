@@ -1,6 +1,10 @@
 export const getApiBase = (): string => {
   if (typeof window !== 'undefined') {
-    return `http://${window.location.hostname}:8000`;
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || /^192\.168\./.test(hostname)) {
+      return `http://${hostname}:8000`;
+    }
+    return process.env.NEXT_PUBLIC_API_URL || `http://${hostname}:8000`;
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 };
