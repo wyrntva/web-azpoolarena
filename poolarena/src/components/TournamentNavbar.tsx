@@ -19,6 +19,7 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
   const [status, setStatus] = useState<string>("upcoming");
   const [tournament, setTournament] = useState<any>(null);
   const [isRegistered, setIsRegistered] = useState<boolean>(false);
+  const [matches, setMatches] = useState<any[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -31,6 +32,17 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
       })
       .catch((err) => {
         console.error("Failed to fetch tournament status in TournamentNavbar:", err);
+      });
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    tournamentAPI.getTournamentMatchesBySlug(slug)
+      .then((res) => {
+        setMatches(res.data || []);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch matches in TournamentNavbar:", err);
       });
   }, [slug]);
 
@@ -59,12 +71,33 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
 
   const canAccessMatches = isRevealedPhase || isRegistered;
 
+  const getKnockoutStart = (numberOfPlayers: number) => {
+    if (numberOfPlayers > 32) return 81;
+    if (numberOfPlayers === 24) return 25;
+    if (numberOfPlayers > 16) return 41;
+    return 21;
+  };
+
+  const getTargetMatchesStage = () => {
+    if (!tournament) return 1;
+    if (status === "completed") return 2;
+    if (status === "upcoming") return 1;
+
+    // ongoing
+    const numberOfPlayers = tournament.number_of_players || 16;
+    const knockoutStart = getKnockoutStart(numberOfPlayers);
+    const hasOngoingOrCompletedKnockout = matches.some(
+      (m: any) => m.match_no >= knockoutStart && (m.status === "ongoing" || m.status === "completed")
+    );
+    return hasOngoingOrCompletedKnockout ? 2 : 1;
+  };
+
   const go = (tab: "info" | "matches" | "live" | "rankings" | "fav") => {
     if (!slug) return;
     if (tab === "info") router.push(`/tournaments/${slug}`);
     if (tab === "matches") {
       if (!canAccessMatches) return;
-      router.push(`/tournaments/${slug}/matches`);
+      router.push(`/tournaments/${slug}/matches/${getTargetMatchesStage()}`);
     }
     if (tab === "rankings") {
       if (status !== "completed" && status !== "finished") return;

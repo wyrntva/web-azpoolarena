@@ -1,5 +1,9 @@
-export const getApiBase = (): string =>
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export const getApiBase = (): string => {
+  if (typeof window !== 'undefined') {
+    return `http://${window.location.hostname}:8000`;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+};
 
 // Resolve a possibly-relative image path to an absolute URL pointing at the backend.
 export const resolveImageUrl = (path: string | null | undefined, fallback: string): string => {

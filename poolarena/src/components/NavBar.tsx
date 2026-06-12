@@ -13,7 +13,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAppDispatch } from "@/stores/hooks";
 import { logout } from "@/stores/auth.slice";
 
-export default function NavBar() {
+export default function NavBar(props?: { logoUrl?: string }) {
+  const logoUrl = props?.logoUrl;
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
@@ -28,131 +29,209 @@ export default function NavBar() {
   return (
     <div className="sticky top-0 z-50 shadow-md">
       <div className="h-[4px] w-full bg-[#172339]" />
-    <div className="w-full h-[57px] bg-white">
-      <div className="flex justify-between items-center max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 w-full h-full relative">
+    <div className="w-full h-[46px] xl:h-[62px] bg-white relative">
 
-        {/* Logo (Left) - Desktop */}
+      {/* Desktop Back button - only on bracket pages, hidden on mobile */}
+      {pathname?.endsWith('/bracket') && (
+        <button
+          onClick={() => router.back()}
+          className="hidden xl:flex"
+          style={{
+            width: '40px',
+            height: '40px',
+            padding: '8px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            borderRadius: '100px',
+            background: '#FFF',
+            boxShadow: '0 4px 6px 0 rgba(138, 138, 138, 0.10)',
+            position: 'absolute',
+            left: '30px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 10,
+            flexShrink: 0,
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="9" height="16" viewBox="0 0 7 13" fill="none">
+            <path d="M6.03 0.75L0.75 6.045L6.03 11.34" stroke="#37393E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+
+      {/* Mobile Back button - positioned fixed in the bottom-left corner */}
+      {pathname?.endsWith('/bracket') && (
+        <button
+          onClick={() => router.back()}
+          className="flex xl:hidden fixed left-[16px] bottom-[16px] w-[50px] h-[50px] items-center justify-center rounded-full bg-[#e23841] shadow-[0_4px_12px_rgba(226,56,65,0.4)] border-none cursor-pointer z-50 transition-transform active:scale-95"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M15.5 19L8.5 12L15.5 5" stroke="#FFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      )}
+
+      {pathname?.endsWith('/bracket') && (
         <Link
           href="/tournaments"
-          className="hidden xl:flex relative w-[260px] h-12"
+          className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 xl:left-auto xl:right-[30px] xl:translate-x-0 z-10 w-[150px] h-[30px] xl:w-[180px] xl:h-[36px]"
           prefetch
         >
-          <Image
-            src="/images/logo-dark.png"
-            alt="Pool Arena Logo"
-            fill
-            sizes="260px"
-            className="object-contain"
-            priority
+          <img
+            src={logoUrl || "/images/logo-dark.png"}
+            alt="Tournament Logo"
+            className="w-full h-full object-contain object-center xl:object-right"
           />
         </Link>
+      )}
 
-        {/* Center Menu (Desktop) */}
-        <div className="hidden xl:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
+      <div className="flex justify-between items-center max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 w-full h-full relative">
+
+
+
+        {/* Logo (Left) - Desktop */}
+        {!pathname?.endsWith('/bracket') && (
           <Link
             href="/tournaments"
-            className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
-            style={{ fontFamily: 'Montserrat, sans-serif' }}
+            className="hidden xl:flex relative w-[260px] h-12"
             prefetch
           >
-            GIẢI ĐẤU
+            <Image
+              src="/images/logo-dark.png"
+              alt="Pool Arena Logo"
+              fill
+              sizes="260px"
+              className="object-contain"
+              priority
+            />
           </Link>
-          <Link
-            href="/rankings"
-            className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
-            style={{ fontFamily: 'Montserrat, sans-serif' }}
-            prefetch
-          >
-            BẢNG XẾP HẠNG
-          </Link>
-          <Link
-            href="/achievements"
-            className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap flex items-center gap-1"
-            style={{ fontFamily: 'Montserrat, sans-serif' }}
-            prefetch
-          >
-            <span>THÀNH TÍCH</span>
-            <FaLock size={12} className="text-[#9A9CA3]" />
-          </Link>
-        </div>
+        )}
+
+        {/* Center Menu (Desktop) */}
+        {!pathname?.endsWith('/bracket') && (
+          <div className="hidden xl:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
+            <Link
+              href="/tournaments"
+              className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+              prefetch
+            >
+              GIẢI ĐẤU
+            </Link>
+            <Link
+              href="/rankings"
+              className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+              prefetch
+            >
+              BẢNG XẾP HẠNG
+            </Link>
+            <Link
+              href="/achievements"
+              className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap flex items-center gap-1"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+              prefetch
+            >
+              <span>THÀNH TÍCH</span>
+              <FaLock size={12} className="text-[#9A9CA3]" />
+            </Link>
+          </div>
+        )}
 
         {/* Right Menu (Desktop) */}
-        <div className="hidden xl:flex items-center space-x-6">
-          <Link
-            href="/myprofile"
-            className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
-            prefetch
-          >
-            <CiUser className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
-            <span 
-              className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
+        {!pathname?.endsWith('/bracket') && (
+          <div className="hidden xl:flex items-center space-x-6">
+            <Link
+              href="/myprofile"
+              className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
+              prefetch
             >
-              My profile
-            </span>
-          </Link>
-          <div className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group">
-            <HiQuestionMarkCircle className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
-            <span 
-              className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
+              <CiUser className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+              <span 
+                className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                My profile
+              </span>
+            </Link>
+            <Link
+              href="/info"
+              className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
+              prefetch
             >
-              Support
-            </span>
+              <HiQuestionMarkCircle className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+              <span 
+                className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                Support
+              </span>
+            </Link>
+            <button
+              className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group"
+              onClick={handleLogout}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                className="text-[#37393E] group-hover:text-[#D22E39] transition-colors"
+              >
+                <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span 
+                className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+              >
+                Đăng xuất
+              </span>
+            </button>
           </div>
-          <button
-            className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group"
-            onClick={handleLogout}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              className="text-[#37393E] group-hover:text-[#D22E39] transition-colors"
-            >
-              <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span 
-              className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              Đăng xuất
-            </span>
-          </button>
-        </div>
+        )}
 
       {/* Mobile: Logo left + hamburger right */}
       <div className="flex xl:hidden items-center w-full justify-between">
         {/* Logo (Left) */}
-        <Link href="/tournaments" className="relative w-[180px] h-[36px]" prefetch>
-          <Image
-            src="/images/logo-dark.png"
-            alt="Pool Arena Logo"
-            fill
-            sizes="180px"
-            className="object-contain object-left"
-            priority
-          />
-        </Link>
+        {!pathname?.endsWith('/bracket') ? (
+          <Link href="/tournaments" className="relative w-[180px] h-[36px]" prefetch>
+            <Image
+              src="/images/logo-dark.png"
+              alt="Pool Arena Logo"
+              fill
+              sizes="180px"
+              className="object-contain object-left"
+              priority
+            />
+          </Link>
+        ) : (
+          <div className="w-[180px] h-[36px]" />
+        )}
 
         {/* Menu toggle (Right) */}
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="28"
-          height="28"
-          viewBox="0 0 36 36"
-          fill="none"
-          className="cursor-pointer"
-          onClick={() => setOpenMenu(!openMenu)}
-        >
-          <rect y="3.34302" width="36" height="3.6" rx="1.8" fill="#37393E"/>
-          <rect y="28.8" width="21.6" height="3.6" rx="1.8" fill="#C6010B"/>
-          <rect y="16.2" width="36" height="3.6" rx="1.8" fill="#37393E"/>
-        </svg>
+        {!pathname?.endsWith('/bracket') ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="28"
+            height="28"
+            viewBox="0 0 36 36"
+            fill="none"
+            className="cursor-pointer"
+            onClick={() => setOpenMenu(!openMenu)}
+          >
+            <rect y="3.34302" width="36" height="3.6" rx="1.8" fill="#37393E"/>
+            <rect y="28.8" width="21.6" height="3.6" rx="1.8" fill="#C6010B"/>
+            <rect y="16.2" width="36" height="3.6" rx="1.8" fill="#37393E"/>
+          </svg>
+        ) : (
+          <div className="w-[28px] h-[28px]" />
+        )}
       </div>
 
       {/* Mobile Dropdown Menu */}
@@ -163,7 +242,7 @@ export default function NavBar() {
             animate={{ height: "auto" }}
             exit={{ height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="absolute top-[57px] left-0 w-full bg-white shadow-xl xl:hidden z-50 overflow-hidden"
+            className="absolute top-[46px] left-0 w-full bg-white shadow-xl xl:hidden z-50 overflow-hidden"
           >
             <div className="p-6 flex flex-col space-y-4">
               {/* Navigation Links */}
@@ -335,10 +414,14 @@ export default function NavBar() {
                 <CiUser size={22} className="text-gray-600" />
                 <span className="text-base font-medium">My profile</span>
               </Link>
-              <div className="flex items-center space-x-3 cursor-pointer text-gray-700 hover:text-[#D22E39] transition-colors py-1">
+              <Link
+                href="/info"
+                className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] transition-colors py-1"
+                onClick={() => setOpenMenu(false)}
+              >
                 <HiQuestionMarkCircle size={22} className="text-gray-600" />
                 <span className="text-base font-medium">Support</span>
-              </div>
+              </Link>
               <button
                 className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] group w-full text-left transition-colors py-1"
                 onClick={() => {
@@ -368,12 +451,13 @@ export default function NavBar() {
       {/* Overlay khi mở menu */}
       {openMenu && (
         <div
-          className="fixed inset-x-0 bottom-0 top-[61px] bg-black/40 xl:hidden z-40"
+          className="fixed inset-x-0 bottom-0 top-[50px] bg-black/40 xl:hidden z-40"
           onClick={() => setOpenMenu(false)}
         />
       )}
       {/* Mobile Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-t-[20px] xl:hidden h-[52px] flex items-center justify-around px-2 pb-0.5">
+      {!pathname?.endsWith('/bracket') && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-t-[20px] xl:hidden h-[52px] flex items-center justify-around px-2 pb-0.5">
         {/* Tournaments Tab */}
         <Link
           href="/tournaments"
@@ -544,6 +628,7 @@ export default function NavBar() {
           </span>
         </Link>
       </div>
+      )}
     </div>
     </div>
     </div>

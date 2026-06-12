@@ -1,47 +1,67 @@
 import { Divider, Space } from "antd";
 import { Link } from "react-router-dom";
-import LogoSection from "./LogoSection";
-import { FaFacebookF } from "react-icons/fa6";
-import { CiGlobe, CiMail } from "react-icons/ci";
+import { CiGlobe } from "react-icons/ci";
 import { IoCallOutline } from "react-icons/io5";
 
 export default function Footer() {
   return (
     <footer className="bg-[#172339] text-white py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8">
           {/* Logo Section */}
-          <LogoSection />
+          <div className="flex items-center justify-start mb-4 -mt-[20px]">
+            <div className="relative w-full max-w-[240px] h-16">
+              <img
+                src="/images/logo.png"
+                alt="Pool Arena Logo"
+                className="w-full h-full object-contain object-left"
+              />
+            </div>
+          </div>
 
           {/* Website Section */}
           <div>
-            <div className="text-white font-semibold text-base mb-4">Website</div>
+            <div className="text-white font-semibold text-base mb-4">Poolarena.vn</div>
             <Space direction="vertical" size="small">
-              <Link to="/tournaments" className="!text-gray-300 !hover:text-white block">
-                Giải đấu
+              <Link to="/about" className="!text-gray-300 !hover:text-white block">
+                Về chúng tôi
               </Link>
-              <Link to="/ranking" className="!text-gray-300 !hover:text-white block">
-                Thành viên
+              <Link to="/introduction" className="!text-gray-300 !hover:text-white block">
+                Poolarena là gì?
               </Link>
-              <Link to="/software" className="!text-gray-300 !hover:text-white block">
-                Phần mềm quản lý
+            </Space>
+          </div>
+
+          {/* Cooperation Section */}
+          <div>
+            <div className="text-white font-semibold text-base mb-4">Hợp tác</div>
+            <Space direction="vertical" size="small">
+              <Link to="/contact-cooperation" className="!text-gray-300 !hover:text-white block">
+                Liên hệ hợp tác
+              </Link>
+              <Link to="/for-clubs" className="!text-gray-300 !hover:text-white block">
+                Dành cho câu lạc bộ
+              </Link>
+              <Link to="/for-organizers" className="!text-gray-300 !hover:text-white block">
+                Dành cho đơn vị tổ chức giải
               </Link>
             </Space>
           </div>
 
           <div>
             <div className="text-white font-semibold text-base mb-4">
-              Social
+              Điều khoản pháp lý
             </div>
             <Space direction="vertical" size="small">
-              <div className="flex items-center space-x-2">
-                <FaFacebookF className="text-white text-xl" />
-                <span>linkfacebook</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CiGlobe className="text-white text-xl" />
-                <span>azstudio.com.vn</span>
-              </div>
+              <Link to="/terms" className="!text-gray-300 !hover:text-white block">
+                Điều khoản & Điều kiện
+              </Link>
+              <Link to="/privacy" className="!text-gray-300 !hover:text-white block">
+                Chính sách bảo mật
+              </Link>
+              <Link to="/cookies" className="!text-gray-300 !hover:text-white block">
+                Chính sách cookie
+              </Link>
             </Space>
           </div>
 
@@ -53,14 +73,14 @@ export default function Footer() {
             <Space direction="vertical" size="small">
               <div className="flex items-center space-x-2">
                 <IoCallOutline className="text-white text-base" />
-                <span>Liên hệ: 0912 222 555</span>
+                <span>0364756638</span>
               </div>
               <div className="flex items-center space-x-2">
                 <CiGlobe className="text-white text-base" />
-                <span>Mail: cskh@poolarena.com.vn</span>
+                <span>poolarena.vn@gmail.com</span>
               </div>
               <div className="text-white text-base">
-                Chung cư Học viện Quốc Phòng, Đ. Võ Chí Công, Xuân La, Tây Hồ, Hà Nội, Vietnam
+                Ô 102, Tháp Tây, Chung cư Học viện Quốc Phòng, Đ. Võ Chí Công, Xuân La, Tây Hồ, Hà Nội, Vietnam
               </div>
             </Space>
           </div>

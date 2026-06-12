@@ -308,7 +308,13 @@ const SidebarContent: MenuItem[] = [
         icon: "solar:settings-minimalistic-outline",
         id: uniqueId(),
         url: "/tournament-settings",
-      }
+      },
+      {
+        name: "Phân tích & Analytics",
+        icon: "custom:analytics",
+        id: uniqueId(),
+        url: "/analytics",
+      },
     ]
   },
 ];

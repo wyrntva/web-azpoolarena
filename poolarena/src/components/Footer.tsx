@@ -2,69 +2,76 @@ import { Divider, Space } from "antd";
 import Link from "next/link";
 import React from "react";
 import Image from "next/image";
-import { FaFacebookF } from "react-icons/fa6";
-import { CiGlobe, CiMail } from "react-icons/ci";
+import { CiMail } from "react-icons/ci";
 import { IoCallOutline} from "react-icons/io5";
 
 export const Footer = () => {
   return (
     <footer className="bg-[#172339] text-white w-full min-h-[340px]">
       <div className="max-w-[1360px] mx-auto pt-[48px] pb-[48px] px-4 2xl:px-0">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-[48px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-[48px]">
           {/* Logo Section */}
-          <div className="relative w-[280px] h-16">
+          <div className="relative w-full max-w-[240px] h-16 -mt-[20px]">
             <Image
               src="/images/logo.png"
               alt="Pool Arena Logo"
               fill
               unoptimized
-              sizes="280px"
-              className="object-contain"
+              sizes="240px"
+              className="object-contain object-left"
               priority
             />
           </div>
 
           {/* Menu Section */}
           <div>
-            <div className="text-white font-semibold text-base mb-4">Menu</div>
+            <div className="text-white font-semibold text-base mb-4">Poolarena.vn</div>
             <Space direction="vertical" size="small">
-              <Link href="/tournaments" className="!text-gray-300 hover:!text-white">
-                Giải đấu
+              <Link href="/about" className="!text-gray-300 hover:!text-white">
+                Về chúng tôi
               </Link>
               <Link
-                href="/rankings"
+                href="/introduction"
                 className="!text-gray-300 hover:!text-white"
               >
-                Bảng xếp hạng
+                Poolarena là gì?
+              </Link>
+            </Space>
+          </div>
+
+          {/* Cooperation Section */}
+          <div>
+            <div className="text-white font-semibold text-base mb-4">Hợp tác</div>
+            <Space direction="vertical" size="small">
+              <Link href="/contact-cooperation" className="!text-gray-300 hover:!text-white">
+                Liên hệ hợp tác
+              </Link>
+              <Link href="/for-clubs" className="!text-gray-300 hover:!text-white">
+                Dành cho câu lạc bộ
               </Link>
               <Link
-                href="/achievements"
+                href="/for-organizers"
                 className="!text-gray-300 hover:!text-white"
               >
-                Thành tích
-              </Link>
-              <Link
-                href="/players"
-                className="!text-gray-300 hover:!text-white"
-              >
-                Người chơi
+                Dành cho đơn vị tổ chức giải
               </Link>
             </Space>
           </div>
 
           <div>
             <div className="text-white font-semibold text-base mb-4">
-              Social
+              Điều khoản pháp lý
             </div>
             <Space direction="vertical" size="small">
-              <div className="flex items-center space-x-2">
-                <FaFacebookF className="text-white text-xl" />
-                <span>linkfacebook</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CiGlobe className="text-white text-xl" />
-                <span>azstudio.com.vn</span>
-              </div>
+              <Link href="/terms" className="!text-gray-300 hover:!text-white">
+                Điều khoản & Điều kiện
+              </Link>
+              <Link href="/privacy" className="!text-gray-300 hover:!text-white">
+                Chính sách bảo mật
+              </Link>
+              <Link href="/cookies" className="!text-gray-300 hover:!text-white">
+                Chính sách cookie
+              </Link>
             </Space>
           </div>
 
@@ -76,14 +83,14 @@ export const Footer = () => {
             <Space direction="vertical" size="small">
             <div className="flex items-center space-x-2">
                 <IoCallOutline className="text-white text-base" />
-                <span>Liên hệ: 0912 222 555</span>
+                <span>0364756638</span>
               </div>
               <div className="flex items-center space-x-2">
                 <CiMail className="text-white text-base" />
-                <span>Mail: cskh@poolarena.com.vn</span>
+                <span>poolarena.vn@gmail.com</span>
               </div>
-              <div className="text-gwhite text-base">
-              Chung cư Học viện Quốc Phòng, Đ. Võ Chí Công, Xuân La, Tây Hồ, Hà Nội, Vietnam
+              <div className="text-white text-base">
+              Ô 102, Tháp Tây, Chung cư Học viện Quốc Phòng, Đ. Võ Chí Công, Xuân La, Tây Hồ, Hà Nội, Vietnam
               </div>
               
             </Space>

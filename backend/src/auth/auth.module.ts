@@ -8,10 +8,11 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserEntity } from '../users/entities/user.entity';
 import { DeviceEntity } from '../devices/entities/device.entity';
+import { LoginLogEntity } from '../analytics/entities/login-log.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, DeviceEntity]),
+    TypeOrmModule.forFeature([UserEntity, DeviceEntity, LoginLogEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

@@ -1,14 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
 import { TournamentEntity } from '../../tournaments/entities';
 import { StoreSettingsEntity } from '../../store-settings/entities';
+import { ProductEntity, MenuEntity } from '../../pos/entities';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class UploadsService {
+  private readonly logger = new Logger(UploadsService.name);
+
   constructor(
     @InjectRepository(UserEntity)
     private userRepo: Repository<UserEntity>,
@@ -16,6 +20,10 @@ export class UploadsService {
     private tourRepo: Repository<TournamentEntity>,
     @InjectRepository(StoreSettingsEntity)
     private settingsRepo: Repository<StoreSettingsEntity>,
+    @InjectRepository(ProductEntity)
+    private productRepo: Repository<ProductEntity>,
+    @InjectRepository(MenuEntity)
+    private menuRepo: Repository<MenuEntity>,
   ) {}
 
   private extractUrls(urls: Set<string>, value: string | null | undefined) {
@@ -31,11 +39,12 @@ export class UploadsService {
     for (const u of users) this.extractUrls(used, u.avatar_url);
 
     const tours = await this.tourRepo.find({
-      select: ['banner', 'organizer_logo', 'sponsor_logos'],
+      select: ['banner', 'organizer_logo', 'detail_logo', 'sponsor_logos'],
     });
     for (const t of tours) {
       this.extractUrls(used, t.banner);
       this.extractUrls(used, t.organizer_logo);
+      this.extractUrls(used, t.detail_logo);
       if (t.sponsor_logos) {
         try {
           const logos = JSON.parse(t.sponsor_logos);
@@ -62,6 +71,12 @@ export class UploadsService {
         }
       }
     }
+
+    const products = await this.productRepo.find({ select: ['image'] });
+    for (const p of products) this.extractUrls(used, p.image);
+
+    const menus = await this.menuRepo.find({ select: ['image'] });
+    for (const m of menus) this.extractUrls(used, m.image);
 
     return used;
   }
@@ -110,7 +125,7 @@ export class UploadsService {
             deletedCount++;
           }
         } catch (e) {
-          console.error(`Failed to delete ${fullPath}`, e);
+          this.logger.error(`Failed to delete ${fullPath}`, e);
         }
       }
     }
@@ -122,5 +137,15 @@ export class UploadsService {
       deleted: deletedCount,
       orphans,
     };
+  }
+
+  // Chạy mỗi ngày lúc 3 giờ sáng để dọn ảnh không dùng đến
+  @Cron(CronExpression.EVERY_DAY_AT_3AM)
+  async scheduledCleanup() {
+    this.logger.log('Running scheduled orphan cleanup...');
+    const result = await this.getOrphans(true);
+    this.logger.log(
+      `Orphan cleanup done: deleted ${result.deleted}/${result.orphan_files} orphans`,
+    );
   }
 }

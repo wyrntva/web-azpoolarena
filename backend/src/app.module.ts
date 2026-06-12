@@ -24,6 +24,7 @@ import { UploadsModule } from './uploads/uploads.module';
 import { MqttClientModule } from './mqtt/mqtt.module';
 import { AiModule } from './ai/ai.module';
 import { FacebookModule } from './facebook/facebook.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 
@@ -123,6 +124,7 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
     MqttClientModule,
     AiModule,
     FacebookModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule implements NestModule {

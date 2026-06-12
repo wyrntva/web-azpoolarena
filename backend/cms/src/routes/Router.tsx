@@ -75,6 +75,7 @@ const ProductCategories = lazy(() => import('../views/products/ProductCategories
 const ProductMenus = lazy(() => import('../views/products/ProductMenus'));
 const MenuDetail = lazy(() => import('../views/products/MenuDetail'));
 const Error = lazy(() => import('../views/auth/error/Error'));
+const AnalyticsDashboard = lazy(() => import('../views/analytics/AnalyticsDashboard'));
 
 
 
@@ -164,6 +165,7 @@ const Router = () => {
             <Route path="products/categories" element={<ProductCategories />} />
             <Route path="products/menu" element={<ProductMenus />} />
             <Route path="products/menu/:id" element={<MenuDetail />} />
+            <Route path="analytics" element={<AnalyticsDashboard />} />
             <Route path="tournaments" element={<Tournaments />} />
             <Route path="tournaments/:id" element={<TournamentDetail />} />
             <Route path="tournaments/leaderboard" element={<Leaderboard />} />

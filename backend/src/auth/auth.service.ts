@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserEntity } from '../users/entities/user.entity';
 import { DeviceEntity } from '../devices/entities/device.entity';
+import { LoginLogEntity } from '../analytics/entities/login-log.entity';
 import { ALL_PERMISSIONS } from './constants/permissions';
 import { JwtPayload } from './strategies/jwt.strategy';
 
@@ -21,9 +22,28 @@ export class AuthService {
     private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(DeviceEntity)
     private readonly deviceRepo: Repository<DeviceEntity>,
+    @InjectRepository(LoginLogEntity)
+    private readonly loginLogRepo: Repository<LoginLogEntity>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
+
+  private async writeLoginLog(
+    userId: number,
+    ipAddress?: string | null,
+    userAgent?: string | null,
+  ): Promise<void> {
+    try {
+      const log = this.loginLogRepo.create({
+        user_id: userId,
+        ip_address: ipAddress ?? null,
+        user_agent: userAgent ?? null,
+      });
+      await this.loginLogRepo.save(log);
+    } catch {
+      // Lỗi ghi log không được ảnh hưởng luồng đăng nhập
+    }
+  }
 
   // ==================== Password ====================
   async hashPassword(password: string): Promise<string> {
@@ -58,7 +78,12 @@ export class AuthService {
   }
 
   // ==================== Login ====================
-  async login(username: string, password: string) {
+  async login(
+    username: string,
+    password: string,
+    ipAddress?: string | null,
+    userAgent?: string | null,
+  ) {
     const normalizedPhone = username.trim().match(/^0[0-9]{9,10}$/)
       ? '+84' + username.trim().slice(1)
       : username.trim();
@@ -83,6 +108,8 @@ export class AuthService {
     if (user.user_type !== 'staff' && user.user_type !== 'both') {
       throw new ForbiddenException('Tài khoản này không có quyền truy cập hệ thống quản lý');
     }
+
+    void this.writeLoginLog(user.id, ipAddress, userAgent);
 
     return {
       access_token: this.createAccessToken(user.id),

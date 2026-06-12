@@ -64,6 +64,8 @@ services:
       ENV: development
       TZ: ${TZ:-Asia/Ho_Chi_Minh}
       DOCKER: "true"
+      GA4_PROPERTY_ID: "541312365"
+      GA4_SERVICE_ACCOUNT_KEY_PATH: /app/ga4-credentials.json
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -106,6 +108,7 @@ services:
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-G-SF8SEPE960}
       PORT: 3000
       DOCKER: "true"
     ports:

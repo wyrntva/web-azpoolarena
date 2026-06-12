@@ -8,6 +8,9 @@ cms/dist/
 
 # Environment
 .env
+
+# Google Service Account credentials (sensitive)
+ga4-credentials.json
 .env.*
 !.env.example
 
