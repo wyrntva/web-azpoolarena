@@ -1,246 +1,290 @@
-import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Label, TextInput, Textarea, Spinner } from 'flowbite-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Button, Spinner } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
-import CustomPagination from '../../../components/shared/CustomPagination';
 import { tournamentSettingsAPI } from '../../../api/tournamentSettings.api';
-import type { TournamentCoefficient } from '../../../types/api';
+import type { TournamentRound } from '../../../types/api';
+
+// ─── Predefined rounds per tournament size ───────────────────────────────────
+
+interface RoundDef {
+    key: string;    // unique key matching round name in DB
+    label: string;  // display name
+    matches: string;
+}
+
+const ROUNDS_BY_SIZE: Record<number, RoundDef[]> = {
+    16: [
+        { key: 'Tứ kết',      label: 'Tứ kết',      matches: '4 trận' },
+        { key: 'Bán kết',     label: 'Bán kết',     matches: '2 trận' },
+        { key: 'Chung kết',   label: 'Chung kết',   matches: '1 trận' },
+    ],
+    24: [
+        { key: 'Vòng 1/8',    label: 'Vòng 1/8',    matches: '8 trận' },
+        { key: 'Tứ kết',      label: 'Tứ kết',      matches: '4 trận' },
+        { key: 'Bán kết',     label: 'Bán kết',     matches: '2 trận' },
+        { key: 'Chung kết',   label: 'Chung kết',   matches: '1 trận' },
+    ],
+    32: [
+        { key: 'Vòng 1/8',    label: 'Vòng 1/8',    matches: '8 trận' },
+        { key: 'Tứ kết',      label: 'Tứ kết',      matches: '4 trận' },
+        { key: 'Bán kết',     label: 'Bán kết',     matches: '2 trận' },
+        { key: 'Chung kết',   label: 'Chung kết',   matches: '1 trận' },
+    ],
+    48: [
+        { key: 'Vòng 1/16',   label: 'Vòng 1/16',   matches: '16 trận' },
+        { key: 'Vòng 1/8',    label: 'Vòng 1/8',    matches: '8 trận' },
+        { key: 'Tứ kết',      label: 'Tứ kết',      matches: '4 trận' },
+        { key: 'Bán kết',     label: 'Bán kết',     matches: '2 trận' },
+        { key: 'Chung kết',   label: 'Chung kết',   matches: '1 trận' },
+    ],
+    64: [
+        { key: 'Vòng 1/16',   label: 'Vòng 1/16',   matches: '16 trận' },
+        { key: 'Vòng 1/8',    label: 'Vòng 1/8',    matches: '8 trận' },
+        { key: 'Tứ kết',      label: 'Tứ kết',      matches: '4 trận' },
+        { key: 'Bán kết',     label: 'Bán kết',     matches: '2 trận' },
+        { key: 'Chung kết',   label: 'Chung kết',   matches: '1 trận' },
+    ],
+    96: [
+        { key: 'Vòng 1/32',   label: 'Vòng 1/32',   matches: '32 trận' },
+        { key: 'Vòng 1/16',   label: 'Vòng 1/16',   matches: '16 trận' },
+        { key: 'Vòng 1/8',    label: 'Vòng 1/8',    matches: '8 trận' },
+        { key: 'Tứ kết',      label: 'Tứ kết',      matches: '4 trận' },
+        { key: 'Bán kết',     label: 'Bán kết',     matches: '2 trận' },
+        { key: 'Chung kết',   label: 'Chung kết',   matches: '1 trận' },
+    ],
+    128: [
+        { key: 'Vòng 1/32',   label: 'Vòng 1/32',   matches: '32 trận' },
+        { key: 'Vòng 1/16',   label: 'Vòng 1/16',   matches: '16 trận' },
+        { key: 'Vòng 1/8',    label: 'Vòng 1/8',    matches: '8 trận' },
+        { key: 'Tứ kết',      label: 'Tứ kết',      matches: '4 trận' },
+        { key: 'Bán kết',     label: 'Bán kết',     matches: '2 trận' },
+        { key: 'Chung kết',   label: 'Chung kết',   matches: '1 trận' },
+    ],
+};
+
+const TOURNAMENT_SIZES = [16, 24, 32, 48, 64, 96, 128];
+
+// order key = size * 100 + roundIndex to keep globally unique
+const orderKey = (size: number, idx: number) => size * 100 + idx + 1;
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const CoefficientTab = () => {
-    const [items, setItems] = useState<TournamentCoefficient[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [modalOpen, setModalOpen] = useState(false);
-    const [editing, setEditing] = useState<TournamentCoefficient | null>(null);
-    const [formData, setFormData] = useState({
-        order: 1,
-        name: '',
-        value: 1.0,
-        description: '',
-    });
+    const [allRounds, setAllRounds] = useState<TournamentRound[]>([]);
+    const [loadingAll, setLoadingAll] = useState(false);
+    const [selectedSize, setSelectedSize] = useState<number | null>(null);
 
-    useEffect(() => {
-        fetchItems();
+    // per-row multiplier edits: key = roundDef.key, value = string (controlled input)
+    const [multipliers, setMultipliers] = useState<Record<string, string>>({});
+    const [saving, setSaving] = useState(false);
+
+    const fetchAll = useCallback(async () => {
+        try {
+            setLoadingAll(true);
+            const res = await tournamentSettingsAPI.getRounds();
+            setAllRounds(res.data || []);
+        } catch {
+            toast.error('Không thể tải dữ liệu hệ số');
+        } finally {
+            setLoadingAll(false);
+        }
     }, []);
 
-    const fetchItems = async () => {
-        try {
-            setLoading(true);
-            const response = await tournamentSettingsAPI.getCoefficients();
-            setItems(response.data || []);
-            setCurrentPage(1);
-        } catch (error) {
-            toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể tải danh sách hệ số');
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => { fetchAll(); }, [fetchAll]);
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(items.length / itemsPerPage);
+    // When size changes, load current multipliers from DB into local state
+    useEffect(() => {
+        if (selectedSize == null) return;
+        const defs = ROUNDS_BY_SIZE[selectedSize] ?? [];
+        const dbMap: Record<string, TournamentRound> = {};
+        allRounds
+            .filter(r => r.number_of_players === selectedSize)
+            .forEach(r => { dbMap[r.name] = r; });
 
-    const handleCreate = () => {
-        setEditing(null);
-        setFormData({ order: items.length + 1, name: '', value: 1.0, description: '' });
-        setModalOpen(true);
-    };
-
-    const handleEdit = (item: TournamentCoefficient) => {
-        setEditing(item);
-        setFormData({
-            order: item.order,
-            name: item.name,
-            value: item.value,
-            description: item.description || '',
+        const init: Record<string, string> = {};
+        defs.forEach(def => {
+            init[def.key] = dbMap[def.key]
+                ? String(dbMap[def.key].multiplier ?? 1)
+                : '1';
         });
-        setModalOpen(true);
-    };
+        setMultipliers(init);
+    }, [selectedSize, allRounds]);
 
-    const handleDelete = async (id: number) => {
-        if (window.confirm('Bạn có chắc muốn xóa hệ số này?')) {
-            try {
-                await tournamentSettingsAPI.deleteCoefficient(id);
-                toast.success('Xóa hệ số thành công');
-                fetchItems();
-            } catch (error) {
-                toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể xóa hệ số');
-            }
-        }
-    };
+    const handleSave = async () => {
+        if (selectedSize == null) return;
+        const defs = ROUNDS_BY_SIZE[selectedSize] ?? [];
+        const dbMap: Record<string, TournamentRound> = {};
+        allRounds
+            .filter(r => r.number_of_players === selectedSize)
+            .forEach(r => { dbMap[r.name] = r; });
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formData.name.trim()) {
-            toast.error('Vui lòng nhập tên hệ số');
-            return;
-        }
+        setSaving(true);
         try {
-            if (editing) {
-                await tournamentSettingsAPI.updateCoefficient(editing.id, formData);
-                toast.success('Cập nhật hệ số thành công');
-            } else {
-                await tournamentSettingsAPI.createCoefficient(formData);
-                toast.success('Thêm hệ số thành công');
-            }
-            setModalOpen(false);
-            fetchItems();
+            await Promise.all(
+                defs.map(async (def, idx) => {
+                    const value = parseFloat(multipliers[def.key]) || 1;
+                    const existing = dbMap[def.key];
+                    if (existing) {
+                        await tournamentSettingsAPI.updateRound(existing.id, { multiplier: value });
+                    } else {
+                        await tournamentSettingsAPI.createRound({
+                            name: def.key,
+                            order: orderKey(selectedSize, idx),
+                            number_of_players: selectedSize,
+                            multiplier: value,
+                            is_active: true,
+                        });
+                    }
+                })
+            );
+            toast.success(`Đã lưu hệ số giải ${selectedSize} người`);
+            await fetchAll();
         } catch (error) {
             toast.error((error as { response?: { data?: { detail?: string } } })?.response?.data?.detail || 'Không thể lưu hệ số');
+        } finally {
+            setSaving(false);
         }
     };
 
+    const configuredCount = (size: number) => {
+        const validKeys = new Set((ROUNDS_BY_SIZE[size] ?? []).map(d => d.key));
+        return allRounds.filter(r => r.number_of_players === size && validKeys.has(r.name)).length;
+    };
+
+    const defs = selectedSize != null ? (ROUNDS_BY_SIZE[selectedSize] ?? []) : [];
+
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Quản lý hệ số</h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Cấu hình các hệ số nhân điểm trong giải đấu</p>
-                </div>
-                <Button onClick={handleCreate} color="blue" size="sm">
-                    <Icon icon="solar:add-circle-outline" className="mr-2" />
-                    Thêm Hệ Số
-                </Button>
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Hệ số theo giải đấu</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Chọn kích thước giải để cấu hình hệ số nhân điểm cho từng vòng đấu
+                </p>
             </div>
 
-            <div className="overflow-x-auto">
-                <Table hoverable>
-                    <Table.Head>
-                        <Table.HeadCell>ID</Table.HeadCell>
-                        <Table.HeadCell>THỨ TỰ</Table.HeadCell>
-                        <Table.HeadCell>TÊN HỆ SỐ</Table.HeadCell>
-                        <Table.HeadCell>GIÁ TRỊ</Table.HeadCell>
-                        <Table.HeadCell>MÔ TẢ</Table.HeadCell>
-                        <Table.HeadCell>HÀNH ĐỘNG</Table.HeadCell>
-                    </Table.Head>
-                    <Table.Body className="divide-y">
-                        {loading ? (
-                            <Table.Row>
-                                <Table.Cell colSpan={6} className="text-center py-8">
-                                    <Spinner />
-                                </Table.Cell>
-                            </Table.Row>
-                        ) : currentItems.length === 0 ? (
-                            <Table.Row>
-                                <Table.Cell colSpan={6} className="text-center py-8 text-gray-500">
-                                    Chưa có hệ số nào
-                                </Table.Cell>
-                            </Table.Row>
-                        ) : (
-                            currentItems.map((item) => (
-                                <Table.Row key={item.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                                    <Table.Cell className="font-medium">{item.id}</Table.Cell>
-                                    <Table.Cell>{item.order}</Table.Cell>
-                                    <Table.Cell className="font-semibold">{item.name}</Table.Cell>
-                                    <Table.Cell>
-                                        <span className="font-bold text-blue-600 dark:text-blue-400">
-                                            x{item.value.toFixed(2)}
-                                        </span>
-                                    </Table.Cell>
-                                    <Table.Cell className="text-gray-500 text-sm max-w-xs truncate">
-                                        {item.description || '—'}
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <div className="flex items-center gap-2">
-                                            <Button size="xs" color="blue" onClick={() => handleEdit(item)}>
-                                                <Icon icon="solar:pen-new-square-outline" className="mr-1" />
-                                                Cập nhật
-                                            </Button>
-                                            <Button size="xs" color="failure" onClick={() => handleDelete(item.id)}>
-                                                <Icon icon="solar:trash-bin-trash-outline" className="mr-1" />
-                                                Xóa
-                                            </Button>
-                                        </div>
-                                    </Table.Cell>
-                                </Table.Row>
-                            ))
-                        )}
-                    </Table.Body>
-                </Table>
-            </div>
+            {/* Size picker */}
+            {loadingAll ? (
+                <div className="flex justify-center py-8"><Spinner /></div>
+            ) : (
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+                    {TOURNAMENT_SIZES.map(size => {
+                        const count = configuredCount(size);
+                        const isSelected = selectedSize === size;
 
-            {items.length > 0 && (
-                <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <span className="text-sm text-blue-700 dark:text-blue-400">
-                        Hiển thị từ {indexOfFirstItem + 1} đến {Math.min(indexOfLastItem, items.length)} trên tổng {items.length}
-                    </span>
-                    <CustomPagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={setCurrentPage}
-                    />
+                        return (
+                            <button
+                                key={size}
+                                type="button"
+                                onClick={() => setSelectedSize(prev => prev === size ? null : size)}
+                                className={`relative flex flex-col items-center justify-center gap-1 p-4 rounded-xl border-2 transition-all cursor-pointer
+                                    ${isSelected
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md'
+                                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300'
+                                    }`}
+                            >
+                                <span className={`text-2xl font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'}`}>
+                                    {size}
+                                </span>
+                                <span className="text-xs text-gray-400">người</span>
+                                {count > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                                        {count}
+                                    </span>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
 
-            <Modal show={modalOpen} onClose={() => setModalOpen(false)}>
-                <form onSubmit={handleSubmit}>
-                    <Modal.Header>
-                        {editing ? 'Chỉnh sửa hệ số' : 'Thêm hệ số mới'}
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="coef-order" value="Thứ tự" />
-                                    <TextInput
-                                        id="coef-order"
-                                        type="number"
-                                        min={1}
-                                        value={formData.order}
-                                        onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 1 })}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="coef-value" value="Giá trị hệ số" />
-                                    <TextInput
-                                        id="coef-value"
-                                        type="number"
-                                        min={0}
-                                        step={0.01}
-                                        placeholder="VD: 1.0, 1.5, 2.0"
-                                        value={formData.value}
-                                        onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 1.0 })}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="coef-name" value="Tên hệ số" />
-                                <TextInput
-                                    id="coef-name"
-                                    type="text"
-                                    placeholder="VD: Hệ số vòng loại, Hệ số chung kết..."
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    required
-                                    maxLength={100}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="coef-desc" value="Mô tả (tuỳ chọn)" />
-                                <Textarea
-                                    id="coef-desc"
-                                    placeholder="Mô tả cách áp dụng hệ số này..."
-                                    rows={3}
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                />
-                            </div>
+            {/* Round coefficient table for selected size */}
+            {selectedSize != null && (
+                <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    {/* header */}
+                    <div className="flex items-center justify-between px-5 py-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                        <div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                                Giải <span className="text-blue-600 dark:text-blue-400">{selectedSize} người</span>
+                                <span className="ml-2 text-sm font-normal text-gray-500">— Vòng loại trực tiếp</span>
+                            </h3>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                                {defs.length} vòng đấu · Nhập hệ số nhân điểm cho mỗi vòng rồi nhấn Lưu
+                            </p>
                         </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button type="submit" color="blue">
-                            {editing ? 'Cập nhật' : 'Thêm'}
+                        <Button
+                            color="blue"
+                            size="sm"
+                            onClick={handleSave}
+                            disabled={saving}
+                        >
+                            {saving
+                                ? <><Spinner size="sm" className="mr-2" />Đang lưu...</>
+                                : <><Icon icon="solar:floppy-disk-outline" className="mr-2 text-base" />Lưu hệ số</>
+                            }
                         </Button>
-                        <Button color="gray" onClick={() => setModalOpen(false)}>
-                            Hủy
-                        </Button>
-                    </Modal.Footer>
-                </form>
-            </Modal>
+                    </div>
+
+                    {/* table */}
+                    <table className="w-full text-sm">
+                        <thead className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                            <tr>
+                                <th className="text-left px-5 py-3 font-medium text-gray-500 uppercase text-xs w-10">#</th>
+                                <th className="text-left px-5 py-3 font-medium text-gray-500 uppercase text-xs">Vòng đấu</th>
+                                <th className="text-left px-5 py-3 font-medium text-gray-500 uppercase text-xs">Số trận</th>
+                                <th className="px-5 py-3 font-medium text-gray-500 uppercase text-xs text-center w-48">Hệ số nhân điểm</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                            {defs.map((def, idx) => {
+                                const isLast = idx === defs.length - 1;
+                                return (
+                                    <tr
+                                        key={def.key}
+                                        className={`bg-white dark:bg-gray-800 ${isLast ? 'bg-blue-50/40 dark:bg-blue-900/10' : ''}`}
+                                    >
+                                        <td className="px-5 py-4 text-gray-400 text-xs">{idx + 1}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-2">
+                                                {isLast && (
+                                                    <Icon icon="solar:cup-star-bold" className="text-yellow-400 text-base" />
+                                                )}
+                                                <span className={`font-semibold ${isLast ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-100'}`}>
+                                                    {def.label}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4 text-gray-400 text-xs">{def.matches}</td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className="text-gray-400 text-sm font-medium">x</span>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step={0.01}
+                                                    value={multipliers[def.key] ?? '1'}
+                                                    onChange={e => setMultipliers(prev => ({ ...prev, [def.key]: e.target.value }))}
+                                                    className="w-28 text-center border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2
+                                                               text-sm font-bold text-blue-700 dark:text-blue-300
+                                                               bg-white dark:bg-gray-700
+                                                               focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                                />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {selectedSize == null && !loadingAll && (
+                <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-600">
+                    <Icon icon="solar:cursor-square-outline" className="text-5xl mb-3 text-gray-300" />
+                    <p className="text-sm">Chọn một kích thước giải bên trên để cấu hình hệ số</p>
+                </div>
+            )}
         </div>
     );
 };

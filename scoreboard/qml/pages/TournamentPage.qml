@@ -228,7 +228,7 @@ Item {
 
     // ==== MATCH TIMER (đồng hồ trận) ====
     property int  matchElapsedSec: 0
-    property bool matchTimerRunning: true
+    property bool matchTimerRunning: false
 
     function startMatchTimer()   { matchTimerRunning = true }
     function pauseMatchTimer()   { matchTimerRunning = false }
@@ -274,7 +274,6 @@ Item {
     }
 
     Component.onCompleted: {
-        startMatchTimer()
         restoreHistory()
         if (typeof TournamentService !== "undefined") {
             TournamentService.startAutoRefresh()
@@ -313,6 +312,7 @@ Item {
                 if (p1CheckIn === "confirmed" && p2CheckIn === "confirmed") {
                     // Both already confirmed — skip dialog
                     page.matchJoined = true
+                    page.startMatchTimer()
                     console.log("[TournamentPage] Both players already confirmed, skipping join dialog")
                 } else if (!page.matchJoined) {
                     Qt.callLater(function() {
@@ -422,6 +422,7 @@ Item {
                 var p2ci = m.player2_check_in || "unconfirmed"
                 if (p1ci === "confirmed" && p2ci === "confirmed") {
                     page.matchJoined = true
+                    page.startMatchTimer()
                 } else if (!page.matchJoined) {
                     joinDlg.leftConfirmed = (p1ci === "confirmed")
                     joinDlg.rightConfirmed = (p2ci === "confirmed")
@@ -783,7 +784,14 @@ Item {
                 page.syncScore()
             } else if (page.pendingAction === "finishMatch") {
                 page.logAction("Xác nhận kết thúc trận đấu")
-                page.syncScore(true)
+                if (typeof TournamentService !== "undefined" && TournamentService.activeMatch && TournamentService.activeMatch.match_id) {
+                    var fMatch = TournamentService.activeMatch
+                    TournamentService.requestTableFeePayment(fMatch.match_id, page.matchElapsedSec)
+                    // Nếu skip=true → syncScore(true) được gọi trong onTableFeePaymentReady
+                    // Nếu không → QR dialog mở
+                } else {
+                    page.syncScore(true)
+                }
             } else if (page.pendingAction === "leavePage") {
                 prepareForLeave()
                 win.backTo(page.backTo || "home")
@@ -916,6 +924,40 @@ Item {
         fixedW: dlgW; minW: dlgMin; sideMargin: dlgSide; keyboardMargin: dlgKb
         onBothConfirmed: {
             page.matchJoined = true
+            page.startMatchTimer()
+        }
+        onAbsentDetected: {
+            page.matchJoined = true
+            // Timer không chạy — không tính tiền bàn khi có người vắng mặt
+        }
+    }
+
+    TableFeePaymentDialog {
+        id: tableFeeDlg
+        fixedW: Math.round(500 * win.uiScale)
+        minW: Math.round(400 * win.uiScale)
+        sideMargin: dlgSide
+        onPaymentConfirmed: {
+            page.logAction("Thanh toán tiền bàn thành công")
+            // Backend đã set match completed, poll tiếp theo sẽ navigate về home
+        }
+    }
+
+    Connections {
+        id: tableFeeConnections
+        target: typeof TournamentService !== "undefined" ? TournamentService : null
+        ignoreUnknownSignals: true
+        function onTableFeePaymentReady(skip, qrUrl, amount, code) {
+            if (skip) {
+                page.syncScore(true)
+            } else {
+                var m = TournamentService.activeMatch
+                tableFeeDlg.matchId = m ? m.match_id : 0
+                tableFeeDlg.qrUrl = qrUrl
+                tableFeeDlg.amount = amount
+                tableFeeDlg.paymentCode = code
+                tableFeeDlg.open()
+            }
         }
     }
 

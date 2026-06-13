@@ -42,6 +42,12 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
     // size tier: 16, 32, or 64
     const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
     const dirtyRef = useRef(false);
+
+    const isRegistrationClosed = tournament.registration_end_date
+        ? new Date() > new Date(tournament.registration_end_date)
+        : false;
+    const fallbackText = isRegistrationClosed ? 'bye' : 'Chờ đăng ký';
+
     const byeAutoSavedRef = useRef<Set<number>>(new Set());
     const pendingSwapRef = useRef<number | null>(null);
     const prevLR1FilledRef = useRef<Set<number>>(new Set());
@@ -460,7 +466,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                                             <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player1_id && match.winner_id ? { fontWeight: 700, ...(round === 2 && match.player2_id ? { color: '#91d913' } : {}) } : undefined}>
                                                 {getPlayerName(match.player1_id) || (
                                                     (match.winner_id && !match.player1_id) || (round === 1 && !match.player1_id && match.player2_id && isWR1SourceBye(idx, 1))
-                                                        ? <span className="text-gray-400 italic font-semibold text-xs">bye</span>
+                                                        ? <span className="text-gray-400 italic font-semibold text-xs">{fallbackText}</span>
                                                         : <span className="text-gray-400 italic text-xs">{sourceLabels[idx]?.[0] ?? 'Chờ...'}</span>
                                                 )}
                                             </span>
@@ -511,7 +517,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
                                             <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player2_id && match.winner_id ? { fontWeight: 700, ...(round === 2 && match.player1_id ? { color: '#91d913' } : {}) } : undefined}>
                                                 {getPlayerName(match.player2_id) || (
                                                     (match.winner_id && !match.player2_id) || (round === 1 && !match.player2_id && match.player1_id && isWR1SourceBye(idx, 2))
-                                                        ? <span className="text-gray-400 italic font-semibold text-xs">bye</span>
+                                                        ? <span className="text-gray-400 italic font-semibold text-xs">{fallbackText}</span>
                                                         : <span className="text-gray-400 italic text-xs">{sourceLabels[idx]?.[1] ?? 'Chờ...'}</span>
                                                 )}
                                             </span>

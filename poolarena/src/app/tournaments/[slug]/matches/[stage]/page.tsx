@@ -340,19 +340,26 @@ function formatMatch(
         : undefined;
     const raceText = showTable ? computeRaceText(p1Rank, p2Rank, tournament, koRoundInfo) : "";
 
+    const isRegistrationClosed = tournament?.registration_end_date
+        ? new Date() > new Date(tournament.registration_end_date)
+        : false;
+
+    const resolvedP1Fallback = (!isRegistrationClosed && p1Fallback === "Bye") ? "Chờ đăng ký" : p1Fallback;
+    const resolvedP2Fallback = (!isRegistrationClosed && p2Fallback === "Bye") ? "Chờ đăng ký" : p2Fallback;
+
     return {
         id: match.id,
         tableNumber: tableNumber,
         tableNumberColor: getIndexColor(match),
         player1: {
-            name: getPlayerName(p1Id, p1Name, match.player1_check_in, p1Fallback),
+            name: getPlayerName(p1Id, p1Name, match.player1_check_in, resolvedP1Fallback),
             avatar: formatAvatarUrl(p1Avatar),
             rank: p1Rank,
             isWinner: p1Winner,
             isBye: !p1Id,
         },
         player2: {
-            name: getPlayerName(p2Id, p2Name, match.player2_check_in, p2Fallback),
+            name: getPlayerName(p2Id, p2Name, match.player2_check_in, resolvedP2Fallback),
             avatar: formatAvatarUrl(p2Avatar),
             rank: p2Rank,
             isWinner: p2Winner,
@@ -1362,17 +1369,21 @@ export default function TournamentMatchesPage() {
         return ids;
     }, [rawMatches, user, isRegistered]);
 
+    const isRegistrationClosed = useMemo(() => {
+        if (!tournamentData) return false;
+        return tournamentData.registration_end_date
+            ? new Date() > new Date(tournamentData.registration_end_date)
+            : false;
+    }, [tournamentData]);
+
     // Reveal all names when: registration has closed OR tournament is full
     const isRevealedPhase = useMemo(() => {
         if (!tournamentData) return false;
-        const closed = tournamentData.registration_end_date
-            ? new Date() > new Date(tournamentData.registration_end_date)
-            : false;
         const full = (tournamentData.registration_count ?? 0) >= (tournamentData.number_of_players ?? Infinity);
-        return closed || full;
-    }, [tournamentData]);
+        return isRegistrationClosed || full;
+    }, [tournamentData, isRegistrationClosed]);
 
-    // Own match always shows real names; other matches hidden as "Bye" until revealed phase
+    // Own match always shows real names; other matches hidden as "Bye" / "Chờ đăng ký" until revealed phase
     const sanitizeRoundsForUser = (rounds: RoundGroup[]): RoundGroup[] => {
         if (isRevealedPhase) return rounds;
         if (!isRegistered) return [];
@@ -1381,12 +1392,14 @@ export default function TournamentMatchesPage() {
             !name ||
             name === "Bye" ||
             name === "Chờ..." ||
+            name === "Chờ đăng ký" ||
             name.startsWith("Thắng trận") ||
             name.startsWith("Thua trận");
 
         const hidePlayer = (p: FormattedMatch["player1"]) => {
             if (isPlaceholderName(p.name)) return p;
-            return { ...p, name: "Bye", avatar: "", rank: null, isBye: true };
+            const hiddenName = isRegistrationClosed ? "Bye" : "Chờ đăng ký";
+            return { ...p, name: hiddenName, avatar: "", rank: null, isBye: true };
         };
 
         return rounds.map(round => ({
@@ -1402,12 +1415,12 @@ export default function TournamentMatchesPage() {
     const visibleGroupRounds = useMemo(
         () => sanitizeRoundsForUser(groupRounds),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [groupRounds, userMatchIds, isRevealedPhase, isRegistered],
+        [groupRounds, userMatchIds, isRevealedPhase, isRegistered, isRegistrationClosed],
     );
     const visibleKnockoutRounds = useMemo(
         () => sanitizeRoundsForUser(knockoutRounds),
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [knockoutRounds, userMatchIds, isRevealedPhase, isRegistered],
+        [knockoutRounds, userMatchIds, isRevealedPhase, isRegistered, isRegistrationClosed],
     );
 
     // Check if current user is registered for this tournament

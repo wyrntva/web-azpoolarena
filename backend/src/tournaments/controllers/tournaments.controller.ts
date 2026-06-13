@@ -16,6 +16,8 @@ import {
   MessageEvent,
   Header,
   Request,
+  Logger,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { filter, map } from 'rxjs/operators';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -34,6 +36,8 @@ import { Roles } from '../../auth/decorators/auth.decorators';
 
 @Controller('api/tournaments')
 export class TournamentsController {
+  private readonly logger = new Logger(TournamentsController.name);
+
   constructor(private readonly service: TournamentsService) {}
 
   @Post()
@@ -215,7 +219,44 @@ export class TournamentsController {
     return this.service.updateDeviceMatchCheckIn(id, dto);
   }
 
+  @Post('device/active-match/:id/table-fee-payment')
+  async createTableFeePayment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: { elapsed_sec: number },
+  ) {
+    return this.service.createTableFeePayment(id, dto.elapsed_sec);
+  }
+
+  @Get('device/active-match/:id/table-fee-payment/status')
+  async getTableFeePaymentStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('code') code: string,
+  ) {
+    return this.service.getTableFeePaymentStatus(id, code);
+  }
+
+  @Post('device/active-match/:id/table-fee-payment/cancel')
+  async cancelTableFeePayment(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('code') code: string,
+  ) {
+    await this.service.cancelTableFeePayment(id, code);
+    return { success: true };
+  }
+
   // ==== ADMIN / WEB BRACKET & REGISTRATION API ==== //
+
+  @Get(':id/payments')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async getPayments(@Param('id', ParseIntPipe) id: number) {
+    try {
+      return await this.service.getTournamentPayments(id);
+    } catch (err) {
+      this.logger.error(`getTournamentPayments(${id}) failed: ${err?.message}`, err?.stack);
+      throw new InternalServerErrorException(err?.message ?? 'Unknown error');
+    }
+  }
 
   @Get(':id/bracket')
   async getBracket(@Param('id', ParseIntPipe) id: number) {

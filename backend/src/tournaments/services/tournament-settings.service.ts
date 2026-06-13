@@ -143,4 +143,33 @@ export class TournamentSettingsService {
     fs.writeFileSync(filePath, JSON.stringify(matrix, null, 2), 'utf8');
     return { success: true };
   }
+
+  // Table fee
+  private getTableFeeFilePath() {
+    return path.join(__dirname, '..', '..', '..', 'uploads', 'table_fee.json');
+  }
+
+  async getTableFee(): Promise<{ price: number; per_minutes: number; surcharge: number }> {
+    const filePath = this.getTableFeeFilePath();
+    if (fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        const data = JSON.parse(content);
+        return { price: data.price ?? 0, per_minutes: data.per_minutes ?? 1, surcharge: data.surcharge ?? 0 };
+      } catch {
+        // fallback
+      }
+    }
+    return { price: 0, per_minutes: 1, surcharge: 0 };
+  }
+
+  async saveTableFee(data: { price: number; per_minutes: number; surcharge?: number }): Promise<{ success: boolean }> {
+    const filePath = this.getTableFeeFilePath();
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    return { success: true };
+  }
 }

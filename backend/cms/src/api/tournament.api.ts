@@ -227,7 +227,40 @@ export const tournamentAPI = {
     unregisterPlayer: (tournamentId: number, userId: number): Promise<AxiosResponse<void>> => {
         return axiosClient.delete(`/api/tournaments/${tournamentId}/registrations/${userId}`);
     },
+
+    getPayments: (tournamentId: number): Promise<AxiosResponse<TournamentPaymentsResponse>> => {
+        return axiosClient.get(`/api/tournaments/${tournamentId}/payments`);
+    },
 };
+
+export interface TournamentRegistrationPayment {
+    id: number;
+    code: string;
+    tournament_id: number;
+    user_id: number;
+    used: boolean;
+    created_at: string;
+    user?: {
+        full_name: string;
+        phone_number: string;
+    };
+}
+
+export interface TournamentTableFeePayment {
+    id: number;
+    code: string;
+    match_id: number;
+    amount: number;
+    paid: boolean;
+    status: 'pending' | 'paid' | 'cancelled';
+    created_at: string;
+    paid_at: string | null;
+}
+
+export interface TournamentPaymentsResponse {
+    registrationCodes: TournamentRegistrationPayment[];
+    tableFeePayments: TournamentTableFeePayment[];
+}
 
 export interface TournamentRegisteredPlayer {
     id: number;

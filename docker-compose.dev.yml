@@ -1,0 +1,108 @@
+# =============================================================
+# AZ PoolArena — Dev Docker Compose
+#
+# Mirror của docker-compose.prod.yml nhưng dùng database riêng,
+# container names riêng, ports riêng:
+#   backend  → 127.0.0.1:8001
+#   poolarena → 127.0.0.1:3001
+#
+# Chạy từ /www/wwwroot/dev.cms.poolarena.vn/
+# =============================================================
+
+services:
+  # ---- PostgreSQL (dev DB riêng) ----
+  db:
+    image: postgres:16-alpine
+    container_name: azpool-db-dev
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-poolarena_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-poolarena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-poolarena} -d ${POSTGRES_DB:-poolarena_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - azpool-dev
+
+  # ---- MQTT Broker ----
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: azpool-mqtt-dev
+    restart: always
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - mosquitto_data_dev:/mosquitto/data
+      - mosquitto_log_dev:/mosquitto/log
+    networks:
+      - azpool-dev
+
+  # ---- NestJS Backend + CMS (dev) ----
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    image: azpool-backend:dev
+    container_name: azpool-backend-dev
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-poolarena}:${POSTGRES_PASSWORD:?}@db:5432/${POSTGRES_DB:-poolarena_dev}
+      MQTT_URL: mqtt://mqtt:1883
+      NODE_ENV: production
+      ENV: development
+      PORT: 8000
+      TZ: Asia/Ho_Chi_Minh
+    ports:
+      - "127.0.0.1:8001:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - azpool-dev
+
+  # ---- Next.js Poolarena (dev) ----
+  poolarena:
+    build:
+      context: ${POOLARENA_CONTEXT:-/www/wwwroot/dev.poolarena.vn/poolarena}
+      dockerfile: Dockerfile
+      target: production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://dev.cms.poolarena.vn}
+    image: azpool-poolarena:dev
+    container_name: azpool-poolarena-dev
+    restart: always
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      PORT: 3000
+    ports:
+      - "127.0.0.1:3001:3000"
+    networks:
+      - azpool-dev
+
+volumes:
+  postgres_data_dev:
+    name: azpool_postgres_dev
+  mosquitto_data_dev:
+    name: azpool_mosquitto_data_dev
+  mosquitto_log_dev:
+    name: azpool_mosquitto_log_dev
+
+networks:
+  azpool-dev:
+    name: azpool-dev-network
+    driver: bridge

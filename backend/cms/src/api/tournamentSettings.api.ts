@@ -1,6 +1,18 @@
 import axiosClient from './axiosClient';
 import type { AxiosResponse } from 'axios';
-import type { ScoringRule, TournamentRank, TournamentCoefficient } from '../types/api';
+import type { ScoringRule, TournamentRank, TournamentCoefficient, TournamentRound } from '../types/api';
+
+export interface RoundPayload {
+    name: string;
+    description?: string;
+    order: number;
+    tournament_type?: string;
+    number_of_players?: number;
+    multiplier?: number;
+    is_active?: boolean;
+}
+
+export type RoundUpdatePayload = Partial<RoundPayload>;
 
 export interface RankPayload {
     order: number;
@@ -32,6 +44,27 @@ export interface ScoringRulePayload {
 export type ScoringRuleUpdatePayload = Partial<ScoringRulePayload>;
 
 export const tournamentSettingsAPI = {
+    // Rounds
+    getRounds: (): Promise<AxiosResponse<TournamentRound[]>> => {
+        return axiosClient.get('/api/tournament-settings/rounds');
+    },
+
+    getRound: (id: number): Promise<AxiosResponse<TournamentRound>> => {
+        return axiosClient.get(`/api/tournament-settings/rounds/${id}`);
+    },
+
+    createRound: (data: RoundPayload): Promise<AxiosResponse<TournamentRound>> => {
+        return axiosClient.post('/api/tournament-settings/rounds', data);
+    },
+
+    updateRound: (id: number, data: RoundUpdatePayload): Promise<AxiosResponse<TournamentRound>> => {
+        return axiosClient.put(`/api/tournament-settings/rounds/${id}`, data);
+    },
+
+    deleteRound: (id: number): Promise<AxiosResponse<void>> => {
+        return axiosClient.delete(`/api/tournament-settings/rounds/${id}`);
+    },
+
     // Ranks
     getRanks: (): Promise<AxiosResponse<TournamentRank[]>> => {
         return axiosClient.get('/api/tournament-settings/ranks');
@@ -80,6 +113,15 @@ export const tournamentSettingsAPI = {
 
     saveRatingMatrix: (data: any[]): Promise<AxiosResponse<void>> => {
         return axiosClient.post('/api/tournament-settings/scoring-rules/matrix', data);
+    },
+
+    // Table fee
+    getTableFee: (): Promise<AxiosResponse<{ price: number; per_minutes: number; surcharge: number }>> => {
+        return axiosClient.get('/api/tournament-settings/table-fee');
+    },
+
+    saveTableFee: (data: { price: number; per_minutes: number; surcharge: number }): Promise<AxiosResponse<{ success: boolean }>> => {
+        return axiosClient.post('/api/tournament-settings/table-fee', data);
     },
 
     // Coefficients

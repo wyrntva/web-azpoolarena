@@ -89,26 +89,46 @@ export class WebhooksController {
     if (transactions.length > 0) {
       for (const tx of transactions) {
         const description = (tx.description || '').toUpperCase();
-        const match = description.match(/POOLARENA[A-Z0-9]{10}/);
 
-        if (match) {
-          const code = match[0];
+        // Tournament registration payment
+        const registrationMatch = description.match(/POOLARENA[A-Z0-9]{10}/);
+        if (registrationMatch) {
+          const code = registrationMatch[0];
           this.logger.log(
-            `Found matching transaction. Code: ${code}, TxID: ${tx.tid}, Amount: ${tx.amount}`,
+            `Found registration payment. Code: ${code}, TxID: ${tx.tid}, Amount: ${tx.amount}`,
           );
-
           try {
             await this.tournamentsService.redeemPaymentCode(code, tx.amount);
-            this.logger.log(`Successfully redeemed code ${code} via Webhook.`);
+            this.logger.log(`Successfully redeemed registration code ${code} via Webhook.`);
           } catch (error) {
             this.logger.error(
-              `Failed to redeem code ${code} for TxID ${tx.tid}: ${error.message}`,
+              `Failed to redeem registration code ${code} for TxID ${tx.tid}: ${error.message}`,
               error.stack,
             );
           }
-        } else {
-          this.logger.log(`Transaction ignored (non-matching description): "${tx.description}"`);
+          continue;
         }
+
+        // Table fee payment
+        const tableFeeMatch = description.match(/TFEE[A-Z0-9]{8}/);
+        if (tableFeeMatch) {
+          const code = tableFeeMatch[0];
+          this.logger.log(
+            `Found table fee payment. Code: ${code}, TxID: ${tx.tid}, Amount: ${tx.amount}`,
+          );
+          try {
+            await this.tournamentsService.redeemTableFeePayment(code);
+            this.logger.log(`Successfully redeemed table fee code ${code} via Webhook.`);
+          } catch (error) {
+            this.logger.error(
+              `Failed to redeem table fee code ${code} for TxID ${tx.tid}: ${error.message}`,
+              error.stack,
+            );
+          }
+          continue;
+        }
+
+        this.logger.log(`Transaction ignored (non-matching description): "${tx.description}"`);
       }
     }
 

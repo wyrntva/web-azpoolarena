@@ -140,12 +140,121 @@ function computeRaceText(
 }
 
 // Convert ApiMatch into a clean state for rendering inside the map
+function getMatchBracketAndRound(matchNo: number, numberOfPlayers: number): { bracket: string; round: number } {
+    if (numberOfPlayers === 24) {
+        if (matchNo >= 1 && matchNo <= 8) return { bracket: "winners", round: 1 };
+        if (matchNo >= 9 && matchNo <= 16) return { bracket: "winners", round: 2 };
+        if (matchNo >= 17 && matchNo <= 24) return { bracket: "losers", round: 1 };
+    } else if (numberOfPlayers > 32) { // 64 players
+        if (matchNo >= 1 && matchNo <= 32) return { bracket: "winners", round: 1 };
+        if (matchNo >= 33 && matchNo <= 48) return { bracket: "losers", round: 1 };
+        if (matchNo >= 49 && matchNo <= 64) return { bracket: "winners", round: 2 };
+        if (matchNo >= 65 && matchNo <= 80) return { bracket: "losers", round: 2 };
+    } else if (numberOfPlayers > 16) { // 32 players
+        if (matchNo >= 1 && matchNo <= 16) return { bracket: "winners", round: 1 };
+        if (matchNo >= 17 && matchNo <= 24) return { bracket: "losers", round: 1 };
+        if (matchNo >= 25 && matchNo <= 32) return { bracket: "winners", round: 2 };
+        if (matchNo >= 33 && matchNo <= 40) return { bracket: "losers", round: 2 };
+    } else { // 16 players
+        if (matchNo >= 1 && matchNo <= 8) return { bracket: "winners", round: 1 };
+        if (matchNo >= 9 && matchNo <= 12) return { bracket: "losers", round: 1 };
+        if (matchNo >= 13 && matchNo <= 16) return { bracket: "winners", round: 2 };
+        if (matchNo >= 17 && matchNo <= 20) return { bracket: "losers", round: 2 };
+    }
+    return { bracket: "knockout", round: 1 }; // fallback
+}
+
+function getFallbackPlayerName(
+    matchNo: number,
+    slot: 1 | 2,
+    numberOfPlayers: number,
+    bracket: string,
+    round: number
+): string {
+    if (round === 1 && (bracket === "winners" || bracket === "knockout")) {
+        return "Bye";
+    }
+
+    if (numberOfPlayers === 24) {
+        if (bracket === "winners") {
+            if (round === 2) {
+                if (slot === 1) {
+                    return `Thắng trận ${matchNo - 8}`;
+                }
+                return "Chờ...";
+            }
+        } else if (bracket === "losers") {
+            if (round === 1) {
+                if (slot === 1) {
+                    return `Thua trận ${33 - matchNo}`;
+                } else {
+                    return `Thua trận ${matchNo - 16}`;
+                }
+            }
+        }
+        return "Chờ...";
+    }
+
+    // For other sizes (16, 32, 64)
+    if (bracket === "winners") {
+        if (round === 2) {
+            const size = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
+            const wr2Start = size === 64 ? 49 : size === 32 ? 25 : 13;
+            const wr1Start = 1;
+            const idx = matchNo - wr2Start;
+            const src1 = wr1Start + 2 * idx;
+            const src2 = wr1Start + 2 * idx + 1;
+            return `Thắng trận ${slot === 1 ? src1 : src2}`;
+        }
+    } else if (bracket === "losers") {
+        if (round === 1) {
+            const size = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
+            const lr1Start = size === 64 ? 33 : size === 32 ? 17 : 9;
+            const wr1Start = 1;
+            const idx = matchNo - lr1Start;
+            const src1 = wr1Start + 2 * idx;
+            const src2 = wr1Start + 2 * idx + 1;
+            return `Thua trận ${slot === 1 ? src1 : src2}`;
+        } else if (round === 2) {
+            const size = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
+            const lr2Start = size === 64 ? 65 : size === 32 ? 33 : 17;
+            const lr1Start = size === 64 ? 33 : size === 32 ? 17 : 9;
+            const wr2Start = size === 64 ? 49 : size === 32 ? 25 : 13;
+            const wr2Count = size === 64 ? 16 : size === 32 ? 8 : 4;
+            const idx = matchNo - lr2Start;
+            if (slot === 1) {
+                return `Thắng trận ${lr1Start + idx}`;
+            } else {
+                return `Thua trận ${wr2Start + wr2Count - 1 - idx}`;
+            }
+        }
+    }
+
+    return "Chờ...";
+}
+
+// Convert ApiMatch into a clean state for rendering inside the map
 function parseMatch(match: ApiMatch | undefined, matchNo: number, tournament: TournamentInfo | null): FormattedMatch {
+    const numPlayers = tournament?.number_of_players || 16;
+    const { bracket: derivedBracket, round: derivedRound } = getMatchBracketAndRound(matchNo, numPlayers);
+    const bracket = match?.bracket || derivedBracket;
+    const round = match?.round || derivedRound;
+
+    const p1Fallback = getFallbackPlayerName(matchNo, 1, numPlayers, bracket, round);
+    const p2Fallback = getFallbackPlayerName(matchNo, 2, numPlayers, bracket, round);
+
+    const isRegistrationClosed = tournament?.registration_end_date
+        ? new Date() > new Date(tournament.registration_end_date)
+        : false;
+
+    const resolvedP1Fallback = (!isRegistrationClosed && p1Fallback === "Bye") ? "Chờ đăng ký" : p1Fallback;
+    const resolvedP2Fallback = (!isRegistrationClosed && p2Fallback === "Bye") ? "Chờ đăng ký" : p2Fallback;
+
     if (!match) {
         return {
             matchNo,
-            player1: { id: null, name: "Chờ...", avatar: "", rank: null, isWinner: false, isBye: true },
-            player2: { id: null, name: "Chờ...", avatar: "", rank: null, isWinner: false, isBye: true },
+            player1: { id: null, name: resolvedP1Fallback, avatar: "", rank: null, isWinner: false, isBye: resolvedP1Fallback === "Bye" || resolvedP1Fallback === "Chờ đăng ký" },
+            player2: { id: null, name: resolvedP2Fallback, avatar: "", rank: null, isWinner: false, isBye: resolvedP2Fallback === "Bye" || resolvedP2Fallback === "Chờ đăng ký" },
             score1: "-",
             score2: "-",
             status: "pending",
@@ -208,19 +317,19 @@ function parseMatch(match: ApiMatch | undefined, matchNo: number, tournament: To
         matchNo: match.match_no,
         player1: {
             id: p1Id,
-            name: getPlayerName(p1Id, p1Name, "Bye"),
+            name: getPlayerName(p1Id, p1Name, resolvedP1Fallback),
             avatar: formatAvatarUrl(p1Avatar),
             rank: p1Rank,
             isWinner: p1Winner,
-            isBye: !p1Id
+            isBye: !p1Id && (resolvedP1Fallback === "Bye" || resolvedP1Fallback === "Chờ đăng ký")
         },
         player2: {
             id: p2Id,
-            name: getPlayerName(p2Id, p2Name, "Bye"),
+            name: getPlayerName(p2Id, p2Name, resolvedP2Fallback),
             avatar: formatAvatarUrl(p2Avatar),
             rank: p2Rank,
             isWinner: p2Winner,
-            isBye: !p2Id
+            isBye: !p2Id && (resolvedP2Fallback === "Bye" || resolvedP2Fallback === "Chờ đăng ký")
         },
         score1: match.status === "pending" ? "-" : String(s1),
         score2: match.status === "pending" ? "-" : String(s2),
@@ -789,135 +898,193 @@ export default function TournamentStageBracketPage() {
                     {stageParam === "1" ? (
                         /* Stage 1: 4-column layout side-by-side with SVG connectors */
                         <div className="flex py-4 min-w-max md:justify-center gap-0">
-                            {/* Column 1: Vòng 2 Nhánh thắng */}
-                            <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
-                                <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
-                                    Vòng 2: Nhánh thắng
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    {(() => {
-                                        const layout = getBracketLayout(tournamentData?.number_of_players || 16);
-                                        return Array.from({ length: layout.wr2.count }).map((_, i) => {
-                                            const mNo = layout.wr2.start + i;
-                                            const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
-                                            return (
-                                                <div key={mNo} className="h-[228px] flex flex-col justify-center shrink-0 items-center">
-                                                    <BracketMatchCard match={m} />
+                            {(() => {
+                                const layout = getBracketLayout(tournamentData?.number_of_players || 16);
+                                const is24 = tournamentData?.number_of_players === 24;
+
+                                if (is24) {
+                                    return (
+                                        <>
+                                            {/* Column 1: Vòng 1 */}
+                                            <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
+                                                <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
+                                                    Vòng 1
                                                 </div>
-                                            );
-                                        });
-                                    })()}
-                                </div>
-                            </div>
-
-                            {/* Left Connectors: Vòng 1 to Vòng 2 Nhánh thắng */}
-                            {(() => {
-                                const layout = getBracketLayout(tournamentData?.number_of_players || 16);
-                                return (
-                                    <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
-                                        {Array.from({ length: layout.wr2.count }).map((_, i) => (
-                                            <div key={i} className="h-[228px] flex items-center justify-center shrink-0">
-                                                <svg width="50" height="228" viewBox="0 0 50 228" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M50 68 H25 V188 H50 M25 128 H0" stroke="#37393E" strokeWidth="1.5" />
-                                                </svg>
-                                            </div>
-                                        ))}
-                                    </div>
-                                );
-                            })()}
-
-                            {/* Column 2: Vòng 1 */}
-                            <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
-                                <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
-                                    Vòng 1
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    {(() => {
-                                        const layout = getBracketLayout(tournamentData?.number_of_players || 16);
-                                        return Array.from({ length: layout.wr1.count }).map((_, i) => {
-                                            const mNo = layout.wr1.start + i;
-                                            const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
-                                            return <BracketMatchCard key={mNo} match={m} />;
-                                        });
-                                    })()}
-                                </div>
-                            </div>
-
-                            {/* Right Connectors: Vòng 1 to Vòng 1 Nhánh thua */}
-                            {(() => {
-                                const layout = getBracketLayout(tournamentData?.number_of_players || 16);
-                                return (
-                                    <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
-                                        {Array.from({ length: layout.lr1.count }).map((_, i) => (
-                                            <div key={i} className="h-[228px] flex items-center justify-center shrink-0">
-                                                <svg width="50" height="228" viewBox="0 0 50 228" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M0 68 H25 V188 H0 M25 128 H50" stroke="#37393E" strokeWidth="1.5" />
-                                                </svg>
-                                            </div>
-                                        ))}
-                                    </div>
-                                );
-                            })()}
-
-                            {/* Column 3: Vòng 1 Nhánh thua */}
-                            <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
-                                <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
-                                    Vòng 1: Nhánh thua
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    {(() => {
-                                        const layout = getBracketLayout(tournamentData?.number_of_players || 16);
-                                        return Array.from({ length: layout.lr1.count }).map((_, i) => {
-                                            const mNo = layout.lr1.start + i;
-                                            const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
-                                            return (
-                                                <div key={mNo} className="h-[228px] flex flex-col justify-center shrink-0 items-center">
-                                                    <BracketMatchCard match={m} />
+                                                <div className="flex flex-col gap-3">
+                                                    {Array.from({ length: layout.wr1.count }).map((_, i) => {
+                                                        const mNo = layout.wr1.start + i;
+                                                        const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
+                                                        return <BracketMatchCard key={mNo} match={m} />;
+                                                    })}
                                                 </div>
-                                            );
-                                        });
-                                    })()}
-                                </div>
-                            </div>
-
-                            {/* Connectors: Vòng 1 Nhánh thua to Vòng 2 Nhánh thua */}
-                            {(() => {
-                                const layout = getBracketLayout(tournamentData?.number_of_players || 16);
-                                if (!layout.lr2 || layout.lr2.count === 0) return null;
-                                return (
-                                    <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
-                                        {Array.from({ length: layout.lr2.count }).map((_, i) => (
-                                            <div key={i} className="h-[228px] flex items-center justify-center shrink-0">
-                                                <svg width="50" height="228" viewBox="0 0 50 228" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M0 128 H50" stroke="#37393E" strokeWidth="1.5" />
-                                                </svg>
                                             </div>
-                                        ))}
-                                    </div>
-                                );
-                            })()}
 
-                            {/* Column 4: Vòng 2 Nhánh thua */}
-                            {(() => {
-                                const layout = getBracketLayout(tournamentData?.number_of_players || 16);
-                                if (!layout.lr2 || layout.lr2.count === 0) return null;
-                                return (
-                                    <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
-                                        <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
-                                            Vòng 2: Nhánh thua
-                                        </div>
-                                        <div className="flex flex-col gap-3">
-                                            {Array.from({ length: layout.lr2.count }).map((_, i) => {
-                                                const mNo = layout.lr2.start + i;
-                                                const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
-                                                return (
-                                                    <div key={mNo} className="h-[228px] flex flex-col justify-center shrink-0 items-center">
-                                                        <BracketMatchCard match={m} />
+                                            {/* Left Connectors: Vòng 1 to Vòng 2 Nhánh thắng */}
+                                            <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
+                                                {Array.from({ length: layout.wr2.count }).map((_, i) => (
+                                                    <div key={i} className="h-[108px] flex items-center justify-center shrink-0">
+                                                        <svg width="50" height="108" viewBox="0 0 50 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M0 68 H50" stroke="#37393E" strokeWidth="1.5" />
+                                                        </svg>
                                                     </div>
-                                                );
-                                            })}
+                                                ))}
+                                            </div>
+
+                                            {/* Column 2: Vòng 2 Nhánh thắng */}
+                                            <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
+                                                <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
+                                                    Vòng 2: Nhánh thắng
+                                                </div>
+                                                <div className="flex flex-col gap-3">
+                                                    {Array.from({ length: layout.wr2.count }).map((_, i) => {
+                                                        const mNo = layout.wr2.start + i;
+                                                        const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
+                                                        return <BracketMatchCard key={mNo} match={m} />;
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            {/* Right Connectors: Vòng 2 Nhánh thắng to Vòng 1 Nhánh thua */}
+                                            <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
+                                                {Array.from({ length: layout.lr1.count }).map((_, i) => (
+                                                    <div key={i} className="h-[108px] flex items-center justify-center shrink-0">
+                                                        <svg width="50" height="108" viewBox="0 0 50 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M0 68 H50" stroke="#37393E" strokeWidth="1.5" />
+                                                        </svg>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Column 3: Vòng 1 Nhánh thua */}
+                                            <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
+                                                <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
+                                                    Vòng 1: Nhánh thua
+                                                </div>
+                                                <div className="flex flex-col gap-3">
+                                                    {Array.from({ length: layout.lr1.count }).map((_, i) => {
+                                                        const mNo = layout.lr1.start + i;
+                                                        const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
+                                                        return <BracketMatchCard key={mNo} match={m} />;
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </>
+                                    );
+                                }
+
+                                return (
+                                    <>
+                                        {/* Column 1: Vòng 2 Nhánh thắng */}
+                                        <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
+                                            <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
+                                                Vòng 2: Nhánh thắng
+                                            </div>
+                                            <div className="flex flex-col gap-3">
+                                                {Array.from({ length: layout.wr2.count }).map((_, i) => {
+                                                    const mNo = layout.wr2.start + i;
+                                                    const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
+                                                    return (
+                                                        <div key={mNo} className="h-[228px] flex flex-col justify-center shrink-0 items-center">
+                                                            <BracketMatchCard match={m} />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
+
+                                        {/* Left Connectors: Vòng 1 to Vòng 2 Nhánh thắng */}
+                                        <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
+                                            {Array.from({ length: layout.wr2.count }).map((_, i) => (
+                                                <div key={i} className="h-[228px] flex items-center justify-center shrink-0">
+                                                    <svg width="50" height="228" viewBox="0 0 50 228" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M50 68 H25 V188 H50 M25 128 H0" stroke="#37393E" strokeWidth="1.5" />
+                                                    </svg>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Column 2: Vòng 1 */}
+                                        <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
+                                            <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
+                                                Vòng 1
+                                            </div>
+                                            <div className="flex flex-col gap-3">
+                                                {Array.from({ length: layout.wr1.count }).map((_, i) => {
+                                                    const mNo = layout.wr1.start + i;
+                                                    const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
+                                                    return <BracketMatchCard key={mNo} match={m} />;
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Right Connectors: Vòng 1 to Vòng 1 Nhánh thua */}
+                                        <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
+                                            {Array.from({ length: layout.lr1.count }).map((_, i) => (
+                                                <div key={i} className="h-[228px] flex items-center justify-center shrink-0">
+                                                    <svg width="50" height="228" viewBox="0 0 50 228" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M0 68 H25 V188 H0 M25 128 H50" stroke="#37393E" strokeWidth="1.5" />
+                                                    </svg>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Column 3: Vòng 1 Nhánh thua */}
+                                        <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
+                                            <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
+                                                Vòng 1: Nhánh thua
+                                            </div>
+                                            <div className="flex flex-col gap-3">
+                                                {Array.from({ length: layout.lr1.count }).map((_, i) => {
+                                                    const mNo = layout.lr1.start + i;
+                                                    const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
+                                                    return (
+                                                        <div key={mNo} className="h-[228px] flex flex-col justify-center shrink-0 items-center">
+                                                            <BracketMatchCard match={m} />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Connectors: Vòng 1 Nhánh thua to Vòng 2 Nhánh thua */}
+                                        {(() => {
+                                            if (!layout.lr2 || layout.lr2.count === 0) return null;
+                                            return (
+                                                <div className="flex flex-col gap-3 w-[50px] shrink-0 pt-[80px]">
+                                                    {Array.from({ length: layout.lr2.count }).map((_, i) => (
+                                                        <div key={i} className="h-[228px] flex items-center justify-center shrink-0">
+                                                            <svg width="50" height="228" viewBox="0 0 50 228" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M0 128 H50" stroke="#37393E" strokeWidth="1.5" />
+                                                            </svg>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* Column 4: Vòng 2 Nhánh thua */}
+                                        {(() => {
+                                            if (!layout.lr2 || layout.lr2.count === 0) return null;
+                                            return (
+                                                <div className="flex flex-col gap-6 w-[calc(100vw-32px)] md:w-[358px] items-stretch snap-center shrink-0">
+                                                    <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-2 self-center">
+                                                        Vòng 2: Nhánh thua
+                                                    </div>
+                                                    <div className="flex flex-col gap-3">
+                                                        {Array.from({ length: layout.lr2.count }).map((_, i) => {
+                                                            const mNo = layout.lr2.start + i;
+                                                            const m = parseMatch(matchByNo.get(mNo), mNo, tournamentData);
+                                                            return (
+                                                                <div key={mNo} className="h-[228px] flex flex-col justify-center shrink-0 items-center">
+                                                                    <BracketMatchCard match={m} />
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </>
                                 );
                             })()}
                         </div>

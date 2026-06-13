@@ -5,8 +5,9 @@ import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
 
-// Load .env from the backend root (one level above src/)
-config({ path: join(__dirname, '..', '.env') });
+if (process.env.DOCKER !== 'true') {
+  config({ path: join(__dirname, '..', '.env') });
+}
 
 /**
  * DataSource used by the TypeORM CLI for generating and running migrations.

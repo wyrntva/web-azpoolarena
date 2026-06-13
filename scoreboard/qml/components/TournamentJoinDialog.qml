@@ -18,6 +18,7 @@ DialogShell {
     property int titleFont: Math.round(24 * uiScale)
 
     signal bothConfirmed()
+    signal absentDetected()
 
     titleText: "Xác nhận tham gia giải"
     contentMargins: 30
@@ -110,6 +111,7 @@ DialogShell {
             var p1Status = leftConfirmed ? "" : "absent"
             var p2Status = rightConfirmed ? "" : "absent"
             sendCheckIn(p1Status, p2Status)
+            root.absentDetected()
             root.close()
             return
         }
@@ -169,6 +171,7 @@ DialogShell {
                 var p1 = root.leftConfirmed ? "" : "absent"
                 var p2 = root.rightConfirmed ? "" : "absent"
                 root.sendCheckIn(p1, p2)
+                root.absentDetected()
 
                 // Tự đóng dialog
                 root.close()

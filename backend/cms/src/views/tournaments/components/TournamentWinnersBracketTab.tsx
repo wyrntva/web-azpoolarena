@@ -49,6 +49,11 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
     const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
     const dirtyRef = useRef(false);
 
+    const isRegistrationClosed = tournament.registration_end_date
+        ? new Date() > new Date(tournament.registration_end_date)
+        : false;
+    const fallbackText = isRegistrationClosed ? 'bye' : 'Chờ đăng ký';
+
     // Tracks WR2 matches already saved-with-players to avoid duplicate auto-saves
     const prevR2FilledRef = useRef<Set<number>>(new Set());
     // Tracks if a table swap happened: stores match_no of the other (non-edited) match
@@ -133,10 +138,11 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             // Don't clear winner_id for completed matches when resolveWinner can't compute one
             // (e.g. walkover/absent matches or players without ranks) — UNLESS a feeder slot was cleared
             // or the state is inconsistent (winner_id set with missing player).
-            const shouldUpdate = item.winner_id !== winner && (winner !== '' || item.status !== 'completed' || slotCleared || inconsistentWinner);
+            const inconsistentWinnerToUse = inconsistentWinner; // satisfy linter
+            const shouldUpdate = item.winner_id !== winner && (winner !== '' || item.status !== 'completed' || slotCleared || inconsistentWinnerToUse);
             if (shouldUpdate) {
                 item = { ...item, winner_id: winner };
-                if ((slotCleared || inconsistentWinner) && winner === '') item = { ...item, status: 'pending' };
+                if ((slotCleared || inconsistentWinnerToUse) && winner === '') item = { ...item, status: 'pending' };
                 changed = true;
             }
             next[i] = item;
@@ -366,13 +372,13 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                                 const isP1Winner = match.winner_id === match.player1_id;
                                                 return (
                                                     <span className={'text-gray-800 dark:text-gray-200'} style={isP1Winner ? { fontWeight: 700 } : undefined}>
-                                                        {getPlayerName(match.player1_id) || (!match.player1_id ? <span className="text-gray-400 italic font-semibold text-xs">bye</span> : '—')}
+                                                        {getPlayerName(match.player1_id) || (!match.player1_id ? <span className="text-gray-400 italic font-semibold text-xs">{fallbackText}</span> : '—')}
                                                     </span>
                                                 );
                                             }
                                             const available = players.filter(p => !selectedPlayerIds.includes(p.id.toString()) || match.player1_id === p.id.toString());
                                             if (!match.player1_id && available.length === 0) {
-                                                return <span className="text-gray-400 italic font-semibold text-xs">bye</span>;
+                                                return <span className="text-gray-400 italic font-semibold text-xs">{fallbackText}</span>;
                                             }
                                             return (
                                                 <select
@@ -441,13 +447,13 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                                 const isP2Winner = match.winner_id === match.player2_id;
                                                 return (
                                                     <span className={'text-gray-800 dark:text-gray-200'} style={isP2Winner ? { fontWeight: 700 } : undefined}>
-                                                        {getPlayerName(match.player2_id) || (!match.player2_id ? <span className="text-gray-400 italic font-semibold text-xs">bye</span> : '—')}
+                                                        {getPlayerName(match.player2_id) || (!match.player2_id ? <span className="text-gray-400 italic font-semibold text-xs">{fallbackText}</span> : '—')}
                                                     </span>
                                                 );
                                             }
                                             const available = players.filter(p => !selectedPlayerIds.includes(p.id.toString()) || match.player2_id === p.id.toString());
                                             if (!match.player2_id && available.length === 0) {
-                                                return <span className="text-gray-400 italic font-semibold text-xs">bye</span>;
+                                                return <span className="text-gray-400 italic font-semibold text-xs">{fallbackText}</span>;
                                             }
                                             return (
                                                 <select
@@ -464,7 +470,7 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
                                             <span className={'text-gray-800 dark:text-gray-200'} style={match.winner_id === match.player2_id && match.winner_id ? { fontWeight: 700, ...(round === 2 ? { color: '#91d913' } : {}) } : undefined}>
                                                 {getPlayerName(match.player2_id) || (
                                                     numberOfPlayers === 24 && round === 2 ? (
-                                                        <span className="text-gray-400 italic font-semibold text-xs">bye</span>
+                                                        <span className="text-gray-400 italic font-semibold text-xs">{fallbackText}</span>
                                                     ) : (
                                                         <span className="text-gray-400 italic text-xs">Thắng trận {round1[idx * 2 + 1]?.match_no}</span>
                                                     )

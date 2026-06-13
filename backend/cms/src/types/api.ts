@@ -285,6 +285,19 @@ export interface Penalty {
 // Tournament settings
 export type ScoringRuleType = 'win' | 'lose' | 'draw' | 'bonus' | 'penalty';
 
+export interface TournamentRound {
+    id: number;
+    name: string;
+    description?: string;
+    order: number;
+    tournament_type?: string;
+    number_of_players?: number;
+    multiplier?: number;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
 export interface TournamentRank {
     id: number;
     order: number;

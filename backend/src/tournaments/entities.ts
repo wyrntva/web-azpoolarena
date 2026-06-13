@@ -440,4 +440,45 @@ export class PaymentCodeEntity {
 
   @CreateDateColumn()
   created_at: Date;
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity;
+}
+
+export enum TableFeePaymentStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  CANCELLED = 'cancelled',
+}
+
+@Entity('tournament_table_fee_payments')
+export class TableFeePaymentEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'varchar', length: 20, unique: true })
+  code: string; // Format: "TFEE" + 8 random alphanum
+
+  @Column({ type: 'int' })
+  match_id: number;
+
+  @Column({ type: 'int' })
+  amount: number; // Total amount in VND
+
+  @Column({ type: 'boolean', default: false })
+  paid: boolean;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: TableFeePaymentStatus.PENDING,
+  })
+  status: TableFeePaymentStatus;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  paid_at: Date | null;
 }

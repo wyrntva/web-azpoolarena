@@ -18,6 +18,8 @@ class TournamentService(QObject):
     """Fetch active tournament match from backend and expose it to QML."""
 
     matchChanged = Signal()
+    tableFeePaymentReady = Signal(bool, str, int, str)  # skip, qr_url, amount, code
+    tableFeePaymentStatus = Signal(bool)                 # paid
 
     def __init__(self, device_settings: Optional[QObject] = None, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -139,6 +141,72 @@ class TournamentService(QObject):
         if winner_id > 0:
             reply.finished.connect(self.fetchActiveMatch)
         reply.finished.connect(reply.deleteLater)
+
+    @Slot(int, int)
+    def requestTableFeePayment(self, match_id: int, elapsed_sec: int) -> None:
+        """Called from QML when match ends — requests table fee payment info."""
+        url_str = f"{self._base_url}/api/tournaments/device/active-match/{match_id}/table-fee-payment"
+        request = QNetworkRequest(QUrl(url_str))
+        request.setRawHeader(b"Content-Type", b"application/json")
+        request.setRawHeader(b"User-Agent", b"PoolArenaScoreboard/1.0")
+        body = json.dumps({"elapsed_sec": elapsed_sec}).encode("utf-8")
+        reply = self._network.post(request, body)
+        reply.finished.connect(lambda r=reply: self._on_table_fee_payment_reply(r))
+
+    def _on_table_fee_payment_reply(self, reply: QNetworkReply) -> None:
+        try:
+            if reply.error() != QNetworkReply.NetworkError.NoError:
+                print(f"[TournamentService] Table fee payment error: {reply.errorString()}")
+                self.tableFeePaymentReady.emit(True, "", 0, "")
+                return
+            raw = bytes(reply.readAll())
+            data = json.loads(raw.decode("utf-8")) if raw else {}
+            if data.get("skip"):
+                self.tableFeePaymentReady.emit(True, "", 0, "")
+            else:
+                self.tableFeePaymentReady.emit(
+                    False,
+                    str(data.get("qr_url", "")),
+                    int(data.get("amount", 0)),
+                    str(data.get("payment_code", "")),
+                )
+        except Exception as e:
+            print(f"[TournamentService] Table fee payment reply error: {e}")
+            self.tableFeePaymentReady.emit(True, "", 0, "")
+        finally:
+            reply.deleteLater()
+
+    @Slot(int, str)
+    def cancelTableFeePayment(self, match_id: int, code: str) -> None:
+        """Called from QML when the user cancels the table fee payment dialog."""
+        url_str = f"{self._base_url}/api/tournaments/device/active-match/{match_id}/table-fee-payment/cancel"
+        request = QNetworkRequest(QUrl(url_str))
+        request.setRawHeader(b"Content-Type", b"application/json")
+        request.setRawHeader(b"User-Agent", b"PoolArenaScoreboard/1.0")
+        body = json.dumps({"code": code}).encode("utf-8")
+        reply = self._network.post(request, body)
+        reply.finished.connect(reply.deleteLater)
+
+    @Slot(int, str)
+    def checkTableFeePayment(self, match_id: int, code: str) -> None:
+        """Polls backend for table fee payment status."""
+        url_str = f"{self._base_url}/api/tournaments/device/active-match/{match_id}/table-fee-payment/status?code={code}"
+        request = QNetworkRequest(QUrl(url_str))
+        request.setRawHeader(b"User-Agent", b"PoolArenaScoreboard/1.0")
+        reply = self._network.get(request)
+        reply.finished.connect(lambda r=reply: self._on_table_fee_status_reply(r))
+
+    def _on_table_fee_status_reply(self, reply: QNetworkReply) -> None:
+        try:
+            if reply.error() != QNetworkReply.NetworkError.NoError:
+                return
+            raw = bytes(reply.readAll())
+            data = json.loads(raw.decode("utf-8")) if raw else {}
+            self.tableFeePaymentStatus.emit(bool(data.get("paid", False)))
+        except Exception as e:
+            print(f"[TournamentService] Table fee status reply error: {e}")
+        finally:
+            reply.deleteLater()
 
     @Slot(int, str, str)
     def updateCheckIn(self, match_id: int, p1_check_in: str, p2_check_in: str) -> None:

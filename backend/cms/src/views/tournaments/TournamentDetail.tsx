@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import TournamentRegistrationsTab from './components/TournamentRegistrationsTab';
 import TournamentQualificationTab from './components/TournamentQualificationTab';
 import TournamentKnockoutTab from './components/TournamentKnockoutTab';
+import TournamentPaymentsTab from './components/TournamentPaymentsTab';
 import { getTournamentTypeLabel } from '../../constants/shared';
 
 
@@ -384,6 +385,15 @@ const TournamentDetail = () => {
                             />
                         </Tabs.Item>
                     )}
+
+                    {/* Thanh toán */}
+                    <Tabs.Item
+                        active={activeTab === 'payments'}
+                        title="Thanh toán"
+                        onClick={() => setActiveTab('payments')}
+                    >
+                        <TournamentPaymentsTab tournamentId={tournament.id} />
+                    </Tabs.Item>
                 </Tabs>
             </Card>
         </div>

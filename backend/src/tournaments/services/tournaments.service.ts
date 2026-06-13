@@ -11,7 +11,10 @@ import {
   TournamentMatchStatus,
   TournamentMatchBracket,
   TournamentRankEntity,
+  TournamentRoundEntity,
   PaymentCodeEntity,
+  TableFeePaymentEntity,
+  TableFeePaymentStatus,
 } from '../entities';
 import {
   CreateTournamentDto,
@@ -56,8 +59,12 @@ export class TournamentsService {
     private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(TournamentRankEntity)
     private readonly rankRepo: Repository<TournamentRankEntity>,
+    @InjectRepository(TournamentRoundEntity)
+    private readonly roundRepo: Repository<TournamentRoundEntity>,
     @InjectRepository(PaymentCodeEntity)
     private readonly paymentCodeRepo: Repository<PaymentCodeEntity>,
+    @InjectRepository(TableFeePaymentEntity)
+    private readonly tableFeePaymentRepo: Repository<TableFeePaymentEntity>,
     @InjectRepository(TableEntity)
     private readonly tableRepo: Repository<TableEntity>,
   ) {}
@@ -1129,6 +1136,51 @@ export class TournamentsService {
     return reloaded;
   }
 
+  private getMatchRoundLabel(matchNo: number, numberOfPlayers: number): string | null {
+    if (numberOfPlayers > 32) {
+      if (matchNo >= 81 && matchNo <= 96)  return 'r16';
+      if (matchNo >= 97 && matchNo <= 104) return 'r8';
+      if (matchNo >= 105 && matchNo <= 108) return 'qf';
+      if (matchNo >= 109 && matchNo <= 110) return 'sf';
+      if (matchNo === 111) return 'f';
+    } else if (numberOfPlayers === 24) {
+      if (matchNo >= 25 && matchNo <= 32) return 'r8';
+      if (matchNo >= 33 && matchNo <= 36) return 'qf';
+      if (matchNo >= 37 && matchNo <= 38) return 'sf';
+      if (matchNo === 39) return 'f';
+    } else if (numberOfPlayers > 16) {
+      if (matchNo >= 41 && matchNo <= 48) return 'r8';
+      if (matchNo >= 49 && matchNo <= 52) return 'qf';
+      if (matchNo >= 53 && matchNo <= 54) return 'sf';
+      if (matchNo === 55) return 'f';
+    } else {
+      if (matchNo >= 21 && matchNo <= 24) return 'qf';
+      if (matchNo >= 25 && matchNo <= 26) return 'sf';
+      if (matchNo === 27) return 'f';
+    }
+    return null;
+  }
+
+  private readonly ROUND_LABEL_TO_NAME: Record<string, string> = {
+    'qf':  'Tứ kết',
+    'sf':  'Bán kết',
+    'f':   'Chung kết',
+    'r8':  'Vòng 1/8',
+    'r16': 'Vòng 1/16',
+  };
+
+  private async getRoundCoefficient(matchNo: number, numberOfPlayers: number): Promise<number> {
+    const label = this.getMatchRoundLabel(matchNo, numberOfPlayers);
+    if (!label) return 1.0;
+    const roundName = this.ROUND_LABEL_TO_NAME[label];
+    if (!roundName) return 1.0;
+    const roundConfig = await this.roundRepo.findOne({
+      where: { number_of_players: numberOfPlayers, name: roundName },
+    });
+    if (!roundConfig || !roundConfig.multiplier) return 1.0;
+    return Number(roundConfig.multiplier);
+  }
+
   async calculateAndApplyRating(match: TournamentMatchEntity, winnerId: number) {
     if (!match.player1_id || !match.player2_id) return;
 
@@ -1196,20 +1248,31 @@ export class TournamentsService {
       }
     }
 
+    // Look up tournament coefficient for winner only
+    const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    const coefficient = tournament
+      ? await this.getRoundCoefficient(match.match_no, tournament.number_of_players)
+      : 1.0;
+
     let p1PointsChange = 0;
     let p2PointsChange = 0;
 
     if (match.player1_points !== null && match.player1_points !== undefined) {
       p1PointsChange = match.player1_points;
     } else {
-      p1PointsChange = winnerId === player1.id ? pointsChange : -pointsChange;
+      // Winner gets base points × coefficient, loser gets -base points (no multiplier)
+      p1PointsChange = winnerId === player1.id
+        ? Math.round(pointsChange * coefficient)
+        : -pointsChange;
       match.player1_points = p1PointsChange;
     }
 
     if (match.player2_points !== null && match.player2_points !== undefined) {
       p2PointsChange = match.player2_points;
     } else {
-      p2PointsChange = winnerId === player2.id ? pointsChange : -pointsChange;
+      p2PointsChange = winnerId === player2.id
+        ? Math.round(pointsChange * coefficient)
+        : -pointsChange;
       match.player2_points = p2PointsChange;
     }
 
@@ -1570,5 +1633,167 @@ export class TournamentsService {
       // Recursively propagate
       await this.propagateWinnerToNextRound(nextMatch);
     }
+  }
+
+  // ===== Table Fee Payment =====
+
+  private generateTableFeeCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let random = '';
+    for (let i = 0; i < 8; i++) {
+      random += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return `TFEE${random}`;
+  }
+
+  private getTableFeeConfig(): { price: number; per_minutes: number; surcharge: number } {
+    try {
+      const filePath = path.join(__dirname, '..', '..', '..', 'uploads', 'table_fee.json');
+      if (fs.existsSync(filePath)) {
+        const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        return { price: data.price ?? 0, per_minutes: data.per_minutes ?? 1, surcharge: data.surcharge ?? 0 };
+      }
+    } catch { /* ignore */ }
+    return { price: 0, per_minutes: 1, surcharge: 0 };
+  }
+
+  async createTableFeePayment(matchId: number, elapsedSec: number) {
+    const match = await this.matchRepo.findOne({ where: { id: matchId } });
+    if (!match) throw new NotFoundException('Match not found');
+
+    const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    const config = this.getTableFeeConfig();
+
+    if (tournament?.free_table_fee || config.price === 0) {
+      return { skip: true };
+    }
+
+    const perMinutes = config.per_minutes || 1;
+    const baseAmount = Math.ceil(elapsedSec / (perMinutes * 60)) * config.price;
+    const totalAmount = baseAmount + (config.surcharge || 0);
+
+    if (totalAmount <= 0) return { skip: true };
+
+    const code = this.generateTableFeeCode();
+    await this.tableFeePaymentRepo.save(
+      this.tableFeePaymentRepo.create({
+        code,
+        match_id: matchId,
+        amount: totalAmount,
+        paid: false,
+        status: TableFeePaymentStatus.PENDING,
+      }),
+    );
+
+    const BANK_ID = 'ocb';
+    const ACCOUNT_NO = 'CASSPOOLARENA';
+    const ACCOUNT_NAME = 'TRAN VIET ANH';
+    const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact2.png?amount=${totalAmount}&addInfo=${code}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+
+    return { skip: false, payment_code: code, amount: totalAmount, qr_url: qrUrl };
+  }
+
+  async getTableFeePaymentStatus(matchId: number, code: string) {
+    const payment = await this.tableFeePaymentRepo.findOne({ where: { code, match_id: matchId } });
+    if (!payment) throw new NotFoundException('Payment not found');
+    return { paid: payment.paid, amount: payment.amount };
+  }
+
+  async getTournamentPayments(tournamentId: number) {
+    // 1. Registration payment codes
+    const codes = await this.paymentCodeRepo.find({
+      where: { tournament_id: tournamentId },
+      order: { created_at: 'DESC' },
+    });
+
+    // Fetch user info separately to avoid TypeORM relation dependency
+    const userIds = [...new Set(codes.map((c) => c.user_id))];
+    const users = userIds.length > 0
+      ? await this.userRepo.find({ where: { id: In(userIds) } })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const registrationCodes = codes.map((c) => ({
+      id: c.id,
+      code: c.code,
+      tournament_id: c.tournament_id,
+      user_id: c.user_id,
+      used: c.used,
+      created_at: c.created_at,
+      user: userMap.has(c.user_id)
+        ? { full_name: userMap.get(c.user_id)!.full_name, phone_number: userMap.get(c.user_id)!.phone_number }
+        : null,
+    }));
+
+    // 2. Table fee payments — get match IDs for this tournament first
+    const matches = await this.matchRepo.find({
+      where: { tournament_id: tournamentId },
+      select: { id: true },
+    });
+    const matchIds = matches.map((m) => m.id);
+
+    if (matchIds.length === 0) {
+      return { registrationCodes, tableFeePayments: [] };
+    }
+
+    // Check if 'status' column exists (migration may not have run yet)
+    const em = this.tableFeePaymentRepo.manager;
+    const colCheck: any[] = await em.query(
+      `SELECT 1 FROM information_schema.columns
+       WHERE table_name = 'tournament_table_fee_payments' AND column_name = 'status' LIMIT 1`,
+    );
+    const hasStatusCol = colCheck.length > 0;
+
+    const selectCols = hasStatusCol
+      ? `id, code, match_id, amount, paid, status, created_at, paid_at`
+      : `id, code, match_id, amount, paid, created_at, paid_at,
+         CASE WHEN paid THEN 'paid' ELSE 'pending' END AS status`;
+
+    const feeRows: any[] = await em.query(
+      `SELECT ${selectCols}
+       FROM tournament_table_fee_payments
+       WHERE match_id IN (${matchIds.map((_, i) => `$${i + 1}`).join(',')})
+       ORDER BY created_at DESC`,
+      matchIds,
+    );
+
+    const tableFeePayments = feeRows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      match_id: r.match_id,
+      amount: r.amount,
+      paid: r.paid,
+      status: r.status as 'pending' | 'paid' | 'cancelled',
+      created_at: r.created_at,
+      paid_at: r.paid_at,
+    }));
+
+    return { registrationCodes, tableFeePayments };
+  }
+
+  async redeemTableFeePayment(code: string) {
+    const payment = await this.tableFeePaymentRepo.findOne({ where: { code } });
+    if (!payment || payment.paid) return;
+
+    payment.paid = true;
+    payment.paid_at = new Date();
+    payment.status = TableFeePaymentStatus.PAID;
+    await this.tableFeePaymentRepo.save(payment);
+
+    const match = await this.matchRepo.findOne({ where: { id: payment.match_id } });
+    if (match && match.status !== TournamentMatchStatus.COMPLETED) {
+      match.status = TournamentMatchStatus.COMPLETED;
+      await this.matchRepo.save(match);
+      await this.emitMatchUpdate(match.id);
+    }
+  }
+
+  async cancelTableFeePayment(matchId: number, code: string) {
+    const payment = await this.tableFeePaymentRepo.findOne({
+      where: { code, match_id: matchId },
+    });
+    if (!payment || payment.paid) return;
+    payment.status = TableFeePaymentStatus.CANCELLED;
+    await this.tableFeePaymentRepo.save(payment);
   }
 }

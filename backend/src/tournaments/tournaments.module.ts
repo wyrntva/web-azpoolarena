@@ -9,6 +9,7 @@ import {
   ScoringRuleEntity,
   PaymentCodeEntity,
   CoefficientEntity,
+  TableFeePaymentEntity,
 } from './entities';
 import { TournamentsService } from './services/tournaments.service';
 import { TournamentsController } from './controllers/tournaments.controller';
@@ -29,6 +30,7 @@ import { TableEntity } from '../areas/entities/area.entity';
       ScoringRuleEntity,
       PaymentCodeEntity,
       CoefficientEntity,
+      TableFeePaymentEntity,
       UserEntity,
       TableEntity,
     ]),

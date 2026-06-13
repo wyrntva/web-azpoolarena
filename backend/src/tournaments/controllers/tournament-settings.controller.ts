@@ -96,6 +96,15 @@ export class TournamentSettingsController {
   @Roles('admin', 'Super Admin')
   async deleteScoringRule(@Param('id', ParseIntPipe) id: number) { return this.service.deleteScoringRule(id); }
 
+  // Table fee
+  @Get('table-fee')
+  async getTableFee() { return this.service.getTableFee(); }
+
+  @Post('table-fee')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async saveTableFee(@Body() dto: { price: number; per_minutes: number; surcharge?: number }) { return this.service.saveTableFee(dto); }
+
   // Coefficients
   @Get('coefficients')
   async getCoefficients() { return this.service.getCoefficients(); }
