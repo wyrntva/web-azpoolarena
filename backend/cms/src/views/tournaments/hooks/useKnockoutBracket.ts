@@ -362,13 +362,13 @@ export const useKnockoutBracket = ({
         []
     );
 
-    // KO8 auto-seed: seed WR2 (13-16) vs LR2 straight (17,18,19,20)
+    // KO8 auto-seed: seed WR2 (13-16) vs LR2 (19,20,17,18)
     // Seeds each player as soon as they qualify — no need to wait for both
     useEffect(() => {
         if (!isKO8Mode) return;
 
         const wr = [winnerOf(13), winnerOf(14), winnerOf(15), winnerOf(16)];
-        const lr = [winnerOf(17), winnerOf(18), winnerOf(19), winnerOf(20)];
+        const lr = [winnerOf(19), winnerOf(20), winnerOf(17), winnerOf(18)];
 
         // Include matches where at least 1 player is known, or where stale players need clearing
         const candidates = ko8Round1Nos.map((matchNo, i) => ({ matchNo, i, p1: wr[i], p2: lr[i] }))

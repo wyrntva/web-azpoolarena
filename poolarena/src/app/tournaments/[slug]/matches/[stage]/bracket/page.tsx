@@ -171,7 +171,36 @@ function getFallbackPlayerName(
     bracket: string,
     round: number
 ): string {
-    if (round === 1 && (bracket === "winners" || bracket === "knockout")) {
+    if (round === 1 && bracket === "winners") {
+        return "Bye";
+    }
+
+    if (round === 1 && bracket === "knockout") {
+        if (numberOfPlayers === 24) {
+            if (matchNo >= 25 && matchNo <= 32) {
+                const idx = matchNo - 25;
+                if (slot === 1) return `Thắng trận ${9 + idx}`;
+                return `Thắng trận ${17 + idx}`;
+            }
+        } else {
+            const size = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
+            if (size === 16 && matchNo >= 21 && matchNo <= 24) {
+                const idx = matchNo - 21;
+                if (slot === 1) return `Thắng trận ${13 + idx}`;
+                const mapping = [19, 20, 17, 18];
+                return `Thắng trận ${mapping[idx]}`;
+            }
+            if (size === 32 && matchNo >= 41 && matchNo <= 48) {
+                const idx = matchNo - 41;
+                if (slot === 1) return `Thắng trận ${25 + idx}`;
+                return `Thắng trận ${33 + idx}`;
+            }
+            if (size === 64 && matchNo >= 81 && matchNo <= 96) {
+                const idx = matchNo - 81;
+                if (slot === 1) return `Thắng trận ${49 + idx}`;
+                return `Thắng trận ${65 + idx}`;
+            }
+        }
         return "Bye";
     }
 

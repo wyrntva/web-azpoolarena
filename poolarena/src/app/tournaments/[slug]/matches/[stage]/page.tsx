@@ -964,7 +964,11 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                         if (p1Id && p2Id) return m;
 
                         const wr2MatchNo = layout.wr2.start + idx;
-                        const lr2MatchNo = layout.lr2.start + idx;
+                        let lr2MatchNo = layout.lr2.start + idx;
+                        if (numberOfPlayers <= 16) {
+                            const mapping = [19, 20, 17, 18];
+                            lr2MatchNo = mapping[idx];
+                        }
                         let p1 = m.player1 || null;
                         let p2 = m.player2 || null;
                         if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
@@ -986,7 +990,11 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
 
                     roundFormattedMatches = koMatches.map((match, idx) => {
                         const wr2MatchNo = layout.wr2.start + idx;
-                        const lr2MatchNo = layout.lr2.start + idx;
+                        let lr2MatchNo = layout.lr2.start + idx;
+                        if (numberOfPlayers <= 16) {
+                            const mapping = [19, 20, 17, 18];
+                            lr2MatchNo = mapping[idx];
+                        }
                         const p1Fallback = `Thắng trận ${wr2MatchNo}`;
                         const p2Fallback = `Thắng trận ${lr2MatchNo}`;
                         return formatMatch(match, tournament, p1Fallback, p2Fallback, maxKoRound);

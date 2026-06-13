@@ -990,6 +990,16 @@ Item {
                 tableFeeDlg.qrUrl = qrUrl
                 tableFeeDlg.amount = amount
                 tableFeeDlg.paymentCode = code
+                tableFeeDlg.elapsedSec = page.matchElapsedSec
+
+                // Tính giờ vào / giờ ra
+                var now = new Date()
+                var startMs = now.getTime() - page.matchElapsedSec * 1000
+                var startDate = new Date(startMs)
+                function padT(n) { return (n < 10 ? "0" : "") + n }
+                tableFeeDlg.startTime = padT(startDate.getHours()) + ":" + padT(startDate.getMinutes())
+                tableFeeDlg.endTime   = padT(now.getHours()) + ":" + padT(now.getMinutes())
+
                 tableFeeDlg.open()
             }
         }

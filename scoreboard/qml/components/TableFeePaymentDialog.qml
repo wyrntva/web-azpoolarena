@@ -17,6 +17,17 @@ DialogShell {
     property int amount: 0
     property string paymentCode: ""
     property int matchId: 0
+    property string startTime: ""
+    property string endTime: ""
+    property int elapsedSec: 0
+
+    function fmtElapsed(sec) {
+        const h = Math.floor(sec / 3600)
+        const m = Math.floor((sec % 3600) / 60)
+        const s = sec % 60
+        function pad(n) { return (n < 10 ? "0" : "") + n }
+        return pad(h) + ":" + pad(m) + ":" + pad(s)
+    }
 
     signal paymentConfirmed()
 
@@ -69,6 +80,86 @@ DialogShell {
             font.bold: true
             color: "#172339"
             Layout.alignment: Qt.AlignHCenter
+        }
+
+        // Time info row
+        Rectangle {
+            Layout.fillWidth: true
+            height: timeRow.implicitHeight + Math.round(24 * root.uiScale)
+            color: "#f7f8fa"
+            radius: Math.round(10 * root.uiScale)
+            visible: root.startTime !== "" || root.endTime !== "" || root.elapsedSec > 0
+
+            Row {
+                id: timeRow
+                anchors.centerIn: parent
+                spacing: Math.round(32 * root.uiScale)
+
+                Column {
+                    spacing: Math.round(4 * root.uiScale)
+                    AppText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Giờ vào"
+                        font.pixelSize: Math.round(14 * root.uiScale)
+                        color: "#888"
+                    }
+                    AppText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: root.startTime || "---"
+                        font.pixelSize: Math.round(22 * root.uiScale)
+                        font.bold: true
+                        color: "#172339"
+                    }
+                }
+
+                AppText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "→"
+                    font.pixelSize: Math.round(20 * root.uiScale)
+                    color: "#aaa"
+                }
+
+                Column {
+                    spacing: Math.round(4 * root.uiScale)
+                    AppText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Giờ ra"
+                        font.pixelSize: Math.round(14 * root.uiScale)
+                        color: "#888"
+                    }
+                    AppText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: root.endTime || "---"
+                        font.pixelSize: Math.round(22 * root.uiScale)
+                        font.bold: true
+                        color: "#172339"
+                    }
+                }
+
+                AppText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "|"
+                    font.pixelSize: Math.round(20 * root.uiScale)
+                    color: "#ddd"
+                }
+
+                Column {
+                    spacing: Math.round(4 * root.uiScale)
+                    AppText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Thời gian"
+                        font.pixelSize: Math.round(14 * root.uiScale)
+                        color: "#888"
+                    }
+                    AppText {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: root.elapsedSec > 0 ? root.fmtElapsed(root.elapsedSec) : "---"
+                        font.pixelSize: Math.round(22 * root.uiScale)
+                        font.bold: true
+                        color: "#172339"
+                    }
+                }
+            }
         }
 
         // VietQR image (URL đã là ảnh PNG trực tiếp)
