@@ -145,26 +145,27 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                         ))}
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <span className="font-semibold text-gray-500">Thống kê thu:</span>
-                    <span className="text-gray-600 dark:text-gray-300">
-                        Tiền bàn: <strong className="text-gray-900 dark:text-white">{formatVND(totalPaidTableFee)}</strong>
-                    </span>
-                    <span className="text-gray-600 dark:text-gray-300">
-                        Phụ phí: <strong className="text-gray-900 dark:text-white">{formatVND(totalPaidSurcharge)}</strong>
-                    </span>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-gray-600 dark:text-gray-300">
-                        Tiền mặt: <strong className="text-orange-600 dark:text-orange-400">{formatVND(totalPaidCash)}</strong>
-                    </span>
-                    <span className="text-gray-600 dark:text-gray-300">
-                        Chuyển khoản: <strong className="text-blue-600 dark:text-blue-400">{formatVND(totalPaidTransfer)}</strong>
-                    </span>
-                    <span className="text-gray-400">|</span>
-                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
-                        Tổng thu: {formatVND(totalPaid)}
-                    </span>
-                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3 text-xs bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <span className="font-semibold text-gray-500">Thống kê thu:</span>
+                        <span className="text-gray-600 dark:text-gray-300">
+                            Tiền bàn: <strong className="text-gray-900 dark:text-white">{formatVND(totalPaidTableFee)}</strong>
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-300">
+                            Phụ phí: <strong className="text-gray-900 dark:text-white">{formatVND(totalPaidSurcharge)}</strong>
+                        </span>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-gray-600 dark:text-gray-300">
+                            Tiền mặt: <strong className="text-orange-600 dark:text-orange-400">{formatVND(totalPaidCash)}</strong>
+                        </span>
+                        <span className="text-gray-600 dark:text-gray-300">
+                            Chuyển khoản: <strong className="text-blue-600 dark:text-blue-400">{formatVND(totalPaidTransfer)}</strong>
+                        </span>
+                        <span className="text-gray-400">|</span>
+                        <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                            Tổng thu: {formatVND(totalPaid)}
+                        </span>
+                    </div>
                     <Button size="sm" color="light" onClick={fetchPayments}>
                         <Icon icon="solar:refresh-outline" className="mr-1.5" />
                         Làm mới
