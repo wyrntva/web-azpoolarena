@@ -217,13 +217,13 @@ docker exec -w /app azpool-backend-dev npx typeorm migration:run -d dist/data-so
 ```bash
 # Production
 cd /www/wwwroot/cms.poolarena.vn
-docker compose -f docker-compose.prod.yml build backend poolarena
+docker compose -f docker-compose.prod.yml build --no-cache backend poolarena
 docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml ps
 
 # Dev
 cd /www/wwwroot/dev.cms.poolarena.vn
-docker compose -f docker-compose.dev.yml build backend poolarena
+docker compose -f docker-compose.dev.yml build --no-cache backend poolarena
 docker compose -f docker-compose.dev.yml up -d
 docker compose -f docker-compose.dev.yml ps
 ```
@@ -240,9 +240,9 @@ cd /www/wwwroot/dev.cms.poolarena.vn && git stash && git pull origin master
 cd /www/wwwroot/dev.poolarena.vn && git stash && git pull origin master
 
 # 2. Rebuild và restart PRODUCTION
-# (Nếu lỗi Conflict container name, chạy docker compose ... down trước)
+# (dùng --no-cache để đảm bảo CMS frontend luôn được build lại)
 cd /www/wwwroot/cms.poolarena.vn
-docker compose -f docker-compose.prod.yml build backend poolarena
+docker compose -f docker-compose.prod.yml build --no-cache backend poolarena
 docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.prod.yml up -d
 
 # 3. Đồng bộ CMS build sang host — PRODUCTION
@@ -250,7 +250,7 @@ docker cp azpool-backend-prod:/app/public/. /www/wwwroot/cms.poolarena.vn/backen
 
 # 4. Rebuild và restart DEV
 cd /www/wwwroot/dev.cms.poolarena.vn
-docker compose -f docker-compose.dev.yml build backend poolarena
+docker compose -f docker-compose.dev.yml build --no-cache backend poolarena
 docker compose -f docker-compose.dev.yml down && docker compose -f docker-compose.dev.yml up -d
 
 # 5. Đồng bộ CMS build sang host — DEV
@@ -274,7 +274,7 @@ cd /www/wwwroot/dev.poolarena.vn && git stash && git pull origin master
 
 # 2. Rebuild và restart PRODUCTION
 cd /www/wwwroot/cms.poolarena.vn
-docker compose -f docker-compose.prod.yml build backend poolarena
+docker compose -f docker-compose.prod.yml build --no-cache backend poolarena
 docker compose -f docker-compose.prod.yml down && docker compose -f docker-compose.prod.yml up -d
 
 # 3. Chạy migration — PRODUCTION
@@ -285,7 +285,7 @@ docker cp azpool-backend-prod:/app/public/. /www/wwwroot/cms.poolarena.vn/backen
 
 # 5. Rebuild và restart DEV
 cd /www/wwwroot/dev.cms.poolarena.vn
-docker compose -f docker-compose.dev.yml build backend poolarena
+docker compose -f docker-compose.dev.yml build --no-cache backend poolarena
 docker compose -f docker-compose.dev.yml down && docker compose -f docker-compose.dev.yml up -d
 
 # 6. Chạy migration — DEV
