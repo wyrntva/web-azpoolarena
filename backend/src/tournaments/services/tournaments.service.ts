@@ -1773,7 +1773,10 @@ export class TournamentsService {
 
   async redeemTableFeePayment(code: string) {
     const payment = await this.tableFeePaymentRepo.findOne({ where: { code } });
-    if (!payment || payment.paid) return;
+    if (!payment) {
+      throw new NotFoundException(`Table fee payment with code "${code}" not found`);
+    }
+    if (payment.paid) return;
 
     payment.paid = true;
     payment.paid_at = new Date();
@@ -1783,9 +1786,59 @@ export class TournamentsService {
     const match = await this.matchRepo.findOne({ where: { id: payment.match_id } });
     if (match && match.status !== TournamentMatchStatus.COMPLETED) {
       match.status = TournamentMatchStatus.COMPLETED;
+
+      // Auto-derive winner if not set
+      if (!match.winner_id) {
+        if (match.player1_id && match.player2_id) {
+          if (match.player1_score > match.player2_score) {
+            match.winner_id = match.player1_id;
+          } else if (match.player2_score > match.player1_score) {
+            match.winner_id = match.player2_id;
+          }
+        }
+      }
+
+      if (match.winner_id) {
+        await this.calculateAndApplyRating(match, match.winner_id);
+      }
+
+      await this.applyMatchStateAndTimerLogic(match);
+      await this.freezeOrUnfreezeMatchRanks(match);
       await this.matchRepo.save(match);
+
+      await this.propagateWinnerToNextRound(match);
+
+      if (match.winner_id) {
+        await this.propagateLoserToLR1(match);
+        await this.propagateLR1WinnerToLR2(match);
+        await this.propagateWR2LoserToLR2(match);
+      }
+      await this.autoScheduleQualificationMatches(match.tournament_id);
+
+      // Auto-complete tournament when the final match finishes
+      if (match.winner_id) {
+        const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+        if (tour && tour.status !== 'completed') {
+          const finalMatchNo = this.getFinalMatchNo(tour.number_of_players);
+          if (match.match_no === finalMatchNo) {
+            tour.status = 'completed';
+            await this.tourRepo.save(tour);
+          }
+        }
+      }
+
       await this.emitMatchUpdate(match.id);
     }
+  }
+
+  async payTableFeeCash(paymentId: number) {
+    const payment = await this.tableFeePaymentRepo.findOne({ where: { id: paymentId } });
+    if (!payment) {
+      throw new NotFoundException(`Table fee payment with ID "${paymentId}" not found`);
+    }
+    if (payment.paid) return { success: true };
+    await this.redeemTableFeePayment(payment.code);
+    return { success: true };
   }
 
   async cancelTableFeePayment(matchId: number, code: string) {

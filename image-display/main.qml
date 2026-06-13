@@ -292,7 +292,7 @@ Window {
 
                 model: matchesModel
                 delegate: Item {
-                    width: matchesGrid.cellWidth - 24 
+                    width: matchesGrid.cellWidth - 16 
                     height: 155                      
 
                     property int matchId: model.id
@@ -369,7 +369,7 @@ Window {
                         // Cột số bàn bên trái (Pill dọc - Bo góc trái tuyệt đối)
                         Rectangle {
                             id: tablePill
-                            width: 96
+                            width: 80
                             height: 120
                             color: {
                                 if (model.tableNumberColor === "green") return "#60DB80"
@@ -382,7 +382,7 @@ Window {
                             Rectangle {
                                 width: 16
                                 height: 120
-                                x: 80      // 96 - 16
+                                x: 64      // 80 - 16
                                 color: parent.color
                             }
 
@@ -444,7 +444,7 @@ Window {
                                     radius: 19
                                     clip: true
                                     anchors.left: parent.left
-                                    anchors.leftMargin: 12
+                                    anchors.leftMargin: 8
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: !model.player1IsBye
                                     color: "transparent"
@@ -452,7 +452,7 @@ Window {
                                     Image {
                                         id: p1AvatarImg
                                         anchors.fill: parent
-                                        source: model.player1Avatar || (apiBaseUrl + "/images/generic-profile.png")
+                                        source: (model.player1Avatar && model.player1Avatar !== "") ? model.player1Avatar : "file:///opt/azpool-imagedisplay/default_avatar.png"
                                         sourceSize.width: 76
                                         sourceSize.height: 76
                                         cache: true
@@ -467,9 +467,9 @@ Window {
                                 Text {
                                     text: model.player1Name + (model.player1Rank && !model.player1IsBye ? " - " + model.player1Rank : "")
                                     anchors.left: p1AvatarBg.visible ? p1AvatarBg.right : parent.left
-                                    anchors.leftMargin: 10
+                                    anchors.leftMargin: 8
                                     anchors.right: p1ScoreText.left
-                                    anchors.rightMargin: 10
+                                    anchors.rightMargin: 8
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
                                     font.bold: model.hasActiveResult ? model.player1IsWinner : false
@@ -495,7 +495,7 @@ Window {
                                     id: p1ScoreText
                                     text: model.player1Score
                                     anchors.right: parent.right
-                                    anchors.rightMargin: 16
+                                    anchors.rightMargin: 12
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
                                     font.bold: true
@@ -553,7 +553,7 @@ Window {
                                     radius: 19
                                     clip: true
                                     anchors.left: parent.left
-                                    anchors.leftMargin: 12
+                                    anchors.leftMargin: 8
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: !model.player2IsBye
                                     color: "transparent"
@@ -561,7 +561,7 @@ Window {
                                     Image {
                                         id: p2AvatarImg
                                         anchors.fill: parent
-                                        source: model.player2Avatar || (apiBaseUrl + "/images/generic-profile.png")
+                                        source: (model.player2Avatar && model.player2Avatar !== "") ? model.player2Avatar : "file:///opt/azpool-imagedisplay/default_avatar.png"
                                         sourceSize.width: 76
                                         sourceSize.height: 76
                                         cache: true
@@ -576,9 +576,9 @@ Window {
                                 Text {
                                     text: model.player2Name + (model.player2Rank && !model.player2IsBye ? " - " + model.player2Rank : "")
                                     anchors.left: p2AvatarBg.visible ? p2AvatarBg.right : parent.left
-                                    anchors.leftMargin: 10
+                                    anchors.leftMargin: 8
                                     anchors.right: p2ScoreText.left
-                                    anchors.rightMargin: 10
+                                    anchors.rightMargin: 8
                                     anchors.verticalCenter: parent.verticalCenter
                                     font.family: baseFontFamily
                                     font.bold: model.hasActiveResult ? model.player2IsWinner : false

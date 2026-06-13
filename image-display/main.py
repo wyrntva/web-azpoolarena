@@ -451,12 +451,34 @@ def fetch_active_matches(api_base_url):
         
         # 2. Find active tournament (ongoing or upcoming)
         # Ưu tiên: ongoing > upcoming — hiển thị live ngay khi giải sắp diễn ra
+        # Đối với giải upcoming: chỉ mở trước khi giải đấu bắt đầu 10 phút.
         active_tour = None
         for status_priority in ["ongoing", "upcoming"]:
             for t in tours_data:
                 if isinstance(t, dict) and t.get("status") == status_priority:
-                    active_tour = t
-                    break
+                    if status_priority == "upcoming":
+                        start_date_str = t.get("start_date")
+                        if start_date_str:
+                            try:
+                                clean_date = start_date_str.replace("Z", "+00:00")
+                                start_dt = datetime.fromisoformat(clean_date)
+                                now_dt = datetime.now(timezone.utc)
+                                diff = start_dt - now_dt
+                                # Mở trước khi giải đấu bắt đầu 10p (<= 600 giây)
+                                if diff.total_seconds() <= 600:
+                                    active_tour = t
+                                    break
+                            except Exception as e:
+                                print(f"Error parsing start_date: {e}")
+                                # Fallback nếu parse lỗi
+                                active_tour = t
+                                break
+                        else:
+                            # Không có start_date thì không hiển thị dạng upcoming
+                            pass
+                    else: # ongoing
+                        active_tour = t
+                        break
             if active_tour:
                 break
                 

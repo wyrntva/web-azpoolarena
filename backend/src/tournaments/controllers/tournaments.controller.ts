@@ -258,6 +258,20 @@ export class TournamentsController {
     }
   }
 
+  @Post('table-fee-payment/:paymentId/pay-cash')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async payTableFeeCash(
+    @Param('paymentId', ParseIntPipe) paymentId: number,
+  ) {
+    try {
+      return await this.service.payTableFeeCash(paymentId);
+    } catch (err) {
+      this.logger.error(`payTableFeeCash(${paymentId}) failed: ${err?.message}`, err?.stack);
+      throw new InternalServerErrorException(err?.message ?? 'Unknown error');
+    }
+  }
+
   @Get(':id/bracket')
   async getBracket(@Param('id', ParseIntPipe) id: number) {
     return this.service.getMatches(id);

@@ -13,6 +13,9 @@ DialogShell {
     property bool leftConfirmed: false
     property bool rightConfirmed: false
 
+    onLeftConfirmedChanged: checkBoth()
+    onRightConfirmedChanged: checkBoth()
+
     property int btnW: Math.round(180 * uiScale)
     property int btnH: Math.round(72 * uiScale)
     property int titleFont: Math.round(24 * uiScale)

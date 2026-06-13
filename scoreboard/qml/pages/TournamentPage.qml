@@ -230,7 +230,16 @@ Item {
     property int  matchElapsedSec: 0
     property bool matchTimerRunning: false
 
-    function startMatchTimer()   { matchTimerRunning = true }
+    function startMatchTimer() {
+        if (typeof TournamentService !== "undefined" && TournamentService.activeMatch && TournamentService.activeMatch.match_id) {
+            var mid = TournamentService.activeMatch.match_id
+            TournamentService.recordMatchStart(mid)
+            var elapsed = TournamentService.getMatchElapsedSec(mid)
+            if (elapsed > matchElapsedSec)
+                matchElapsedSec = elapsed
+        }
+        matchTimerRunning = true
+    }
     function pauseMatchTimer()   { matchTimerRunning = false }
     function resetMatchTimer()   { matchElapsedSec = 0 }
     function fmtTime(sec) {
@@ -356,6 +365,8 @@ Item {
             
             console.log("[TournamentPage] syncScore called: " + Controller.leftScore + " - " + Controller.rightScore + " forceFinish=" + !!forceFinish)
             TournamentService.updateScore(m.match_id, Controller.leftScore, Controller.rightScore, winner_id || 0)
+            if (winner_id > 0)
+                TournamentService.clearMatchStart(m.match_id)
         }
     }
 
@@ -420,12 +431,35 @@ Item {
 
                 var p1ci = m.player1_check_in || "unconfirmed"
                 var p2ci = m.player2_check_in || "unconfirmed"
-                if (p1ci === "confirmed" && p2ci === "confirmed") {
+                var p1Ready = (p1ci === "confirmed" || p1ci === "absent")
+                var p2Ready = (p2ci === "confirmed" || p2ci === "absent")
+                if (p1Ready && p2Ready) {
                     page.matchJoined = true
-                    page.startMatchTimer()
+                    if (p1ci === "confirmed" && p2ci === "confirmed") {
+                        page.startMatchTimer()
+                    }
                 } else if (!page.matchJoined) {
                     joinDlg.leftConfirmed = (p1ci === "confirmed")
                     joinDlg.rightConfirmed = (p2ci === "confirmed")
+                    joinDlg.open()
+                }
+            } else if (!page.matchJoined) {
+                // Match loaded but not yet joined: update check-in status dynamically
+                var p1ci = m.player1_check_in || "unconfirmed"
+                var p2ci = m.player2_check_in || "unconfirmed"
+                joinDlg.leftConfirmed = (p1ci === "confirmed")
+                joinDlg.rightConfirmed = (p2ci === "confirmed")
+
+                var p1Ready = (p1ci === "confirmed" || p1ci === "absent")
+                var p2Ready = (p2ci === "confirmed" || p2ci === "absent")
+                if (p1Ready && p2Ready) {
+                    console.log("[TournamentPage] Check-in resolved from backend: p1=" + p1ci + " p2=" + p2ci + ". Closing join dialog.")
+                    page.matchJoined = true
+                    if (p1ci === "confirmed" && p2ci === "confirmed") {
+                        page.startMatchTimer()
+                    }
+                    joinDlg.close()
+                } else if (!joinDlg.opened) {
                     joinDlg.open()
                 }
             }

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import urllib.parse
 from typing import Any, Dict, Optional
 
@@ -32,6 +33,7 @@ class TournamentService(QObject):
         self._match: Dict[str, Any] = {}
         self._table_name = ""
         self._device_settings = device_settings
+        self._start_times: Dict[int, float] = self._load_start_times()
 
         if device_settings is not None:
             try:
@@ -207,6 +209,56 @@ class TournamentService(QObject):
             print(f"[TournamentService] Table fee status reply error: {e}")
         finally:
             reply.deleteLater()
+
+    # ==== Match start time persistence ====
+
+    def _start_times_path(self) -> str:
+        runtime_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "runtime")
+        return os.path.join(runtime_dir, "match_start_times.json")
+
+    def _load_start_times(self) -> Dict[int, float]:
+        try:
+            path = self._start_times_path()
+            if os.path.exists(path):
+                data = json.loads(open(path).read())
+                return {int(k): float(v) for k, v in data.items()}
+        except Exception:
+            pass
+        return {}
+
+    def _save_start_times(self) -> None:
+        try:
+            path = self._start_times_path()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as f:
+                json.dump({str(k): v for k, v in self._start_times.items()}, f)
+        except Exception:
+            pass
+
+    @Slot(int)
+    def recordMatchStart(self, match_id: int) -> None:
+        """Called from QML when both players confirm — saves current timestamp."""
+        if match_id <= 0:
+            return
+        if match_id not in self._start_times:
+            self._start_times[match_id] = time.time()
+            self._save_start_times()
+            print(f"[TournamentService] Match {match_id} start time recorded")
+
+    @Slot(int, result=int)
+    def getMatchElapsedSec(self, match_id: int) -> int:
+        """Returns elapsed seconds since match start was recorded, or 0 if not found."""
+        ts = self._start_times.get(match_id)
+        if ts is None:
+            return 0
+        return max(0, int(time.time() - ts))
+
+    @Slot(int)
+    def clearMatchStart(self, match_id: int) -> None:
+        """Called from QML when match ends — removes the stored start time."""
+        if match_id in self._start_times:
+            del self._start_times[match_id]
+            self._save_start_times()
 
     @Slot(int, str, str)
     def updateCheckIn(self, match_id: int, p1_check_in: str, p2_check_in: str) -> None:

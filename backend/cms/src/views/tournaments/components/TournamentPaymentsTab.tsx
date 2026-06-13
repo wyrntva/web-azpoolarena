@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Badge, Button, Spinner, Table } from 'flowbite-react';
+import { Badge, Button, Spinner, Table, Modal } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import { tournamentAPI, type TournamentTableFeePayment } from '../../../api/tournament.api';
 import toast from 'react-hot-toast';
@@ -53,6 +53,9 @@ interface TableFeeGroup {
 const TournamentPaymentsTab = ({ tournamentId }: Props) => {
     const [loading, setLoading] = useState(false);
     const [tableFeePayments, setTableFeePayments] = useState<TournamentTableFeePayment[]>([]);
+    const [selectedPayment, setSelectedPayment] = useState<TournamentTableFeePayment | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPaying, setIsPaying] = useState(false);
 
     const fetchPayments = useCallback(async () => {
         try {
@@ -69,6 +72,23 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
     useEffect(() => {
         fetchPayments();
     }, [fetchPayments]);
+
+    const handlePayCash = async () => {
+        if (!selectedPayment) return;
+        try {
+            setIsPaying(true);
+            await tournamentAPI.payTableFeeCash(selectedPayment.id);
+            toast.success('Thanh toán tiền mặt thành công');
+            setIsModalOpen(false);
+            setSelectedPayment(null);
+            fetchPayments();
+        } catch (err: any) {
+            const msg = err?.response?.data?.message || 'Có lỗi xảy ra khi thanh toán';
+            toast.error(msg);
+        } finally {
+            setIsPaying(false);
+        }
+    };
 
     const groups: TableFeeGroup[] = [
         { status: 'pending',   items: tableFeePayments.filter((p) => p.status === 'pending') },
@@ -142,7 +162,14 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                                 </Table.Head>
                                 <Table.Body>
                                     {items.map((p) => (
-                                        <Table.Row key={p.id}>
+                                        <Table.Row 
+                                            key={p.id}
+                                            className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            onClick={() => {
+                                                setSelectedPayment(p);
+                                                setIsModalOpen(true);
+                                            }}
+                                        >
                                             <Table.Cell className="font-mono text-xs">{p.code}</Table.Cell>
                                             <Table.Cell>#{p.match_id}</Table.Cell>
                                             <Table.Cell className="font-semibold">{formatVND(p.amount)}</Table.Cell>
@@ -159,6 +186,58 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                     </section>
                 );
             })}
+
+            {selectedPayment && (
+                <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)} size="md">
+                    <Modal.Header>Chi tiết hóa đơn tiền bàn</Modal.Header>
+                    <Modal.Body className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="text-gray-500 dark:text-gray-400">Mã hóa đơn:</div>
+                            <div className="font-mono font-semibold text-gray-900 dark:text-white">{selectedPayment.code}</div>
+
+                            <div className="text-gray-500 dark:text-gray-400">Trận đấu:</div>
+                            <div className="font-semibold text-gray-900 dark:text-white">#{selectedPayment.match_id}</div>
+
+                            <div className="text-gray-500 dark:text-gray-400">Số tiền:</div>
+                            <div className="font-semibold text-green-600 dark:text-green-400 text-lg">
+                                {formatVND(selectedPayment.amount)}
+                            </div>
+
+                            <div className="text-gray-500 dark:text-gray-400">Ngày tạo:</div>
+                            <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.created_at)}</div>
+
+                            {selectedPayment.paid_at && (
+                                <>
+                                    <div className="text-gray-500 dark:text-gray-400">Ngày thanh toán:</div>
+                                    <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.paid_at)}</div>
+                                </>
+                            )}
+
+                            <div className="text-gray-500 dark:text-gray-400">Trạng thái:</div>
+                            <div>
+                                <Badge color={STATUS_CONFIG[selectedPayment.status].badge as any}>
+                                    {STATUS_CONFIG[selectedPayment.status].label}
+                                </Badge>
+                            </div>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer className="justify-end gap-2">
+                        <Button color="gray" size="sm" onClick={() => setIsModalOpen(false)}>
+                            Đóng
+                        </Button>
+                        {selectedPayment.status === 'pending' && (
+                            <Button 
+                                color="success" 
+                                size="sm" 
+                                disabled={isPaying} 
+                                onClick={handlePayCash}
+                            >
+                                {isPaying ? 'Đang xử lý...' : 'Thanh toán tiền mặt'}
+                            </Button>
+                        )}
+                    </Modal.Footer>
+                </Modal>
+            )}
         </div>
     );
 };

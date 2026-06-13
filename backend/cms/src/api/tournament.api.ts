@@ -231,6 +231,10 @@ export const tournamentAPI = {
     getPayments: (tournamentId: number): Promise<AxiosResponse<TournamentPaymentsResponse>> => {
         return axiosClient.get(`/api/tournaments/${tournamentId}/payments`);
     },
+
+    payTableFeeCash: (id: number): Promise<AxiosResponse<{ success: boolean }>> => {
+        return axiosClient.post(`/api/tournaments/table-fee-payment/${id}/pay-cash`);
+    },
 };
 
 export interface TournamentRegistrationPayment {
