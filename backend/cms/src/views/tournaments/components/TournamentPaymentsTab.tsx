@@ -115,7 +115,12 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
         { status: 'cancelled', items: tableFeePayments.filter((p) => p.status === 'cancelled') },
     ];
 
-    const totalPaid = groups.find((g) => g.status === 'paid')?.items.reduce((s, p) => s + p.amount, 0) ?? 0;
+    const paidItems = groups.find((g) => g.status === 'paid')?.items ?? [];
+    const totalPaidTableFee = paidItems.reduce((s, p) => s + (p.amount - (p.surcharge ?? 0)), 0);
+    const totalPaidSurcharge = paidItems.reduce((s, p) => s + (p.surcharge ?? 0), 0);
+    const totalPaidCash = paidItems.reduce((s, p) => s + (p.payment_method === 'cash' ? p.amount : 0), 0);
+    const totalPaidTransfer = paidItems.reduce((s, p) => s + (p.payment_method !== 'cash' ? p.amount : 0), 0);
+    const totalPaid = paidItems.reduce((s, p) => s + p.amount, 0);
 
     if (loading) {
         return (
@@ -140,12 +145,26 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                         ))}
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    {totalPaid > 0 && (
-                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-                            Tổng thu: {formatVND(totalPaid)}
-                        </span>
-                    )}
+                <div className="flex flex-wrap items-center gap-3 text-xs bg-gray-50 dark:bg-gray-800 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span className="font-semibold text-gray-500">Thống kê thu:</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                        Tiền bàn: <strong className="text-gray-900 dark:text-white">{formatVND(totalPaidTableFee)}</strong>
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                        Phụ phí: <strong className="text-gray-900 dark:text-white">{formatVND(totalPaidSurcharge)}</strong>
+                    </span>
+                    <span className="text-gray-400">|</span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                        Tiền mặt: <strong className="text-orange-600 dark:text-orange-400">{formatVND(totalPaidCash)}</strong>
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                        Chuyển khoản: <strong className="text-blue-600 dark:text-blue-400">{formatVND(totalPaidTransfer)}</strong>
+                    </span>
+                    <span className="text-gray-400">|</span>
+                    <span className="text-sm font-bold text-green-600 dark:text-green-400">
+                        Tổng thu: {formatVND(totalPaid)}
+                    </span>
+                </div>
                     <Button size="sm" color="light" onClick={fetchPayments}>
                         <Icon icon="solar:refresh-outline" className="mr-1.5" />
                         Làm mới
@@ -222,29 +241,27 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                                 {formatVND(selectedPayment.amount)}
                             </div>
 
+                            <div className="text-gray-500 dark:text-gray-400">Tiền bàn:</div>
+                            <div className="font-semibold text-gray-900 dark:text-white">
+                                {formatVND(selectedPayment.amount - (selectedPayment.surcharge ?? 0))}
+                            </div>
+
+                            <div className="text-gray-500 dark:text-gray-400">Phụ phí:</div>
+                            <div className="font-semibold text-gray-900 dark:text-white">
+                                {formatVND(selectedPayment.surcharge ?? 0)}
+                            </div>
+
                             <div className="text-gray-500 dark:text-gray-400">Ngày tạo:</div>
                             <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.created_at)}</div>
 
-                            {selectedPayment.start_time && (
-                                <>
-                                    <div className="text-gray-500 dark:text-gray-400">Giờ vào:</div>
-                                    <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.start_time)}</div>
-                                </>
-                            )}
+                            <div className="text-gray-500 dark:text-gray-400">Giờ vào:</div>
+                            <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.start_time)}</div>
 
-                            {selectedPayment.end_time && (
-                                <>
-                                    <div className="text-gray-500 dark:text-gray-400">Giờ ra:</div>
-                                    <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.end_time)}</div>
-                                </>
-                            )}
+                            <div className="text-gray-500 dark:text-gray-400">Giờ ra:</div>
+                            <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.end_time)}</div>
 
-                            {selectedPayment.duration_sec !== undefined && selectedPayment.duration_sec !== null && (
-                                <>
-                                    <div className="text-gray-500 dark:text-gray-400">Thời gian chơi:</div>
-                                    <div className="text-gray-900 dark:text-white">{formatDuration(selectedPayment.duration_sec)}</div>
-                                </>
-                            )}
+                            <div className="text-gray-500 dark:text-gray-400">Thời gian chơi:</div>
+                            <div className="text-gray-900 dark:text-white">{formatDuration(selectedPayment.duration_sec)}</div>
 
                             {selectedPayment.paid_at && (
                                 <>
@@ -253,14 +270,10 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                                 </>
                             )}
 
-                            {selectedPayment.payment_method && (
-                                <>
-                                    <div className="text-gray-500 dark:text-gray-400">Hình thức thanh toán:</div>
-                                    <div className="font-semibold text-blue-600 dark:text-blue-400">
-                                        {formatPaymentMethod(selectedPayment.payment_method)}
-                                    </div>
-                                </>
-                            )}
+                            <div className="text-gray-500 dark:text-gray-400">Hình thức thanh toán:</div>
+                            <div className="font-semibold text-blue-600 dark:text-blue-400">
+                                {formatPaymentMethod(selectedPayment.payment_method)}
+                            </div>
 
                             <div className="text-gray-500 dark:text-gray-400">Trạng thái:</div>
                             <div>

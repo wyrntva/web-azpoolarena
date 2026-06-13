@@ -262,6 +262,7 @@ export interface TournamentTableFeePayment {
     start_time?: string | null;
     end_time?: string | null;
     duration_sec?: number | null;
+    surcharge?: number;
     payment_method?: 'cash' | 'bank_transfer' | null;
 }
 

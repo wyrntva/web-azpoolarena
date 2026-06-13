@@ -1688,6 +1688,7 @@ export class TournamentsService {
         start_time: startTime,
         end_time: now,
         duration_sec: elapsedSec,
+        surcharge: config.surcharge || 0,
       }),
     );
 
@@ -1751,8 +1752,8 @@ export class TournamentsService {
     const hasStatusCol = colCheck.length > 0;
 
     const selectCols = hasStatusCol
-      ? `id, code, match_id, amount, paid, status, created_at, paid_at, start_time, end_time, duration_sec, payment_method`
-      : `id, code, match_id, amount, paid, created_at, paid_at, start_time, end_time, duration_sec, payment_method,
+      ? `id, code, match_id, amount, paid, status, created_at, paid_at, start_time, end_time, duration_sec, surcharge, payment_method`
+      : `id, code, match_id, amount, paid, created_at, paid_at, start_time, end_time, duration_sec, 0 AS surcharge, payment_method,
          CASE WHEN paid THEN 'paid' ELSE 'pending' END AS status`;
 
     const feeRows: any[] = await em.query(
@@ -1775,6 +1776,7 @@ export class TournamentsService {
       start_time: r.start_time,
       end_time: r.end_time,
       duration_sec: r.duration_sec,
+      surcharge: r.surcharge ?? 0,
       payment_method: r.payment_method,
     }));
 

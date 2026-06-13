@@ -485,6 +485,9 @@ export class TableFeePaymentEntity {
   @Column({ type: 'int', nullable: true })
   duration_sec: number | null;
 
+  @Column({ type: 'int', default: 0 })
+  surcharge: number;
+
   @Column({ type: 'varchar', length: 20, nullable: true })
   payment_method: string | null; // 'cash' | 'bank_transfer'
 
