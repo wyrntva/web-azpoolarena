@@ -897,7 +897,7 @@ export default function TournamentStageBracketPage() {
                 <div className="w-full min-h-[600px] overflow-x-auto snap-x snap-mandatory" style={{ scrollbarWidth: "thin" }}>
                     {stageParam === "1" ? (
                         /* Stage 1: 4-column layout side-by-side with SVG connectors */
-                        <div className="flex py-4 min-w-max md:justify-center gap-0">
+                        <div className="flex py-4 min-w-full md:justify-center gap-0">
                             {(() => {
                                 const layout = getBracketLayout(tournamentData?.number_of_players || 16);
                                 const is24 = tournamentData?.number_of_players === 24;
@@ -1091,24 +1091,66 @@ export default function TournamentStageBracketPage() {
                     ) : (
                         /* Stage 2: Single Elimination Playoff/Knockout Bracket Map */
                         <div 
-                            className="flex gap-6 md:gap-12 py-4 justify-start md:justify-center min-w-max"
+                            className="flex gap-0 py-4 justify-start md:justify-center min-w-full"
                             style={{ 
                                 height: `${knockoutBracketHeight}px`
                             }}
                         >
-                            {knockoutRounds.map((round) => (
-                                <div key={round.roundNo} className="flex flex-col w-[calc(100vw-32px)] md:w-[358px] h-full items-stretch snap-center shrink-0">
-                                    {/* Capsule header for Knockout Rounds */}
-                                    <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-4 self-center">
-                                        {round.title}
-                                    </div>
-                                    <div className="flex flex-col justify-around flex-grow h-full py-2">
-                                        {round.matches.map((m) => (
-                                            <BracketMatchCard key={m.matchNo} match={m} />
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
+                            {knockoutRounds.map((round, idx) => {
+                                const isLast = idx === knockoutRounds.length - 1;
+                                const nextRound = !isLast ? knockoutRounds[idx + 1] : null;
+
+                                return (
+                                    <React.Fragment key={round.roundNo}>
+                                        <div className="flex flex-col w-[calc(100vw-32px)] md:w-[358px] h-full items-stretch snap-center shrink-0">
+                                            {/* Capsule header for Knockout Rounds */}
+                                            <div className="flex w-full max-w-[358px] h-[48px] p-3 items-center justify-center shrink-0 rounded-[12px] bg-[#C6010B] text-white font-bold uppercase tracking-wider text-[13px] shadow-sm mb-4 self-center">
+                                                {round.title}
+                                            </div>
+                                            <div className="flex flex-col justify-around flex-grow py-2">
+                                                {round.matches.map((m) => (
+                                                    <BracketMatchCard key={m.matchNo} match={m} />
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {!isLast && nextRound && (
+                                            <div className="hidden sm:flex flex-col w-[50px] h-full shrink-0">
+                                                {/* Empty spacer to align with the capsule header */}
+                                                <div className="h-[48px] mb-4"></div>
+                                                {/* Connector SVG container */}
+                                                <div className="flex-grow py-2">
+                                                    {(() => {
+                                                        const m = nextRound.matches.length;
+                                                        const H_avail = knockoutBracketHeight - 112;
+                                                        const H_item = H_avail / m;
+                                                        return (
+                                                            <div className="flex flex-col h-full">
+                                                                {Array.from({ length: m }).map((_, j) => {
+                                                                    const Y1 = (H_item / 4) + 14;
+                                                                    const Y2 = (3 * H_item / 4) + 14;
+                                                                    const Ymid = (H_item / 2) + 14;
+                                                                    return (
+                                                                        <div key={j} style={{ height: `${H_item}px` }} className="flex items-center justify-center shrink-0">
+                                                                            <svg width="50" height={H_item} viewBox={`0 0 50 ${H_item}`} fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                <path 
+                                                                                    d={`M 0 ${Y1} H 25 V ${Y2} H 0 M 25 ${Ymid} H 50`}
+                                                                                    stroke="#37393E" 
+                                                                                    strokeWidth="1.5" 
+                                                                                />
+                                                                            </svg>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })}
                         </div>
                     )}
                 </div>

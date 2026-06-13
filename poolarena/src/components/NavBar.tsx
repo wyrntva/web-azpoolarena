@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -10,7 +10,7 @@ import { FaLock } from "react-icons/fa";
 
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useAppDispatch } from "@/stores/hooks";
+import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import { logout } from "@/stores/auth.slice";
 
 export default function NavBar(props?: { logoUrl?: string }) {
@@ -19,6 +19,14 @@ export default function NavBar(props?: { logoUrl?: string }) {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const [openMenu, setOpenMenu] = useState(false);
+  const { token } = useAppSelector((state) => state.auth);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const isLoggedIn = isMounted && !!token;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -144,55 +152,88 @@ export default function NavBar(props?: { logoUrl?: string }) {
         {/* Right Menu (Desktop) */}
         {!pathname?.endsWith('/bracket') && (
           <div className="hidden xl:flex items-center space-x-6">
-            <Link
-              href="/myprofile"
-              className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
-              prefetch
-            >
-              <CiUser className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
-              <span 
-                className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                My profile
-              </span>
-            </Link>
-            <Link
-              href="/info"
-              className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
-              prefetch
-            >
-              <HiQuestionMarkCircle className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
-              <span 
-                className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                Support
-              </span>
-            </Link>
-            <button
-              className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group"
-              onClick={handleLogout}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                className="text-[#37393E] group-hover:text-[#D22E39] transition-colors"
-              >
-                <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span 
-                className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                Đăng xuất
-              </span>
-            </button>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/myprofile"
+                  className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
+                  prefetch
+                >
+                  <CiUser className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+                  <span 
+                    className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  >
+                    My profile
+                  </span>
+                </Link>
+                <Link
+                  href="/info"
+                  className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
+                  prefetch
+                >
+                  <HiQuestionMarkCircle className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+                  <span 
+                    className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  >
+                    Support
+                  </span>
+                </Link>
+                <button
+                  className="flex items-center space-x-1 cursor-pointer hover:text-[#D22E39] transition-colors group"
+                  onClick={handleLogout}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="text-[#37393E] group-hover:text-[#D22E39] transition-colors"
+                  >
+                    <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span 
+                    className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  >
+                    Đăng xuất
+                  </span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/info"
+                  className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
+                  prefetch
+                >
+                  <HiQuestionMarkCircle className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+                  <span 
+                    className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  >
+                    Support
+                  </span>
+                </Link>
+                <Link
+                  href="/login"
+                  className="flex items-center space-x-1 hover:text-[#D22E39] transition-colors group"
+                  prefetch
+                >
+                  <CiUser className="text-[#37393E] group-hover:text-[#D22E39] transition-colors" size={20} />
+                  <span 
+                    className="text-[14px] leading-[20px] tracking-[0.28px] text-[#37393E] font-medium group-hover:text-[#D22E39] transition-colors whitespace-nowrap"
+                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  >
+                    Đăng nhập
+                  </span>
+                </Link>
+              </>
+            )}
           </div>
         )}
 
@@ -406,43 +447,66 @@ export default function NavBar(props?: { logoUrl?: string }) {
               <div className="border-t border-gray-200 my-2" />
 
               {/* User Actions */}
-              <Link
-                href="/myprofile"
-                className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] transition-colors py-1"
-                onClick={() => setOpenMenu(false)}
-              >
-                <CiUser size={22} className="text-gray-600" />
-                <span className="text-base font-medium">My profile</span>
-              </Link>
-              <Link
-                href="/info"
-                className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] transition-colors py-1"
-                onClick={() => setOpenMenu(false)}
-              >
-                <HiQuestionMarkCircle size={22} className="text-gray-600" />
-                <span className="text-base font-medium">Support</span>
-              </Link>
-              <button
-                className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] group w-full text-left transition-colors py-1"
-                onClick={() => {
-                  handleLogout();
-                  setOpenMenu(false);
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  className="text-gray-600 group-hover:text-[#D22E39] transition-colors"
-                >
-                  <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="text-base font-medium">Đăng xuất</span>
-              </button>
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/myprofile"
+                    className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] transition-colors py-1"
+                    onClick={() => setOpenMenu(false)}
+                  >
+                    <CiUser size={22} className="text-gray-600" />
+                    <span className="text-base font-medium">My profile</span>
+                  </Link>
+                  <Link
+                    href="/info"
+                    className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] transition-colors py-1"
+                    onClick={() => setOpenMenu(false)}
+                  >
+                    <HiQuestionMarkCircle size={22} className="text-gray-600" />
+                    <span className="text-base font-medium">Support</span>
+                  </Link>
+                  <button
+                    className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] group w-full text-left transition-colors py-1"
+                    onClick={() => {
+                      handleLogout();
+                      setOpenMenu(false);
+                    }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="22"
+                      height="22"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="text-gray-600 group-hover:text-[#D22E39] transition-colors"
+                    >
+                      <path d="M7.41699 6.29995C7.67533 3.29995 9.21699 2.07495 12.592 2.07495H12.7003C16.4253 2.07495 17.917 3.56662 17.917 7.29162V12.725C17.917 16.45 16.4253 17.9416 12.7003 17.9416H12.592C9.24199 17.9416 7.70033 16.7333 7.42533 13.7833" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M1.66699 10H12.4003" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M10.542 7.20837L13.3337 10L10.542 12.7917" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className="text-base font-medium">Đăng xuất</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/info"
+                    className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] transition-colors py-1"
+                    onClick={() => setOpenMenu(false)}
+                  >
+                    <HiQuestionMarkCircle size={22} className="text-gray-600" />
+                    <span className="text-base font-medium">Support</span>
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="flex items-center space-x-3 text-gray-700 hover:text-[#D22E39] transition-colors py-1"
+                    onClick={() => setOpenMenu(false)}
+                  >
+                    <CiUser size={22} className="text-gray-600" />
+                    <span className="text-base font-medium">Đăng nhập</span>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

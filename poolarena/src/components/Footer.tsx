@@ -63,13 +63,13 @@ export const Footer = () => {
               Điều khoản pháp lý
             </div>
             <Space direction="vertical" size="small">
-              <Link href="/terms" className="!text-gray-300 hover:!text-white">
+              <Link href="/terms-conditions" className="!text-gray-300 hover:!text-white">
                 Điều khoản & Điều kiện
               </Link>
-              <Link href="/privacy" className="!text-gray-300 hover:!text-white">
+              <Link href="/privacy-policy" className="!text-gray-300 hover:!text-white">
                 Chính sách bảo mật
               </Link>
-              <Link href="/cookies" className="!text-gray-300 hover:!text-white">
+              <Link href="/cookie-policy" className="!text-gray-300 hover:!text-white">
                 Chính sách cookie
               </Link>
             </Space>

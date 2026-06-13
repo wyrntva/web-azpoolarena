@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Các route công khai không cần đăng nhập
-const publicRoutes = ['/login', '/register', '/forgot-password'];
+const publicRoutes = ['/login', '/register', '/forgot-password', '/info', '/terms-conditions', '/privacy-policy', '/cookie-policy', '/tournaments'];
+
 
 // Các trang auth — khi đã đăng nhập thì redirect ra ngoài
 const authRoutes = ['/login', '/register', '/forgot-password'];
