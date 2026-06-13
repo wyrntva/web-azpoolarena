@@ -259,6 +259,10 @@ export interface TournamentTableFeePayment {
     status: 'pending' | 'paid' | 'cancelled';
     created_at: string;
     paid_at: string | null;
+    start_time?: string | null;
+    end_time?: string | null;
+    duration_sec?: number | null;
+    payment_method?: 'cash' | 'bank_transfer' | null;
 }
 
 export interface TournamentPaymentsResponse {

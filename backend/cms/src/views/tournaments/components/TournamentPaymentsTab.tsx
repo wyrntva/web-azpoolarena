@@ -22,6 +22,25 @@ const formatDate = (dateStr: string | null) => {
     });
 };
 
+const formatDuration = (sec: number | null | undefined) => {
+    if (sec === null || sec === undefined) return '—';
+    const hrs = Math.floor(sec / 3600);
+    const mins = Math.floor((sec % 3600) / 60);
+    const secs = sec % 60;
+    
+    const parts = [];
+    if (hrs > 0) parts.push(`${hrs} giờ`);
+    if (mins > 0) parts.push(`${mins} phút`);
+    if (secs > 0 || parts.length === 0) parts.push(`${secs} giây`);
+    
+    return parts.join(' ');
+};
+
+const formatPaymentMethod = (method: 'cash' | 'bank_transfer' | null | undefined) => {
+    if (!method) return '—';
+    return method === 'cash' ? 'Tiền mặt' : 'Chuyển khoản';
+};
+
 type StatusGroup = 'pending' | 'paid' | 'cancelled';
 
 const STATUS_CONFIG: Record<StatusGroup, { label: string; badge: string; icon: string; textColor: string }> = {
@@ -206,10 +225,40 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                             <div className="text-gray-500 dark:text-gray-400">Ngày tạo:</div>
                             <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.created_at)}</div>
 
+                            {selectedPayment.start_time && (
+                                <>
+                                    <div className="text-gray-500 dark:text-gray-400">Giờ vào:</div>
+                                    <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.start_time)}</div>
+                                </>
+                            )}
+
+                            {selectedPayment.end_time && (
+                                <>
+                                    <div className="text-gray-500 dark:text-gray-400">Giờ ra:</div>
+                                    <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.end_time)}</div>
+                                </>
+                            )}
+
+                            {selectedPayment.duration_sec !== undefined && selectedPayment.duration_sec !== null && (
+                                <>
+                                    <div className="text-gray-500 dark:text-gray-400">Thời gian chơi:</div>
+                                    <div className="text-gray-900 dark:text-white">{formatDuration(selectedPayment.duration_sec)}</div>
+                                </>
+                            )}
+
                             {selectedPayment.paid_at && (
                                 <>
                                     <div className="text-gray-500 dark:text-gray-400">Ngày thanh toán:</div>
                                     <div className="text-gray-900 dark:text-white">{formatDate(selectedPayment.paid_at)}</div>
+                                </>
+                            )}
+
+                            {selectedPayment.payment_method && (
+                                <>
+                                    <div className="text-gray-500 dark:text-gray-400">Hình thức thanh toán:</div>
+                                    <div className="font-semibold text-blue-600 dark:text-blue-400">
+                                        {formatPaymentMethod(selectedPayment.payment_method)}
+                                    </div>
                                 </>
                             )}
 

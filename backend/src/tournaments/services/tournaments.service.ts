@@ -1674,6 +1674,9 @@ export class TournamentsService {
 
     if (totalAmount <= 0) return { skip: true };
 
+    const now = new Date();
+    const startTime = new Date(now.getTime() - elapsedSec * 1000);
+
     const code = this.generateTableFeeCode();
     await this.tableFeePaymentRepo.save(
       this.tableFeePaymentRepo.create({
@@ -1682,6 +1685,9 @@ export class TournamentsService {
         amount: totalAmount,
         paid: false,
         status: TableFeePaymentStatus.PENDING,
+        start_time: startTime,
+        end_time: now,
+        duration_sec: elapsedSec,
       }),
     );
 
@@ -1745,8 +1751,8 @@ export class TournamentsService {
     const hasStatusCol = colCheck.length > 0;
 
     const selectCols = hasStatusCol
-      ? `id, code, match_id, amount, paid, status, created_at, paid_at`
-      : `id, code, match_id, amount, paid, created_at, paid_at,
+      ? `id, code, match_id, amount, paid, status, created_at, paid_at, start_time, end_time, duration_sec, payment_method`
+      : `id, code, match_id, amount, paid, created_at, paid_at, start_time, end_time, duration_sec, payment_method,
          CASE WHEN paid THEN 'paid' ELSE 'pending' END AS status`;
 
     const feeRows: any[] = await em.query(
@@ -1766,12 +1772,16 @@ export class TournamentsService {
       status: r.status as 'pending' | 'paid' | 'cancelled',
       created_at: r.created_at,
       paid_at: r.paid_at,
+      start_time: r.start_time,
+      end_time: r.end_time,
+      duration_sec: r.duration_sec,
+      payment_method: r.payment_method,
     }));
 
     return { registrationCodes, tableFeePayments };
   }
 
-  async redeemTableFeePayment(code: string) {
+  async redeemTableFeePayment(code: string, paymentMethod?: string) {
     const payment = await this.tableFeePaymentRepo.findOne({ where: { code } });
     if (!payment) {
       throw new NotFoundException(`Table fee payment with code "${code}" not found`);
@@ -1781,6 +1791,7 @@ export class TournamentsService {
     payment.paid = true;
     payment.paid_at = new Date();
     payment.status = TableFeePaymentStatus.PAID;
+    payment.payment_method = paymentMethod || 'bank_transfer';
     await this.tableFeePaymentRepo.save(payment);
 
     const match = await this.matchRepo.findOne({ where: { id: payment.match_id } });
@@ -1837,7 +1848,7 @@ export class TournamentsService {
       throw new NotFoundException(`Table fee payment with ID "${paymentId}" not found`);
     }
     if (payment.paid) return { success: true };
-    await this.redeemTableFeePayment(payment.code);
+    await this.redeemTableFeePayment(payment.code, 'cash');
     return { success: true };
   }
 

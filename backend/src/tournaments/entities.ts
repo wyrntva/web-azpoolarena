@@ -476,6 +476,18 @@ export class TableFeePaymentEntity {
   })
   status: TableFeePaymentStatus;
 
+  @Column({ type: 'timestamp', nullable: true })
+  start_time: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  end_time: Date | null;
+
+  @Column({ type: 'int', nullable: true })
+  duration_sec: number | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  payment_method: string | null; // 'cash' | 'bank_transfer'
+
   @CreateDateColumn()
   created_at: Date;
 
