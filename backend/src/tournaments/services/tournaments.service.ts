@@ -435,7 +435,10 @@ export class TournamentsService {
         ...m,
         tournament_id: tournamentId,
       });
-      if (!match.match_time && tournament.start_date && match.player1_id && match.player2_id) {
+      // Không gán start_date làm match_time cho Tứ kết — sẽ dùng logic 75% khi có đủ người
+      const isQF = this.getMatchRoundLabel(match.match_no, tournament.number_of_players) === 'qf'
+        && match.bracket === TournamentMatchBracket.KNOCKOUT;
+      if (!match.match_time && tournament.start_date && match.player1_id && match.player2_id && !isQF) {
         match.match_time = tournament.start_date;
       }
       return match;
@@ -842,10 +845,12 @@ export class TournamentsService {
     match.player1_score = 0;
     match.player2_score = 0;
 
-    // Set match time to tournament start date only if both players are present
-    if (tournament?.start_date && match.player1_id && match.player2_id) {
+    // Set match time to tournament start date only if both players are present (not QF — handled by 75% threshold)
+    const isQFMatch = this.getMatchRoundLabel(match.match_no, tournament?.number_of_players ?? 16) === 'qf'
+      && match.bracket === TournamentMatchBracket.KNOCKOUT;
+    if (!isQFMatch && tournament?.start_date && match.player1_id && match.player2_id) {
       match.match_time = tournament.start_date;
-    } else {
+    } else if (!isQFMatch) {
       match.match_time = null as any;
     }
 
@@ -941,6 +946,16 @@ export class TournamentsService {
   }
 
   private async applyMatchStateAndTimerLogic(match: TournamentMatchEntity): Promise<void> {
+    // Tứ kết (QF) trong bracket knockout: dùng ngưỡng 75%
+    const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    const numPlayers = tournament?.number_of_players ?? 16;
+    const roundLabel = this.getMatchRoundLabel(match.match_no, numPlayers);
+
+    if (roundLabel === 'qf' && match.bracket === TournamentMatchBracket.KNOCKOUT) {
+      await this.applyKnockoutQFThresholdLogic(match);
+      return;
+    }
+
     const isNewLogic = !(match.round === 1 && (match.bracket === 'winners' || match.bracket === 'knockout'));
     if (isNewLogic) {
       // Transition from PENDING to UPCOMING if we have >= 1 player and a table assigned
@@ -982,6 +997,56 @@ export class TournamentsService {
         if (!isTableBusy) {
           match.match_time = new Date(Date.now() + 3 * 60 * 1000);
         }
+      }
+    }
+  }
+
+  // Logic 75% cho Tứ kết (QF knockout):
+  // - Khi < 75% trận có đủ 2 người: trận nào có ≥1 người + đã xếp bàn → UPCOMING
+  // - Khi ≥ 75% trận có đủ 2 người: tất cả trận có 2 người (chưa có giờ) → set match_time = now + 3min
+  private async applyKnockoutQFThresholdLogic(match: TournamentMatchEntity): Promise<void> {
+    const allQFInDB = await this.matchRepo.find({
+      where: { tournament_id: match.tournament_id, bracket: match.bracket as any, round: match.round },
+    });
+
+    // Merge DB state với in-memory state của trận hiện tại (chưa save)
+    const allQF = allQFInDB.map(m => (m.id && m.id === match.id ? match : m));
+    if (!match.id || !allQF.some(m => m.id === match.id)) allQF.push(match);
+
+    const totalQF = allQF.length;
+    if (totalQF === 0) return;
+
+    const withBothCount = allQF.filter(m => m.player1_id && m.player2_id).length;
+    const threshold = Math.ceil(totalQF * 0.75); // ceil(4 * 0.75) = 3
+
+    if (withBothCount >= threshold) {
+      // Ngưỡng đạt: set match_time cho tất cả trận có 2 người (chưa có giờ)
+      const newTime = new Date(Date.now() + 3 * 60 * 1000);
+      for (const qf of allQF) {
+        if (qf.player1_id && qf.player2_id && !qf.match_time) {
+          qf.match_time = newTime;
+          if (qf.id && qf.id !== match.id) {
+            await this.matchRepo.save(qf);
+            const reloaded = await this.matchRepo.findOne({
+              where: { id: qf.id },
+              relations: ['player1', 'player2'],
+            });
+            this.matchUpdates$.next({ tournamentId: match.tournament_id, match: reloaded || qf });
+          }
+        }
+      }
+    } else {
+      // Chưa đạt ngưỡng: nếu ≥1 người + đã xếp bàn → UPCOMING
+      if (
+        match.status === TournamentMatchStatus.PENDING &&
+        (match.player1_id || match.player2_id) &&
+        match.table_no
+      ) {
+        match.status = TournamentMatchStatus.UPCOMING;
+      }
+      // Xóa match_time nếu chưa có đủ 2 người
+      if (!(match.player1_id && match.player2_id)) {
+        match.match_time = null as any;
       }
     }
   }
