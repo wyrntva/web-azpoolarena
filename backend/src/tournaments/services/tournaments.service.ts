@@ -1664,7 +1664,11 @@ export class TournamentsService {
     const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
     const config = this.getTableFeeConfig();
 
-    if (tournament?.free_table_fee || config.price === 0) {
+    const isKnockout = match.bracket === 'knockout';
+    const roundName = this.computeRoundName(match.round, tournament?.number_of_players || 32);
+    const isSemiOrFinal = roundName.includes('Bán Kết') || roundName.includes('Chung Kết');
+
+    if (tournament?.free_table_fee || config.price === 0 || isKnockout || isSemiOrFinal) {
       return { skip: true };
     }
 

@@ -197,7 +197,7 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                                     <Table.HeadCell>Bàn</Table.HeadCell>
                                     <Table.HeadCell>Người thua (Thanh toán)</Table.HeadCell>
                                     <Table.HeadCell>Số tiền</Table.HeadCell>
-                                    <Table.HeadCell>Ngày tạo</Table.HeadCell>
+                                    <Table.HeadCell>Phương thức thanh toán</Table.HeadCell>
                                     {status === 'paid' && <Table.HeadCell>Ngày thanh toán</Table.HeadCell>}
                                     <Table.HeadCell>Trạng thái</Table.HeadCell>
                                 </Table.Head>
@@ -216,7 +216,9 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                                             <Table.Cell className="font-medium text-gray-900 dark:text-white">{p.table_no || '—'}</Table.Cell>
                                             <Table.Cell className="font-semibold text-red-600 dark:text-red-400">{p.payer_name || '—'}</Table.Cell>
                                             <Table.Cell className="font-semibold">{formatVND(p.amount)}</Table.Cell>
-                                            <Table.Cell>{formatDate(p.created_at)}</Table.Cell>
+                                            <Table.Cell className="font-semibold text-blue-600 dark:text-blue-400">
+                                                {formatPaymentMethod(p.payment_method)}
+                                            </Table.Cell>
                                             {status === 'paid' && <Table.Cell>{formatDate(p.paid_at)}</Table.Cell>}
                                             <Table.Cell>
                                                 <Badge color={cfg.badge as any}>{cfg.label.split(' (')[0]}</Badge>
