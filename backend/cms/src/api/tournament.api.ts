@@ -264,6 +264,8 @@ export interface TournamentTableFeePayment {
     duration_sec?: number | null;
     surcharge?: number;
     payment_method?: 'cash' | 'bank_transfer' | null;
+    table_no?: string | null;
+    payer_name?: string | null;
 }
 
 export interface TournamentPaymentsResponse {

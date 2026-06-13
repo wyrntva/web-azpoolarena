@@ -194,6 +194,8 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                                 <Table.Head>
                                     <Table.HeadCell>Mã hóa đơn</Table.HeadCell>
                                     <Table.HeadCell>Trận #</Table.HeadCell>
+                                    <Table.HeadCell>Bàn</Table.HeadCell>
+                                    <Table.HeadCell>Người thua (Thanh toán)</Table.HeadCell>
                                     <Table.HeadCell>Số tiền</Table.HeadCell>
                                     <Table.HeadCell>Ngày tạo</Table.HeadCell>
                                     {status === 'paid' && <Table.HeadCell>Ngày thanh toán</Table.HeadCell>}
@@ -211,6 +213,8 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
                                         >
                                             <Table.Cell className="font-mono text-xs">{p.code}</Table.Cell>
                                             <Table.Cell>#{p.match_id}</Table.Cell>
+                                            <Table.Cell className="font-medium text-gray-900 dark:text-white">{p.table_no || '—'}</Table.Cell>
+                                            <Table.Cell className="font-semibold text-red-600 dark:text-red-400">{p.payer_name || '—'}</Table.Cell>
                                             <Table.Cell className="font-semibold">{formatVND(p.amount)}</Table.Cell>
                                             <Table.Cell>{formatDate(p.created_at)}</Table.Cell>
                                             {status === 'paid' && <Table.Cell>{formatDate(p.paid_at)}</Table.Cell>}
@@ -236,6 +240,12 @@ const TournamentPaymentsTab = ({ tournamentId }: Props) => {
 
                             <div className="text-gray-500 dark:text-gray-400">Trận đấu:</div>
                             <div className="font-semibold text-gray-900 dark:text-white">#{selectedPayment.match_id}</div>
+
+                            <div className="text-gray-500 dark:text-gray-400">Bàn:</div>
+                            <div className="font-semibold text-gray-900 dark:text-white">{selectedPayment.table_no || '—'}</div>
+
+                            <div className="text-gray-500 dark:text-gray-400">Người thua (Thanh toán):</div>
+                            <div className="font-semibold text-red-600 dark:text-red-400">{selectedPayment.payer_name || '—'}</div>
 
                             <div className="text-gray-500 dark:text-gray-400">Số tiền:</div>
                             <div className="font-semibold text-green-600 dark:text-green-400 text-lg">

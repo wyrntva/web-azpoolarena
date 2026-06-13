@@ -1735,7 +1735,18 @@ export class TournamentsService {
     // 2. Table fee payments — get match IDs for this tournament first
     const matches = await this.matchRepo.find({
       where: { tournament_id: tournamentId },
-      select: { id: true },
+      relations: ['player1', 'player2'],
+      select: {
+        id: true,
+        table_no: true,
+        player1_id: true,
+        player2_id: true,
+        winner_id: true,
+        player1_score: true,
+        player2_score: true,
+        player1: { id: true, full_name: true },
+        player2: { id: true, full_name: true },
+      },
     });
     const matchIds = matches.map((m) => m.id);
 
@@ -1764,21 +1775,49 @@ export class TournamentsService {
       matchIds,
     );
 
-    const tableFeePayments = feeRows.map((r) => ({
-      id: r.id,
-      code: r.code,
-      match_id: r.match_id,
-      amount: r.amount,
-      paid: r.paid,
-      status: r.status as 'pending' | 'paid' | 'cancelled',
-      created_at: r.created_at,
-      paid_at: r.paid_at,
-      start_time: r.start_time,
-      end_time: r.end_time,
-      duration_sec: r.duration_sec,
-      surcharge: r.surcharge ?? 0,
-      payment_method: r.payment_method,
-    }));
+    const matchMap = new Map(matches.map((m) => [m.id, m]));
+
+    const tableFeePayments = feeRows.map((r) => {
+      const m = matchMap.get(r.match_id);
+      let payerName = '—';
+      if (m) {
+        if (m.winner_id) {
+          if (m.player1_id === m.winner_id) {
+            payerName = m.player2?.full_name || '—';
+          } else if (m.player2_id === m.winner_id) {
+            payerName = m.player1?.full_name || '—';
+          }
+        } else {
+          if (m.player1 && m.player2) {
+            if (m.player1_score > m.player2_score) {
+              payerName = m.player2.full_name || '—';
+            } else if (m.player2_score > m.player1_score) {
+              payerName = m.player1.full_name || '—';
+            } else {
+              payerName = `${m.player1.full_name} / ${m.player2.full_name}`;
+            }
+          }
+        }
+      }
+
+      return {
+        id: r.id,
+        code: r.code,
+        match_id: r.match_id,
+        amount: r.amount,
+        paid: r.paid,
+        status: r.status as 'pending' | 'paid' | 'cancelled',
+        created_at: r.created_at,
+        paid_at: r.paid_at,
+        start_time: r.start_time,
+        end_time: r.end_time,
+        duration_sec: r.duration_sec,
+        surcharge: r.surcharge ?? 0,
+        payment_method: r.payment_method,
+        table_no: m?.table_no || '—',
+        payer_name: payerName,
+      };
+    });
 
     return { registrationCodes, tableFeePayments };
   }
