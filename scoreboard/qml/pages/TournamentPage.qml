@@ -319,10 +319,19 @@ Item {
                 console.log("[TournamentPage] Check-in status: p1=" + p1CheckIn + " p2=" + p2CheckIn)
 
                 if (p1CheckIn === "confirmed" && p2CheckIn === "confirmed") {
-                    // Both already confirmed — skip dialog
-                    page.matchJoined = true
-                    page.startMatchTimer()
-                    console.log("[TournamentPage] Both players already confirmed, skipping join dialog")
+                    var savedElapsed = (typeof TournamentService !== "undefined") ? TournamentService.getMatchElapsedSec(m.match_id) : 0
+                    if (savedElapsed > 0) {
+                        page.matchJoined = true
+                        page.startMatchTimer()
+                        console.log("[TournamentPage] Active running timer found (" + savedElapsed + "s), skipping join dialog")
+                    } else {
+                        page.matchJoined = false
+                        Qt.callLater(function() {
+                            joinDlg.leftConfirmed = true
+                            joinDlg.rightConfirmed = true
+                            joinDlg.open()
+                        })
+                    }
                 } else if (!page.matchJoined) {
                     Qt.callLater(function() {
                         // Pre-populate confirmed status from backend
@@ -431,14 +440,12 @@ Item {
 
                 var p1ci = m.player1_check_in || "unconfirmed"
                 var p2ci = m.player2_check_in || "unconfirmed"
-                var p1Ready = (p1ci === "confirmed" || p1ci === "absent")
-                var p2Ready = (p2ci === "confirmed" || p2ci === "absent")
-                if (p1Ready && p2Ready) {
+                var savedElapsed = (typeof TournamentService !== "undefined") ? TournamentService.getMatchElapsedSec(m.match_id) : 0
+                if (savedElapsed > 0) {
                     page.matchJoined = true
-                    if (p1ci === "confirmed" && p2ci === "confirmed") {
-                        page.startMatchTimer()
-                    }
-                } else if (!page.matchJoined) {
+                    page.startMatchTimer()
+                } else {
+                    page.matchJoined = false
                     joinDlg.leftConfirmed = (p1ci === "confirmed")
                     joinDlg.rightConfirmed = (p2ci === "confirmed")
                     joinDlg.open()
@@ -450,14 +457,9 @@ Item {
                 joinDlg.leftConfirmed = (p1ci === "confirmed")
                 joinDlg.rightConfirmed = (p2ci === "confirmed")
 
-                var p1Ready = (p1ci === "confirmed" || p1ci === "absent")
-                var p2Ready = (p2ci === "confirmed" || p2ci === "absent")
-                if (p1Ready && p2Ready) {
-                    console.log("[TournamentPage] Check-in resolved from backend: p1=" + p1ci + " p2=" + p2ci + ". Closing join dialog.")
+                if (p1ci === "absent" || p2ci === "absent") {
+                    console.log("[TournamentPage] Walkover detected from backend (absent player). Closing join dialog.")
                     page.matchJoined = true
-                    if (p1ci === "confirmed" && p2ci === "confirmed") {
-                        page.startMatchTimer()
-                    }
                     joinDlg.close()
                 } else if (!joinDlg.opened) {
                     joinDlg.open()

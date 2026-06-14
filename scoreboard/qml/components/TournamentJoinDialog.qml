@@ -25,8 +25,13 @@ DialogShell {
 
     titleText: "Xác nhận tham gia giải"
     contentMargins: 30
-    confirmText: ""
+    confirmText: (leftConfirmed && rightConfirmed) ? "Bắt đầu trận đấu" : ""
     cancelText: ""
+
+    onConfirmed: {
+        root.bothConfirmed()
+    }
+
     
     // Ngăn chặn tắt dialog bằng nút X
     showCloseButton: false
@@ -291,17 +296,6 @@ DialogShell {
     function checkBoth() {
         if (root.leftConfirmed && root.rightConfirmed) {
             countdownTimer.stop()
-            autoCloseTimer.start()
-        }
-    }
-
-    Timer {
-        id: autoCloseTimer
-        interval: 800
-        repeat: false
-        onTriggered: {
-            root.bothConfirmed()
-            root.close()
         }
     }
 }
