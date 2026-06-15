@@ -65,6 +65,7 @@ const initialFormData: TournamentFormData = {
     semi_final: '',
     final: '',
     draw_from_round: '',
+    is_pinned: false,
 };
 
 // ============================================
@@ -244,6 +245,7 @@ export const useTournamentForm = () => {
             semi_final: tournament.semi_final || '',
             final: tournament.final || '',
             draw_from_round: (tournament.draw_from_round as string) || '',
+            is_pinned: tournament.is_pinned ?? false,
         });
     };
 

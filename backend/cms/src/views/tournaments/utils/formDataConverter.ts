@@ -111,6 +111,7 @@ export function convertFormDataToAPI(
         semi_final: data.semi_final || null,
         final: data.final || null,
         draw_from_round: data.draw_from_round || null,
+        is_pinned: data.is_pinned ?? false,
         ranks: data.ranks,
     };
 

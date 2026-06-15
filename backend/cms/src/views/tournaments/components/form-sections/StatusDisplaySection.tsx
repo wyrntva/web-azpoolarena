@@ -1,7 +1,7 @@
 /**
  * StatusDisplaySection — Section 3: Trạng thái và hiển thị
  */
-import { Label, Select, TextInput } from 'flowbite-react';
+import { Label, Select, TextInput, Checkbox } from 'flowbite-react';
 import type { TournamentFormData } from '../../types';
 
 interface StatusDisplaySectionProps {
@@ -57,6 +57,16 @@ export default function StatusDisplaySection({ formData, setFormData }: StatusDi
                         onChange={(e) => setFormData({ ...formData, public_date: e.target.value })}
                     />
                 </div>
+            </div>
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Checkbox
+                    id="is_pinned"
+                    checked={formData.is_pinned}
+                    onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })}
+                />
+                <Label htmlFor="is_pinned" className="cursor-pointer font-semibold text-amber-600 dark:text-amber-400">
+                    Ghim giải đấu lên đầu trang Pool Arena
+                </Label>
             </div>
         </div>
     );

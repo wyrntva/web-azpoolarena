@@ -220,7 +220,8 @@ export class TournamentsService {
       )
       .skip(skip)
       .take(limit)
-      .orderBy('t.created_at', 'DESC');
+      .orderBy('t.is_pinned', 'DESC')
+      .addOrderBy('t.created_at', 'DESC');
 
     const { entities, raw } = await qb.getRawAndEntities();
     const total = await this.tourRepo.count();
@@ -331,7 +332,8 @@ export class TournamentsService {
       .where('t.display = :display', { display: 'public' })
       .skip(skip)
       .take(limit)
-      .orderBy('t.created_at', 'DESC');
+      .orderBy('t.is_pinned', 'DESC')
+      .addOrderBy('t.created_at', 'DESC');
 
     const { entities, raw } = await qb.getRawAndEntities();
     const total = await this.tourRepo
@@ -516,8 +518,11 @@ export class TournamentsService {
 
   // ==== DEVICE API ==== //
 
-  private computeRoundName(round: number, numberOfPlayers: number): string {
-    const totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
+  private computeRoundName(round: number, numberOfPlayers: number, bracket?: string, tournamentType?: string): string {
+    let totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
+    if (tournamentType === 'double_elimination' && bracket === 'knockout') {
+      totalRounds -= 1;
+    }
     const fromFinal = totalRounds - round;
     if (fromFinal <= 0) return 'Chung Kết';
     if (fromFinal === 1) return 'Bán Kết';
@@ -528,8 +533,11 @@ export class TournamentsService {
     return `Vòng ${round}`;
   }
 
-  private computeRaceTo(round: number, numberOfPlayers: number, t: TournamentEntity): number | null {
-    const totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
+  private computeRaceTo(round: number, numberOfPlayers: number, t: TournamentEntity, bracket?: string): number | null {
+    let totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
+    if (t?.tournament_type === 'double_elimination' && bracket === 'knockout') {
+      totalRounds -= 1;
+    }
     const fromFinal = totalRounds - round;
     const parse = (v: string | null | undefined) => v ? (parseInt(v, 10) || null) : null;
     if (fromFinal <= 0) return parse(t.final);
@@ -583,8 +591,8 @@ export class TournamentsService {
       match_no: match.match_no,
       round: match.round,
       bracket: match.bracket,
-      round_name: this.computeRoundName(match.round, numPlayers),
-      race_to: this.computeRaceTo(match.round, numPlayers, t),
+      round_name: this.computeRoundName(match.round, numPlayers, match.bracket, t?.tournament_type),
+      race_to: this.computeRaceTo(match.round, numPlayers, t, match.bracket),
       match_time: match.match_time ? match.match_time.toISOString() : null,
       status: match.status,
       draw_touch: t?.draw_touch || null,
@@ -1729,7 +1737,7 @@ export class TournamentsService {
     const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
     const config = this.getTableFeeConfig();
 
-    const roundName = this.computeRoundName(match.round, tournament?.number_of_players || 32);
+    const roundName = this.computeRoundName(match.round, tournament?.number_of_players || 32, match.bracket, tournament?.tournament_type);
     const isSemiOrFinal = roundName.includes('Bán Kết') || roundName.includes('Chung Kết');
 
     if (tournament?.free_table_fee || config.price === 0 || isSemiOrFinal) {

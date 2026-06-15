@@ -25,6 +25,7 @@ interface TournamentData {
   number_of_players: number;
   registration_count?: number;
   status: string;
+  is_pinned?: boolean;
 }
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
@@ -109,6 +110,7 @@ export default function TournamentsPage() {
           isRegistered: false,
           canRegister: (tournament as any).can_register ?? true,
           _startDate: startDate,
+          _isPinned: tournament.is_pinned ?? false,
         };
 
         if (isOngoing) ongoing.push(formatted);
@@ -116,9 +118,24 @@ export default function TournamentsPage() {
         else completed.push(formatted);
       });
 
-      ongoing.sort((a, b) => (a._startDate?.getTime() ?? 0) - (b._startDate?.getTime() ?? 0));
-      upcoming.sort((a, b) => (a._startDate?.getTime() ?? 0) - (b._startDate?.getTime() ?? 0));
-      completed.sort((a, b) => (b._startDate?.getTime() ?? 0) - (a._startDate?.getTime() ?? 0));
+      ongoing.sort((a, b) => {
+        const pinA = a._isPinned ? 1 : 0;
+        const pinB = b._isPinned ? 1 : 0;
+        if (pinB !== pinA) return pinB - pinA;
+        return (a._startDate?.getTime() ?? 0) - (b._startDate?.getTime() ?? 0);
+      });
+      upcoming.sort((a, b) => {
+        const pinA = a._isPinned ? 1 : 0;
+        const pinB = b._isPinned ? 1 : 0;
+        if (pinB !== pinA) return pinB - pinA;
+        return (a._startDate?.getTime() ?? 0) - (b._startDate?.getTime() ?? 0);
+      });
+      completed.sort((a, b) => {
+        const pinA = a._isPinned ? 1 : 0;
+        const pinB = b._isPinned ? 1 : 0;
+        if (pinB !== pinA) return pinB - pinA;
+        return (b._startDate?.getTime() ?? 0) - (a._startDate?.getTime() ?? 0);
+      });
 
       setOngoingTournaments(ongoing);
       setUpcomingTournaments(upcoming);

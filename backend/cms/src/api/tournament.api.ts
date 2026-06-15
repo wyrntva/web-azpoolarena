@@ -53,6 +53,7 @@ export interface Tournament {
     enabled_tables?: string[] | null;
     priority_tables?: string[] | null;
     registration_count?: number;
+    is_pinned?: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -107,6 +108,7 @@ export interface TournamentCreate {
     final?: string | null;
     enabled_tables?: string[] | null;
     priority_tables?: string[] | null;
+    is_pinned?: boolean;
 }
 
 export type TournamentUpdate = Partial<TournamentCreate>;

@@ -18,6 +18,7 @@ export interface Tournament {
   isRegistered: boolean;
   canRegister?: boolean;
   _startDate?: Date | null;
+  _isPinned?: boolean;
 }
 
 interface TournamentCardProps {

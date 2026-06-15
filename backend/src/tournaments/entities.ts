@@ -285,6 +285,9 @@ export class TournamentEntity {
   @Column({ type: 'text', nullable: true })
   priority_tables: string | null;
 
+  @Column({ type: 'boolean', default: false })
+  is_pinned: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 

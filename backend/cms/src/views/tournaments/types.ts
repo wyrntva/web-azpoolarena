@@ -48,4 +48,5 @@ export interface TournamentFormData {
     semi_final: string;
     final: string;
     draw_from_round: string;
+    is_pinned: boolean;
 }

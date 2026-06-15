@@ -130,7 +130,14 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                                             </div>
                                         </Table.Cell>
                                         <Table.Cell className="text-center whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                            {tournament.name}
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                {tournament.name}
+                                                {tournament.is_pinned && (
+                                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                                        <Icon icon="solar:pin-bold" className="text-xs" /> Ghim
+                                                    </span>
+                                                )}
+                                            </div>
                                         </Table.Cell>
                                         <Table.Cell className="text-center">
                                             {tournament.ranks && tournament.ranks.length > 0 ? (

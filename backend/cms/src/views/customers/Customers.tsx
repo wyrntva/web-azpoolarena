@@ -49,7 +49,6 @@ const Customers = () => {
             .catch(() => toast.error('Không thể tải danh sách hạng'));
     }, []);
 
-    useEffect(() => { setCurrentPage(1); }, [search]);
 
     // --- Filtering & Pagination ---
 
@@ -100,7 +99,7 @@ const Customers = () => {
                     </p>
                 </div>
                 <div className="w-full md:w-72">
-                    <TextInput value={search} onChange={(e) => setSearch(e.target.value)}
+                    <TextInput value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                         placeholder="Tìm theo tên, SĐT, email, hạng" />
                 </div>
             </div>

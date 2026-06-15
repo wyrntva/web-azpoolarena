@@ -63,6 +63,7 @@ export class CreateTournamentDto {
   @IsOptional() @IsString() final?: string | null;
   @IsOptional() @IsArray() enabled_tables?: string[] | null;
   @IsOptional() @IsArray() priority_tables?: string[] | null;
+  @IsOptional() @IsBoolean() is_pinned?: boolean;
 }
 
 export class UpdateTournamentDto {
@@ -115,6 +116,7 @@ export class UpdateTournamentDto {
   @IsOptional() @IsString() final?: string | null;
   @IsOptional() @IsArray() enabled_tables?: string[] | null;
   @IsOptional() @IsArray() priority_tables?: string[] | null;
+  @IsOptional() @IsBoolean() is_pinned?: boolean;
 }
 
 export class CreateMatchDto {
