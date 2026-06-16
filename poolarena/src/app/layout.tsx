@@ -14,7 +14,7 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: "Poolarena VietNam",
-  description: "Pool Arena - Hệ thống quản lý câu lạc bộ bida chuyên nghiệp",
+  description: "POOLARENA.VN - Hệ thống giải đấu hàng đầu Việt Nam",
   icons: {
     icon: "/favicon.png",
   },
