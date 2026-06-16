@@ -580,6 +580,20 @@ export class TournamentsService {
     const t = match.tournament;
     const numPlayers = t?.number_of_players || 32;
 
+    const roundLabel = this.getMatchRoundLabel(match.match_no, numPlayers);
+    let effectiveRaceTo: number | null = null;
+    if (roundLabel && t?.draw_from_round) {
+      const DRAW_ROUND_ORDER = ['r16', 'r8', 'qf', 'sf', 'f'];
+      const drawFromIdx = DRAW_ROUND_ORDER.indexOf(t.draw_from_round);
+      const roundIdx = DRAW_ROUND_ORDER.indexOf(roundLabel);
+      if (drawFromIdx >= 0 && roundIdx >= 0 && roundIdx >= drawFromIdx) {
+        if (roundLabel === 'qf') effectiveRaceTo = parseInt(t.quarter_final || '0', 10) || null;
+        else if (roundLabel === 'sf') effectiveRaceTo = parseInt(t.semi_final || '0', 10) || null;
+        else if (roundLabel === 'f')  effectiveRaceTo = parseInt(t.final || '0', 10) || null;
+        else effectiveRaceTo = parseInt(t.draw_touch || '0', 10) || null;
+      }
+    }
+
     // Formatting for the exact keys QML expects payload
     return {
       id: match.id,
@@ -593,6 +607,7 @@ export class TournamentsService {
       bracket: match.bracket,
       round_name: this.computeRoundName(match.round, numPlayers, match.bracket, t?.tournament_type),
       race_to: this.computeRaceTo(match.round, numPlayers, t, match.bracket),
+      effective_race_to: effectiveRaceTo,
       match_time: match.match_time ? match.match_time.toISOString() : null,
       status: match.status,
       draw_touch: t?.draw_touch || null,
