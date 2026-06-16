@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Typography } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import { formatLevel } from "@/lib/tournament-utils";
 
 const { Title, Text } = Typography;
 
@@ -77,7 +78,7 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
                   className="!text-[#575E70] !text-[16px] !font-medium !leading-[24px] !font-sans"
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  Điểm: {player.score.toLocaleString()} - Hạng {player.rank}
+                  Điểm: {player.score.toLocaleString()} - {formatLevel(player.rank)}
                 </div>
               </div>
             </div>

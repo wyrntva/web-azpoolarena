@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/stores/store";
 import NavBar from "@/components/NavBar";
 import { tournamentAPI } from "@/api/tournament.api";
-import { resolveImageUrl } from "@/lib/tournament-utils";
+import { resolveImageUrl, formatLevel } from "@/lib/tournament-utils";
 
 // ---------- Types ----------
 interface ApiPlayerNested {
@@ -528,7 +528,7 @@ const BracketMatchCard: React.FC<{ match: FormattedMatch }> = ({ match }) => {
                                     minWidth: 0,
                                 }}
                             >
-                                {match.player1.name}{match.player1.rank && !match.player1.isBye ? ` - ${match.player1.rank}` : ""}
+                                {match.player1.name}{match.player1.rank && !match.player1.isBye ? ` - ${formatLevel(match.player1.rank)}` : ""}
                             </span>
                         </div>
                         <div style={{
@@ -586,7 +586,7 @@ const BracketMatchCard: React.FC<{ match: FormattedMatch }> = ({ match }) => {
                                     minWidth: 0,
                                 }}
                             >
-                                {match.player2.name}{match.player2.rank && !match.player2.isBye ? ` - ${match.player2.rank}` : ""}
+                                {match.player2.name}{match.player2.rank && !match.player2.isBye ? ` - ${formatLevel(match.player2.rank)}` : ""}
                             </span>
                         </div>
                         <div style={{

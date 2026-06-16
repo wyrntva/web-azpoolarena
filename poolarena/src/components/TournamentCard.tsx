@@ -3,6 +3,7 @@
 import React, { memo, useState, useEffect } from "react";
 import Image from "next/image";
 import { LuCalendarRange } from "react-icons/lu";
+import { formatLevelRange } from "@/lib/tournament-utils";
 
 export interface Tournament {
   id: number;
@@ -109,7 +110,13 @@ const TournamentCard = memo(function TournamentCard({
 
           {/* Bottom: Rank */}
           <div className="mb-2 sm:mb-4 text-white text-sm sm:text-lg font-normal">
-            Hạng {tournament.rank}
+            {(() => {
+              const ranksArray = tournament.rank ? tournament.rank.split('-') : [];
+              if (ranksArray.length === 0 || ranksArray.includes('ALL') || ranksArray.includes('Tất cả hạng')) {
+                return 'Tất cả level';
+              }
+              return formatLevelRange(ranksArray);
+            })()}
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import { Avatar } from "antd";
 import React from "react";
+import { formatLevel } from "@/lib/tournament-utils";
 
 interface MatchPlayer {
   name: string;
@@ -144,7 +145,7 @@ export default function MatchRow({
             className="truncate"
             style={getPlayerNameStyle(player1, player2)}
           >
-            {player1.name}{player1.rank && !player1.isBye ? ` - ${player1.rank}` : ""}
+            {player1.name}{player1.rank && !player1.isBye ? ` - ${formatLevel(player1.rank)}` : ""}
           </span>
           {!player1.isBye && (
             <Avatar
@@ -242,7 +243,7 @@ export default function MatchRow({
             className="truncate"
             style={getPlayerNameStyle(player2, player1)}
           >
-            {player2.name}{player2.rank && !player2.isBye ? ` - ${player2.rank}` : ""}
+            {player2.name}{player2.rank && !player2.isBye ? ` - ${formatLevel(player2.rank)}` : ""}
           </span>
         </div>
       </div>

@@ -288,4 +288,14 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(154, 156, 163, 0.8);
+}
+
+/* Force Ant Design label to stretch to 100% width so that flex justify-between works */
+.w-full-label .ant-form-item-label {
+  width: 100% !important;
+}
+
+.w-full-label .ant-form-item-label > label {
+  width: 100% !important;
+  display: inline-flex !important;
 }

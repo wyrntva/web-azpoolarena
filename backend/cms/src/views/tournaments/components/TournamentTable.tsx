@@ -7,6 +7,7 @@ import CustomPagination from '../../../components/shared/CustomPagination';
 import { tournamentAPI, type Tournament } from '../../../api/tournament.api';
 import BaseDialog from '../../../components/shared/BaseDialog';
 import { TOURNAMENT_STATUS_MAP, TOURNAMENT_TYPE_MAP, getImageUrl as getImageUrlShared } from '../../../constants/shared';
+import { formatFullLevel } from '../../../utils/formatters';
 
 interface TournamentTableProps {
     tournaments: Tournament[];
@@ -89,7 +90,7 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                         <Table.HeadCell className="text-center">STT</Table.HeadCell>
                         <Table.HeadCell className="text-center">ẢNH</Table.HeadCell>
                         <Table.HeadCell className="text-center">TÊN</Table.HeadCell>
-                        <Table.HeadCell className="text-center">HẠNG</Table.HeadCell>
+                        <Table.HeadCell className="text-center">LEVEL</Table.HeadCell>
                         <Table.HeadCell className="text-center">TRẠNG THÁI</Table.HeadCell>
                         <Table.HeadCell className="text-center">HIỂN THỊ</Table.HeadCell>
                         <Table.HeadCell className="text-center">LƯỢT ĐĂNG KÝ</Table.HeadCell>
@@ -142,11 +143,11 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                                         <Table.Cell className="text-center">
                                             {tournament.ranks && tournament.ranks.length > 0 ? (
                                                 <div className="flex flex-wrap gap-1 justify-center">
-                                                    {tournament.ranks.map((rank, idx) => (
-                                                        <span key={idx} className="px-2 py-1 text-blue-800 text-xs">
-                                                            {rank}
-                                                        </span>
-                                                    ))}
+                                                     {tournament.ranks.map((rank, idx) => (
+                                                         <span key={idx} className="px-2 py-1 text-blue-800 text-xs">
+                                                             {formatFullLevel(rank)}
+                                                         </span>
+                                                     ))}
                                                 </div>
                                             ) : (
                                                 <span className="text-gray-400">-</span>

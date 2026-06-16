@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { FaTiktok, FaFacebookF, FaInstagram } from "react-icons/fa";
-import { resolveImageUrl } from "@/lib/tournament-utils";
+import { resolveImageUrl, formatLevel } from "@/lib/tournament-utils";
 import { tournamentAPI } from "@/api/tournament.api";
 
 interface Achievement {
@@ -245,7 +245,7 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                             </span>
                             <span className="text-white/60">—</span>
                             <span className="font-semibold text-white">
-                                Hạng {user.rank || "G+"}
+                                {formatLevel(user.rank)}
                             </span>
                         </div>
                         {/* Two buttons below points: Lịch sử and Hiệu số */}

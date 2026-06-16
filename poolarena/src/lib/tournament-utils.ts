@@ -49,3 +49,65 @@ export const formatCurrency = (amount: number | null | undefined): string => {
   if (!amount) return '0₫';
   return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
 };
+
+export const formatLevel = (rank: string | null | undefined): string => {
+  if (!rank) return "Chưa có level";
+  const cleanRank = rank.trim().toUpperCase().replace(/^HẠNG\s+/, '');
+  switch (cleanRank) {
+    case 'I': return 'Lv .1';
+    case 'K': return 'Lv .1';
+    case 'H': return 'Lv .2';
+    case 'G': return 'Lv .3';
+    case 'F': return 'Lv .4';
+    case 'E': return 'Lv .5';
+    case 'D': return 'Lv .6';
+    case 'C': return 'Lv .7';
+    case 'B': return 'Lv .8';
+    case 'A': return 'Lv .9';
+    case 'S': return 'Lv .10 (MASTER)';
+    default:
+      if (cleanRank.startsWith('LV')) return rank;
+      if (/^\d+$/.test(cleanRank)) return `Lv .${cleanRank}`;
+      return `Level ${rank}`;
+  }
+};
+
+export const formatLevelRange = (ranks: string[] | null | undefined): string => {
+  if (!ranks || ranks.length === 0) return 'Tất cả level';
+  const sorted = sortRanks(ranks).reverse();
+  const mappedLevels = sorted.map(r => {
+    const lvl = formatLevel(r);
+    return lvl.replace('Lv .', '').replace('Level ', '');
+  });
+  const uniqueLevels = Array.from(new Set(mappedLevels));
+  if (uniqueLevels.length === 1) {
+    const lvl = uniqueLevels[0];
+    return `Level ${lvl}`;
+  }
+  return `Level ${uniqueLevels.join('-')}`;
+};
+
+export const formatFullLevel = (rank: string | null | undefined): string => {
+  if (!rank) return "Chưa có level";
+  const cleanRank = rank.trim().toUpperCase().replace(/^HẠNG\s+/, '');
+  switch (cleanRank) {
+    case 'I': return 'Level 1';
+    case 'K': return 'Level 1';
+    case 'H': return 'Level 2';
+    case 'G': return 'Level 3';
+    case 'F': return 'Level 4';
+    case 'E': return 'Level 5';
+    case 'D': return 'Level 6';
+    case 'C': return 'Level 7';
+    case 'B': return 'Level 8';
+    case 'A': return 'Level 9';
+    case 'S': return 'Level 10 (MASTER)';
+    default:
+      if (cleanRank.startsWith('LV')) {
+        return cleanRank.replace(/^LV\s*\.?\s*/i, 'Level ');
+      }
+      if (/^\d+$/.test(cleanRank)) return `Level ${cleanRank}`;
+      return `Level ${rank}`;
+  }
+};
+

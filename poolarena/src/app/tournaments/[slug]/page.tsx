@@ -15,7 +15,7 @@ import {
 import NavBar from "@/components/NavBar";
 import { useAppSelector } from "@/stores/hooks";
 import { tournamentAPI } from "@/api/tournament.api";
-import { sortRanks, resolveImageUrl, formatCurrency, generateSlug } from "@/lib/tournament-utils";
+import { sortRanks, resolveImageUrl, formatCurrency, generateSlug, formatLevelRange } from "@/lib/tournament-utils";
 import { LuCalendarRange } from "react-icons/lu";
 import Image from "next/image";
 
@@ -240,7 +240,7 @@ export default function TournamentDetailPage() {
           max: data.number_of_players || 16,
         },
         format: COMPETITION_FORMAT_MAP[competitionFormat] ?? competitionFormat ?? 'Chưa xác định',
-        rank: sortedRanks.length > 0 ? `Hạng ${sortedRanks.join('-')}` : 'Tất cả hạng',
+        rank: formatLevelRange(sortedRanks),
         phone: data.support_phone || 'Chưa có',
         registrationFee: data.free_registration_fee
           ? `FREE lệ phí${data.free_table_fee ? ' - FREE tiền bàn' : ' - Thua trả tiền bàn'}`
@@ -438,7 +438,7 @@ export default function TournamentDetailPage() {
                     className="text-[#575E70] text-[16px] leading-[24px] font-normal" 
                     style={{ fontFamily: 'Montserrat, sans-serif' }}
                   >
-                    Hạng
+                    Level
                   </span>
                 </div>
                 <div 

@@ -25,6 +25,25 @@ import {
 import { UserEntity } from '../../users/entities/user.entity';
 import { TableEntity } from '../../areas/entities/area.entity';
 
+const formatLevel = (rank: string | null | undefined): string => {
+  if (!rank) return 'Chưa có level';
+  const cleanRank = rank.trim().toUpperCase();
+  switch (cleanRank) {
+    case 'I': return 'Level 1';
+    case 'K': return 'Level 1';
+    case 'H': return 'Level 2';
+    case 'G': return 'Level 3';
+    case 'F': return 'Level 4';
+    case 'E': return 'Level 5';
+    case 'D': return 'Level 6';
+    case 'C': return 'Level 7';
+    case 'B': return 'Level 8';
+    case 'A': return 'Level 9';
+    case 'S': return 'Level 10 (MASTER)';
+    default: return `Level ${rank}`;
+  }
+};
+
 @Injectable()
 export class TournamentsService {
   private readonly matchUpdates$ = new Subject<{ tournamentId: number; match: any }>();
@@ -119,7 +138,7 @@ export class TournamentsService {
       const isAllowed = allowedRanks.map((r) => r.toUpperCase()).includes(userRank);
       if (!isAllowed) {
         throw new BadRequestException(
-          `Hạng của bạn (${user.rank || 'N/A'}) không được tham gia giải đấu này (Chỉ nhận các hạng: ${allowedRanks.join(', ')})`,
+          `Level của bạn (${user.rank ? formatLevel(user.rank) : 'N/A'}) không được tham gia giải đấu này (Chỉ nhận các level: ${allowedRanks.map(formatLevel).join(', ')})`,
         );
       }
     }
@@ -789,7 +808,7 @@ export class TournamentsService {
       const isAllowed = allowedRanks.map((r) => r.toUpperCase()).includes(userRank);
       if (!isAllowed) {
         throw new BadRequestException(
-          `Cơ thủ ${user.full_name} có hạng ${user.rank || 'N/A'}, không nằm trong các hạng được phép của giải đấu: ${allowedRanks.join(', ')}`,
+          `Cơ thủ ${user.full_name} có level ${user.rank ? formatLevel(user.rank) : 'N/A'}, không nằm trong các level được phép của giải đấu: ${allowedRanks.map(formatLevel).join(', ')}`,
         );
       }
     }

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { PlayerCard } from '@/components';
 import { useUsers } from '@/hooks/useUsers';
 import { useUsersFilterStore } from '@/stores/users.store';
+import { formatLevel } from '@/lib/tournament-utils';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -109,19 +110,23 @@ export default function PlayersPage() {
               onChange={handleSearchChange}
             />
             <Select
-              placeholder="Xếp hạng"
-              style={{ width: 120 }}
+              placeholder="Level"
+              style={{ width: 150 }}
               allowClear
               value={rank}
               onChange={handleRankChange}
             >
-              <Option value="S">Hạng S</Option>
-              <Option value="A">Hạng A</Option>
-              <Option value="B">Hạng B</Option>
-              <Option value="C">Hạng C</Option>
-              <Option value="D">Hạng D</Option>
-              <Option value="E">Hạng E</Option>
-              <Option value="K">Hạng K</Option>
+              <Option value="S">Lv .10 (MASTER)</Option>
+              <Option value="A">Lv .9</Option>
+              <Option value="B">Lv .8</Option>
+              <Option value="C">Lv .7</Option>
+              <Option value="D">Lv .6</Option>
+              <Option value="E">Lv .5</Option>
+              <Option value="F">Lv .4</Option>
+              <Option value="G">Lv .3</Option>
+              <Option value="H">Lv .2</Option>
+              <Option value="I">Lv .1</Option>
+              <Option value="K">Lv .1 (K)</Option>
             </Select>
             <Select
               placeholder="Trạng thái"
@@ -165,7 +170,7 @@ export default function PlayersPage() {
                     <PlayerCard
                       id={String(u.id)}
                       name={u.full_name}
-                      rank={u.rank ? `Hạng ${u.rank}` : 'Hạng E'}
+                      rank={formatLevel(u.rank)}
                       avatarUrl={undefined}
                       stats={{
                         wins: u.wins ?? 0,

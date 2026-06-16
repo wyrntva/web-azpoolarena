@@ -10,6 +10,7 @@ import { registerThunk, loginThunk } from "@/stores/auth.slice";
 import { tournamentSettingsAPI } from "@/api/tournamentSettings.api";
 import { UserGender } from "@/types/user.types";
 import { RegisterFormData } from "@/types/auth.types";
+import { formatLevel, formatFullLevel } from "@/lib/tournament-utils";
 
 const { Link } = Typography;
 
@@ -163,25 +164,36 @@ export default function RegisterPage() {
                 </Form.Item>
 
                 <Form.Item
-                  name="rank"
-                  label={
-                    <div className="text-gray-800 text-base font-semibold">
-                      Hạng
-                      <span className="text-red-500 ml-1">*</span>
-                    </div>
-                  }
-                  hasFeedback
-                  rules={[{ required: true, message: "Hạng không được để trống" }]}
-                  style={{ marginBottom: 16 }}
-                >
-                  <Select placeholder="Hạng của bạn">
-                    {ranks.map((rank) => (
-                      <Select.Option key={rank.id} value={rank.name}>
-                        {rank.name}
-                      </Select.Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+                   name="rank"
+                   className="w-full-label"
+                   label={
+                     <div className="flex justify-between items-center w-full">
+                       <div className="text-gray-800 text-base font-semibold">
+                         Level
+                         <span className="text-red-500 ml-1">*</span>
+                       </div>
+                       <a 
+                         href="/info" 
+                         target="_blank" 
+                         rel="noopener noreferrer" 
+                         className="text-sm font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                       >
+                         Thông tin Level
+                       </a>
+                     </div>
+                   }
+                   hasFeedback
+                   rules={[{ required: true, message: "Level không được để trống" }]}
+                   style={{ marginBottom: 16 }}
+                 >
+                   <Select placeholder="Level của bạn">
+                     {ranks.map((rank) => (
+                       <Select.Option key={rank.id} value={rank.name}>
+                         {formatFullLevel(rank.name)}
+                       </Select.Option>
+                     ))}
+                   </Select>
+                 </Form.Item>
 
                  <Form.Item
                   name="phoneNumber"

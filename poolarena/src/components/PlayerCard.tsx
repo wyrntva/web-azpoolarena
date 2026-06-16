@@ -32,7 +32,7 @@ interface PlayerCardProps {
 const PlayerCard = memo(function PlayerCard({
   id,
   name,
-  rank = "Hạng E",
+  rank = "Lv .5",
   avatarUrl,
   stats = {
     wins: 42,

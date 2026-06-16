@@ -15,7 +15,7 @@ interface PlayerProfileProps {
 
 export default function PlayerProfile({
   name = "Quốc Huy",
-  rank = "Hạng E",
+  rank = "Lv .5",
   avatarUrl,
   className = ""
 }: PlayerProfileProps) {

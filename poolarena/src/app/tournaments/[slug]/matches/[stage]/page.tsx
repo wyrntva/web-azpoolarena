@@ -12,6 +12,7 @@ import {
 } from "@/components";
 import NavBar from "@/components/NavBar";
 import { tournamentAPI } from "@/api/tournament.api";
+import { formatLevel } from "@/lib/tournament-utils";
 
 // ---------- Types ----------
 interface ApiPlayerNested {
@@ -1235,7 +1236,7 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = fals
                                     paddingRight: match.player1.isBye ? "4px" : "0px",
                                 }}
                             >
-                                {match.player1.name}{match.player1.rank && !match.player1.isBye ? ` - ${match.player1.rank}` : ""}
+                                {match.player1.name}{match.player1.rank && !match.player1.isBye ? ` - ${formatLevel(match.player1.rank)}` : ""}
                             </span>
                         </div>
                         <div style={{
@@ -1291,7 +1292,7 @@ const MobileMatchCard: React.FC<MobileMatchCardProps> = ({ match, isFinal = fals
                                     paddingRight: match.player2.isBye ? "4px" : "0px",
                                 }}
                             >
-                                {match.player2.name}{match.player2.rank && !match.player2.isBye ? ` - ${match.player2.rank}` : ""}
+                                {match.player2.name}{match.player2.rank && !match.player2.isBye ? ` - ${formatLevel(match.player2.rank)}` : ""}
                             </span>
                         </div>
                         <div style={{

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import CustomPagination from '../../../components/shared/CustomPagination';
 import { tournamentSettingsAPI } from '../../../api/tournamentSettings.api';
 import type { TournamentRank } from '../../../types/api';
+import { formatFullLevel } from '../../../utils/formatters';
 
 const RanksTab = () => {
     const [ranks, setRanks] = useState<TournamentRank[]>([]);
@@ -111,15 +112,15 @@ const RanksTab = () => {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Quản lý hạng
+                        Quản lý Level
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Cấu hình các mức hạng và điểm số tương ứng
+                        Cấu hình các mức Level và điểm số tương ứng
                     </p>
                 </div>
                 <Button onClick={handleCreate} color="blue" size="sm">
                     <Icon icon="solar:add-circle-outline" className="mr-2" />
-                    Thêm Hạng
+                    Thêm Level
                 </Button>
             </div>
 
@@ -129,7 +130,7 @@ const RanksTab = () => {
                     <Table.Head>
                         <Table.HeadCell>ID</Table.HeadCell>
                         <Table.HeadCell>THỨ TỰ</Table.HeadCell>
-                        <Table.HeadCell>TÊN HẠNG</Table.HeadCell>
+                        <Table.HeadCell>TÊN LEVEL</Table.HeadCell>
                         <Table.HeadCell>ĐIỂM TỐI THIỂU</Table.HeadCell>
                         <Table.HeadCell>ĐIỂM TỐI ĐA</Table.HeadCell>
                         <Table.HeadCell>ĐIỂM MẶC ĐỊNH</Table.HeadCell>
@@ -145,7 +146,7 @@ const RanksTab = () => {
                         ) : currentRanks.length === 0 ? (
                             <Table.Row>
                                 <Table.Cell colSpan={7} className="text-center py-8 text-gray-500">
-                                    Chưa có hạng nào
+                                    Chưa có level nào
                                 </Table.Cell>
                             </Table.Row>
                         ) : (
@@ -153,7 +154,7 @@ const RanksTab = () => {
                                 <Table.Row key={rank.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                                     <Table.Cell className="font-medium">{rank.id}</Table.Cell>
                                     <Table.Cell>{rank.order}</Table.Cell>
-                                    <Table.Cell className="font-bold text-lg">{rank.name}</Table.Cell>
+                                    <Table.Cell className="font-bold text-lg">{formatFullLevel(rank.name)}</Table.Cell>
                                     <Table.Cell>{rank.min_score.toLocaleString()}</Table.Cell>
                                     <Table.Cell>{rank.max_score.toLocaleString()}</Table.Cell>
                                     <Table.Cell>{rank.default_score.toLocaleString()}</Table.Cell>
@@ -202,7 +203,7 @@ const RanksTab = () => {
             <Modal show={modalOpen} onClose={() => setModalOpen(false)}>
                 <form onSubmit={handleSubmit}>
                     <Modal.Header>
-                        {editingRank ? 'Chỉnh sửa hạng' : 'Thêm hạng mới'}
+                        {editingRank ? 'Chỉnh sửa level' : 'Thêm level mới'}
                     </Modal.Header>
                     <Modal.Body>
                         <div className="space-y-4">
@@ -218,7 +219,7 @@ const RanksTab = () => {
                                 />
                             </div>
                             <div>
-                                <Label htmlFor="name" value="Tên hạng" />
+                                <Label htmlFor="name" value="Mã Level (VD: I, H, G...)" />
                                 <TextInput
                                     id="name"
                                     type="text"

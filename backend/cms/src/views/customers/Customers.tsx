@@ -12,6 +12,7 @@ import { tournamentSettingsAPI } from '../../api/tournamentSettings.api';
 import type { PoolArenaUser, TournamentRank } from '../../types/api';
 import CustomerEditModal from './CustomerEditModal';
 import { defaultAvatar, GENDER_LABELS } from '../../constants/shared';
+import { formatFullLevel } from '../../utils/formatters';
 
 const ITEMS_PER_PAGE = 50;
 
@@ -100,7 +101,7 @@ const Customers = () => {
                 </div>
                 <div className="w-full md:w-72">
                     <TextInput value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                        placeholder="Tìm theo tên, SĐT, email, hạng" />
+                        placeholder="Tìm theo tên, SĐT, email, level" />
                 </div>
             </div>
 
@@ -114,7 +115,7 @@ const Customers = () => {
                             <Table.HeadCell>Số điện thoại</Table.HeadCell>
                             <Table.HeadCell>Email</Table.HeadCell>
                             <Table.HeadCell>Giới tính</Table.HeadCell>
-                            <Table.HeadCell>Hạng</Table.HeadCell>
+                            <Table.HeadCell>Level</Table.HeadCell>
                             <Table.HeadCell>Điểm</Table.HeadCell>
                             <Table.HeadCell><span className="sr-only">Actions</span></Table.HeadCell>
                         </Table.Head>
@@ -199,7 +200,7 @@ function CustomerRow({ customer, onEdit, onDelete }: {
             <Table.Cell>{customer.phone_number}</Table.Cell>
             <Table.Cell>{customer.email || '-'}</Table.Cell>
             <Table.Cell>{GENDER_LABELS[customer.gender || ''] || '-'}</Table.Cell>
-            <Table.Cell>{customer.rank || '-'}</Table.Cell>
+            <Table.Cell>{customer.rank ? formatFullLevel(customer.rank) : '-'}</Table.Cell>
             <Table.Cell>{customer.points ?? 0}</Table.Cell>
             <Table.Cell>
                 <div className="flex gap-2">

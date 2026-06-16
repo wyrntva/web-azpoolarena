@@ -7,7 +7,7 @@ import NavBar from "@/components/NavBar";
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/config/axios";
-import { resolveImageUrl } from "@/lib/tournament-utils";
+import { resolveImageUrl, formatFullLevel } from "@/lib/tournament-utils";
 
 const { Option } = Select;
 
@@ -104,7 +104,7 @@ const PlayerRow = memo(function PlayerRow({
             <div className="flex md:hidden flex-1 flex-col justify-start min-w-0">
               <h3 className="text-base font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
               <span className="text-xs font-medium text-gray-400 mt-0.5">
-                {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
+                {formatFullLevel(player.rank)}
               </span>
               <span className="text-base font-black italic text-gray-700 mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 {player.points ?? 0}
@@ -116,7 +116,7 @@ const PlayerRow = memo(function PlayerRow({
               <div className="flex flex-col justify-center min-w-0">
                 <h3 className="text-xl font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
                 <span className="text-base font-medium text-gray-400 mt-1">
-                  {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
+                  {formatFullLevel(player.rank)}
                 </span>
               </div>
               <div className="text-right pl-2">
@@ -145,7 +145,7 @@ const PlayerRow = memo(function PlayerRow({
           <div className="flex-1 flex flex-col justify-center min-w-0">
             <h3 className="text-[18px] font-bold text-gray-800 m-0 truncate leading-snug">{player.full_name}</h3>
             <span className="text-sm font-medium text-gray-400 mt-0.5">
-              {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
+              {formatFullLevel(player.rank)}
             </span>
           </div>
         </div>
@@ -166,7 +166,7 @@ const PlayerRow = memo(function PlayerRow({
         <div className="flex-1 flex flex-col justify-center ml-4 min-w-0">
           <h3 className="text-base font-bold text-gray-800 m-0 truncate">{player.full_name}</h3>
           <span className="text-xs text-gray-400">
-            {player.rank ? `Hạng ${player.rank}` : 'Chưa có hạng'}
+            {formatFullLevel(player.rank)}
           </span>
         </div>
         <div className="text-right pl-2">
@@ -351,7 +351,7 @@ export default function LeaderboardPage() {
                 </h1>
               </div>
               <div className="flex items-center w-full max-w-[313px] xl:max-w-none xl:w-[200px] justify-end">
-                <span className="hidden md:inline text-gray-500 text-sm sm:text-base font-medium mr-2">Hạng</span>
+                <span className="hidden md:inline text-gray-500 text-sm sm:text-base font-medium mr-2">Level</span>
                 <Select
                   value={selectedRank}
                   style={{ width: 110 }}
@@ -362,7 +362,7 @@ export default function LeaderboardPage() {
                 >
                   <Option value="all">Tất cả</Option>
                   {ranks.map((rank) => (
-                    <Option key={rank.id} value={rank.name}>Hạng {rank.name}</Option>
+                    <Option key={rank.id} value={rank.name}>{formatFullLevel(rank.name)}</Option>
                   ))}
                 </Select>
               </div>

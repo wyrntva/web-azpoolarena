@@ -74,7 +74,7 @@ export const TournamentInfoCard: React.FC<TournamentInfoCardProps> = ({
           />
           <TournamentDetailRow
             icon="trophy"
-            label="Hạng"
+            label="Level"
             value={tournament.rank}
           />
           <TournamentDetailRow

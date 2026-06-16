@@ -6,6 +6,7 @@ import CustomPagination from '../../components/shared/CustomPagination';
 import { poolArenaUserAPI } from '../../api/poolArenaUser.api';
 import type { PoolArenaUser } from '../../types/api';
 import { defaultAvatar, GENDER_LABELS, getAvatarUrl } from '../../constants/shared';
+import { formatFullLevel } from '../../utils/formatters';
 
 const Leaderboard = () => {
     const [customers, setCustomers] = useState<PoolArenaUser[]>([]);
@@ -77,7 +78,7 @@ const Leaderboard = () => {
                         <TextInput
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Tìm theo tên, SĐT, email, hạng"
+                            placeholder="Tìm theo tên, SĐT, email, level"
                             icon={() => <Icon icon="solar:magnifer-outline" />}
                         />
                     </div>
@@ -98,7 +99,7 @@ const Leaderboard = () => {
                             <Table.HeadCell>Số điện thoại</Table.HeadCell>
                             <Table.HeadCell>Email</Table.HeadCell>
                             <Table.HeadCell>Giới tính</Table.HeadCell>
-                            <Table.HeadCell>Hạng đấu</Table.HeadCell>
+                            <Table.HeadCell>Level</Table.HeadCell>
                             <Table.HeadCell className="text-right">Điểm</Table.HeadCell>
                         </Table.Head>
                         <Table.Body className="divide-y">
@@ -151,7 +152,7 @@ const Leaderboard = () => {
                                             <Table.Cell>
                                                 {customer.rank ? (
                                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
-                                                        {customer.rank}
+                                                        {formatFullLevel(customer.rank)}
                                                     </span>
                                                 ) : (
                                                     '-'

@@ -11,6 +11,7 @@ import ImageCropModal from '../../components/ImageCropModal';
 import { poolArenaUserAPI } from '../../api/poolArenaUser.api';
 import type { PoolArenaUser, TournamentRank } from '../../types/api';
 import { defaultAvatar } from '../../constants/shared';
+import { formatFullLevel } from '../../utils/formatters';
 
 // ============================================
 // TYPES
@@ -215,7 +216,7 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
                             </Select>
                         </div>
                         <div>
-                            <Label htmlFor="rank" value="Hạng" />
+                            <Label htmlFor="rank" value="Level" />
                             <Select id="rank" value={formData.rank}
                                 onChange={(e) => {
                                     const selectedName = e.target.value;
@@ -226,9 +227,9 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
                                         ...(selectedRank ? { points: selectedRank.default_score } : {}),
                                     }));
                                 }}>
-                                <option value="">Chọn hạng</option>
+                                <option value="">Chọn level</option>
                                 {ranks.map((rank) => (
-                                    <option key={rank.id} value={rank.name}>{rank.name}</option>
+                                    <option key={rank.id} value={rank.name}>{formatFullLevel(rank.name)}</option>
                                 ))}
                             </Select>
                         </div>

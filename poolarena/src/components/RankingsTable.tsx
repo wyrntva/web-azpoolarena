@@ -78,7 +78,7 @@ const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, i
                         }`}
                         style={{ fontFamily: 'Montserrat, sans-serif' }}
                     >
-                        {data.player.tier || "Hạng G+"}
+                        {data.player.tier || "Chưa có level"}
                     </span>
                     <span
                         className={`block sm:hidden font-bold italic mt-0.5 ${

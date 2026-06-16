@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import { FiCopy, FiCheck, FiDownload } from "react-icons/fi";
-import { formatCurrency } from "@/lib/tournament-utils";
+import { formatCurrency, formatLevel } from "@/lib/tournament-utils";
 import { tournamentAPI } from "@/api/tournament.api";
 
 interface RegisterTournamentModalProps {
@@ -162,8 +162,8 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
           <span className="font-semibold text-[#37393E] text-[16px] leading-[24px] flex items-center">{user.phoneNumber || "Chưa cập nhật"}</span>
           <span className="text-[#575E70] text-[16px] font-normal leading-[24px] flex items-center">Tài khoản đăng ký:</span>
           <span className="font-semibold text-[#37393E] text-[16px] leading-[24px] flex items-center">{user.fullName}</span>
-          <span className="text-[#575E70] text-[16px] font-normal leading-[24px] flex items-center">Hạng của bạn:</span>
-          <span className="font-semibold text-[#37393E] text-[16px] leading-[24px] flex items-center">Hạng {user.rank || "Chưa cập nhật"}</span>
+          <span className="text-[#575E70] text-[16px] font-normal leading-[24px] flex items-center">Level của bạn:</span>
+          <span className="font-semibold text-[#37393E] text-[16px] leading-[24px] flex items-center">{user.rank ? formatLevel(user.rank) : "Chưa cập nhật"}</span>
         </div>
 
         {/* Payment section or success state */}

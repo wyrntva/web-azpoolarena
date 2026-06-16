@@ -10,7 +10,7 @@ import {
 import NavBar from "@/components/NavBar";
 import { RankingsTable, RankingData } from "@/components/RankingsTable";
 import { tournamentAPI } from "@/api/tournament.api";
-import { resolveImageUrl } from "@/lib/tournament-utils";
+import { resolveImageUrl, formatFullLevel } from "@/lib/tournament-utils";
 import Image from "next/image";
 
 interface RegistrationItem {
@@ -75,7 +75,7 @@ export default function TournamentRankingsPage() {
                         id: reg.id,
                         name: reg.full_name,
                         avatar: reg.avatar_url ? resolveImageUrl(reg.avatar_url, '') : '',
-                        tier: reg.rank ? `Hạng ${reg.rank}` : undefined,
+                        tier: reg.rank ? formatFullLevel(reg.rank) : undefined,
                     },
                     points: formattedPoints,
                 };
@@ -155,7 +155,7 @@ export default function TournamentRankingsPage() {
                         id: reg.id,
                         name: reg.full_name,
                         avatar: reg.avatar_url ? resolveImageUrl(reg.avatar_url, '') : '',
-                        tier: reg.rank ? `Hạng ${reg.rank}` : undefined,
+                        tier: reg.rank ? formatFullLevel(reg.rank) : undefined,
                     },
                     points: formattedPoints,
                 });
