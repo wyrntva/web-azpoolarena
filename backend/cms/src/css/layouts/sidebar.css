@@ -10,7 +10,7 @@
 .menu-sidebar {
     height: 100%;
     width: 256px !important;
-    background: var(--bs-white);
+    background: #172339 !important;
     top: 0;
     left: 0px;
     transition: left .4s ease-in-out;
@@ -80,4 +80,129 @@
     background: 0 0;
     border: 0;
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out;
+}
+
+/* Dark Theme styling for AZ Pool Arena Sidebar */
+.menu-sidebar {
+    background: #172339 !important;
+}
+
+/* Sidebar Captions / Group Headers */
+.menu-sidebar .caption h5 {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Inactive Sidebar Links / Collapses */
+.menu-sidebar a:not(.active),
+.menu-sidebar .cursor-pointer:not(.text-primary) {
+    color: #ffffff !important;
+    background-color: transparent !important;
+}
+
+.menu-sidebar a:not(.active) svg,
+.menu-sidebar .cursor-pointer:not(.text-primary) svg {
+    color: #ffffff !important;
+}
+
+/* Sidebar Divider Line */
+.menu-sidebar .border-t {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Custom Scrollbar for Sidebar */
+.menu-sidebar .simplebar-scrollbar:before {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Force all menu items (links, buttons, collapses) to be full width with square corners and correct spacing */
+.menu-sidebar a,
+.menu-sidebar .cursor-pointer,
+.menu-sidebar .sidebar-dropdown li a,
+.menu-sidebar .sidebar-dropdown a {
+    box-shadow: none !important;
+    border-radius: 0px !important;
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+    padding-left: 36px !important;
+    padding-right: 36px !important;
+}
+
+/* Correct indentation for nested child items (active or inactive, hovered or not) */
+.menu-sidebar .ml-5,
+.menu-sidebar .ml-5.active,
+.menu-sidebar .ml-5.cursor-pointer,
+.menu-sidebar .ml-5 .cursor-pointer,
+.menu-sidebar .sidebar-dropdown li a,
+.menu-sidebar .sidebar-dropdown a {
+    padding-left: 56px !important;
+}
+
+/* Colors for Active State (including active submenus) */
+.menu-sidebar .active,
+.menu-sidebar .sidebar-dropdown li a.active,
+.menu-sidebar .sidebar-dropdown a.active {
+    background-color: #BAE3FF !important;
+    color: #172339 !important;
+    opacity: 1 !important;
+}
+
+.menu-sidebar .active:hover,
+.menu-sidebar .sidebar-dropdown li a.active:hover,
+.menu-sidebar .sidebar-dropdown a.active:hover {
+    background-color: #BAE3FF !important;
+    color: #172339 !important;
+}
+
+.menu-sidebar .active svg,
+.menu-sidebar .active span,
+.menu-sidebar .sidebar-dropdown li a.active svg,
+.menu-sidebar .sidebar-dropdown li a.active span,
+.menu-sidebar .sidebar-dropdown a.active svg,
+.menu-sidebar .sidebar-dropdown a.active span {
+    color: #172339 !important;
+}
+
+/* Active nested child item bullet point color adjustment */
+.menu-sidebar .active .bg-white,
+.menu-sidebar .active span.bg-white,
+.menu-sidebar .sidebar-dropdown li a.active .bg-white,
+.menu-sidebar .sidebar-dropdown li a.active span.bg-white,
+.menu-sidebar .sidebar-dropdown a.active .bg-white,
+.menu-sidebar .sidebar-dropdown a.active span.bg-white {
+    background-color: #172339 !important;
+}
+
+/* Active/Open collapses text color */
+.menu-sidebar .text-primary,
+.menu-sidebar .text-primary svg {
+    color: #ffffff !important;
+}
+
+/* Colors for Hover State (Inactive Items) */
+.menu-sidebar a:not(.active):hover,
+.menu-sidebar .cursor-pointer:not(.text-primary):hover,
+.menu-sidebar .sidebar-dropdown li a:not(.active):hover,
+.menu-sidebar .sidebar-dropdown a:not(.active):hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.menu-sidebar a:not(.active):hover svg,
+.menu-sidebar .cursor-pointer:not(.text-primary):hover svg,
+.menu-sidebar .sidebar-dropdown li a:not(.active):hover svg,
+.menu-sidebar .sidebar-dropdown a:not(.active):hover svg {
+    color: #ffffff !important;
+}
+
+/* Make collapse containers stretch to the full width of the sidebar */
+.menu-sidebar .collpase-items {
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+}
+
+/* Reset margins for items inside collapse containers so they align with the stretched parent */
+.menu-sidebar .collpase-items a,
+.menu-sidebar .collpase-items .cursor-pointer {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
 }

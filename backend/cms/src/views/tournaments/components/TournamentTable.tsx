@@ -7,7 +7,7 @@ import CustomPagination from '../../../components/shared/CustomPagination';
 import { tournamentAPI, type Tournament } from '../../../api/tournament.api';
 import BaseDialog from '../../../components/shared/BaseDialog';
 import { TOURNAMENT_STATUS_MAP, TOURNAMENT_TYPE_MAP, getImageUrl as getImageUrlShared } from '../../../constants/shared';
-import { formatFullLevel } from '../../../utils/formatters';
+import { formatLevel } from '../../../utils/formatters';
 
 interface TournamentTableProps {
     tournaments: Tournament[];
@@ -145,7 +145,7 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                                                 <div className="flex flex-wrap gap-1 justify-center">
                                                      {tournament.ranks.map((rank, idx) => (
                                                          <span key={idx} className="px-2 py-1 text-blue-800 text-xs">
-                                                             {formatFullLevel(rank)}
+                                                             {formatLevel(rank)}
                                                          </span>
                                                      ))}
                                                 </div>

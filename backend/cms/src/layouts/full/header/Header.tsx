@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navbar, Drawer } from "flowbite-react";
 import { Icon } from "@iconify/react";
 import Profile from "./Profile";
@@ -6,38 +6,18 @@ import Notification from "./notification";
 import MobileSidebar from "../sidebar/MobileSidebar";
 
 const Header = () => {
-  const [isSticky, setIsSticky] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsSticky(true);
-      } else {
-        setIsSticky(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   // mobile-sidebar
   const [isOpen, setIsOpen] = useState(false);
   const handleClose = () => setIsOpen(false);
   return (
     <>
       <header
-        className={`sticky top-0 z-[5] ${isSticky
-          ? "bg-white dark:bg-dark fixed w-full"
-          : "bg-white"
-          }`}
+        className="absolute top-0 left-0 right-[6px] z-[10] h-[50px] flex flex-col justify-start bg-white dark:bg-dark"
       >
+        <div className="h-[4px] w-full bg-[#172339] shrink-0" />
         <Navbar
           fluid
-          className={`rounded-none bg-transparent dark:bg-transparent py-1 sm:px-30 px-4`}
+          className={`rounded-none bg-transparent dark:bg-transparent h-[46px] py-0 sm:px-30 px-4 flex items-center`}
         >
           {/* Mobile Toggle Icon */}
 

@@ -24,7 +24,7 @@ const NavItems: React.FC<NavItemsProps> = ({ item, isChild, centered }) => {
         className={`${item.url == pathname
           ? "text-white bg-primary rounded-xl  hover:text-white hover:bg-primary dark:hover:text-white shadow-btnshdw active"
           : "text-link bg-transparent group/link "
-          } ${isChild ? "ml-5 mb-0.5" : ""} `}
+          } ${isChild ? "mb-0.5" : ""} `}
       >
         <div className={`flex items-center ${centered ? 'justify-center' : 'justify-between'}`}>
           <span className="flex gap-3 align-center items-center">

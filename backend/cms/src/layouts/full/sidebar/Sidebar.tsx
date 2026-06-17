@@ -62,10 +62,10 @@ const SidebarLayout = () => {
   return (
     <>
       <div className="xl:block hidden">
-        <div className="fixed menu-sidebar bg-white dark:bg-darkgray rtl:pe-4 rtl:ps-0 top-0 z-[10] h-full min-h-screen flex flex-col">
+        <div className="fixed menu-sidebar bg-[#172339] rtl:pe-4 rtl:ps-0 top-0 z-[10] h-full min-h-screen flex flex-col">
           {/* Logo Area (Fixed at top) */}
           <div className="flex items-center justify-center h-[50px] sidebarlogo shrink-0">
-            <FullLogo />
+            <FullLogo theme="light" />
           </div>
 
           {/* Menu Area (Scrollable) */}

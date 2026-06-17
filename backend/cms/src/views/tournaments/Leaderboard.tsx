@@ -6,7 +6,7 @@ import CustomPagination from '../../components/shared/CustomPagination';
 import { poolArenaUserAPI } from '../../api/poolArenaUser.api';
 import type { PoolArenaUser } from '../../types/api';
 import { defaultAvatar, GENDER_LABELS, getAvatarUrl } from '../../constants/shared';
-import { formatFullLevel } from '../../utils/formatters';
+import { formatLevel } from '../../utils/formatters';
 
 const Leaderboard = () => {
     const [customers, setCustomers] = useState<PoolArenaUser[]>([]);
@@ -152,7 +152,7 @@ const Leaderboard = () => {
                                             <Table.Cell>
                                                 {customer.rank ? (
                                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
-                                                        {formatFullLevel(customer.rank)}
+                                                        {formatLevel(customer.rank)}
                                                     </span>
                                                 ) : (
                                                     '-'

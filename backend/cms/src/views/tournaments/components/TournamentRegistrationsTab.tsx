@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import { tournamentAPI, type TournamentRegisteredPlayer, type TournamentEligibleUser } from '../../../api/tournament.api';
 import { defaultAvatar, getAvatarUrl } from '../../../constants/shared';
-import { formatFullLevel } from '../../../utils/formatters';
+import { formatLevel } from '../../../utils/formatters';
 
 interface TournamentRegistrationsTabProps {
     tournamentId: number;
@@ -109,7 +109,7 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, onBrac
         if (!selectedUserId) return '-- Chọn khách hàng --';
         const user = eligibleUsers.find(u => u.id === parseInt(selectedUserId, 10));
         if (!user) return '-- Chọn khách hàng --';
-        return `${user.full_name} – ${user.phone_number} ${user.rank ? `(${formatFullLevel(user.rank)})` : ''} ${user.email ? `- ${user.email}` : ''}`;
+        return `${user.full_name} – ${user.phone_number} ${user.rank ? `(${formatLevel(user.rank)})` : ''} ${user.email ? `- ${user.email}` : ''}`;
     };
 
     const handleRemoveClick = (player: TournamentRegisteredPlayer) => {
@@ -198,7 +198,7 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, onBrac
                                                         }`}
                                                 >
                                                     <div className="text-sm text-gray-900 dark:text-white">
-                                                        {u.full_name} – {u.phone_number} {u.rank ? `(${formatFullLevel(u.rank)})` : ''} {u.email ? `- ${u.email}` : ''}
+                                                        {u.full_name} – {u.phone_number} {u.rank ? `(${formatLevel(u.rank)})` : ''} {u.email ? `- ${u.email}` : ''}
                                                     </div>
                                                 </button>
                                             ))
@@ -283,7 +283,7 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, onBrac
                                         </Table.Cell>
                                         <Table.Cell className="text-center font-medium">{player.full_name}</Table.Cell>
                                         <Table.Cell className="text-center">{player.phone_number}</Table.Cell>
-                                        <Table.Cell className="text-center">{player.rank ? formatFullLevel(player.rank) : '-'}</Table.Cell>
+                                        <Table.Cell className="text-center">{player.rank ? formatLevel(player.rank) : '-'}</Table.Cell>
                                         <Table.Cell className="text-center">
                                             {player.registered_at ? new Date(player.registered_at).toLocaleString('vi-VN') : '-'}
                                         </Table.Cell>

@@ -5,11 +5,20 @@ export default function ScrollToTop({ children }: { children: ReactElement | nul
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'smooth',
-    });
+    const scrollContainer = document.getElementById('main-content-scroll');
+    if (scrollContainer) {
+      scrollContainer.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth',
+      });
+    } else {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth',
+      });
+    }
   }, [pathname]);
 
   return children || null;

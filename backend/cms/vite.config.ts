@@ -79,6 +79,9 @@ export default defineConfig({
         host: '0.0.0.0', // Expose to network
         port: 5173,
         strictPort: false, // Try next port if 5173 is busy
+        watch: {
+            usePolling: true,
+        },
         proxy: {
             '/api': {
                 target: process.env.VITE_API_URL || 'http://localhost:8000',

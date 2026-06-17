@@ -94,7 +94,7 @@ export class PoolArenaService {
   async update(id: number, dto: UpdatePoolArenaUserDto) {
     const user = await this.findOne(id);
     Object.assign(user, dto);
-    if (dto.rank) {
+    if (dto.rank && dto.points === undefined) {
       const rank = await this.rankRepo.findOne({ where: { name: dto.rank } });
       if (rank) user.points = rank.default_score;
     }

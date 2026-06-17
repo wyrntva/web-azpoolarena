@@ -63,11 +63,11 @@ const MobileSidebar = () => {
     <>
       <div>
         <Sidebar
-          className="fixed menu-sidebar pt-0 bg-white dark:bg-darkgray transition-all shadow-none w-full"
+          className="fixed menu-sidebar pt-0 bg-[#172339] transition-all shadow-none w-full"
           aria-label="Sidebar with multi-level dropdown example"
         >
           <div className="px-5 py-4 pb-7 flex items-center sidebarlogo">
-            <FullLogo />
+            <FullLogo theme="light" />
           </div>
           <SimpleBar className="h-[calc(100vh_-_100px)]">
             <Sidebar.Items className="px-5 mt-2">

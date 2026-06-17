@@ -84,7 +84,7 @@ export default function InfoPage() {
                 </div>
                 <div className="space-y-2">
                   <p>
-                    <strong>Level 2</strong> dành cho cơ thủ đang tập chơi, đi được từ 1 đến tối đa 4 bóng (<strong className="text-[#C6010B]">KHÔNG THỂ</strong> ĐI ĐƯỢC CHẤM, nếu <strong className="text-[#C6010B]">RÙA</strong> hay <strong className="text-[#C6010B]">HÌNH BI ĐẸP</strong> thì sẽ được BTC xem xét đánh giá)
+                    <strong>Level 2</strong> dành cho cơ thủ đang tập chơi, đi được từ 1 đến tối đa 4 bóng (<strong className="text-[#C6010B]">KHÔNG THỂ</strong> ĐI ĐƯỢC CHẤM, kể cả <strong className="text-[#C6010B]">RÙA</strong> hay <strong className="text-[#C6010B]">HÌNH BI ĐẸP</strong>)
                   </p>
                   <p>Có thể ăn từ 3 đến 5 bóng trong trường hợp 1 - 2 bóng nằm cửa lỗ, tuy nhiên tính ổn định không được cao.</p>
                   <p>Biết sử dụng các kĩ thuật cơ bản nhưng chưa thành thạo.</p>
