@@ -54,7 +54,7 @@ const TotalIncome = () => {
   };
   return (
     <>
-      <div className="bg-white rounded-xl shadow-md p-8">
+      <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md p-8">
         <div className="flex items-center gap-4 mb-8">
           <div className="bg-lighterror text-error p-3 rounded-md">
             <Icon icon="solar:box-linear" height={24} />

@@ -1708,7 +1708,7 @@ export default function TournamentMatchesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#e8e8e8] font-sans">
+        <div className="min-h-screen bg-[#F0F2F4] font-sans">
             <NavBar />
 
             {/* ===================== DESKTOP ===================== */}

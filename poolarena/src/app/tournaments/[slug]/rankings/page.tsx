@@ -166,11 +166,11 @@ export default function TournamentRankingsPage() {
     }, [registrations, matches]);
 
     return (
-        <div className="min-h-screen bg-[#F4F7FE] sm:bg-[#e8e8e8] pb-24 font-sans">
+        <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
             <NavBar />
 
             {/* MOBILE LAYOUT (block sm:hidden) */}
-            <div className="block sm:hidden bg-[#F4F7FE]">
+            <div className="block sm:hidden bg-[#F0F2F4]">
                 {/* Banner Image */}
                 <div className="relative w-full h-[180px] bg-gray-200 overflow-hidden">
                     <Image

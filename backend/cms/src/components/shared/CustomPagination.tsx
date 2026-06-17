@@ -33,7 +33,7 @@ const CustomPagination: React.FC<CustomPaginationProps> = ({ currentPage, totalP
                         onClick={() => onPageChange(i)}
                         className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors
                             ${currentPage === i
-                                ? 'bg-blue-600 text-white'
+                                ? 'bg-primary text-white'
                                 : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
                             }`}
                     >

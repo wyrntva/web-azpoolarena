@@ -4,6 +4,7 @@
 import { Checkbox, Label, Select } from 'flowbite-react';
 import type { TournamentFormData } from '../../types';
 import type { TournamentRank } from '../../../../types/api';
+import { formatLevel } from '../../../../utils/formatters';
 
 interface LevelTypeSectionProps {
     formData: TournamentFormData;
@@ -33,7 +34,7 @@ export default function LevelTypeSection({
                                 onChange={() => handleRankToggle(rank.name)}
                             />
                             <Label htmlFor={`rank-${rank.id}`} className="cursor-pointer font-medium">
-                                {rank.name}
+                                {formatLevel(rank.name)}
                             </Label>
                         </div>
                     ))}

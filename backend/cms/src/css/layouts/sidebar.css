@@ -10,7 +10,7 @@
 .menu-sidebar {
     height: 100%;
     width: 256px !important;
-    background: #172339 !important;
+    background: #ffffff !important;
     top: 0;
     left: 0px;
     transition: left .4s ease-in-out;
@@ -82,75 +82,108 @@
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out;
 }
 
-/* Dark Theme styling for AZ Pool Arena Sidebar */
+/* Light Theme styling for AZ Pool Arena Sidebar */
 .menu-sidebar {
-    background: #172339 !important;
+    background: #ffffff !important;
 }
 
 /* Sidebar Captions / Group Headers */
 .menu-sidebar .caption h5 {
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: #37393E !important;
+    font-size: 14px !important;
 }
 
 /* Inactive Sidebar Links / Collapses */
 .menu-sidebar a:not(.active),
 .menu-sidebar .cursor-pointer:not(.text-primary) {
-    color: #ffffff !important;
+    color: #37393E !important;
     background-color: transparent !important;
 }
 
 .menu-sidebar a:not(.active) svg,
 .menu-sidebar .cursor-pointer:not(.text-primary) svg {
-    color: #ffffff !important;
+    color: #37393E !important;
 }
 
 /* Sidebar Divider Line */
 .menu-sidebar .border-t {
-    border-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: #e5e7eb !important;
 }
 
 /* Custom Scrollbar for Sidebar */
 .menu-sidebar .simplebar-scrollbar:before {
-    background: rgba(255, 255, 255, 0.3) !important;
+    background: rgba(0, 0, 0, 0.15) !important;
 }
 
-/* Force all menu items (links, buttons, collapses) to be full width with square corners and correct spacing */
+/* Style menu items and wrappers as rounded pills */
 .menu-sidebar a,
 .menu-sidebar .cursor-pointer,
 .menu-sidebar .sidebar-dropdown li a,
 .menu-sidebar .sidebar-dropdown a {
+    border-radius: 24px !important;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
     box-shadow: none !important;
-    border-radius: 0px !important;
-    margin-left: -20px !important;
-    margin-right: -20px !important;
-    padding-left: 36px !important;
+    padding-left: 20px !important;
     padding-right: 36px !important;
+    font-size: 14px !important;
 }
 
-/* Correct indentation for nested child items (active or inactive, hovered or not) */
-.menu-sidebar .ml-5,
-.menu-sidebar .ml-5.active,
-.menu-sidebar .ml-5.cursor-pointer,
-.menu-sidebar .ml-5 .cursor-pointer,
-.menu-sidebar .sidebar-dropdown li a,
-.menu-sidebar .sidebar-dropdown a {
-    padding-left: 56px !important;
+.menu-sidebar li,
+.menu-sidebar .sidebar-dropdown li {
+    border-radius: 24px !important;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
 }
+
+/* Align child items' left margin with parent's icon (margin-left: 20px) */
+.menu-sidebar .sidebar-dropdown li,
+.menu-sidebar .sidebar-dropdown > a {
+    margin-left: 20px !important;
+    margin-right: 0px !important;
+}
+
+.menu-sidebar .sidebar-dropdown li a {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+}
+
+/* Align child items' text padding (padding-left: 24px) */
+.menu-sidebar .sidebar-dropdown li a div,
+.menu-sidebar .sidebar-dropdown a div {
+    padding-left: 24px !important;
+}
+
+
 
 /* Colors for Active State (including active submenus) */
 .menu-sidebar .active,
 .menu-sidebar .sidebar-dropdown li a.active,
-.menu-sidebar .sidebar-dropdown a.active {
-    background-color: #BAE3FF !important;
-    color: #172339 !important;
+.menu-sidebar .sidebar-dropdown a.active,
+.menu-sidebar .sidebar-dropdown li.active a,
+.menu-sidebar .sidebar-dropdown li a.bg-primary,
+.menu-sidebar .sidebar-dropdown a.bg-primary {
+    background-color: #C6010B !important;
+    color: #ffffff !important;
     opacity: 1 !important;
+    padding-left: 20px !important;
+}
+
+.menu-sidebar .sidebar-dropdown li a.active div,
+.menu-sidebar .sidebar-dropdown a.active div,
+.menu-sidebar .sidebar-dropdown li.active a div,
+.menu-sidebar .sidebar-dropdown li a.bg-primary div,
+.menu-sidebar .sidebar-dropdown a.bg-primary div {
+    padding-left: 24px !important;
 }
 
 .menu-sidebar .active:hover,
 .menu-sidebar .sidebar-dropdown li a.active:hover,
 .menu-sidebar .sidebar-dropdown a.active:hover {
-    background-color: #BAE3FF !important;
-    color: #172339 !important;
+    background-color: #C6010B !important;
+    color: #ffffff !important;
 }
 
 .menu-sidebar .active svg,
@@ -159,7 +192,7 @@
 .menu-sidebar .sidebar-dropdown li a.active span,
 .menu-sidebar .sidebar-dropdown a.active svg,
 .menu-sidebar .sidebar-dropdown a.active span {
-    color: #172339 !important;
+    color: #ffffff !important;
 }
 
 /* Active nested child item bullet point color adjustment */
@@ -169,13 +202,13 @@
 .menu-sidebar .sidebar-dropdown li a.active span.bg-white,
 .menu-sidebar .sidebar-dropdown a.active .bg-white,
 .menu-sidebar .sidebar-dropdown a.active span.bg-white {
-    background-color: #172339 !important;
+    background-color: #ffffff !important;
 }
 
 /* Active/Open collapses text color */
 .menu-sidebar .text-primary,
 .menu-sidebar .text-primary svg {
-    color: #ffffff !important;
+    color: #C6010B !important;
 }
 
 /* Colors for Hover State (Inactive Items) */
@@ -183,21 +216,21 @@
 .menu-sidebar .cursor-pointer:not(.text-primary):hover,
 .menu-sidebar .sidebar-dropdown li a:not(.active):hover,
 .menu-sidebar .sidebar-dropdown a:not(.active):hover {
-    color: #ffffff !important;
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #37393E !important;
+    background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
 .menu-sidebar a:not(.active):hover svg,
 .menu-sidebar .cursor-pointer:not(.text-primary):hover svg,
 .menu-sidebar .sidebar-dropdown li a:not(.active):hover svg,
 .menu-sidebar .sidebar-dropdown a:not(.active):hover svg {
-    color: #ffffff !important;
+    color: #37393E !important;
 }
 
-/* Make collapse containers stretch to the full width of the sidebar */
+/* Make collapse containers align with the shorter sidebar items */
 .menu-sidebar .collpase-items {
-    margin-left: -20px !important;
-    margin-right: -20px !important;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
 }
 
 /* Reset margins for items inside collapse containers so they align with the stretched parent */
@@ -205,4 +238,9 @@
 .menu-sidebar .collpase-items .cursor-pointer {
     margin-left: 0px !important;
     margin-right: 0px !important;
+}
+
+/* Ensure the leading icon has exactly 24px spacing from the text */
+.menu-sidebar .leading-icon {
+    margin-right: 24px !important;
 }

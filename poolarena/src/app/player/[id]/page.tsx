@@ -43,7 +43,7 @@ export default function PlayerDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#e8e8e8]">
+            <div className="min-h-screen flex items-center justify-center bg-[#F0F2F4]">
                 <Spin size="large" />
             </div>
         );
@@ -51,7 +51,7 @@ export default function PlayerDetailPage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-[#e8e8e8]">
+            <div className="min-h-screen bg-[#F0F2F4]">
                 <NavBar />
                 <div className="max-w-7xl mx-auto px-4 py-8 text-center">
                     <h2 className="text-xl font-bold text-gray-700">Không tìm thấy người chơi</h2>
@@ -61,7 +61,7 @@ export default function PlayerDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#e8e8e8]">
+        <div className="min-h-screen bg-[#F0F2F4]">
             {/* Top Navigation Bar */}
             <NavBar />
 

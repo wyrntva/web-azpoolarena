@@ -43,49 +43,49 @@ const SidebarContent: MenuItem[] = [
         id: uniqueId(),
         children: [
           {
-            name: "Báo cáo chi tiết",
+            name: "Chi tiết",
             icon: "solar:document-text-outline",
             id: uniqueId(),
             url: "/reports",
           },
           {
-            name: "Báo cáo chi phí",
+            name: "Chi phí",
             icon: "solar:money-bag-outline",
             id: uniqueId(),
             url: "/expense-report",
           },
           {
-            name: "Báo cáo doanh thu",
+            name: "Doanh thu",
             icon: "solar:chart-square-outline",
             id: uniqueId(),
             url: "/reports/revenue",
           },
           {
-            name: "Báo cáo mặt hàng",
+            name: "Mặt hàng",
             icon: "solar:bag-3-outline",
             id: uniqueId(),
             url: "/reports/products",
           },
           {
-            name: "Báo cáo kho hàng",
+            name: "Kho hàng",
             icon: "solar:box-outline",
             id: uniqueId(),
             url: "/reports/inventory",
           },
           {
-            name: "Báo cáo tài chính",
+            name: "Tài chính",
             icon: "solar:dollar-outline",
             id: uniqueId(),
             url: "/reports/finance",
           },
           {
-            name: "Báo cáo khuyến mãi",
+            name: "Khuyến mãi",
             icon: "solar:ticket-sale-outline",
             id: uniqueId(),
             url: "/reports/promotions",
           },
           {
-            name: "Báo cáo nhân viên",
+            name: "Nhân viên",
             icon: "solar:users-group-rounded-outline",
             id: uniqueId(),
             url: "/reports/staff",
@@ -98,7 +98,7 @@ const SidebarContent: MenuItem[] = [
         id: uniqueId(),
         children: [
           {
-            name: "Danh sách mặt hàng",
+            name: "Mặt hàng",
             icon: "solar:list-outline",
             id: uniqueId(),
             url: "/products/list",
@@ -222,7 +222,7 @@ const SidebarContent: MenuItem[] = [
         id: uniqueId(),
         children: [
           {
-            name: "Danh sách nhân viên",
+            name: "Nhân viên",
             icon: "solar:user-outline",
             id: uniqueId(),
             url: "/staff",
@@ -241,7 +241,7 @@ const SidebarContent: MenuItem[] = [
         id: uniqueId(),
         children: [
           {
-            name: "Danh sách khách hàng",
+            name: "Khách hàng",
             icon: "solar:user-hand-up-outline",
             id: uniqueId(),
             url: "/customers",
@@ -310,7 +310,7 @@ const SidebarContent: MenuItem[] = [
         url: "/tournament-settings",
       },
       {
-        name: "Phân tích & Analytics",
+        name: "Phân tích dữ liệu",
         icon: "custom:analytics",
         id: uniqueId(),
         url: "/analytics",

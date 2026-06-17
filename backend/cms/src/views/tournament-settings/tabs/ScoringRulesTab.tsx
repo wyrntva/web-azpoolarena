@@ -5,7 +5,7 @@ import { tournamentSettingsAPI } from '../../../api/tournamentSettings.api';
 import toast from 'react-hot-toast';
 
 interface RatingMatrixItem {
-    diff: number;
+    diff: number | string;
     winFav: number | string;
     winUnd: number | string;
     loseFav: number | string;

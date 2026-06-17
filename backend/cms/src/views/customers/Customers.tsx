@@ -90,14 +90,13 @@ const Customers = () => {
     // --- Render ---
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="pt-0 px-6 pb-6 space-y-6">
             {/* Header */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Danh sách khách hàng</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                        Hiển thị toàn bộ người chơi đã đăng ký qua web PoolArena
-                    </p>
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        DANH SÁCH KHÁCH HÀNG
+                    </h1>
                 </div>
                 <div className="w-full md:w-72">
                     <TextInput value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}

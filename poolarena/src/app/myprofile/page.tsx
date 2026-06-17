@@ -47,14 +47,14 @@ export default function MyProfilePage() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#e8e8e8]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F0F2F4]">
         <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#e8e8e8]">
+    <div className="min-h-screen bg-[#F0F2F4]">
       {/* Top Navigation Bar */}
       <NavBar />
 

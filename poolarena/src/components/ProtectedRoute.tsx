@@ -40,7 +40,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // This matches server-side structure (loading/null) and prevents hydration issues
   if (!isMounted && isProtectedRoute) {
     return (
-      <div className="min-h-screen bg-[#e8e8e8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -49,7 +49,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // If it's a protected route, wait until we check the token on client side
   if (isProtectedRoute && !hasCheckedToken) {
     return (
-      <div className="min-h-screen bg-[#e8e8e8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
         <Spin size="large" />
       </div>
     );
@@ -58,7 +58,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // If it's a protected route, and the token does not exist, show loading spinner (redirect in progress)
   if (isProtectedRoute && !tokenExists) {
     return (
-      <div className="min-h-screen bg-[#e8e8e8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
         <Spin size="large" />
       </div>
     );

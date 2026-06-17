@@ -105,19 +105,19 @@ const StaffRole = () => {
     const totalPages = Math.ceil(roles.length / itemsPerPage);
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="pt-0 px-6 pb-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Quản lý vai trò nhân viên
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        DANH SÁCH VAI TRÒ
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                        Định nghĩa các vai trò và quyền hạn trong hệ thống
-                    </p>
                 </div>
-                <Button onClick={handleCreate} color="blue">
+                <button
+                    onClick={handleCreate}
+                    className="bg-[#C6010B] hover:bg-[#C6010B]/90 text-white font-medium px-4 py-2.5 rounded-[24px] flex items-center justify-center transition-colors cursor-pointer"
+                >
                     Thêm vai trò
-                </Button>
+                </button>
             </div>
 
             <Card>

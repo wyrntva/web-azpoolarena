@@ -47,15 +47,6 @@ const Timesheet = () => {
         return map;
     }, [schedules]);
 
-    useEffect(() => {
-        fetchEmployees();
-    }, []);
-
-    useEffect(() => {
-        fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedDate]);
-
     const fetchEmployees = async () => {
         try {
             const response = await userAPI.getUsers();
@@ -83,6 +74,27 @@ const Timesheet = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let active = true;
+        Promise.resolve().then(() => {
+            if (active) fetchEmployees();
+        });
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        let active = true;
+        Promise.resolve().then(() => {
+            if (active) fetchData();
+        });
+        return () => {
+            active = false;
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedDate]);
 
     const weekDates = useMemo(
         () => Array.from({ length: 7 }, (_, i) => mondayDate.add(i, 'day')),
@@ -198,7 +210,7 @@ const Timesheet = () => {
                                 {weekDates.map((d, i) => (
                                     <th key={i} className="p-2 md:p-4">
                                         <p className="text-[10px] md:text-xs uppercase text-gray-500 mb-1">{i === 6 ? 'CN' : `Thứ ${i + 2}`}</p>
-                                        <span className={`font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-sm ${d.isSame(dayjs(), 'day') ? 'bg-[#635BFF] text-white' : 'text-gray-900'}`}>
+                                        <span className={`font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-sm ${d.isSame(dayjs(), 'day') ? 'bg-primary text-white' : 'text-gray-900'}`}>
                                             {d.format('DD/MM')}
                                         </span>
                                     </th>

@@ -9,7 +9,7 @@ interface MyAppProps {
 }
 const CardBox: React.FC<MyAppProps> = ({ children, className }) => {
   return (
-    <Card className={`card p-[30px] shadow-md dark:shadow-none  ${className} `}
+    <Card className={`card p-[30px] shadow-md dark:shadow-dark-md  ${className} `}
       style={{
         borderRadius: `12px`,
       }}

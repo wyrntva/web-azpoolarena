@@ -37,7 +37,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#e8e8e8]">
+    <div className="min-h-screen bg-[#F0F2F4]">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -146,7 +146,7 @@ export default function DashboardPage() {
                 <Col xs={24} lg={12}>
                   <Card title="Trận đấu gần đây" className="h-full">
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 bg-[#e8e8e8] rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-[#F0F2F4] rounded-lg">
                         <div>
                           <Text strong>vs Nguyễn Văn A</Text>
                           <br />
@@ -154,7 +154,7 @@ export default function DashboardPage() {
                         </div>
                         <Text className="text-green-600 font-semibold">Thắng</Text>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-[#e8e8e8] rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-[#F0F2F4] rounded-lg">
                         <div>
                           <Text strong>vs Trần Thị B</Text>
                           <br />
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                         </div>
                         <Text className="text-red-600 font-semibold">Thua</Text>
                       </div>
-                      <div className="flex justify-between items-center p-3 bg-[#e8e8e8] rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-[#F0F2F4] rounded-lg">
                         <div>
                           <Text strong>vs Lê Văn C</Text>
                           <br />

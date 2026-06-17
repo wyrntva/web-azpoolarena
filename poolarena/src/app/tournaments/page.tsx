@@ -183,7 +183,7 @@ export default function TournamentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#e8e8e8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
         <div className="text-center">
           <Spin size="large" />
           <p className="mt-4 text-gray-600">Đang tải danh sách giải đấu...</p>
@@ -193,7 +193,7 @@ export default function TournamentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#e8e8e8]">
+    <div className="min-h-screen bg-[#F0F2F4]">
       <NavBar />
 
       <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pb-20 sm:pb-0">

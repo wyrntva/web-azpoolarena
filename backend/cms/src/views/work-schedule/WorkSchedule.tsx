@@ -49,11 +49,6 @@ const WorkSchedule = () => {
         return map;
     }, [schedules]);
 
-    useEffect(() => {
-        fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedDate]);
-
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -79,6 +74,17 @@ const WorkSchedule = () => {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let active = true;
+        Promise.resolve().then(() => {
+            if (active) fetchData();
+        });
+        return () => {
+            active = false;
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedDate]);
 
     const weekDates = useMemo(
         () => Array.from({ length: 7 }, (_, i) => mondayDate.add(i, 'day')),
@@ -261,7 +267,7 @@ const WorkSchedule = () => {
                                 {weekDates.map((d, i) => (
                                     <th key={i} className="p-2 md:p-4">
                                         <p className="text-[10px] md:text-xs uppercase text-gray-500 mb-1">{i === 6 ? 'CN' : `Thứ ${i + 2}`}</p>
-                                        <span className={`font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-sm ${d.isSame(dayjs(), 'day') ? 'bg-[#635BFF] text-white' : 'text-gray-900'}`}>
+                                        <span className={`font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-sm ${d.isSame(dayjs(), 'day') ? 'bg-primary text-white' : 'text-gray-900'}`}>
                                             {d.format('DD/MM')}
                                         </span>
                                     </th>
@@ -271,7 +277,7 @@ const WorkSchedule = () => {
                         <tbody className="divide-y">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={8} className="p-10 text-center flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></td>
+                                    <td colSpan={8} className="p-10 text-center flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></td>
                                 </tr>
                             ) : (
                                 employees.map((emp) => (

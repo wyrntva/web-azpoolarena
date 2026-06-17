@@ -18,14 +18,14 @@ const CustomCollapse: React.FC<{
     <div className={twMerge("transition-none", isChild ? "ml-5 mb-0.5" : "")}>
       <div
         className={twMerge(
-          "flex cursor-pointer mb-1 items-center justify-between rounded-lg px-4 py-[11px] gap-3 text-[15px] leading-[normal] font-normal text-link nav-cover hover:text-primary dark:text-white dark:hover:text-primary transition-colors duration-200",
+          "flex cursor-pointer mb-1 items-center justify-between rounded-lg px-4 py-[11px] text-[14px] leading-[normal] font-medium text-link nav-cover hover:text-primary dark:text-white dark:hover:text-primary transition-colors duration-200",
           className
         )}
         onClick={onClick}
       >
-        <div className="flex items-center gap-3">
-          {!isChild && icon && <Icon icon={icon} height={18} />}
-          <span className={twMerge("nav-label", isChild ? "text-[14px]" : "")}>{label}</span>
+        <div className="flex items-center">
+          {!isChild && icon && <Icon icon={icon} height={20} className="mr-6 shrink-0 leading-icon" />}
+          <span className="nav-label text-[14px] font-medium">{label}</span>
         </div>
         <div className="flex items-center gap-0.5" >
           {isPro ? <span className="py-0.5 px-2.5 text-[10px] bg-lightsecondary text-secondary rounded-sm">Pro</span> : null}

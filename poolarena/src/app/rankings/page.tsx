@@ -64,7 +64,7 @@ const PlayerRow = memo(function PlayerRow({
     return (
       <div className="group">
         <Link href={`/player/${player.id}`} className="block">
-          <div className="flex items-center py-[11px] px-2 sm:px-4 rounded-xl hover:bg-[#F0F2F5] hover:scale-[1.01] hover:shadow-sm transition-all duration-300 cursor-pointer border border-transparent">
+          <div className="flex items-center py-[11px] px-2 sm:px-4 rounded-xl hover:bg-[#F0F2F5] hover:scale-[1.01] hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent">
             {/* Mobile Rank Column */}
             <div className="flex md:hidden w-[52px] flex-shrink-0 flex-row items-baseline gap-[4px] justify-center">
               <span 
@@ -134,7 +134,7 @@ const PlayerRow = memo(function PlayerRow({
   return (
     <Link href={`/player/${player.id}`} className="block">
       {/* Mobile View */}
-      <div className="flex md:hidden bg-white rounded-[16px] shadow-sm w-full py-3 px-6 items-center justify-between hover:bg-blue-50/10 transition-all duration-300 cursor-pointer border border-transparent group">
+      <div className="flex md:hidden bg-white rounded-[16px] shadow-md w-full py-3 px-6 items-center justify-between hover:bg-blue-50/10 transition-all duration-300 cursor-pointer border border-transparent group">
         <div className="flex items-center gap-6 flex-1 min-w-0">
           {/* Rank Column */}
           <div className="flex-shrink-0 flex items-baseline gap-[4px]">
@@ -158,7 +158,7 @@ const PlayerRow = memo(function PlayerRow({
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:flex bg-white rounded-[16px] shadow-sm w-full h-[72px] flex items-center px-12 hover:bg-blue-50/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer border border-transparent group">
+      <div className="hidden md:flex bg-white rounded-[16px] shadow-md w-full h-[72px] flex items-center px-12 hover:bg-blue-50/10 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer border border-transparent group">
         <div className="w-16 flex-shrink-0 flex items-baseline gap-[4px]">
           <span className="font-bold italic text-[#575E70] text-base" style={{ fontFamily: 'Montserrat, sans-serif' }}>#</span>
           <span className="font-bold italic text-[#575E70] text-[18px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>{index + 1}</span>
@@ -290,7 +290,7 @@ export default function LeaderboardPage() {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-[#F4F7FE] pb-24 font-sans">
+      <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
         <NavBar />
         <div className="flex items-center justify-center h-screen">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
@@ -300,7 +300,7 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F7FE] pb-24 font-sans">
+    <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
       <NavBar />
 
       {/* Banner */}
@@ -339,7 +339,7 @@ export default function LeaderboardPage() {
 
         {/* Top 5 Card */}
         {currentPage === 1 && (
-          <div className="bg-white rounded-[16px] lg:rounded-3xl shadow-sm w-full lg:max-w-[1360px] lg:mx-auto min-h-[360px] sm:min-h-[400px] relative flex flex-col lg:pb-6">
+          <div className="bg-white rounded-[16px] lg:rounded-3xl shadow-md w-full lg:max-w-[1360px] lg:mx-auto min-h-[360px] sm:min-h-[400px] relative flex flex-col lg:pb-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 px-4 sm:px-8 pt-6 mb-4">
               <div className="w-[200px] hidden md:block" />
               <div className="bg-[#172339] text-white w-full max-w-[313px] xl:max-w-[648px] xl:w-[648px] h-[56px] flex items-center justify-center rounded-b-[24px] xl:rounded-t-none xl:rounded-b-[32px] xl:py-3 xl:px-6 xl:gap-[10px] -mt-6 shadow-md z-20">

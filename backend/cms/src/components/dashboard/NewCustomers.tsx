@@ -5,7 +5,7 @@ import { Icon } from "@iconify/react";
 const NewCustomers = () => {
   return (
     <>
-      <div className="bg-white rounded-xl shadow-md p-8">
+      <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md p-8">
         <div className="flex items-center gap-4 mb-8">
           <div className="bg-lightsecondary text-secondary p-3 rounded-md">
             <Icon icon="solar:football-outline" height={24} />

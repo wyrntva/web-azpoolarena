@@ -102,7 +102,7 @@ const StatCard = ({
   value: string | number;
   sub?: React.ReactNode;
 }) => (
-  <div className="bg-white rounded-xl shadow-md p-5 flex items-center gap-4">
+  <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md p-5 flex items-center gap-4">
     <div
       className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${bg}`}
     >
@@ -274,7 +274,7 @@ const AnalyticsDashboard = () => {
               </div>
 
               {data.ga4.top_pages.length > 0 && (
-                <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-100">
                     <h3 className="text-sm font-semibold text-dark">Top 10 trang phổ biến nhất</h3>
                   </div>
@@ -311,7 +311,7 @@ const AnalyticsDashboard = () => {
               {/* Nguồn truy cập + Thiết bị + Quốc gia */}
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 {/* Nguồn truy cập */}
-                <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-100">
                     <h3 className="text-sm font-semibold text-dark flex items-center gap-2">
                       <Icon icon="solar:routing-bold-duotone" className="text-blue-500" />
@@ -352,7 +352,7 @@ const AnalyticsDashboard = () => {
                 </div>
 
                 {/* Thiết bị */}
-                <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-100">
                     <h3 className="text-sm font-semibold text-dark flex items-center gap-2">
                       <Icon icon="solar:devices-bold-duotone" className="text-violet-500" />
@@ -395,7 +395,7 @@ const AnalyticsDashboard = () => {
                 </div>
 
                 {/* Quốc gia */}
-                <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md overflow-hidden">
                   <div className="px-5 py-4 border-b border-gray-100">
                     <h3 className="text-sm font-semibold text-dark flex items-center gap-2">
                       <Icon icon="solar:global-bold-duotone" className="text-teal-500" />
@@ -421,7 +421,7 @@ const AnalyticsDashboard = () => {
               </div>
             </>
           ) : (
-            <div className="bg-white rounded-xl shadow-md p-5 text-center text-sm text-gray-400">
+            <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md p-5 text-center text-sm text-gray-400">
               <Icon icon="solar:chart-square-outline" className="text-3xl mb-2 mx-auto text-gray-300" />
               <p>Google Analytics chưa được kết nối.</p>
               <p className="text-xs mt-1">Cấu hình <code className="font-mono">GA4_PROPERTY_ID</code> để xem traffic website.</p>
@@ -459,7 +459,7 @@ const AnalyticsDashboard = () => {
           </div>
 
           {/* Combined area chart */}
-          <div className="bg-white rounded-xl shadow-md p-5">
+          <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md p-5">
             <h3 className="text-sm font-semibold text-dark mb-4">
               Biến động tài khoản 30 ngày gần nhất
             </h3>
@@ -476,7 +476,7 @@ const AnalyticsDashboard = () => {
 
           {/* Individual bar charts */}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl shadow-md p-5">
+            <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md p-5">
               <h3 className="text-sm font-semibold text-dark mb-1">
                 Tài khoản đăng ký mới / ngày
               </h3>
@@ -489,7 +489,7 @@ const AnalyticsDashboard = () => {
               />
             </div>
 
-            <div className="bg-white rounded-xl shadow-md p-5">
+            <div className="bg-white dark:bg-darkgray rounded-xl shadow-md dark:shadow-dark-md p-5">
               <h3 className="text-sm font-semibold text-dark mb-1">
                 Tài khoản cũ đăng nhập lại / ngày
               </h3>

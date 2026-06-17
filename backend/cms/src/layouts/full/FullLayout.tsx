@@ -11,11 +11,11 @@ const FullLayout: FC = () => {
         <div className="page-wrapper flex w-full h-full overflow-hidden">
           {/* Header/sidebar */}
           <Sidebar />
-          <div className="page-wrapper-sub relative w-full h-full overflow-hidden" style={{ backgroundColor: '#e8e8e8' }}>
+          <div className="page-wrapper-sub relative w-full h-full overflow-hidden" style={{ backgroundColor: '#F0F2F4' }}>
             {/* Static Grey Card Background */}
             <div
               className="absolute inset-x-0 bottom-0"
-              style={{ backgroundColor: '#e8e8e8', zIndex: 1, top: '50px' }}
+              style={{ backgroundColor: '#F0F2F4', zIndex: 1, top: '50px' }}
             />
 
             {/* Scrollable Content Container */}
@@ -25,9 +25,9 @@ const FullLayout: FC = () => {
               style={{ zIndex: 2 }}
             >
               {/* Content padding to align with the grey card, plus top padding for Header */}
-              <div className="pr-[10px] pt-[50px] min-h-full">
+              <div className="pr-[6px] pt-[50px] min-h-full">
                 <ScrollToTop>
-                  <div className="container py-30">
+                  <div className="w-full max-w-none py-30 pl-[6px] pr-0">
                     <Outlet />
                   </div>
                 </ScrollToTop>

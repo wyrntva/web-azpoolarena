@@ -79,6 +79,7 @@ export default defineConfig({
         host: '0.0.0.0', // Expose to network
         port: 5173,
         strictPort: false, // Try next port if 5173 is busy
+        allowedHosts: true,
         watch: {
             usePolling: true,
         },

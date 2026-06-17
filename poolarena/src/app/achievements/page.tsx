@@ -7,7 +7,7 @@ import NavBar from "@/components/NavBar";
 
 export default function AchievementsPage() {
   return (
-    <div className="min-h-screen bg-[#F4F7FE] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F0F2F4] flex flex-col font-sans">
       <NavBar />
       
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 md:py-20 relative overflow-hidden">

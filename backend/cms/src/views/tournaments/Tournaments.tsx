@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from 'flowbite-react';
 import { Icon } from '@iconify/react';
-import { Link } from 'react-router';
 import toast from 'react-hot-toast';
 import BaseDialog from '../../components/shared/BaseDialog';
 import TournamentTable from './components/TournamentTable';
@@ -15,7 +14,7 @@ const Tournaments = () => {
     const [currentTournamentId, setCurrentTournamentId] = useState<number | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [tournaments, setTournaments] = useState<Tournament[]>([]);
-    const [_loading, _setLoading] = useState(true);
+    const [total, setTotal] = useState(0);
     
     const {
         formData,
@@ -44,18 +43,24 @@ const Tournaments = () => {
 
     const fetchTournaments = useCallback(async () => {
         try {
-            _setLoading(true);
-            const response = await tournamentAPI.getTournaments({ skip: (currentPage - 1) * 50, limit: 50 });
+            const response = await tournamentAPI.getTournaments({ skip: (currentPage - 1) * 10, limit: 10 });
             setTournaments(response.data?.data || []);
+            setTotal(response.data?.meta?.total || 0);
         } catch {
             // Error handled silently
-        } finally {
-            _setLoading(false);
         }
     }, [currentPage]);
 
     useEffect(() => {
-        fetchTournaments();
+        let active = true;
+        Promise.resolve().then(() => {
+            if (active) {
+                fetchTournaments();
+            }
+        });
+        return () => {
+            active = false;
+        };
     }, [fetchTournaments]);
 
     const handleFormSubmit = async (e: React.FormEvent) => {
@@ -105,29 +110,29 @@ const Tournaments = () => {
     };
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="pt-0 px-6 pb-6 space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        Giải Đấu
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        DANH SÁCH GIẢI ĐẤU
                     </h1>
-                    <div className="flex items-center gap-2 mt-1">
-                        <span className="text-gray-600 dark:text-gray-400">Hiển thị {tournaments.length} mục.</span>
-                        <Link to="#" className="text-blue-600 hover:underline">Đặt lại</Link>
-                    </div>
                 </div>
-                <Button color="blue" onClick={() => setModalOpen(true)}>
+                <button
+                    onClick={() => setModalOpen(true)}
+                    className="bg-[#C6010B] hover:bg-[#C6010B]/90 text-white font-medium px-4 py-2.5 rounded-[24px] flex items-center justify-center transition-colors cursor-pointer"
+                >
                     <div className="flex items-center gap-2">
                         <Icon icon="solar:add-circle-outline" className="text-xl" />
                         Thêm Giải đấu
                     </div>
-                </Button>
+                </button>
             </div>
 
             {/* Table */}
             <TournamentTable
                 tournaments={tournaments}
+                total={total}
                 currentPage={currentPage}
                 onPageChange={onPageChange}
                 onRefresh={fetchTournaments}

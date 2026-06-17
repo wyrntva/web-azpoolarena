@@ -78,13 +78,19 @@ const Debt = () => {
     const totalDebt = debts.reduce((sum, d) => sum + d.amount, 0);
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="pt-0 px-6 pb-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý công nợ</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">Theo dõi và quản lý các khoản nợ chưa thanh toán</p>
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        DANH SÁCH CÔNG NỢ
+                    </h1>
                 </div>
-                <Button onClick={handleCreate} color="blue">Thêm công nợ</Button>
+                <button
+                    onClick={handleCreate}
+                    className="bg-[#C6010B] hover:bg-[#C6010B]/90 text-white font-medium px-4 py-2.5 rounded-[24px] flex items-center justify-center transition-colors cursor-pointer"
+                >
+                    Thêm công nợ
+                </button>
             </div>
 
             <Card className="bg-red-50 dark:bg-red-900/20">

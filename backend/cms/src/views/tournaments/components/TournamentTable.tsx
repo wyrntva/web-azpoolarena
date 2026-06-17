@@ -7,10 +7,11 @@ import CustomPagination from '../../../components/shared/CustomPagination';
 import { tournamentAPI, type Tournament } from '../../../api/tournament.api';
 import BaseDialog from '../../../components/shared/BaseDialog';
 import { TOURNAMENT_STATUS_MAP, TOURNAMENT_TYPE_MAP, getImageUrl as getImageUrlShared } from '../../../constants/shared';
-import { formatLevel } from '../../../utils/formatters';
+import { formatLevel, formatDateTime } from '../../../utils/formatters';
 
 interface TournamentTableProps {
     tournaments: Tournament[];
+    total: number;
     currentPage: number;
     onPageChange: (page: number) => void;
     onRefresh?: () => void;
@@ -19,7 +20,7 @@ interface TournamentTableProps {
 
 
 
-const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, onUpdate }: TournamentTableProps) => {
+const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefresh, onUpdate }: TournamentTableProps) => {
     const navigate = useNavigate();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
@@ -92,6 +93,7 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                         <Table.HeadCell className="text-center">TÊN</Table.HeadCell>
                         <Table.HeadCell className="text-center">LEVEL</Table.HeadCell>
                         <Table.HeadCell className="text-center">TRẠNG THÁI</Table.HeadCell>
+                        <Table.HeadCell className="text-center">THỜI GIAN BẮT ĐẦU</Table.HeadCell>
                         <Table.HeadCell className="text-center">HIỂN THỊ</Table.HeadCell>
                         <Table.HeadCell className="text-center">LƯỢT ĐĂNG KÝ</Table.HeadCell>
                         <Table.HeadCell className="text-center">LOẠI GIẢI ĐẤU</Table.HeadCell>
@@ -100,7 +102,7 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                     <Table.Body className="divide-y">
                         {filteredTournaments.length === 0 ? (
                             <Table.Row>
-                                <Table.Cell colSpan={9} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                <Table.Cell colSpan={10} className="text-center py-8 text-gray-500 dark:text-gray-400">
                                     {searchTerm ? 'Không tìm thấy kết quả' : 'Không có dữ liệu'}
                                 </Table.Cell>
                             </Table.Row>
@@ -113,7 +115,7 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                                         className="bg-white dark:border-gray-700 dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                                         onClick={() => navigate(`/tournaments/${tournament.id}`)}
                                     >
-                                        <Table.Cell className="text-center">{(currentPage - 1) * 50 + index + 1}</Table.Cell>
+                                        <Table.Cell className="text-center text-[#37393E] dark:text-white/80">{(currentPage - 1) * 10 + index + 1}</Table.Cell>
                                         <Table.Cell className="text-center">
                                             {imageUrl ? (
                                                 <img
@@ -130,8 +132,8 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                                                 <div className="w-full h-full bg-slate-900 flex items-center justify-center text-xs text-white font-bold">AZ</div>
                                             </div>
                                         </Table.Cell>
-                                        <Table.Cell className="text-center whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                            <div className="flex items-center justify-center gap-1.5">
+                                        <Table.Cell className="text-left whitespace-nowrap font-medium text-[#37393E] dark:text-white">
+                                            <div className="flex items-center justify-start gap-1.5">
                                                 {tournament.name}
                                                 {tournament.is_pinned && (
                                                     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
@@ -144,7 +146,7 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                                             {tournament.ranks && tournament.ranks.length > 0 ? (
                                                 <div className="flex flex-wrap gap-1 justify-center">
                                                      {tournament.ranks.map((rank, idx) => (
-                                                         <span key={idx} className="px-2 py-1 text-blue-800 text-xs">
+                                                         <span key={idx} className="px-2 py-1 text-[#37393E] dark:text-white/80 text-xs">
                                                              {formatLevel(rank)}
                                                          </span>
                                                      ))}
@@ -154,36 +156,39 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
                                             )}
                                         </Table.Cell>
                                         <Table.Cell className="text-center">
-                                            <span className="px-2 py-1 text-gray-800 text-xs">
+                                            <span className="px-2 py-1 text-[#37393E] dark:text-white/80 text-xs">
                                                 {TOURNAMENT_STATUS_MAP[tournament.status] || tournament.status}
                                             </span>
                                         </Table.Cell>
+                                        <Table.Cell className="text-center text-[#37393E] dark:text-white/80 text-xs">
+                                             {tournament.start_date ? formatDateTime(tournament.start_date) : '-'}
+                                         </Table.Cell>
+                                         <Table.Cell className="text-center">
+                                             <span className="px-2 py-1 text-[#37393E] dark:text-white/80 text-xs">
+                                                 {tournament.display === 'public' ? 'Công khai' : 'Riêng tư'}
+                                             </span>
+                                         </Table.Cell>
                                         <Table.Cell className="text-center">
-                                            <span className="px-2 py-1 text-green-800 text-xs">
-                                                {tournament.display === 'public' ? 'Công khai' : 'Riêng tư'}
-                                            </span>
-                                        </Table.Cell>
-                                        <Table.Cell className="text-center">
-                                            <span className="text-gray-500">
+                                            <span className="text-[#37393E] dark:text-white/80">
                                                 {tournament.registration_count ?? 0}/{tournament.number_of_players}
                                             </span>
                                         </Table.Cell>
-                                        <Table.Cell className="text-center">
+                                        <Table.Cell className="text-center text-[#37393E] dark:text-white/80">
                                             {tournament.tournament_type ? (TOURNAMENT_TYPE_MAP[tournament.tournament_type] || tournament.tournament_type) : '-'}
                                         </Table.Cell>
                                         <Table.Cell className="text-center">
-                                            <div className="flex items-center gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
+                                            <div className="flex items-center gap-3 justify-center" onClick={(e) => e.stopPropagation()}>
                                                 <button
                                                     onClick={() => onUpdate?.(tournament.id)}
-                                                    className="font-medium text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                                                    className="font-medium text-[#3E26FF] hover:underline cursor-pointer"
                                                 >
-                                                    <Icon icon="solar:pen-new-square-outline" /> Cập nhật
+                                                    Cập nhật
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteClick(tournament)}
-                                                    className="font-medium text-red-600 hover:underline flex items-center gap-1 cursor-pointer"
+                                                    className="font-medium text-[#C6010B] hover:underline cursor-pointer"
                                                 >
-                                                    <Icon icon="solar:trash-bin-trash-outline" /> Xóa
+                                                    Xóa
                                                 </button>
                                             </div>
                                         </Table.Cell>
@@ -197,13 +202,13 @@ const TournamentTable = ({ tournaments, currentPage, onPageChange, onRefresh, on
 
             {/* Footer */}
             <div className="flex items-center justify-between p-4 border-t">
-                <span className="text-sm text-blue-700 dark:text-blue-400">
-                    Hiển thị {filteredTournaments.length} / {tournaments.length} giải đấu
+                <span className="text-sm text-[#37393E] dark:text-white/80">
+                    Hiển thị {filteredTournaments.length} / {searchTerm ? filteredTournaments.length : total} giải đấu
                     {searchTerm && ` (tìm kiếm: "${searchTerm}")`}
                 </span>
                 <CustomPagination
                     currentPage={currentPage}
-                    totalPages={Math.max(1, Math.ceil(filteredTournaments.length / 50))}
+                    totalPages={Math.max(1, Math.ceil((searchTerm ? filteredTournaments.length : total) / 10))}
                     onPageChange={onPageChange}
                 />
             </div>

@@ -1277,7 +1277,7 @@ export default function TournamentLivePage() {
     }, [matches, tournament]);
 
     return (
-        <div className="min-h-screen bg-[#F4F7FE] pb-24 font-sans">
+        <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
             <NavBar />
 
             <main className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 mt-[48px]">

@@ -88,20 +88,20 @@ const ProductCategories = () => {
     };
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="pt-0 px-6 pb-6 space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Danh mục
+                <div>
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        DANH MỤC MẶT HÀNG
                     </h1>
-                    <button className="text-gray-400 hover:text-gray-600">
-                        <Icon icon="solar:info-circle-outline" className="text-xl" />
-                    </button>
                 </div>
-                <Button color="blue" onClick={handleCreate}>
+                <button
+                    onClick={handleCreate}
+                    className="bg-[#C6010B] hover:bg-[#C6010B]/90 text-white font-medium px-4 py-2.5 rounded-[24px] flex items-center justify-center transition-colors cursor-pointer"
+                >
                     Tạo danh mục
-                </Button>
+                </button>
             </div>
 
             {/* Main Card */}

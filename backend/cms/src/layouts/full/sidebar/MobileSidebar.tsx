@@ -42,16 +42,18 @@ const MobileSidebar = () => {
 
   // Find and set the active item on load/path change
   useEffect(() => {
+    let foundActive: string | null = null;
     filteredSidebarContent.forEach((group) => {
       group.children?.forEach((child) => {
         if (child.children) {
           const isActive = child.children.some((subChild) => subChild.url === pathname);
           if (isActive) {
-            setOpenItem(child.name || null);
+            foundActive = child.name || null;
           }
         }
       });
     });
+    setOpenItem(foundActive);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
@@ -63,11 +65,11 @@ const MobileSidebar = () => {
     <>
       <div>
         <Sidebar
-          className="fixed menu-sidebar pt-0 bg-[#172339] transition-all shadow-none w-full"
+          className="fixed menu-sidebar pt-0 bg-white transition-all shadow-none w-full"
           aria-label="Sidebar with multi-level dropdown example"
         >
           <div className="px-5 py-4 pb-7 flex items-center sidebarlogo">
-            <FullLogo theme="light" />
+            <FullLogo theme="dark" />
           </div>
           <SimpleBar className="h-[calc(100vh_-_100px)]">
             <Sidebar.Items className="px-5 mt-2">
@@ -76,7 +78,7 @@ const MobileSidebar = () => {
                   filteredSidebarContent.map((item, index) => (
                     <div className="caption" key={item.heading}>
                       <React.Fragment key={index}>
-                        <h5 className="text-link dark:text-white/70 caption font-semibold leading-6 tracking-widest text-xs pb-2 uppercase text-wrap">
+                        <h5 className="text-link dark:text-white/70 caption font-semibold leading-6 tracking-widest text-[14px] pb-2 uppercase text-wrap">
                           {item.heading}
                         </h5>
                         {item.children?.map((child, index) => (

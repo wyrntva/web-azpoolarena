@@ -12,7 +12,7 @@ const Header = () => {
   return (
     <>
       <header
-        className="absolute top-0 left-0 right-[6px] z-[10] h-[50px] flex flex-col justify-start bg-white dark:bg-dark"
+        className="absolute top-0 left-0 right-[6px] z-[10] h-[50px] flex flex-col justify-start bg-white dark:bg-dark shadow-md dark:shadow-dark-md"
       >
         <div className="h-[4px] w-full bg-[#172339] shrink-0" />
         <Navbar

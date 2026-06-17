@@ -894,7 +894,7 @@ export default function TournamentStageBracketPage() {
     // Render loading state
     if (loading || isRegistered === null) {
         return (
-            <div className="min-h-screen bg-[#e8e8e8] flex items-center justify-center">
+            <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
                 <div className="text-center">
                     <Spin size="large" />
                     <p className="mt-4 text-gray-600" style={{ fontFamily: "Montserrat, sans-serif" }}>
@@ -907,7 +907,7 @@ export default function TournamentStageBracketPage() {
 
     if (!canAccess) {
         return (
-            <div className="min-h-screen bg-[#e8e8e8] flex items-center justify-center">
+            <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
                 <div className="bg-[#172339] p-8 rounded-2xl text-center max-w-[360px]">
                     <div className="text-4xl mb-3">🔒</div>
                     <p className="text-white text-lg font-bold mb-2">Bạn chưa đăng ký giải đấu này</p>
@@ -918,7 +918,7 @@ export default function TournamentStageBracketPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#e8e8e8] font-sans pb-12">
+        <div className="min-h-screen bg-[#F0F2F4] font-sans pb-12">
             <NavBar logoUrl={logoUrl} />
             <main className="w-full max-w-[1640px] mx-auto px-4 md:px-6 pt-6 flex flex-col gap-6">
 

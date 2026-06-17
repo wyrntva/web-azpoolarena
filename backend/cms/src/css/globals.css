@@ -28,7 +28,7 @@
 
   body {
     @apply text-sm text-bodytext;
-    background-color: #e8e8e8 !important;
+    background-color: #F0F2F4 !important;
   }
 
   .dropdown {
@@ -308,7 +308,7 @@
 
   .match-dialog-field select:focus,
   .match-dialog-field input:focus {
-    border-color: #635BFF;
+    border-color: var(--color-primary);
     box-shadow: none;
     outline: none;
   }
@@ -402,7 +402,7 @@
   }
 
   .match-dialog-score input:focus {
-    border-color: #635BFF;
+    border-color: var(--color-primary);
     box-shadow: none;
     outline: none;
   }
@@ -459,7 +459,7 @@
   }
 
   .match-table-player-select:focus {
-    border-color: #635BFF;
+    border-color: var(--color-primary);
   }
 
   /* Fade-in animation (used by Dashboard and other views) */

@@ -43,7 +43,7 @@ const ChangePassword = () => {
 
     return (
         <div className="flex justify-center items-center h-full pt-10 px-4">
-            <Card className="w-full max-w-md shadow-md rounded-2xl">
+            <Card className="w-full max-w-md shadow-md dark:shadow-dark-md rounded-2xl">
                 <div className="flex flex-col gap-2 mb-6 text-center">
                     <div className="flex justify-center mb-2 text-primary">
                         <Icon icon="solar:lock-password-outline" height={48} />
