@@ -85,8 +85,14 @@ jobs:
             cd $REPO
 
             if [ "$REBUILD_BACKEND" = "true" ] || [ "$INFRA_CHANGED" = "true" ]; then
-              echo "Building backend..."
+              echo "Building backend image..."
               $COMPOSE build backend
+              echo "Building CMS on VPS host..."
+              export PATH=/root/.nvm/versions/node/v20.20.2/bin:$PATH
+              cd $REPO/backend/cms
+              npm install --legacy-peer-deps
+              npm run build
+              cd $REPO
             else
               echo "Backend unchanged — skip build"
             fi

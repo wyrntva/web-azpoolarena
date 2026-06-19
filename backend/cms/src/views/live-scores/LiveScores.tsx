@@ -65,7 +65,9 @@ function ScoreCard({
 
   function changeScore(idx: number, delta: number) {
     if (!isOnline || !data.device_code) return;
-    const newScore = Math.max(0, (data.players[idx].score ?? 0) + delta);
+    const currentScore = data.players[idx].score ?? 0;
+    const isTwoPlayer = data.mode === 'two';
+    const newScore = isTwoPlayer ? Math.max(0, currentScore + delta) : currentScore + delta;
     const updatedPlayers = data.players.map((p, i) => (i === idx ? { ...p, score: newScore } : p));
     if (data.device_code) {
       onPublishCommand(data.device_code, { action: 'update_players', players: updatedPlayers });
@@ -212,7 +214,7 @@ function ScoreCard({
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => changeScore(idx, -1)}
-                  disabled={!isOnline || !data.device_code || player.score <= 0}
+                  disabled={!isOnline || !data.device_code || (data.mode === 'two' && player.score <= 0)}
                   className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <Icon icon="solar:minus-circle-linear" width={16} />
