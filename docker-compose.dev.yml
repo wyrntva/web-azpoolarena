@@ -35,6 +35,8 @@ services:
     image: eclipse-mosquitto:2
     container_name: azpool-mqtt-dev
     restart: always
+    ports:
+      - "127.0.0.1:9002:9001"
     volumes:
       - ./mosquitto/config:/mosquitto/config:ro
       - mosquitto_data_dev:/mosquitto/data

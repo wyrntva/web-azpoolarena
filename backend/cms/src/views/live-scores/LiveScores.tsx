@@ -239,16 +239,15 @@ const LiveScores = () => {
 
     // 2. Setup MQTT over WebSockets
     const getMqttUrl = () => {
-      const apiUr = import.meta.env.VITE_API_URL || '';
-      try {
-        if (apiUr) {
-          const url = new URL(apiUr);
-          return `ws://${url.hostname}:9001`;
-        }
-      } catch (e) {
-        // ignore
+      const hostname = window.location.hostname;
+      const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.');
+      
+      if (isLocal) {
+        return `ws://${hostname}:9001`;
       }
-      return `ws://${window.location.hostname}:9001`;
+      
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return `${protocol}//${window.location.host}/mqtt`;
     };
 
     const mqttUrl = getMqttUrl();
