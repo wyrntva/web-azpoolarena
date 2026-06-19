@@ -198,6 +198,21 @@ def main():
     live_score_service = LiveScoreService(device_settings)
     engine.rootContext().setContextProperty("LiveScoreService", live_score_service)
 
+    # MQTT Service for real-time control and synchronization
+    from core.mqtt_service import ScoreboardMqttService
+    mqtt_service = ScoreboardMqttService(device_settings, ctrl)
+    engine.rootContext().setContextProperty("MqttService", mqtt_service)
+
+    # Connect signals to MQTT
+    live_score_service.scoreChanged.connect(mqtt_service.handleQmlStateChanged)
+    live_score_service.scoreCleared.connect(mqtt_service.handleQmlScoreCleared)
+    ctrl.leftScoreChanged.connect(mqtt_service.publish_state)
+    ctrl.rightScoreChanged.connect(mqtt_service.publish_state)
+    ctrl.leftNameChanged.connect(mqtt_service.publish_state)
+    ctrl.rightNameChanged.connect(mqtt_service.publish_state)
+
+    mqtt_service.start()
+
     from core.device_activation_service import DeviceActivationService
     activation_service = DeviceActivationService()
     engine.rootContext().setContextProperty("DeviceActivationService", activation_service)

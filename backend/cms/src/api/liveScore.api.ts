@@ -19,4 +19,7 @@ export const liveScoreAPI = {
 
   getByTable: (tableName: string) =>
     axiosClient.get<TableLiveScore | null>(`/api/tournaments/device/live-score?table_name=${encodeURIComponent(tableName)}`),
+
+  update: (data: TableLiveScore) =>
+    axiosClient.put('/api/tournaments/device/live-score', data),
 };

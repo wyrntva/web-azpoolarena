@@ -212,6 +212,22 @@ Item {
         function onCurrentLanguageCodeChanged() { page.refreshDefaultNames() }
     }
 
+    Connections {
+        target: typeof MqttService !== "undefined" && MqttService ? MqttService : null
+        ignoreUnknownSignals: true
+        function onPlayersUpdated(playersJson) {
+            console.log("[RemoteControl] MultiQuickAddPage received player updates")
+            var arr = JSON.parse(playersJson)
+            for (var i = 0; i < arr.length; ++i) {
+                if (i < players.count) {
+                    var p = arr[i]
+                    if (p.name !== undefined) players.setProperty(i, "name", p.name)
+                    if (p.score !== undefined) players.setProperty(i, "score", p.score)
+                }
+            }
+        }
+    }
+
     // ==== GOM LỊCH SỬ (dồn sau 7–10s) ====
     property var _agg: ({})   // map: index -> { delta: number, lastTs: ms }
 

@@ -24,6 +24,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { TournamentsService } from '../services/tournaments.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { TableEntity } from '../../areas/entities/area.entity';
 import {
   CreateTournamentDto,
   UpdateTournamentDto,
@@ -38,7 +41,11 @@ import { Roles } from '../../auth/decorators/auth.decorators';
 export class TournamentsController {
   private readonly logger = new Logger(TournamentsController.name);
 
-  constructor(private readonly service: TournamentsService) {}
+  constructor(
+    private readonly service: TournamentsService,
+    @InjectRepository(TableEntity)
+    private readonly tableRepo: Repository<TableEntity>,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -209,18 +216,44 @@ export class TournamentsController {
   }
 
   @Get('device/live-score')
-  getLiveScore(@Query('table_name') tableName?: string) {
+  async getLiveScore(@Query('table_name') tableName?: string) {
     const STALE_MS = 15 * 60 * 1000;
     const now = Date.now();
     const isStale = (entry: { players: any[]; updated_at: string }) =>
       !entry.players?.length || now - new Date(entry.updated_at).getTime() > STALE_MS;
     if (tableName) {
       const entry = this.liveScores.get(tableName);
-      return entry && !isStale(entry) ? entry : null;
+      if (entry && !isStale(entry)) {
+        return entry;
+      }
+      const table = await this.tableRepo.findOne({ where: { name: tableName } });
+      if (!table) return null;
+      return {
+        table_name: table.name,
+        device_code: table.device_code || null,
+        mode: null,
+        players: [],
+        updated_at: new Date(table.updated_at).toISOString(),
+      };
     }
+    const allTables = await this.tableRepo.find({ order: { name: 'ASC' } });
     const result: Record<string, any> = {};
-    for (const [key, val] of this.liveScores) {
-      if (!isStale(val)) result[key] = val;
+    for (const table of allTables) {
+      const entry = this.liveScores.get(table.name);
+      if (entry && !isStale(entry)) {
+        result[table.name] = {
+          ...entry,
+          device_code: table.device_code || null,
+        };
+      } else {
+        result[table.name] = {
+          table_name: table.name,
+          device_code: table.device_code || null,
+          mode: null,
+          players: [],
+          updated_at: new Date(table.updated_at).toISOString(),
+        };
+      }
     }
     return result;
   }

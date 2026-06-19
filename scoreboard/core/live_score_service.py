@@ -10,6 +10,8 @@ from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkRe
 
 class LiveScoreService(QObject):
     """Gửi tỉ số tự do (ScorePage / MultiScorePage) về backend theo thời gian thực."""
+    scoreChanged = Signal(str, str)  # mode, players_json
+    scoreCleared = Signal()
 
     def __init__(self, device_settings: Optional[QObject] = None, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -44,6 +46,7 @@ class LiveScoreService(QObject):
             "players": players,
         }
         self._debounce.start()
+        self.scoreChanged.emit(mode, players_json)
 
     @Slot()
     def clearScore(self) -> None:
@@ -53,6 +56,7 @@ class LiveScoreService(QObject):
             return
         self._debounce.stop()
         self._pending = None
+        self.scoreCleared.emit()
         from PySide6.QtCore import QUrlQuery
         url = QUrl(f"{self._base_url}/api/tournaments/device/live-score")
         query = QUrlQuery()

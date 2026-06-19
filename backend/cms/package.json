@@ -19,6 +19,7 @@
     "dayjs": "^1.11.19",
     "flowbite": "^2.5.2",
     "flowbite-react": "^0.10.2",
+    "mqtt": "^5.15.1",
     "react": "^19.0.0",
     "react-apexcharts": "^1.9.0",
     "react-dom": "^19.0.0",

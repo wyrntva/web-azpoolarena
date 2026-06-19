@@ -67,3 +67,7 @@ scoreboard/runtime/
 # POS App Releases
 pos-app/release*/
 pos-app/dist/
+
+# Scratch & Temporary files
+scratch/
+"v*"

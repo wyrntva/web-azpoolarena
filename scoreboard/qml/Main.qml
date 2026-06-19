@@ -138,6 +138,31 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: typeof MqttService !== "undefined" && MqttService ? MqttService : null
+        ignoreUnknownSignals: true
+        function onRequestPage(pageName, mode) {
+            console.log("[RemoteControl] Requesting page " + pageName + " with mode " + mode)
+            if (pageName === "home") {
+                if (stack.depth > 1) {
+                    stack.pop(null, StackView.Immediate)
+                }
+            } else if (pageName === "ScorePage") {
+                if (stack.depth > 1) stack.pop(null, StackView.Immediate)
+                stack.push(Qt.resolvedUrl("pages/ScorePage.qml"), { routeName: "score2p", backTo: "home", mode: "two" }, StackView.Immediate)
+            } else if (pageName === "MultiScorePage") {
+                if (stack.depth > 1) stack.pop(null, StackView.Immediate)
+                stack.push(Qt.resolvedUrl("pages/MultiScorePage.qml"), { routeName: "multiScore", backTo: "home", mode: "multi" }, StackView.Immediate)
+            } else if (pageName === "MultiCardScorePage") {
+                if (stack.depth > 1) stack.pop(null, StackView.Immediate)
+                stack.push(Qt.resolvedUrl("pages/MultiCardScorePage.qml"), { routeName: "multiCardScore", backTo: "home", mode: "cards" }, StackView.Immediate)
+            } else if (pageName === "MultiQuickAddPage") {
+                if (stack.depth > 1) stack.pop(null, StackView.Immediate)
+                stack.push(Qt.resolvedUrl("pages/MultiQuickAddPage.qml"), { routeName: "QuickScore", backTo: "home", mode: "multiQuick" }, StackView.Immediate)
+            }
+        }
+    }
+
     // ===== Camera Reload System =====
     property int cameraReloadVersion: 0
     property bool cameraIsReconnecting: false
