@@ -124,6 +124,34 @@ function ScoreCard({
         </div>
       )}
 
+      {/* Reset Actions */}
+      {isOnline && data.device_code && data.mode && data.mode !== 'home' && (
+        <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50/20 dark:bg-gray-700/10 flex items-center justify-end gap-2">
+          <button
+            onClick={() => {
+              if (window.confirm(`Bạn muốn reset TỈ SỐ của ${data.table_name}?`)) {
+                onPublishCommand(data.device_code!, { action: 'reset_scores' });
+              }
+            }}
+            className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/10 hover:bg-amber-50 dark:hover:bg-amber-950/30 px-2 py-0.5 rounded transition-colors flex items-center gap-1"
+            title="Reset điểm số của tất cả người chơi về 0"
+          >
+            <Icon icon="solar:restart-outline" width={12} /> Reset tỉ số
+          </button>
+          <button
+            onClick={() => {
+              if (window.confirm(`Bạn muốn reset TRẬN ĐẤU (bao gồm cả tên và lịch sử) của ${data.table_name}?`)) {
+                onPublishCommand(data.device_code!, { action: 'reset_match' });
+              }
+            }}
+            className="text-[11px] font-semibold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/10 hover:bg-red-50 dark:hover:bg-red-950/30 px-2 py-0.5 rounded transition-colors flex items-center gap-1"
+            title="Reset toàn bộ trận đấu (điểm, tên người chơi, lịch sử)"
+          >
+            <Icon icon="solar:trash-bin-trash-outline" width={12} /> Reset trận đấu
+          </button>
+        </div>
+      )}
+
       {/* Players or Empty State */}
       <div className="flex flex-col gap-2 px-4 py-3 flex-1 justify-center">
         {!isOnline ? (

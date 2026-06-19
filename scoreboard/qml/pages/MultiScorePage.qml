@@ -154,6 +154,7 @@ Item {
 
     function resetScores() {
         for (let i = 0; i < players.count; i++) players.setProperty(i, "score", 0)
+        page.syncScoreToBackend()
     }
 
     function resetMatchAndState() {
@@ -166,6 +167,7 @@ Item {
         pendingAction = ""
         pendingDeleteIndex = -1
         persistHistory()
+        page.syncScoreToBackend()
     }
 
     function handleBackRequested() {
@@ -251,6 +253,15 @@ Item {
                     if (p.score !== undefined) players.setProperty(i, "score", p.score)
                 }
             }
+            page.syncScoreToBackend()
+        }
+        function onResetScoresRequested() {
+            console.log("[RemoteControl] MultiScorePage received resetScoresRequested")
+            page.resetScores()
+        }
+        function onResetMatchRequested() {
+            console.log("[RemoteControl] MultiScorePage received resetMatchRequested")
+            page.resetMatchAndState()
         }
     }
 

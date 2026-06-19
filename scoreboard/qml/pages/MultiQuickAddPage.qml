@@ -238,6 +238,15 @@ Item {
                     if (p.score !== undefined) players.setProperty(i, "score", p.score)
                 }
             }
+            page.syncScoreToBackend()
+        }
+        function onResetScoresRequested() {
+            console.log("[RemoteControl] MultiQuickAddPage received resetScoresRequested")
+            page.resetScores()
+        }
+        function onResetMatchRequested() {
+            console.log("[RemoteControl] MultiQuickAddPage received resetMatchRequested")
+            page.resetMatchAndState()
         }
     }
 

@@ -16,6 +16,8 @@ class ScoreboardMqttService(QObject):
     requestPage = Signal(str, str) # pageName, mode
     playersUpdated = Signal(str)  # playersJson
     buttonPressed = Signal(str)   # buttonName
+    resetScoresRequested = Signal()
+    resetMatchRequested = Signal()
 
     def __init__(self, device_settings, controller, parent=None):
         super().__init__(parent)
@@ -187,18 +189,20 @@ class ScoreboardMqttService(QObject):
             if players is not None:
                 self.playersUpdated.emit(json.dumps(players))
                 
-                # Also update controller directly for 2-player mode compatibility
-                if len(players) >= 2:
-                    p1 = players[0]
-                    p2 = players[1]
-                    if "score" in p1:
-                        self._controller.setLeftScore(p1["score"])
-                    if "name" in p1:
-                        self._controller.setLeftNameProp(p1["name"])
-                    if "score" in p2:
-                        self._controller.setRightScore(p2["score"])
-                    if "name" in p2:
-                        self._controller.setRightNameProp(p2["name"])
+                # Also update controller directly for 2-player mode compatibility (only if in two-player mode)
+                current_mode = self._pending_state.get("mode") if self._pending_state else None
+                if current_mode is None or current_mode == "two":
+                    if len(players) >= 2:
+                        p1 = players[0]
+                        p2 = players[1]
+                        if "score" in p1:
+                            self._controller.setLeftScore(p1["score"])
+                        if "name" in p1:
+                            self._controller.setLeftNameProp(p1["name"])
+                        if "score" in p2:
+                            self._controller.setRightScore(p2["score"])
+                        if "name" in p2:
+                            self._controller.setRightNameProp(p2["name"])
 
         elif action == "press_button":
             button = payload.get("button")
@@ -209,6 +213,14 @@ class ScoreboardMqttService(QObject):
                     if callable(slot):
                         print(f"[MQTT] Invoking slot on controller: {button}")
                         slot()
+
+        elif action == "reset_scores":
+            print("[MQTT] Received reset_scores action")
+            self.resetScoresRequested.emit()
+
+        elif action == "reset_match":
+            print("[MQTT] Received reset_match action")
+            self.resetMatchRequested.emit()
 
     @Slot(str, str)
     def handleQmlStateChanged(self, mode, players_json):

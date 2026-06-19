@@ -194,6 +194,19 @@ Item {
         function onRightScoreChanged() { page.syncScoreToBackend() }
     }
 
+    Connections {
+        target: typeof MqttService !== "undefined" && MqttService ? MqttService : null
+        ignoreUnknownSignals: true
+        function onResetScoresRequested() {
+            console.log("[RemoteControl] ScorePage received resetScoresRequested")
+            page.resetScores()
+        }
+        function onResetMatchRequested() {
+            console.log("[RemoteControl] ScorePage received resetMatchRequested")
+            page.resetMatchAndState()
+        }
+    }
+
     function trLocal(key) {
         return (typeof win !== "undefined" && win && typeof win.tr === "function") ? win.tr(key) : key
     }
