@@ -178,6 +178,21 @@ Item {
         return pad(h) + ":" + pad(m) + ":" + pad(s)
     }
 
+    function syncScoreToBackend() {
+        if (typeof LiveScoreService === "undefined" || !LiveScoreService) return
+        var players = JSON.stringify([
+            { name: Controller.leftName  || defaultLeftName(),  score: Controller.leftScore,  color: "#da251d" },
+            { name: Controller.rightName || defaultRightName(), score: Controller.rightScore, color: "#ffcd00" }
+        ])
+        LiveScoreService.reportScore("two", players)
+    }
+
+    Connections {
+        target: Controller
+        function onLeftScoreChanged()  { page.syncScoreToBackend() }
+        function onRightScoreChanged() { page.syncScoreToBackend() }
+    }
+
     function trLocal(key) {
         return (typeof win !== "undefined" && win && typeof win.tr === "function") ? win.tr(key) : key
     }

@@ -198,6 +198,22 @@ export class TournamentsController {
 
   // ==== DEVICE API ==== //
 
+  private readonly liveScores = new Map<string, { table_name: string; mode: string; players: any[]; updated_at: string }>();
+
+  @Put('device/live-score')
+  updateLiveScore(@Body() body: { table_name: string; mode: string; players: any[] }) {
+    const { table_name, mode, players } = body ?? {};
+    if (!table_name) return { ok: false, error: 'table_name required' };
+    this.liveScores.set(table_name, { table_name, mode, players: players ?? [], updated_at: new Date().toISOString() });
+    return { ok: true };
+  }
+
+  @Get('device/live-score')
+  getLiveScore(@Query('table_name') tableName?: string) {
+    if (tableName) return this.liveScores.get(tableName) ?? null;
+    return Object.fromEntries(this.liveScores);
+  }
+
   @Get('device/active-match')
   async getActiveMatch(@Query('table_name') tableName: string) {
     return this.service.getActiveMatchForDevice(tableName);

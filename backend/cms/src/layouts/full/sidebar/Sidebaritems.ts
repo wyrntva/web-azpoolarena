@@ -289,6 +289,17 @@ const SidebarContent: MenuItem[] = [
     ],
   },
   {
+    heading: "QUẢN LÝ BẢNG TỈ SỐ",
+    children: [
+      {
+        name: "Bảng tỉ số",
+        icon: "solar:monitor-smartphone-outline",
+        id: uniqueId(),
+        url: "/live-scores",
+      },
+    ],
+  },
+  {
     heading: "QUẢN LÝ GIẢI ĐẤU",
     children: [
       {

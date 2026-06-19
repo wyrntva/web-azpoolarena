@@ -128,6 +128,7 @@ from core.banner_service import BannerService
 from core.orders_service import OrdersService
 from core.image_cache_service import ImageCacheService
 from core.tournament_service import TournamentService
+from core.live_score_service import LiveScoreService
 
 def resource_path(*parts: str) -> str:
     base = Path(__file__).resolve().parent
@@ -193,6 +194,9 @@ def main():
 
     tournament_service = TournamentService(device_settings)
     engine.rootContext().setContextProperty("TournamentService", tournament_service)
+
+    live_score_service = LiveScoreService(device_settings)
+    engine.rootContext().setContextProperty("LiveScoreService", live_score_service)
 
     from core.device_activation_service import DeviceActivationService
     activation_service = DeviceActivationService()

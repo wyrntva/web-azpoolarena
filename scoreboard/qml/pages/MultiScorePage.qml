@@ -99,6 +99,16 @@ Item {
         persistHistory()
     }
 
+    function syncScoreToBackend() {
+        if (typeof LiveScoreService === "undefined" || !LiveScoreService) return
+        var arr = []
+        for (var i = 0; i < players.count; ++i) {
+            var p = players.get(i)
+            arr.push({ name: p.name || defaultPlayerName(i + 1), score: p.score, color: p.color })
+        }
+        LiveScoreService.reportScore(page.mode, JSON.stringify(arr))
+    }
+
     function trLocal(key) {
         return (typeof win !== "undefined" && win && typeof win.tr === "function") ? win.tr(key) : key
     }
@@ -582,11 +592,12 @@ Item {
             const name = (players.get(i).name && players.get(i).name.length)
                     ? players.get(i).name : defaultPlayerName(i + 1)
 
-            players.setProperty(i, "score", next)
+            players.setProperty(i, “score”, next)
+            page.syncScoreToBackend()
 
-            const sign = inc >= 0 ? "+" : ""
+            const sign = inc >= 0 ? “+” : “”
             const deltaStr = sign + inc
-            page.logAction(historyWithScore(trArgsLocal("log_point_delta", [deltaStr, name], deltaStr + " điểm cho “" + name + "”"), next))
+            page.logAction(historyWithScore(trArgsLocal(“log_point_delta”, [deltaStr, name], deltaStr + “ điểm cho “” + name + “””), next))
         }
 
         onAppliedChanges: {
@@ -632,11 +643,13 @@ Item {
             page.bumpActivity()
             if (page.pendingAction === "resetScore") {
                 resetScores()
+                page.syncScoreToBackend()
                 page.logAction(trLocal("log_reset_score"))
             } else if (page.pendingAction === "resetMatch") {
                 resetMatchAndState()
                 resetMatchTimer()
                 startMatchTimer()
+                page.syncScoreToBackend()
                 page.logAction(trLocal("log_reset_match"))
             } else if (page.pendingAction === "leavePage") {
                 prepareForLeave()
@@ -653,6 +666,7 @@ Item {
                     if (page.renameTarget > i)  page.renameTarget -= 1
                     const displayName = removedName || defaultPlayerName(i + 1)
                     page.logAction(trArgsLocal("log_delete_player", [displayName], "Xóa người chơi \"" + displayName + "\""))
+                    page.syncScoreToBackend()
                 }
                 page.pendingDeleteIndex = -1
             }
