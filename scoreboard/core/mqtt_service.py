@@ -36,21 +36,34 @@ class ScoreboardMqttService(QObject):
             print("[MQTT] WARNING: paho-mqtt not installed. Real-time control disabled.")
             return
 
-        # Determine MQTT Host
+        # Determine MQTT Host, Port, and Transport
         api_base = os.environ.get("POOLARENA_API_BASE_URL", "http://localhost:8000")
-        if "backend" in api_base:
-            default_host = "mqtt"
-        else:
-            try:
-                parsed = urlparse(api_base)
+        try:
+            parsed = urlparse(api_base)
+            is_secure = parsed.scheme == "https"
+            if "backend" in api_base:
+                default_host = "mqtt"
+            else:
                 default_host = parsed.hostname or "localhost"
-            except Exception:
-                default_host = "localhost"
+        except Exception:
+            is_secure = False
+            default_host = "localhost"
 
         self._host = os.environ.get("POOLARENA_MQTT_HOST", default_host)
-        self._port = int(os.environ.get("POOLARENA_MQTT_PORT", 1883))
         
-        print(f"[MQTT] Configuring client on {self._host}:{self._port}")
+        env_port = os.environ.get("POOLARENA_MQTT_PORT")
+        if env_port:
+            self._port = int(env_port)
+            self._transport = os.environ.get("POOLARENA_MQTT_TRANSPORT", "tcp")
+        else:
+            if is_secure:
+                self._port = 443
+                self._transport = "websockets"
+            else:
+                self._port = 1883
+                self._transport = "tcp"
+        
+        print(f"[MQTT] Configuring client on {self._host}:{self._port} transport={self._transport}")
         
         # Connect to settings changes so we can resubscribe if deviceCode changes
         self._device_settings.deviceCodeChanged.connect(self._on_device_code_changed)
@@ -75,7 +88,28 @@ class ScoreboardMqttService(QObject):
                 pass
 
         client_id = f"azpool-scoreboard-{device_code}-{int(time.time())}"
-        self._client = mqtt.Client(client_id=client_id)
+        
+        try:
+            from paho.mqtt.enums import CallbackAPIVersion
+            callback_api = CallbackAPIVersion.VERSION1
+        except ImportError:
+            callback_api = None
+
+        if callback_api is not None:
+            if self._transport == "websockets":
+                self._client = mqtt.Client(callback_api, client_id=client_id, transport="websockets")
+            else:
+                self._client = mqtt.Client(callback_api, client_id=client_id)
+        else:
+            if self._transport == "websockets":
+                self._client = mqtt.Client(client_id=client_id, transport="websockets")
+            else:
+                self._client = mqtt.Client(client_id=client_id)
+                
+        if self._transport == "websockets":
+            self._client.ws_set_options(path="/mqtt")
+            if self._port == 443:
+                self._client.tls_set() # Enable SSL/TLS for secure websockets
         
         # Set Last Will and Testament
         status_topic = f"azpool/scoreboard/{device_code}/status"

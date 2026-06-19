@@ -4,7 +4,7 @@ import json
 import os
 from typing import Any, Dict, Optional
 
-from PySide6.QtCore import QObject, QTimer, QUrl, Slot
+from PySide6.QtCore import QObject, QTimer, QUrl, Slot, Signal
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 
 

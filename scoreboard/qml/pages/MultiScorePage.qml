@@ -610,12 +610,12 @@ Item {
             const name = (players.get(i).name && players.get(i).name.length)
                     ? players.get(i).name : defaultPlayerName(i + 1)
 
-            players.setProperty(i, “score”, next)
+            players.setProperty(i, "score", next)
             page.syncScoreToBackend()
 
-            const sign = inc >= 0 ? “+” : “”
+            const sign = inc >= 0 ? "+" : ""
             const deltaStr = sign + inc
-            page.logAction(historyWithScore(trArgsLocal(“log_point_delta”, [deltaStr, name], deltaStr + “ điểm cho “” + name + “””), next))
+            page.logAction(historyWithScore(trArgsLocal("log_point_delta", [deltaStr, name], deltaStr + " điểm cho \"" + name + "\""), next))
         }
 
         onAppliedChanges: {

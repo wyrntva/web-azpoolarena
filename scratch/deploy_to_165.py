@@ -58,7 +58,7 @@ def deploy_to_165(files_dict):
         cmd_restart = f"echo '{password}' | sudo -S pkill -f 'python.*app.py'"
         _, stdout, _ = ssh.exec_command(cmd_restart)
         stdout.channel.recv_exit_status()
-        print("✓ Restarted successfully!")
+        print("[OK] Restarted successfully!")
 
     except Exception as e:
         print(f"Error during deployment: {e}")
