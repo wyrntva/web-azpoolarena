@@ -93,6 +93,17 @@ Item {
         resetMatchTimer()
         startMatchTimer()
         persistHistory()
+        if (typeof LiveScoreService !== "undefined" && LiveScoreService) LiveScoreService.clearScore()
+    }
+
+    function syncScoreToBackend() {
+        if (typeof LiveScoreService === "undefined" || !LiveScoreService) return
+        var arr = []
+        for (var i = 0; i < players.count; ++i) {
+            var p = players.get(i)
+            arr.push({ name: p.name || defaultPlayerName(i + 1), score: p.score, color: p.color })
+        }
+        LiveScoreService.reportScore(page.mode, JSON.stringify(arr))
     }
 
     function historyCurrentScoreLine(score) {
@@ -133,7 +144,7 @@ Item {
     function normalizeColors() { for (let i = 0; i < players.count; ++i) players.setProperty(i, "color", colorForOrdinal(i + 1)) }
 
     // ==== reset & back ====
-    function resetScores() { for (let i = 0; i < players.count; i++) players.setProperty(i, "score", 0); _recalcTotal() }
+    function resetScores() { for (let i = 0; i < players.count; i++) players.setProperty(i, "score", 0); _recalcTotal(); page.syncScoreToBackend() }
     function resetMatchAndState() {
         // Reset về 3 người chơi mặc định
         players.clear()
@@ -144,6 +155,7 @@ Item {
         page._agg = ({})
         _recalcTotal()
         persistHistory()
+        page.syncScoreToBackend()
     }
     function handleBackRequested() {
         page.pendingAction = "leavePage"
@@ -198,6 +210,7 @@ Item {
         console.log("[MultiQuickAddPage] Component.onCompleted. idleMs:", page.idleMs, "timer interval:", inactivityTimer.interval, "timer running:", inactivityTimer.running)
         startMatchTimer()
         restoreHistory()
+        Qt.callLater(syncScoreToBackend)
     }
 
     // ==== players ====
@@ -600,6 +613,7 @@ Item {
             if (n <= maxPlayers) {
                 players.append({ name: defaultPlayerName(n), score: 0, color: colorForOrdinal(n) })
                 const addedName = defaultPlayerName(n)
+                page.syncScoreToBackend()
             }
         }
     }
@@ -694,6 +708,7 @@ Item {
         const next = cur + delta
         players.setProperty(idx, "score", next)
         page._recalcTotal()
+        page.syncScoreToBackend()
 
         // dồn lịch sử: cộng dồn và cập nhật mốc thời gian cuối
         if (!page._agg[idx]) page._agg[idx] = { delta: 0, lastTs: 0 }
@@ -717,6 +732,7 @@ Item {
             if (!Number.isInteger(idx) || idx < 0 || idx >= players.count) { page.pendingAction = ""; return }
             const old = players.get(idx).name
             players.setProperty(idx, "name", name)
+            page.syncScoreToBackend()
             const label = trArgsLocal("player_numbered", [idx + 1], "Player " + (idx + 1))
             page.logAction(trArgsLocal("log_rename_player_from_to", [label, old || "", name], label + " đổi tên thành \"" + name + "\""))
             page.pendingAction = ""
@@ -752,6 +768,7 @@ Item {
                     if (page.renameTarget > i)  page.renameTarget -= 1
                     const displayName = removedName || defaultPlayerName(i + 1)
                     page.logAction(trArgsLocal("log_delete_player", [displayName], "Xóa người chơi \"" + displayName + "\""))
+                    page.syncScoreToBackend()
                 }
                 page.pendingDeleteIndex = -1
             }

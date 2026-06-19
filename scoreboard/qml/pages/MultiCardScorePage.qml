@@ -100,6 +100,17 @@ Item {
         resetMatchTimer()
         startMatchTimer()
         persistHistory()
+        if (typeof LiveScoreService !== "undefined" && LiveScoreService) LiveScoreService.clearScore()
+    }
+
+    function syncScoreToBackend() {
+        if (typeof LiveScoreService === "undefined" || !LiveScoreService) return
+        var arr = []
+        for (var i = 0; i < players.count; ++i) {
+            var p = players.get(i)
+            arr.push({ name: p.name || defaultPlayerName(i + 1), score: p.score, color: p.color })
+        }
+        LiveScoreService.reportScore(page.mode, JSON.stringify(arr))
     }
 
     function trLocal(key) {
@@ -152,6 +163,7 @@ Item {
             players.setProperty(i, "wins", 0)
         }
         page.totalCommonScore = 0
+        page.syncScoreToBackend()
     }
 
     // reset cả TÊN + ĐIỂM + MÀU về mặc định theo thứ tự hiện có
@@ -166,6 +178,7 @@ Item {
         pendingAction = ""
         pendingDeleteIndex = -1
         persistHistory()
+        page.syncScoreToBackend()
     }
 
     function handleBackRequested() {
@@ -224,6 +237,7 @@ Item {
     Component.onCompleted: {
         startMatchTimer()
         restoreHistory()
+        Qt.callLater(syncScoreToBackend)
     }
 
     // ==== danh sách người chơi (khởi tạo) ====
@@ -513,6 +527,7 @@ Item {
                     color: colorForOrdinal(n)
                 })
                 const addedName = defaultPlayerName(n)
+                page.syncScoreToBackend()
             }
         }
 
@@ -639,6 +654,7 @@ Item {
                     ? players.get(i).name : defaultPlayerName(i + 1)
 
             players.setProperty(i, "score", next)
+            page.syncScoreToBackend()
 
             const sign = inc >= 0 ? "+" : ""
             const deltaStr = sign + inc
@@ -692,6 +708,7 @@ Item {
             }
             const old = players.get(idx).name
             players.setProperty(idx, "name", name)
+            page.syncScoreToBackend()
             const label = trArgsLocal("player_numbered", [idx + 1], "Player " + (idx + 1))
             page.logAction(trArgsLocal("log_rename_player_from_to", [label, old || "", name], label + " đổi tên thành \"" + name + "\""))
             page.pendingAction = ""
@@ -734,6 +751,7 @@ Item {
                     if (page.renameTarget > i)  page.renameTarget -= 1
                     const displayName = removedName || defaultPlayerName(i + 1)
                     page.logAction(trArgsLocal("log_delete_player", [displayName], "Xóa người chơi \"" + displayName + "\""))
+                    page.syncScoreToBackend()
                 }
                 page.pendingDeleteIndex = -1
             }
