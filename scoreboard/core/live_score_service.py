@@ -45,6 +45,25 @@ class LiveScoreService(QObject):
         }
         self._debounce.start()
 
+    @Slot()
+    def clearScore(self) -> None:
+        """QML gọi khi rời ScorePage/MultiScorePage để xóa tỉ số khỏi backend."""
+        table = self._table_name()
+        if not table:
+            return
+        self._debounce.stop()
+        self._pending = None
+        from PySide6.QtCore import QUrlQuery
+        url = QUrl(f"{self._base_url}/api/tournaments/device/live-score")
+        query = QUrlQuery()
+        query.addQueryItem("table_name", table)
+        url.setQuery(query)
+        request = QNetworkRequest(url)
+        request.setRawHeader(b"User-Agent", b"PoolArenaScoreboard/1.0")
+        print(f"[LiveScoreService] clearScore {table}")
+        reply = self._network.deleteResource(request)
+        reply.finished.connect(reply.deleteLater)
+
     def _flush(self) -> None:
         if not self._pending:
             return

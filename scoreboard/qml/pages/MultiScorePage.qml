@@ -97,6 +97,7 @@ Item {
         resetMatchTimer()
         startMatchTimer()
         persistHistory()
+        if (typeof LiveScoreService !== "undefined" && LiveScoreService) LiveScoreService.clearScore()
     }
 
     function syncScoreToBackend() {
@@ -221,6 +222,7 @@ Item {
     Component.onCompleted: {
         startMatchTimer()
         restoreHistory()
+        Qt.callLater(syncScoreToBackend)
     }
 
     ListModel {

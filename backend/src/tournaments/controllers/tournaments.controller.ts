@@ -210,8 +210,26 @@ export class TournamentsController {
 
   @Get('device/live-score')
   getLiveScore(@Query('table_name') tableName?: string) {
-    if (tableName) return this.liveScores.get(tableName) ?? null;
-    return Object.fromEntries(this.liveScores);
+    const STALE_MS = 15 * 60 * 1000;
+    const now = Date.now();
+    const isStale = (entry: { players: any[]; updated_at: string }) =>
+      !entry.players?.length || now - new Date(entry.updated_at).getTime() > STALE_MS;
+    if (tableName) {
+      const entry = this.liveScores.get(tableName);
+      return entry && !isStale(entry) ? entry : null;
+    }
+    const result: Record<string, any> = {};
+    for (const [key, val] of this.liveScores) {
+      if (!isStale(val)) result[key] = val;
+    }
+    return result;
+  }
+
+  @Delete('device/live-score')
+  clearLiveScore(@Query('table_name') tableName: string) {
+    if (!tableName) return { ok: false, error: 'table_name required' };
+    this.liveScores.delete(tableName);
+    return { ok: true };
   }
 
   @Get('device/active-match')

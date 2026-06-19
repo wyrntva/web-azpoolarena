@@ -101,6 +101,7 @@ Item {
         resetMatchTimer()
         startMatchTimer()
         persistHistory()
+        if (typeof LiveScoreService !== "undefined" && LiveScoreService) LiveScoreService.clearScore()
     }
 
     function resetScores() {
@@ -222,6 +223,7 @@ Item {
     Component.onCompleted: {
         startMatchTimer()
         restoreHistory()
+        Qt.callLater(syncScoreToBackend)
     }
 
     // ==== LEFT CARD ====
