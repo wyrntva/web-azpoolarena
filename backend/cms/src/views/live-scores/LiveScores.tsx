@@ -113,6 +113,15 @@ function ScoreCard({
               else if (val === 'multi') { page = 'MultiScorePage'; mode = 'multi'; }
               else if (val === 'cards') { page = 'MultiCardScorePage'; mode = 'cards'; }
               else if (val === 'multiQuick') { page = 'MultiQuickAddPage'; mode = 'multiQuick'; }
+              
+              // Optimistically update local state for immediate dropdown response
+              setTables(prev => prev.map(t => {
+                if (t.device_code === data.device_code) {
+                  return { ...t, mode: mode || null };
+                }
+                return t;
+              }));
+
               onPublishCommand(data.device_code!, { action: 'open_page', page, mode });
             }}
             className="text-xs rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1 outline-none cursor-pointer max-w-[140px] truncate"

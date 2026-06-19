@@ -33,6 +33,8 @@ class ScoreboardMqttService(QObject):
         self._state_timer.timeout.connect(self._publish_state_now)
         
         self._pending_state = None
+        self._current_mode = None
+        self._current_players = []
 
         if not MQTT_AVAILABLE:
             print("[MQTT] WARNING: paho-mqtt not installed. Real-time control disabled.")
@@ -230,6 +232,9 @@ class ScoreboardMqttService(QObject):
         except Exception:
             return
         
+        self._current_mode = mode
+        self._current_players = players
+        
         self._pending_state = {
             "table_name": self._device_settings.getTableName(),
             "mode": mode,
@@ -241,6 +246,8 @@ class ScoreboardMqttService(QObject):
     @Slot()
     def handleQmlScoreCleared(self):
         """Called when scoring page is left, publishing an idle state."""
+        self._current_mode = None
+        self._current_players = []
         self._pending_state = {
             "table_name": self._device_settings.getTableName(),
             "mode": None,
@@ -251,13 +258,30 @@ class ScoreboardMqttService(QObject):
 
     def publish_state(self):
         """Force publishing current state based on Controller (for 2-player) or current active page."""
-        players = [
-            {"name": self._controller.getLeftName(), "score": self._controller.getLeftScore(), "color": "#da251d"},
-            {"name": self._controller.getRightName(), "score": self._controller.getRightScore(), "color": "#ffcd00"}
-        ]
+        if self._current_mode == "two":
+            players = [
+                {"name": self._controller.getLeftName(), "score": self._controller.getLeftScore(), "color": "#da251d"},
+                {"name": self._controller.getRightName(), "score": self._controller.getRightScore(), "color": "#ffcd00"}
+            ]
+            mode = "two"
+        elif self._current_mode is not None:
+            mode = self._current_mode
+            players = self._current_players
+        else:
+            # Fallback/compatibility: check if controller has score (meaning 2-player is active but hasn't updated state yet)
+            if self._controller.getLeftScore() > 0 or self._controller.getRightScore() > 0:
+                mode = "two"
+                players = [
+                    {"name": self._controller.getLeftName(), "score": self._controller.getLeftScore(), "color": "#da251d"},
+                    {"name": self._controller.getRightName(), "score": self._controller.getRightScore(), "color": "#ffcd00"}
+                ]
+            else:
+                mode = None
+                players = []
+
         self._pending_state = {
             "table_name": self._device_settings.getTableName(),
-            "mode": "two",
+            "mode": mode,
             "players": players,
             "updated_at": json.dumps(time.strftime('%Y-%m-%dT%H:%M:%S.000Z', time.gmtime())).replace('"', '')
         }
