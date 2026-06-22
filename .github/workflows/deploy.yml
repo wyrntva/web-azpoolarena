@@ -78,8 +78,8 @@ jobs:
             COMPOSE="docker compose -f $REPO/docker-compose.prod.yml"
 
             echo "=== [1/5] Git pull ==="
-            cd $REPO && git stash 2>/dev/null | true && git pull origin master
-            cd $POOLARENA_REPO && git stash 2>/dev/null | true && git pull origin master
+            cd $REPO && git fetch origin master && git reset --hard origin/master
+            cd $POOLARENA_REPO && git fetch origin master && git reset --hard origin/master
 
             echo "=== [2/5] Build images ==="
             cd $REPO
