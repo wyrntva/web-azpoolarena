@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
@@ -71,10 +72,60 @@ export async function generateMetadata({
   };
 }
 
-export default function TournamentSlugLayout({
+export default async function TournamentSlugLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ slug: string }>;
 }) {
-  return <>{children}</>;
+  const { slug } = await params;
+  const data = await fetchTournament(slug);
+
+  const jsonLd = data
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'SportsEvent',
+        name: data.name,
+        url: `${SITE_URL}/tournaments/${slug}`,
+        description: `Giải đấu bida ${data.name} tại ${data.location || 'AZ Pool Arena'}.`,
+        location: {
+          '@type': 'Place',
+          name: data.location || 'AZ Pool Arena',
+          address: {
+            '@type': 'PostalAddress',
+            addressCountry: 'VN',
+          },
+        },
+        organizer: {
+          '@type': 'Organization',
+          name: 'Poolarena VietNam',
+          url: SITE_URL,
+        },
+        ...(data.start_date && { startDate: data.start_date }),
+        ...(data.end_date && { endDate: data.end_date }),
+        ...(data.banner || data.detail_logo
+          ? {
+              image: (() => {
+                const raw = data.banner || data.detail_logo;
+                return raw.startsWith('http') ? raw : `${API_BASE}${raw}`;
+              })(),
+            }
+          : {}),
+        sport: 'Billiards',
+      }
+    : null;
+
+  return (
+    <>
+      {jsonLd && (
+        <Script
+          id="tournament-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      {children}
+    </>
+  );
 }

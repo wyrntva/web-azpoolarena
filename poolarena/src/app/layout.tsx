@@ -12,11 +12,39 @@ const montserrat = Montserrat({
   weight: ["400", "500", "700"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
+
 export const metadata: Metadata = {
-  title: "Poolarena VietNam",
-  description: "POOLARENA.VN - Hệ thống giải đấu hàng đầu Việt Nam",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Poolarena VietNam",
+    template: "%s | Poolarena VietNam",
+  },
+  description: "POOLARENA.VN - Hệ thống giải đấu bida hàng đầu Việt Nam. Theo dõi giải đấu, bảng xếp hạng và thành tích cơ thủ.",
   icons: {
     icon: "/favicon.png",
+  },
+  openGraph: {
+    title: "Poolarena VietNam",
+    description: "POOLARENA.VN - Hệ thống giải đấu bida hàng đầu Việt Nam.",
+    url: SITE_URL,
+    siteName: "Poolarena VietNam",
+    locale: "vi_VN",
+    type: "website",
+    images: [
+      {
+        url: `${SITE_URL}/images/tour_banner.png`,
+        width: 1200,
+        height: 630,
+        alt: "Poolarena VietNam",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Poolarena VietNam",
+    description: "POOLARENA.VN - Hệ thống giải đấu bida hàng đầu Việt Nam.",
+    images: [`${SITE_URL}/images/tour_banner.png`],
   },
 };
 
