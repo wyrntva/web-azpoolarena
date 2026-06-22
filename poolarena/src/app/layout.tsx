@@ -16,6 +16,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  verification: {
+    google: 'V4fyIm9vnGN9f4Z5d7V9ZEKtdFsbK3e52GuT4B3E6wM',
+  },
   title: {
     default: "Poolarena VietNam",
     template: "%s | Poolarena VietNam",
