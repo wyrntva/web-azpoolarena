@@ -59,7 +59,7 @@ jobs:
     environment: production
     steps:
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@v1.2.0
         env:
           REBUILD_BACKEND:   ${{ needs.detect.outputs.backend }}
           REBUILD_POOLARENA: ${{ needs.detect.outputs.poolarena }}
