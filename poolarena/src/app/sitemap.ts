@@ -9,7 +9,8 @@ async function fetchTournaments(): Promise<{ slug: string; updated_at?: string }
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
-    return res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
   } catch {
     return [];
   }
@@ -21,7 +22,8 @@ async function fetchUsers(): Promise<{ id: number; updated_at?: string }[]> {
       next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
-    return res.json();
+    const data = await res.json();
+    return Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
   } catch {
     return [];
   }
