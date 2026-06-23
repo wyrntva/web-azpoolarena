@@ -14,7 +14,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { AiConversationEntity } from './entities/ai-conversation.entity';
 import { StoreSettingsEntity } from '../store-settings/entities';
 import { AreaEntity } from '../areas/entities/area.entity';
-import { TournamentEntity, TournamentRegistrationEntity } from '../tournaments/entities/tournament.entity';
+import {
+  TournamentEntity,
+  TournamentRegistrationEntity,
+} from '../tournaments/entities/tournament.entity';
 import { ChatResponseDto, FbAiResponseDto } from './dto/chat.dto';
 
 // gpt-4o-mini pricing (per 1K tokens, USD)
@@ -124,7 +127,13 @@ export class AiService implements OnModuleInit {
       this.conversations.set(sid, history);
 
       this.logUsage('CHAT:STAFF', completion.usage, startTime);
-      await this.persistConversation(sid, message, reply, completion.usage, 'staff');
+      await this.persistConversation(
+        sid,
+        message,
+        reply,
+        completion.usage,
+        'staff',
+      );
 
       return { reply, session_id: sid, model: this.model };
     } catch (err) {
@@ -151,7 +160,9 @@ export class AiService implements OnModuleInit {
 
     // Bước 1: Phân tích intent từ câu hỏi
     const intents = this.analyzeIntent(message);
-    this.logger.log(`[CHAT:CUSTOMER] Intents phát hiện: [${intents.join(', ')}]`);
+    this.logger.log(
+      `[CHAT:CUSTOMER] Intents phát hiện: [${intents.join(', ')}]`,
+    );
 
     // Bước 2: Query dữ liệu liên quan từ DB
     const dbContext = await this.buildDbContext(intents);
@@ -179,7 +190,13 @@ export class AiService implements OnModuleInit {
       this.conversations.set(sid_customer, history);
 
       this.logUsage('CHAT:CUSTOMER', completion.usage, startTime);
-      await this.persistConversation(sid, message, reply, completion.usage, 'customer');
+      await this.persistConversation(
+        sid,
+        message,
+        reply,
+        completion.usage,
+        'customer',
+      );
 
       return { reply, session_id: sid, model: this.model };
     } catch (err) {
@@ -221,7 +238,9 @@ export class AiService implements OnModuleInit {
   ): Promise<FbAiResponseDto> {
     this.ensureOpenAI();
     const startTime = Date.now();
-    this.logger.log(`[FB:AI] PSID=${psid} | page="${pageName}" | "${message.slice(0, 80)}"`);
+    this.logger.log(
+      `[FB:AI] PSID=${psid} | page="${pageName}" | "${message.slice(0, 80)}"`,
+    );
 
     // Phân tích intent và lấy DB context
     const intents = this.analyzeIntent(message);
@@ -251,8 +270,13 @@ export class AiService implements OnModuleInit {
       const usage = completion.usage;
       const inputTokens = usage?.prompt_tokens ?? 0;
       const outputTokens = usage?.completion_tokens ?? 0;
-      const cachedTokens = (usage as any)?.prompt_tokens_details?.cached_tokens ?? 0;
-      const cost = this.estimateCostWithCache(inputTokens, outputTokens, cachedTokens);
+      const cachedTokens =
+        (usage as any)?.prompt_tokens_details?.cached_tokens ?? 0;
+      const cost = this.estimateCostWithCache(
+        inputTokens,
+        outputTokens,
+        cachedTokens,
+      );
 
       this.logUsageWithCache('FB:AI', usage, cachedTokens, startTime);
 
@@ -271,7 +295,10 @@ export class AiService implements OnModuleInit {
   // OpenAI tự động cache prefix của prompt khi độ dài >= 1024 tokens.
   // Cached tokens giảm chi phí 50% và latency ~200ms.
   // QUY TẮC: phần TĨNH (không đổi) phải đặt ĐẦU prompt, phần ĐỘNG (DB data) đặt CUỐI.
-  private buildFacebookSystemPrompt(dbContext: string, pageName: string = 'AZ POOLARENA'): string {
+  private buildFacebookSystemPrompt(
+    dbContext: string,
+    pageName: string = 'AZ POOLARENA',
+  ): string {
     // Phần TĨNH này >1024 tokens → OpenAI tự động cache sau request đầu tiên.
     // Cache hit giảm latency ~200ms và chi phí input token 50%.
     const STATIC_PREFIX = `Bạn là JARVIS — trợ lý AI chính thức của ${pageName}, phòng bida chuyên nghiệp tại Việt Nam.
@@ -329,14 +356,43 @@ Sau khi có đủ, trả lời:
 "Mình đã lưu lại yêu cầu cắt cam của bạn rồi. Nhân viên sẽ gửi file cho bạn qua Zalo số [SĐT khách] sớm nhất có thể nhé!
 Ngoài ra bạn biết không, bảng tỉ số tại ${pageName} đã hỗ trợ tính năng cắt cam trực tiếp tại quán luôn đó. Nếu bạn muốn tự cắt mà chưa biết cách dùng, cứ nhờ nhân viên hỗ trợ ngay tại chỗ là được nhé!"
 
+## HƯỚNG DẪN ĐĂNG KÝ TÀI KHOẢN & ĐĂNG NHẬP POOLARENA.VN
+Khi khách hỏi cách tạo tài khoản, đăng ký, hoặc đăng nhập:
+"Bạn tạo tài khoản trên poolarena.vn theo các bước sau nhé:
+1. Truy cập https://poolarena.vn/login
+2. Bấm 'Đăng ký' (nếu chưa có tài khoản)
+3. Điền thông tin: họ tên, số điện thoại, mật khẩu
+4. Xác nhận OTP qua số điện thoại
+5. Đăng nhập lại bằng số điện thoại và mật khẩu vừa tạo
+Sau khi có tài khoản, bạn có thể đăng ký giải đấu, theo dõi lịch thi đấu, xem bảng xếp hạng và thành tích cá nhân.
+Nếu cần hỗ trợ thêm bạn liên hệ số 0364756638 nhé!"
+
 ## HƯỚNG DẪN ĐĂNG KÝ GIẢI ĐẤU
 Khi khách hỏi cách đăng ký giải, hướng dẫn từng bước:
 "Bạn đăng ký giải theo các bước sau nhé:
 1. Truy cập website poolarena.vn và tạo tài khoản (nếu chưa có)
 2. Chọn giải đấu muốn tham gia
-3. Bấm "Đăng ký giải" và thanh toán lệ phí để hoàn tất đăng ký
+3. Bấm 'Đăng ký giải' và thanh toán lệ phí để hoàn tất đăng ký
 4. Sau khi đăng ký xong, vào trang Trận đấu để xem lịch thi đấu, tên đối thủ, thời gian và số bàn diễn ra trận của mình.
 Nếu cần hỗ trợ thêm bạn liên hệ số 0364756638 nhé!"
+
+## HỆ THỐNG PHÂN HẠNG LEVEL - POOLARENA.VN
+Nhằm tối ưu hóa tính minh bạch và hiện đại hóa trải nghiệm, hệ thống của POOLARENA.VN KHÔNG sử dụng cách phân cấp truyền thống theo các hạng G, H, I cũ, mà thay vào đó là bộ tiêu chuẩn LEVEL từ Level 1 đến Level 10 (MASTER), giúp đánh giá chính xác và công bằng nhất năng lực thực tế của từng cơ thủ.
+Chi tiết xem tại: https://poolarena.vn/info
+
+Barem xếp hạng Level:
+- Level 1: Dành cho cơ thủ nữ (hoặc nam thực sự yếu rớt từ Level 2 xuống). Nữ đánh tốt ngang Level 2-4 thì đăng ký đúng hạng.
+- Level 2: Cơ thủ đang tập chơi, đi được 1-4 bóng, KHÔNG đi được chấm. Phù hợp hạng I, K ở giải ngoài nhưng chưa được giải.
+- Level 3: Đi được 3-5 bóng, có thể đi 1 chấm trên 10 game. Có tư duy hình, chạy đạn cơ bản. Phù hợp cơ thủ vô địch giải HIK ngoài.
+- Level 4: Đi hình 4-6 bóng, sử dụng đầu cơ/áp phê thành thạo. Chỉ nhận cơ thủ thăng hạng từ Level 3 qua hệ thống tính điểm nội bộ.
+- Level 5: Trình độ khá-giỏi, đi hình 6-9 bóng. Chỉ nhận cơ thủ thăng hạng từ hệ thống tính điểm hoặc BTC kiểm định.
+- Level 6-10 (MASTER): Các cấp độ cao hơn dành cho cơ thủ chuyên nghiệp, được BTC kiểm định và thăng hạng qua hệ thống.
+
+LƯU Ý QUAN TRỌNG: Barem chỉ mang tính tham khảo. Cơ thủ có thể đăng ký lên 1 level để đánh thoát tay. Nếu phát hiện bíp level (gian lận), BTC sẽ ban khỏi hệ thống giải.
+
+## XỬ LÝ CÂU HỎI VỀ KẾT QUẢ GIẢI ĐẤU
+Khi khách hỏi "ai vô địch", "giải trước", "kết quả giải" — hãy tra cứu DỮ LIỆU THỰC TẾ bên dưới. Nếu có thông tin nhà vô địch, trả lời kèm link xem chi tiết giải: https://poolarena.vn/tournaments/[slug-giải]
+Ví dụ: "Giải RANK-UP SERIES ngày 16/06 vừa rồi, nhà vô địch là [tên]. Bạn xem chi tiết tại: https://poolarena.vn/tournaments/rank-up-series-20260616"
 
 ## THÔNG TIN NHÓM ZALO
 - Nhóm giải đấu: https://zalo.me/g/qazqsv816
@@ -393,28 +449,48 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
       intents.add('hours');
     }
     // Địa chỉ / vị trí
-    if (/địa chỉ|address|đường|ở đâu|location|chỗ nào|tìm|quận|phường/.test(lower)) {
+    if (
+      /địa chỉ|address|đường|ở đâu|location|chỗ nào|tìm|quận|phường/.test(lower)
+    ) {
       intents.add('location');
     }
     // Liên hệ
-    if (/liên hệ|contact|số điện thoại|phone|zalo|hotline|gọi|nhắn/.test(lower)) {
+    if (
+      /liên hệ|contact|số điện thoại|phone|zalo|hotline|gọi|nhắn/.test(lower)
+    ) {
       intents.add('contact');
     }
     // Khuyến mãi / ưu đãi
-    if (/khuyến mãi|ưu đãi|giảm giá|sale|promo|coupon|voucher|deal|khuyến|ưu đãi/.test(lower)) {
+    if (
+      /khuyến mãi|ưu đãi|giảm giá|sale|promo|coupon|voucher|deal|khuyến|ưu đãi/.test(
+        lower,
+      )
+    ) {
       intents.add('promotion');
     }
     // Giải đấu / sự kiện (mở rộng: đăng ký, tuần này, tháng này, số người)
-    if (/giải đấu|tournament|thi đấu|event|cuộc thi|cup|championship|giải|đăng ký|đã đăng|tuần này|tháng này|hôm nay|số người|tổng người|còn chỗ|slot/.test(lower)) {
+    if (
+      /giải đấu|tournament|thi đấu|event|cuộc thi|cup|championship|giải|đăng ký|đã đăng|tuần này|tháng này|hôm nay|số người|tổng người|còn chỗ|slot/.test(
+        lower,
+      )
+    ) {
       intents.add('tournament');
     }
     // Dịch vụ
-    if (/dịch vụ|service|có gì|menu|thức ăn|uống|tiện ích|wifi|parking/.test(lower)) {
+    if (
+      /dịch vụ|service|có gì|menu|thức ăn|uống|tiện ích|wifi|parking/.test(
+        lower,
+      )
+    ) {
       intents.add('services');
     }
     // Thành viên / rank
     if (/thành viên|member|rank|xếp hạng|điểm|vip|hội viên/.test(lower)) {
       intents.add('membership');
+    }
+    // Phân hạng level / barem level
+    if (/level|hạng|barem|rank|xếp hạng|phân hạng|cấp độ|lv\s?\d/.test(lower)) {
+      intents.add('level');
     }
 
     if (intents.size === 0) intents.add('general');
@@ -429,7 +505,9 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
     const cacheKey = `ctx_${[...intents].sort().join('_')}`;
     const cached = this.getCached(cacheKey);
     if (cached) {
-      this.logger.debug(`[CACHE HIT] DB context cho intents: ${intents.join(', ')}`);
+      this.logger.debug(
+        `[CACHE HIT] DB context cho intents: ${intents.join(', ')}`,
+      );
       return cached;
     }
 
@@ -461,7 +539,12 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
       const store = await this.storeSettingsRepo.findOne({ where: {} });
       if (!store) return null;
 
-      const address = [store.address, store.ward, store.district, store.province]
+      const address = [
+        store.address,
+        store.ward,
+        store.district,
+        store.province,
+      ]
         .filter(Boolean)
         .join(', ');
 
@@ -488,7 +571,8 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
       if (!areas.length) return null;
 
       const lines = areas.map(
-        (a) => `- ${a.name}: ${a.table_count} bàn${a.description ? ` (${a.description})` : ''}`,
+        (a) =>
+          `- ${a.name}: ${a.table_count} bàn${a.description ? ` (${a.description})` : ''}`,
       );
 
       return `## Khu vực & Bàn bida\n${lines.join('\n')}`;
@@ -500,72 +584,133 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
 
   private async getTournamentInfo(): Promise<string | null> {
     try {
-      // Lấy giải ongoing + upcoming + finished trong 30 ngày gần đây
+      // Lấy giải ongoing + upcoming + completed trong 30 ngày gần đây
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const tournaments = await this.tournamentRepo
         .createQueryBuilder('t')
-        .where('t.status IN (:...statuses)', { statuses: ['ongoing', 'upcoming', 'finished'] })
-        .andWhere('(t.start_date >= :since OR t.status != :finished)', {
+        .where('t.status IN (:...statuses)', {
+          statuses: ['ongoing', 'upcoming', 'completed'],
+        })
+        .andWhere('(t.start_date >= :since OR t.status != :completed)', {
           since: thirtyDaysAgo,
-          finished: 'finished',
+          completed: 'completed',
         })
         .select([
-          't.id', 't.name', 't.slug', 't.status',
-          't.start_date', 't.registration_end_date',
-          't.location', 't.support_phone', 't.number_of_players',
-          't.registration_fee', 't.total_prize', 't.ranks',
+          't.id',
+          't.name',
+          't.slug',
+          't.status',
+          't.start_date',
+          't.registration_end_date',
+          't.location',
+          't.support_phone',
+          't.number_of_players',
+          't.registration_fee',
+          't.total_prize',
+          't.ranks',
         ])
         .orderBy('t.start_date', 'ASC')
         .take(10)
         .getMany();
 
-      if (!tournaments.length) return '## Giải đấu\nHiện không có giải đấu nào đang diễn ra hoặc sắp tới.';
+      if (!tournaments.length)
+        return '## Giải đấu\nHiện không có giải đấu nào đang diễn ra hoặc sắp tới.';
 
       // Đếm số người đăng ký từng giải một lần query
       const tournamentIds = tournaments.map((t) => t.id);
-      const regCounts: { tournament_id: number; count: string }[] = await this.registrationRepo
-        .createQueryBuilder('r')
-        .select('r.tournament_id', 'tournament_id')
-        .addSelect('COUNT(r.id)', 'count')
-        .where('r.tournament_id IN (:...ids)', { ids: tournamentIds })
-        .groupBy('r.tournament_id')
-        .getRawMany();
+      const regCounts: { tournament_id: number; count: string }[] =
+        await this.registrationRepo
+          .createQueryBuilder('r')
+          .select('r.tournament_id', 'tournament_id')
+          .addSelect('COUNT(r.id)', 'count')
+          .where('r.tournament_id IN (:...ids)', { ids: tournamentIds })
+          .groupBy('r.tournament_id')
+          .getRawMany();
 
-      const countMap = new Map(regCounts.map((r) => [r.tournament_id, Number(r.count)]));
+      const countMap = new Map(
+        regCounts.map((r) => [r.tournament_id, Number(r.count)]),
+      );
+
+      // Truy vấn nhà vô địch cho các giải đã kết thúc (completed)
+      let championMap = new Map<number, string>();
+      if (tournamentIds.length > 0) {
+        try {
+          const champions: { tournament_id: number; champion_name: string }[] =
+            await this.tournamentRepo.manager.query(`
+            SELECT m.tournament_id, u.full_name AS champion_name
+            FROM tournament_matches m
+            JOIN (
+              SELECT tournament_id, MAX(round) as max_round
+              FROM tournament_matches
+              WHERE bracket = 'knockout' AND status = 'completed' AND tournament_id IN (${tournamentIds.join(',')})
+              GROUP BY tournament_id
+            ) max_m ON m.tournament_id = max_m.tournament_id AND m.round = max_m.max_round AND m.bracket = 'knockout'
+            JOIN users u ON u.id = m.winner_id
+          `);
+          championMap = new Map(
+            champions.map((c) => [c.tournament_id, c.champion_name]),
+          );
+        } catch (dbErr: unknown) {
+          const errorMsg = dbErr instanceof Error ? dbErr.message : String(dbErr);
+          this.logger.warn(
+            `[DB] Không lấy được thông tin nhà vô địch: ${errorMsg}`,
+          );
+        }
+      }
 
       const STATUS_MAP: Record<string, string> = {
         ongoing: 'Đang diễn ra',
         upcoming: 'Sắp diễn ra',
-        finished: 'Đã kết thúc',
+        completed: 'Đã kết thúc',
       };
 
       const fmt = (d: Date) =>
         d
           ? new Date(d).toLocaleString('vi-VN', {
-              day: '2-digit', month: '2-digit', year: 'numeric',
-              hour: '2-digit', minute: '2-digit', hour12: false,
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
             })
           : null;
 
       const lines = tournaments.map((t) => {
         const registered = countMap.get(t.id) ?? 0;
+        const championName = championMap.get(t.id);
         const parts = [
           `- Tên giải: ${t.name}`,
           `  Trạng thái: ${STATUS_MAP[t.status] ?? t.status}`,
           `  Link xem giải & đăng ký: https://poolarena.vn/tournaments/${t.slug}`,
         ];
+        if (championName) {
+          parts.push(`  Nhà vô địch: ${championName}`);
+        }
         if (t.start_date) parts.push(`  Ngày bắt đầu: ${fmt(t.start_date)}`);
-        if (t.registration_end_date) parts.push(`  Hạn đăng ký: ${fmt(t.registration_end_date)}`);
-        parts.push(`  Số người đã đăng ký: ${registered}/${t.number_of_players ?? '?'} người`);
-        if (t.registration_fee) parts.push(`  Lệ phí: ${Number(t.registration_fee).toLocaleString('vi-VN')}đ`);
-        if (t.total_prize) parts.push(`  Tổng giải thưởng: ${Number(t.total_prize).toLocaleString('vi-VN')}đ`);
+        if (t.registration_end_date)
+          parts.push(`  Hạn đăng ký: ${fmt(t.registration_end_date)}`);
+        parts.push(
+          `  Số người đã đăng ký: ${registered}/${t.number_of_players ?? '?'} người`,
+        );
+        if (t.registration_fee)
+          parts.push(
+            `  Lệ phí: ${Number(t.registration_fee).toLocaleString('vi-VN')}đ`,
+          );
+        if (t.total_prize)
+          parts.push(
+            `  Tổng giải thưởng: ${Number(t.total_prize).toLocaleString('vi-VN')}đ`,
+          );
         if (t.ranks) {
           try {
             const rankList: string[] = JSON.parse(t.ranks);
-            if (rankList.length) parts.push(`  Hạng tham dự: ${rankList.join(', ')}`);
-          } catch { /* ignore */ }
+            if (rankList.length)
+              parts.push(`  Hạng tham dự: ${rankList.join(', ')}`);
+          } catch {
+            /* ignore */
+          }
         }
         if (t.location) parts.push(`  Địa điểm: ${t.location}`);
         if (t.support_phone) parts.push(`  Liên hệ: ${t.support_phone}`);
@@ -574,7 +719,9 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
 
       return `## Giải đấu (30 ngày gần nhất + sắp tới)\n${lines.join('\n\n')}`;
     } catch (err: any) {
-      this.logger.warn(`[DB] Không lấy được thông tin giải đấu: ${err.message}`);
+      this.logger.warn(
+        `[DB] Không lấy được thông tin giải đấu: ${err.message}`,
+      );
       return null;
     }
   }
@@ -632,10 +779,15 @@ Hướng dẫn trả lời:
     const inputTokens = usage?.prompt_tokens ?? 0;
     const outputTokens = usage?.completion_tokens ?? 0;
     const totalTokens = usage?.total_tokens ?? 0;
-    const cost = this.estimateCostWithCache(inputTokens, outputTokens, cachedTokens);
-    const cacheInfo = cachedTokens > 0
-      ? ` | Cache HIT: ${cachedTokens} tokens (${Math.round(cachedTokens / inputTokens * 100)}% cached)`
-      : ' | Cache MISS';
+    const cost = this.estimateCostWithCache(
+      inputTokens,
+      outputTokens,
+      cachedTokens,
+    );
+    const cacheInfo =
+      cachedTokens > 0
+        ? ` | Cache HIT: ${cachedTokens} tokens (${Math.round((cachedTokens / inputTokens) * 100)}% cached)`
+        : ' | Cache MISS';
 
     this.logger.log(
       `[${context}] ✓ Xong | Thời gian: ${elapsed}ms | ` +
@@ -648,7 +800,11 @@ Hướng dẫn trả lời:
     return this.estimateCostWithCache(inputTokens, outputTokens, 0);
   }
 
-  private estimateCostWithCache(inputTokens: number, outputTokens: number, cachedTokens: number): number {
+  private estimateCostWithCache(
+    inputTokens: number,
+    outputTokens: number,
+    cachedTokens: number,
+  ): number {
     const pricing = PRICING[this.model] ?? PRICING['gpt-4o-mini'];
     const uncachedInput = inputTokens - cachedTokens;
     // Cached tokens giảm 50% chi phí input
@@ -765,7 +921,6 @@ Hướng dẫn trả lời:
 
   private getSdkVersion(): string {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       return require('openai/package.json').version as string;
     } catch {
       return 'unknown';
