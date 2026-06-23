@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import ClientProviders from "@/components/ClientProviders";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
@@ -75,6 +76,7 @@ export default function RootLayout({
             </Script>
           </>
         )}
+        <GoogleAnalytics gaId={GA_ID || ""} />
         <ClientProviders>
           {children}
         </ClientProviders>
