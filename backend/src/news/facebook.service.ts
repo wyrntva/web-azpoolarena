@@ -28,9 +28,23 @@ export class FacebookService {
     const stripHtml = (html: string): string => {
       if (!html) return '';
       let text = html;
+      
+      // Strip links styled as buttons (usually contain display, background, or padding in style)
+      text = text.replace(/<a\s+[^>]*style="[^"]*(display|background|padding)[^"]*"[^>]*>.*?<\/a>/gi, '');
+
       text = text.replace(/<(div|p|h[1-6]|li|br\s*\/?)>/gi, '\n');
       text = text.replace(/<\/(div|p|h[1-6]|li)>/gi, '\n');
-      text = text.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '$2 ($1)');
+      
+      // Replace standard links but avoid duplicate display text if it matches href
+      text = text.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, (match, href, linkText) => {
+        const cleanedHref = href.trim();
+        const cleanedText = linkText.replace(/<[^>]+>/g, '').trim();
+        if (cleanedText === cleanedHref || cleanedText.replace(/\/+$/, '') === cleanedHref.replace(/\/+$/, '')) {
+          return cleanedHref;
+        }
+        return `${cleanedText} (${cleanedHref})`;
+      });
+
       text = text.replace(/<[^>]+>/g, '');
       text = text.replace(/&nbsp;/g, ' ')
                  .replace(/&amp;/g, '&')
@@ -52,7 +66,7 @@ export class FacebookService {
 
     const postBody = plainContent || article.excerpt;
     const articleUrl = `${websiteUrl}/news/${article.id}`;
-    const caption = `${article.title}\n\n${postBody}\n\n🔗 ${articleUrl}`;
+    const caption = `${article.title}\n\n${postBody}`;
 
     try {
       if (article.fanpage_image) {
