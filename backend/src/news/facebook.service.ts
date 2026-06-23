@@ -66,7 +66,7 @@ export class FacebookService {
 
     const postBody = plainContent || article.excerpt;
     const articleUrl = `${websiteUrl}/news/${article.id}`;
-    const caption = `${article.title}\n\n${postBody}`;
+    const caption = postBody;
 
     try {
       if (article.fanpage_image) {
