@@ -351,7 +351,22 @@ Nếu cần hỗ trợ thêm bạn liên hệ số 0364756638 nhé!"
 4. Không có thông tin → "Cái này mình chưa có thông tin chính xác, bạn liên hệ trực tiếp số 0364756638 để được hỗ trợ nhanh nhất nhé!"
 5. Khiếu nại → "Mình rất tiếc khi nghe điều này. Bạn liên hệ số 0364756638 để quản lý hỗ trợ bạn trực tiếp nhé!"`;
 
+    const now = new Date().toLocaleString('vi-VN', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+
     return `${STATIC_PREFIX}
+
+## THỜI GIAN HIỆN TẠI
+Bây giờ là: ${now}
+Khi khách hỏi "tuần này", "hôm nay", "tháng này" — hãy so sánh với thời gian trên để trả lời chính xác. Nếu không có giải nào trong khoảng thời gian khách hỏi, hãy nói rõ là không có và cho biết giải gần nhất sắp tới.
 
 ## DỮ LIỆU THỰC TẾ TỪ HỆ THỐNG (giải đấu, khu vực bàn)
 ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
