@@ -6,7 +6,7 @@ export const LogoSection = () => {
       <div className="flex items-center justify-center mb-4">
         <div className="relative w-64 h-16">
           <Image
-            src="/images/logo.png"
+            src="/images/logo-white.png"
             alt="Pool Arena Logo"
             fill
             sizes="256px"
