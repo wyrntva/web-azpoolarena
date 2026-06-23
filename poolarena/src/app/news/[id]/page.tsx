@@ -190,6 +190,7 @@ export default function ArticleDetailPage() {
             className="object-cover"
             priority
           />
+          <div className="absolute inset-0 bg-black/15" />
         </div>
 
         {/* Content Area */}
@@ -358,6 +359,7 @@ export default function ArticleDetailPage() {
             className="object-cover object-center"
             priority
           />
+          <div className="absolute inset-0 bg-black/15" />
         </div>
 
         <div className="relative z-10 flex flex-col w-full">
