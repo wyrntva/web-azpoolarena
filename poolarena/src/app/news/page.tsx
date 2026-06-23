@@ -10,6 +10,7 @@ import NavBar from "@/components/NavBar";
 import { Footer } from "@/components/Footer";
 import { storeSettingsAPI } from "@/api/storeSettings.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
+import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -36,8 +37,6 @@ function getMessengerUrl(fbUrl: string | null | undefined): string {
   }
 }
 
-import { articles, type Article } from "./articles";
-
 const categories = ["Tất cả", "Tin tức", "Giải đấu", "Thông báo", "Hướng dẫn & Mẹo", "Khuyến mãi"];
 
 export default function NewsPage() {
@@ -52,6 +51,14 @@ export default function NewsPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: newsData, isLoading: newsLoading } = useQuery({
+    queryKey: ['news-public'],
+    queryFn: () => newsPublicAPI.getAll(1, 200).then(r => r.data),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const allArticles: NewsArticle[] = newsData?.items ?? [];
+
   const bannerUrls = parseBannerUrls(storeSettings?.banner_tournament);
 
   // Auto-rotate banners every 15 seconds
@@ -63,7 +70,7 @@ export default function NewsPage() {
     return () => clearInterval(interval);
   }, [bannerUrls.length]);
 
-  const filteredArticles = articles.filter(a => {
+  const filteredArticles = allArticles.filter(a => {
     const matchesCategory = selectedCategory === "Tất cả" || a.category === selectedCategory;
     const matchesSearch = searchQuery === "" ||
       a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,7 +80,7 @@ export default function NewsPage() {
   });
 
   const featuredArticle = filteredArticles.find(a => a.featured) || filteredArticles[0];
-  const regularArticles = filteredArticles.filter(a => a.id !== (featuredArticle?.id || ""));
+  const regularArticles = filteredArticles.filter(a => a.id !== (featuredArticle?.id ?? -1));
 
   // Pagination logic
   const [currentPage, setCurrentPage] = useState(1);
@@ -180,7 +187,11 @@ export default function NewsPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          {filteredArticles.length > 0 ? (
+          {newsLoading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary"></div>
+            </div>
+          ) : filteredArticles.length > 0 ? (
             <motion.div
               key={selectedCategory}
               initial={{ opacity: 0 }}
@@ -198,7 +209,7 @@ export default function NewsPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-12">
                     <div className="lg:col-span-7 relative h-[250px] sm:h-[350px] lg:h-[420px] overflow-hidden bg-gray-100">
                       <Image
-                        src={featuredArticle.image}
+                        src={resolveImageUrl(featuredArticle.image, '/images/logo.png')}
                         alt={featuredArticle.title}
                         fill
                         className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
@@ -267,7 +278,7 @@ export default function NewsPage() {
                       >
                         <div className="relative h-[200px] overflow-hidden bg-gray-100">
                           <Image
-                            src={art.image}
+                            src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill
                             className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"

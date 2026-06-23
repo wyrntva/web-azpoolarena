@@ -1,27 +1,19 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button, Card, Table, Modal, TextInput, Label, Textarea, Badge, Pagination, Select, ToggleSwitch } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
-import { newsAPI } from '../../api/news.api';
+import { newsAPI, type NewsArticle, type NewsPayload } from '../../api/news.api';
 import { API_BASE } from '../../constants/shared';
 import { cropImageToSize } from '../tournaments/utils/imageUtils';
 import QuillEditor from '../../components/QuillEditor';
 
-export interface Article {
-  id: string;
-  title: string;
-  category: string;
-  date: string;
-  author: string;
-  image: string;
-  excerpt: string;
-  content: string[];
-  featured?: boolean;
-}
-
 const CATEGORIES = ['Tin tức', 'Giải đấu', 'Thông báo', 'Hướng dẫn & Mẹo', 'Khuyến mãi'];
 const IMAGE_W = 1920;
 const IMAGE_H = 450;
+const PAGE_SIZE = 10;
+
+const FB_IMAGE_W = 1200;
+const FB_IMAGE_H = 630;
 
 const emptyForm = {
   title: '',
@@ -33,32 +25,58 @@ const emptyForm = {
   excerpt: '',
   contentHtml: '',
   featured: false,
+  postToFanpage: false,
+  fanpageImageUrl: '',
 };
 
 type FormState = typeof emptyForm;
 
-const PAGE_SIZE = 10;
-
 const News = () => {
-  const [articles, setArticles] = useState<Article[]>([]);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [imageUploading, setImageUploading] = useState(false);
+  const [fanpageImageUploading, setFanpageImageUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fanpageFileInputRef = useRef<HTMLInputElement>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filtered = articles.filter(
-    (a) =>
-      a.title.toLowerCase().includes(search.toLowerCase()) ||
-      a.excerpt.toLowerCase().includes(search.toLowerCase()),
-  );
+  const fetchArticles = useCallback(async (page: number, q: string) => {
+    setLoading(true);
+    try {
+      const res = await newsAPI.getAll(page, PAGE_SIZE, q);
+      setArticles(res.data.items);
+      setTotal(res.data.total);
+    } catch {
+      toast.error('Không thể tải danh sách bài viết');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  useEffect(() => {
+    fetchArticles(currentPage, search);
+  }, [currentPage, search, fetchArticles]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      setSearch(value);
+      setCurrentPage(1);
+    }, 400);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const openCreate = () => {
     setEditingId(null);
@@ -66,7 +84,7 @@ const News = () => {
     setModalOpen(true);
   };
 
-  const openEdit = (article: Article) => {
+  const openEdit = (article: NewsArticle) => {
     setEditingId(article.id);
     setForm({
       title: article.title,
@@ -78,11 +96,13 @@ const News = () => {
       excerpt: article.excerpt,
       contentHtml: Array.isArray(article.content) ? article.content.join('\n') : (article.content || ''),
       featured: !!article.featured,
+      postToFanpage: !!article.fanpage_image,
+      fanpageImageUrl: article.fanpage_image || '',
     });
     setModalOpen(true);
   };
 
-  const openDelete = (id: string) => {
+  const openDelete = (id: number) => {
     setDeletingId(id);
     setDeleteModalOpen(true);
   };
@@ -111,13 +131,35 @@ const News = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSave = () => {
+  const handleFanpageImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setFanpageImageUploading(true);
+    try {
+      const url = await newsAPI.uploadImage(file);
+      setForm((f) => ({ ...f, fanpageImageUrl: url }));
+      toast.success('Đã tải ảnh fanpage lên');
+    } catch {
+      toast.error('Tải ảnh fanpage thất bại');
+    } finally {
+      setFanpageImageUploading(false);
+    }
+  };
+
+  const handleRemoveFanpageImage = () => {
+    setForm((f) => ({ ...f, fanpageImageUrl: '' }));
+    if (fanpageFileInputRef.current) fanpageFileInputRef.current.value = '';
+  };
+
+  const handleSave = async () => {
     if (!form.title.trim()) { toast.error('Vui lòng nhập tiêu đề'); return; }
     if (!form.author.trim()) { toast.error('Vui lòng nhập tác giả'); return; }
     if (!form.excerpt.trim()) { toast.error('Vui lòng nhập mô tả ngắn'); return; }
     if (!form.contentHtml.trim()) { toast.error('Vui lòng nhập nội dung bài viết'); return; }
 
-    const articleData = {
+    const payload: NewsPayload = {
       title: form.title,
       category: form.category,
       date: form.date,
@@ -126,26 +168,41 @@ const News = () => {
       excerpt: form.excerpt,
       content: [form.contentHtml],
       featured: form.featured,
+      fanpage_image: form.postToFanpage ? form.fanpageImageUrl : '',
+      post_to_fanpage: form.postToFanpage,
     };
 
-    if (editingId !== null) {
-      setArticles((prev) =>
-        prev.map((a) => a.id === editingId ? { ...a, ...articleData } : a),
-      );
-      toast.success('Đã cập nhật bài viết');
-    } else {
-      setArticles((prev) => [{ id: String(Date.now()), ...articleData }, ...prev]);
-      toast.success('Đã thêm bài viết');
+    setSaving(true);
+    try {
+      if (editingId !== null) {
+        await newsAPI.update(editingId, payload);
+        toast.success('Đã cập nhật bài viết');
+      } else {
+        await newsAPI.create(payload);
+        toast.success('Đã thêm bài viết');
+      }
+      setModalOpen(false);
+      fetchArticles(currentPage, search);
+    } catch {
+      toast.error('Lưu bài viết thất bại');
+    } finally {
+      setSaving(false);
     }
-    setModalOpen(false);
   };
 
-  const handleDelete = () => {
-    if (deletingId !== null) {
-      setArticles((prev) => prev.filter((a) => a.id !== deletingId));
+  const handleDelete = async () => {
+    if (deletingId === null) return;
+    try {
+      await newsAPI.delete(deletingId);
       toast.success('Đã xóa bài viết');
+      setDeleteModalOpen(false);
+      const newPage = articles.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
+      setCurrentPage(newPage);
+      fetchArticles(newPage, search);
+    } catch {
+      toast.error('Xóa bài viết thất bại');
+      setDeleteModalOpen(false);
     }
-    setDeleteModalOpen(false);
   };
 
   const resolvedPreview = form.imageUrl
@@ -180,8 +237,8 @@ const News = () => {
             <TextInput
               type="text"
               placeholder="Tìm kiếm bài viết..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
               icon={() => <Icon icon="solar:magnifer-outline" />}
               className="w-full md:w-auto"
             />
@@ -201,14 +258,22 @@ const News = () => {
               <Table.HeadCell className="text-center">HÀNH ĐỘNG</Table.HeadCell>
             </Table.Head>
             <Table.Body className="divide-y">
-              {paginated.length === 0 ? (
+              {loading ? (
+                <Table.Row>
+                  <Table.Cell colSpan={7} className="text-center py-10">
+                    <div className="flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C6010B]"></div>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ) : articles.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={7} className="text-center py-10 text-gray-500 dark:text-gray-400">
                     {search ? 'Không tìm thấy kết quả' : 'Chưa có bài viết nào'}
                   </Table.Cell>
                 </Table.Row>
               ) : (
-                paginated.map((article, index) => (
+                articles.map((article, index) => (
                   <Table.Row key={article.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
                     <Table.Cell className="text-center text-[#37393E] dark:text-white/80">
                       {(currentPage - 1) * PAGE_SIZE + index + 1}
@@ -244,7 +309,7 @@ const News = () => {
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t dark:border-gray-700">
           <span className="text-sm text-[#37393E] dark:text-white/80">
-            Hiển thị {filtered.length} / {articles.length} bài viết
+            Hiển thị {articles.length} / {total} bài viết
             {search && ` (tìm kiếm: "${search}")`}
           </span>
           {totalPages > 1 && (
@@ -357,6 +422,79 @@ const News = () => {
               </div>
             </div>
 
+            {/* Post to Fanpage */}
+            <div className="border border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-blue-50 dark:bg-blue-950/30">
+              <div className="flex items-center gap-3 mb-1">
+                <ToggleSwitch
+                  checked={form.postToFanpage}
+                  label=""
+                  onChange={(val) => setForm((f) => ({ ...f, postToFanpage: val }))}
+                />
+                <div className="flex items-center gap-2">
+                  <Icon icon="logos:facebook" className="text-xl" />
+                  <span className="font-medium text-[#37393E] dark:text-white">Đăng fanpage</span>
+                </div>
+              </div>
+
+              {form.postToFanpage && (
+                <div className="mt-3">
+                  <Label value={`Ảnh bài đăng Facebook (${FB_IMAGE_W}×${FB_IMAGE_H}px)`} />
+                  <div className="mt-1 flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        ref={fanpageFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        id="n-fanpage-image-input"
+                        className="hidden"
+                        onChange={handleFanpageImageSelect}
+                      />
+                      <Button
+                        type="button"
+                        color="light"
+                        size="sm"
+                        disabled={fanpageImageUploading}
+                        onClick={() => document.getElementById('n-fanpage-image-input')?.click()}
+                      >
+                        {fanpageImageUploading ? (
+                          <>
+                            <Icon icon="solar:refresh-circle-outline" className="mr-2 h-4 w-4 animate-spin" />
+                            Đang tải lên...
+                          </>
+                        ) : (
+                          <>
+                            <Icon icon="solar:gallery-outline" className="mr-2 h-4 w-4" />
+                            Chọn ảnh Facebook
+                          </>
+                        )}
+                      </Button>
+                      {form.fanpageImageUrl && (
+                        <Button type="button" color="failure" size="sm" onClick={handleRemoveFanpageImage}>
+                          <Icon icon="solar:trash-bin-minimalistic-outline" className="mr-2 h-4 w-4" />
+                          Xóa ảnh
+                        </Button>
+                      )}
+                      <span className="text-xs text-gray-400">Khuyến nghị {FB_IMAGE_W}×{FB_IMAGE_H}px</span>
+                    </div>
+
+                    {form.fanpageImageUrl && (
+                      <div
+                        className="w-full overflow-hidden rounded border border-blue-300 dark:border-blue-700 bg-gray-50 dark:bg-gray-800"
+                        style={{ aspectRatio: `${FB_IMAGE_W} / ${FB_IMAGE_H}` }}
+                      >
+                        <img
+                          src={form.fanpageImageUrl.startsWith('http') ? form.fanpageImageUrl : `${API_BASE}${form.fanpageImageUrl}`}
+                          alt="Facebook preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Excerpt */}
             <div>
               <Label htmlFor="n-excerpt" value="Mô tả ngắn (excerpt) *" />
@@ -392,7 +530,9 @@ const News = () => {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button color="primary" onClick={handleSave} disabled={imageUploading}>Lưu</Button>
+          <Button color="primary" onClick={handleSave} disabled={imageUploading || saving}>
+            {saving ? 'Đang lưu...' : 'Lưu'}
+          </Button>
           <Button color="gray" onClick={() => setModalOpen(false)}>Hủy</Button>
         </Modal.Footer>
       </Modal>

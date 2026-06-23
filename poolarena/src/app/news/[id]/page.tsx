@@ -10,7 +10,7 @@ import NavBar from "@/components/NavBar";
 import { Footer } from "@/components/Footer";
 import { storeSettingsAPI } from "@/api/storeSettings.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
-import { articles } from "../articles";
+import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -49,8 +49,22 @@ function getHeaderTitle(category: string): string {
 export default function ArticleDetailPage() {
   const params = useParams();
   const id = params?.id as string;
-  const article = articles.find((a) => a.id === id);
-  const related = articles.filter((a) => a.id !== id).slice(0, 5);
+  const numericId = parseInt(id, 10);
+
+  const { data: article, isLoading: articleLoading } = useQuery({
+    queryKey: ['news-article', numericId],
+    queryFn: () => newsPublicAPI.getOne(numericId).then(r => r.data),
+    enabled: !isNaN(numericId),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const { data: newsData } = useQuery({
+    queryKey: ['news-public'],
+    queryFn: () => newsPublicAPI.getAll(1, 200).then(r => r.data),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const related: NewsArticle[] = (newsData?.items ?? []).filter((a) => a.id !== numericId).slice(0, 5);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCards, setVisibleCards] = useState(3);
@@ -111,6 +125,18 @@ export default function ArticleDetailPage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  if (articleLoading) {
+    return (
+      <div className="min-h-screen bg-[#F0F2F4] flex flex-col font-sans">
+        <NavBar />
+        <main className="flex-1 flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary"></div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!article) {
     return (
       <div className="min-h-screen bg-[#F0F2F4] flex flex-col font-sans">
@@ -148,7 +174,7 @@ export default function ArticleDetailPage() {
         {/* Banner Image */}
         <div className="relative w-full h-[180px] bg-gray-200 overflow-hidden">
           <Image
-            src={article.image}
+            src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
             sizes="100vw"
@@ -260,7 +286,7 @@ export default function ArticleDetailPage() {
                     >
                       <div className="relative h-[150px] w-full overflow-hidden bg-gray-100">
                         <Image
-                          src={art.image}
+                          src={resolveImageUrl(art.image, '/images/logo.png')}
                           alt={art.title}
                           fill
                           className="object-cover"
@@ -315,7 +341,7 @@ export default function ArticleDetailPage() {
         {/* Banner Background */}
         <div className="absolute top-0 left-0 w-full h-[450px] bg-[#172339] overflow-hidden">
           <Image
-            src={article.image}
+            src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
             className="object-cover object-center"
@@ -435,7 +461,7 @@ export default function ArticleDetailPage() {
                       >
                         <div className="relative h-[200px] overflow-hidden bg-gray-100">
                           <Image
-                            src={art.image}
+                            src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill
                             className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
