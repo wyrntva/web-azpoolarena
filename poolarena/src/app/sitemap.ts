@@ -29,8 +29,25 @@ async function fetchUsers(): Promise<{ id: number; updated_at?: string }[]> {
   }
 }
 
+async function fetchNewsArticles(): Promise<{ id: number; updated_at?: string }[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/news`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data?.items) ? data.items : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [tournaments, users] = await Promise.all([fetchTournaments(), fetchUsers()]);
+  const [tournaments, users, articles] = await Promise.all([
+    fetchTournaments(),
+    fetchUsers(),
+    fetchNewsArticles(),
+  ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -47,6 +64,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${SITE_URL}/rankings`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/news`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
@@ -99,5 +122,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...tournamentRoutes, ...playerRoutes];
+  const newsRoutes: MetadataRoute.Sitemap = articles.map((a) => ({
+    url: `${SITE_URL}/news/${a.id}`,
+    lastModified: a.updated_at ? new Date(a.updated_at) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...tournamentRoutes, ...playerRoutes, ...newsRoutes];
 }
