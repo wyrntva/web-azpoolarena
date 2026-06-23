@@ -553,11 +553,17 @@ body {
   background: #a50009 !important;
 }
 
-/* Make images in news article body 40% smaller and center them */
+/* Make images in news article body full-width on mobile, 60% on desktop, and center them */
 .news-content img {
-  max-width: 60% !important;
+  max-width: 100% !important;
   height: auto !important;
   display: block;
   margin-left: auto !important;
   margin-right: auto !important;
+}
+
+@media (min-width: 640px) {
+  .news-content img {
+    max-width: 60% !important;
+  }
 }
