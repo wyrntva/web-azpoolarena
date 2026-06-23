@@ -196,7 +196,7 @@ export default function TournamentsPage() {
     <div className="min-h-screen bg-[#F0F2F4]">
       <NavBar />
 
-      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pb-20 sm:pb-0">
+      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pb-[100px]">
         {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
         {bannerUrls.length > 0 && (
           <div
@@ -212,7 +212,7 @@ export default function TournamentsPage() {
                   src={url}
                   alt={`Tournament Banner ${index + 1}`}
                   fill
-                  sizes="(max-width: 640px) 361px, (max-width: 1024px) 90vw, 1360px"
+                  unoptimized
                   className="object-cover"
                   priority={index === 0}
                 />

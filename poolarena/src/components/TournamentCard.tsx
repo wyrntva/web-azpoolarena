@@ -62,7 +62,7 @@ const TournamentCard = memo(function TournamentCard({
           src={imgSrc}
           alt={tournament.title}
           fill
-          sizes="(max-width: 640px) 100vw, 439px"
+          unoptimized
           className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
           priority
           onError={() => setImgSrc("/images/tournament.webp")}

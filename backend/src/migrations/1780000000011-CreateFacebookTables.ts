@@ -70,8 +70,12 @@ export class CreateFacebookTables1780000000011 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_fb_messages_created_at"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_fb_messages_customer_id"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_fb_messages_created_at"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_fb_messages_customer_id"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "fb_messages"`);
 
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_fb_customers_psid"`);

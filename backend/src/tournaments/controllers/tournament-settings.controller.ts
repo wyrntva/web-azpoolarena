@@ -20,51 +20,73 @@ export class TournamentSettingsController {
 
   // Ranks
   @Get('ranks')
-  async getRanks() { return this.service.getRanks(); }
+  async getRanks() {
+    return this.service.getRanks();
+  }
 
   @Get('ranks/:id')
-  async getRank(@Param('id', ParseIntPipe) id: number) { return this.service.getRank(id); }
+  async getRank(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getRank(id);
+  }
 
   @Post('ranks')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async createRank(@Body() dto: any) { return this.service.createRank(dto); }
+  async createRank(@Body() dto: any) {
+    return this.service.createRank(dto);
+  }
 
   @Put('ranks/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async updateRank(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateRank(id, dto); }
+  async updateRank(@Param('id', ParseIntPipe) id: number, @Body() dto: any) {
+    return this.service.updateRank(id, dto);
+  }
 
   @Delete('ranks/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async deleteRank(@Param('id', ParseIntPipe) id: number) { return this.service.deleteRank(id); }
+  async deleteRank(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteRank(id);
+  }
 
   // Rounds
   @Get('rounds')
-  async getRounds() { return this.service.getRounds(); }
+  async getRounds() {
+    return this.service.getRounds();
+  }
 
   @Get('rounds/:id')
-  async getRound(@Param('id', ParseIntPipe) id: number) { return this.service.getRound(id); }
+  async getRound(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getRound(id);
+  }
 
   @Post('rounds')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async createRound(@Body() dto: any) { return this.service.createRound(dto); }
+  async createRound(@Body() dto: any) {
+    return this.service.createRound(dto);
+  }
 
   @Put('rounds/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async updateRound(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateRound(id, dto); }
+  async updateRound(@Param('id', ParseIntPipe) id: number, @Body() dto: any) {
+    return this.service.updateRound(id, dto);
+  }
 
   @Delete('rounds/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async deleteRound(@Param('id', ParseIntPipe) id: number) { return this.service.deleteRound(id); }
+  async deleteRound(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteRound(id);
+  }
 
   // Scoring Rules
   @Get('scoring-rules')
-  async getScoringRules() { return this.service.getScoringRules(); }
+  async getScoringRules() {
+    return this.service.getScoringRules();
+  }
 
   @Get('scoring-rules/matrix')
   async getRatingMatrix() {
@@ -79,51 +101,81 @@ export class TournamentSettingsController {
   }
 
   @Get('scoring-rules/:id')
-  async getScoringRule(@Param('id', ParseIntPipe) id: number) { return this.service.getScoringRule(id); }
+  async getScoringRule(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getScoringRule(id);
+  }
 
   @Post('scoring-rules')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async createScoringRule(@Body() dto: any) { return this.service.createScoringRule(dto); }
+  async createScoringRule(@Body() dto: any) {
+    return this.service.createScoringRule(dto);
+  }
 
   @Put('scoring-rules/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async updateScoringRule(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateScoringRule(id, dto); }
+  async updateScoringRule(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: any,
+  ) {
+    return this.service.updateScoringRule(id, dto);
+  }
 
   @Delete('scoring-rules/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async deleteScoringRule(@Param('id', ParseIntPipe) id: number) { return this.service.deleteScoringRule(id); }
+  async deleteScoringRule(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteScoringRule(id);
+  }
 
   // Table fee
   @Get('table-fee')
-  async getTableFee() { return this.service.getTableFee(); }
+  async getTableFee() {
+    return this.service.getTableFee();
+  }
 
   @Post('table-fee')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async saveTableFee(@Body() dto: { price: number; per_minutes: number; surcharge?: number }) { return this.service.saveTableFee(dto); }
+  async saveTableFee(
+    @Body() dto: { price: number; per_minutes: number; surcharge?: number },
+  ) {
+    return this.service.saveTableFee(dto);
+  }
 
   // Coefficients
   @Get('coefficients')
-  async getCoefficients() { return this.service.getCoefficients(); }
+  async getCoefficients() {
+    return this.service.getCoefficients();
+  }
 
   @Get('coefficients/:id')
-  async getCoefficient(@Param('id', ParseIntPipe) id: number) { return this.service.getCoefficient(id); }
+  async getCoefficient(@Param('id', ParseIntPipe) id: number) {
+    return this.service.getCoefficient(id);
+  }
 
   @Post('coefficients')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async createCoefficient(@Body() dto: any) { return this.service.createCoefficient(dto); }
+  async createCoefficient(@Body() dto: any) {
+    return this.service.createCoefficient(dto);
+  }
 
   @Put('coefficients/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async updateCoefficient(@Param('id', ParseIntPipe) id: number, @Body() dto: any) { return this.service.updateCoefficient(id, dto); }
+  async updateCoefficient(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: any,
+  ) {
+    return this.service.updateCoefficient(id, dto);
+  }
 
   @Delete('coefficients/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async deleteCoefficient(@Param('id', ParseIntPipe) id: number) { return this.service.deleteCoefficient(id); }
+  async deleteCoefficient(@Param('id', ParseIntPipe) id: number) {
+    return this.service.deleteCoefficient(id);
+  }
 }

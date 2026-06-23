@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { storeSettingsAPI } from "@/api/storeSettings.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
 import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
+import { newsHref } from "@/lib/news-utils";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -116,7 +117,7 @@ export default function NewsPage() {
                   src={url}
                   alt={`Tournament Banner ${index + 1}`}
                   fill
-                  sizes="(max-width: 640px) 361px, (max-width: 1024px) 90vw, 1360px"
+                  unoptimized
                   className="object-cover"
                   priority={index === 0}
                 />
@@ -202,7 +203,7 @@ export default function NewsPage() {
             >
               {featuredArticle && (
                 <Link
-                  href={`/news/${featuredArticle.id}`}
+                  href={newsHref(featuredArticle.id, featuredArticle.title)}
                   className="block bg-white rounded-3xl overflow-hidden shadow-[0_15px_45px_rgba(23,35,57,0.04)] border border-gray-100 hover:shadow-[0_20px_50px_rgba(23,35,57,0.08)] transition-all duration-300 cursor-pointer group animate-slideInFromLeft"
                   style={{ animationDelay: '0ms', animationFillMode: 'backwards' }}
                 >
@@ -212,8 +213,8 @@ export default function NewsPage() {
                         src={resolveImageUrl(featuredArticle.image, '/images/logo.png')}
                         alt={featuredArticle.title}
                         fill
+                        unoptimized
                         className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
-                        sizes="(max-width: 1024px) 100vw, 60vw"
                         priority
                       />
                       {/* Dark Overlay matching TournamentCard */}
@@ -269,7 +270,7 @@ export default function NewsPage() {
                     {paginatedArticles.map((art, idx) => (
                       <Link
                         key={art.id}
-                        href={`/news/${art.id}`}
+                        href={newsHref(art.id, art.title)}
                         className="bg-white rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(23,35,57,0.03)] border border-gray-100/80 hover:shadow-[0_15px_40px_rgba(23,35,57,0.07)] transition-all duration-300 cursor-pointer group flex flex-col h-full animate-slideInFromLeft"
                         style={{
                           animationDelay: `${Math.min((idx + (featuredArticle ? 1 : 0)) * 80, 1600)}ms`,
@@ -281,8 +282,8 @@ export default function NewsPage() {
                             src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill
+                            unoptimized
                             className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                           />
                           {/* Dark Overlay matching TournamentCard */}
                           <div className="absolute inset-0 bg-black/40"></div>

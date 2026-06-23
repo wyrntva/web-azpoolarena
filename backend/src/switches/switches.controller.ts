@@ -44,15 +44,22 @@ export class SwitchesController {
 
   /** Lắng nghe bản tin qua MQTT siêu tốc từ Master ESP */
   @MessagePattern('azpool/master_esp/report')
-  async handleScoreboardReport(@Payload() data: { table_name: string; is_active: boolean }) {
+  async handleScoreboardReport(
+    @Payload() data: { table_name: string; is_active: boolean },
+  ) {
     if (data && data.table_name !== undefined && data.is_active !== undefined) {
-      await this.switchesService.updateStatusByReport(data.table_name, data.is_active);
+      await this.switchesService.updateStatusByReport(
+        data.table_name,
+        data.is_active,
+      );
     }
   }
 
   /** Lắng nghe bản tin thiết bị Cắm-Là-Chạy (Auto Discovery) */
   @MessagePattern('azpool/master_esp/discovery')
-  async handleDeviceDiscovery(@Payload() data: { name: string; switch_type: string; is_active?: boolean }) {
+  async handleDeviceDiscovery(
+    @Payload() data: { name: string; switch_type: string; is_active?: boolean },
+  ) {
     await this.switchesService.handleDiscovery(data);
   }
 }

@@ -29,7 +29,12 @@ export class AuthController {
       req.headers['x-forwarded-for']?.split(',')[0]?.trim() ??
       req.socket?.remoteAddress ??
       null;
-    return this.authService.login(dto.username, dto.password, ip, userAgent ?? null);
+    return this.authService.login(
+      dto.username,
+      dto.password,
+      ip,
+      userAgent ?? null,
+    );
   }
 
   @Post('pos-login')

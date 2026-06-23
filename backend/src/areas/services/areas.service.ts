@@ -270,8 +270,7 @@ export class AreasService {
     if (dto.device_id) table.device_id = dto.device_id.substring(0, 100);
     if (dto.device_app_version)
       table.device_app_version = dto.device_app_version.substring(0, 20);
-    if (dto.device_ip)
-      table.device_ip = dto.device_ip.substring(0, 50);
+    if (dto.device_ip) table.device_ip = dto.device_ip.substring(0, 50);
     table.device_activated_at = new Date();
 
     await this.tableRepo.save(table);
@@ -323,13 +322,14 @@ export class AreasService {
     if (
       (dto.device_ip && table.device_ip !== dto.device_ip) ||
       (dto.device_mac && table.device_mac !== dto.device_mac) ||
-      (dto.device_app_version && table.device_app_version !== dto.device_app_version)
+      (dto.device_app_version &&
+        table.device_app_version !== dto.device_app_version)
     ) {
       if (dto.device_ip) table.device_ip = dto.device_ip.substring(0, 50);
       if (dto.device_mac) table.device_mac = dto.device_mac.substring(0, 50);
       if (dto.device_app_version)
         table.device_app_version = dto.device_app_version.substring(0, 20);
-        
+
       await this.tableRepo.save(table);
     }
 

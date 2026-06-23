@@ -49,11 +49,11 @@ export class SwitchSchedulerService {
         // Độc lập
         if (sw.schedule_on) {
           const [onH, onM] = sw.schedule_on.split(':').map(Number);
-          shouldTriggerOn = currentMinutes >= (onH * 60 + onM);
+          shouldTriggerOn = currentMinutes >= onH * 60 + onM;
         }
         if (sw.schedule_off) {
           const [offH, offM] = sw.schedule_off.split(':').map(Number);
-          shouldTriggerOff = currentMinutes >= (offH * 60 + offM);
+          shouldTriggerOff = currentMinutes >= offH * 60 + offM;
         }
 
         // Nếu có CẢ HAI, áp dụng logic khoảng thời gian
@@ -64,12 +64,15 @@ export class SwitchSchedulerService {
           const offMinutes = offH * 60 + offM;
 
           if (onMinutes < offMinutes) {
-            shouldTriggerOn = currentMinutes >= onMinutes && currentMinutes < offMinutes;
+            shouldTriggerOn =
+              currentMinutes >= onMinutes && currentMinutes < offMinutes;
             shouldTriggerOff = currentMinutes >= offMinutes;
           } else {
             // Overnight: e.g., on=18:00 off=06:00
-            shouldTriggerOn = currentMinutes >= onMinutes || currentMinutes < offMinutes;
-            shouldTriggerOff = currentMinutes >= offMinutes && currentMinutes < onMinutes;
+            shouldTriggerOn =
+              currentMinutes >= onMinutes || currentMinutes < offMinutes;
+            shouldTriggerOff =
+              currentMinutes >= offMinutes && currentMinutes < onMinutes;
           }
         }
 

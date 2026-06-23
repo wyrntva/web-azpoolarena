@@ -177,7 +177,7 @@ export default function TournamentRankingsPage() {
                         src={bannerSrc}
                         alt={tournament?.name || "Tournament Banner"}
                         fill
-                        sizes="100vw"
+                        unoptimized
                         className="object-cover"
                         priority
                         onError={() => setBannerSrc('/images/tour_banner.webp')}

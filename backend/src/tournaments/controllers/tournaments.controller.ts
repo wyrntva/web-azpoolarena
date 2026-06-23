@@ -63,7 +63,8 @@ export class TournamentsController {
       storage: diskStorage({
         destination: './uploads/tournaments',
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
           const imageType = (req.query.image_type as string) || 'image';
           cb(null, `tournament-${imageType}-${uniqueSuffix}${ext}`);
@@ -135,7 +136,8 @@ export class TournamentsController {
     @Query('image_type') imageType: string,
     @Query('sponsor_index') sponsorIndex?: string,
   ) {
-    const idx = sponsorIndex !== undefined ? parseInt(sponsorIndex, 10) : undefined;
+    const idx =
+      sponsorIndex !== undefined ? parseInt(sponsorIndex, 10) : undefined;
     return this.service.removeImage(id, imageType, idx);
   }
 
@@ -155,19 +157,25 @@ export class TournamentsController {
   liveMatches(@Param('id', ParseIntPipe) id: number) {
     return this.service.getMatchUpdatesStream().pipe(
       filter((event) => event.tournamentId === id),
-      map((event) => ({
-        data: event.match,
-      } as MessageEvent)),
+      map(
+        (event) =>
+          ({
+            data: event.match,
+          }) as MessageEvent,
+      ),
     );
   }
 
   @Sse(':id/payment/live')
   @Header('X-Accel-Buffering', 'no')
   @Header('Cache-Control', 'no-cache')
-  livePayment(@Param('id', ParseIntPipe) id: number, @Query('userId', ParseIntPipe) userId: number) {
+  livePayment(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('userId', ParseIntPipe) userId: number,
+  ) {
     return this.service.getPaymentStream().pipe(
       filter((event) => event.tournamentId === id && event.userId === userId),
-      map(() => ({ data: { success: true } } as MessageEvent)),
+      map(() => ({ data: { success: true } }) as MessageEvent),
     );
   }
 
@@ -208,13 +216,23 @@ export class TournamentsController {
 
   // ==== DEVICE API ==== //
 
-  private readonly liveScores = new Map<string, { table_name: string; mode: string; players: any[]; updated_at: string }>();
+  private readonly liveScores = new Map<
+    string,
+    { table_name: string; mode: string; players: any[]; updated_at: string }
+  >();
 
   @Put('device/live-score')
-  updateLiveScore(@Body() body: { table_name: string; mode: string; players: any[] }) {
+  updateLiveScore(
+    @Body() body: { table_name: string; mode: string; players: any[] },
+  ) {
     const { table_name, mode, players } = body ?? {};
     if (!table_name) return { ok: false, error: 'table_name required' };
-    this.liveScores.set(table_name, { table_name, mode, players: players ?? [], updated_at: new Date().toISOString() });
+    this.liveScores.set(table_name, {
+      table_name,
+      mode,
+      players: players ?? [],
+      updated_at: new Date().toISOString(),
+    });
     return { ok: true };
   }
 
@@ -223,13 +241,16 @@ export class TournamentsController {
     const STALE_MS = 15 * 60 * 1000;
     const now = Date.now();
     const isStale = (entry: { players: any[]; updated_at: string }) =>
-      !entry.players?.length || now - new Date(entry.updated_at).getTime() > STALE_MS;
+      !entry.players?.length ||
+      now - new Date(entry.updated_at).getTime() > STALE_MS;
     if (tableName) {
       const entry = this.liveScores.get(tableName);
       if (entry && !isStale(entry)) {
         return entry;
       }
-      const table = await this.tableRepo.findOne({ where: { name: tableName } });
+      const table = await this.tableRepo.findOne({
+        where: { name: tableName },
+      });
       if (!table) return null;
       return {
         table_name: table.name,
@@ -323,7 +344,10 @@ export class TournamentsController {
     try {
       return await this.service.getTournamentPayments(id);
     } catch (err) {
-      this.logger.error(`getTournamentPayments(${id}) failed: ${err?.message}`, err?.stack);
+      this.logger.error(
+        `getTournamentPayments(${id}) failed: ${err?.message}`,
+        err?.stack,
+      );
       throw new InternalServerErrorException(err?.message ?? 'Unknown error');
     }
   }
@@ -331,13 +355,14 @@ export class TournamentsController {
   @Post('table-fee-payment/:paymentId/pay-cash')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'Super Admin')
-  async payTableFeeCash(
-    @Param('paymentId', ParseIntPipe) paymentId: number,
-  ) {
+  async payTableFeeCash(@Param('paymentId', ParseIntPipe) paymentId: number) {
     try {
       return await this.service.payTableFeeCash(paymentId);
     } catch (err) {
-      this.logger.error(`payTableFeeCash(${paymentId}) failed: ${err?.message}`, err?.stack);
+      this.logger.error(
+        `payTableFeeCash(${paymentId}) failed: ${err?.message}`,
+        err?.stack,
+      );
       throw new InternalServerErrorException(err?.message ?? 'Unknown error');
     }
   }

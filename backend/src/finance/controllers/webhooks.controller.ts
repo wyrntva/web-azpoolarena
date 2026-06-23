@@ -26,7 +26,9 @@ export class WebhooksController {
   private sortKeysDeep(obj: any): any {
     if (Array.isArray(obj)) return obj.map((i) => this.sortKeysDeep(i));
     if (obj !== null && typeof obj === 'object') {
-      return Object.keys(obj).sort().reduce((acc, k) => ({ ...acc, [k]: this.sortKeysDeep(obj[k]) }), {});
+      return Object.keys(obj)
+        .sort()
+        .reduce((acc, k) => ({ ...acc, [k]: this.sortKeysDeep(obj[k]) }), {});
     }
     return obj;
   }
@@ -50,7 +52,8 @@ export class WebhooksController {
       const parts: Record<string, string> = {};
       cassoSignature.split(',').forEach((part) => {
         const idx = part.indexOf('=');
-        if (idx > 0) parts[part.slice(0, idx).trim()] = part.slice(idx + 1).trim();
+        if (idx > 0)
+          parts[part.slice(0, idx).trim()] = part.slice(idx + 1).trim();
       });
       const timestamp = parts['t'];
       const v1 = parts['v1'];
@@ -61,14 +64,19 @@ export class WebhooksController {
         const sortedJson = JSON.stringify(sortedPayload);
         const signedPayload = `${timestamp}.${sortedJson}`;
 
-        const sha512sig = crypto.createHmac('sha512', secureToken).update(signedPayload).digest('hex');
+        const sha512sig = crypto
+          .createHmac('sha512', secureToken)
+          .update(signedPayload)
+          .digest('hex');
         isValid = sha512sig === v1;
       }
     }
 
     if (!isValid) {
       if (isDev) {
-        this.logger.warn(`[DEV BYPASS] Casso signature check failed. Bypassing.`);
+        this.logger.warn(
+          `[DEV BYPASS] Casso signature check failed. Bypassing.`,
+        );
       } else {
         this.logger.warn(
           `Unauthorized webhook: invalid Casso signature. Headers: ${JSON.stringify(headers)}`,
@@ -77,12 +85,16 @@ export class WebhooksController {
       }
     }
 
-    this.logger.log(`Received Casso webhook payload: ${JSON.stringify(payload)}`);
+    this.logger.log(
+      `Received Casso webhook payload: ${JSON.stringify(payload)}`,
+    );
 
     // Casso có thể gửi data dạng array hoặc single object
     const transactions = Array.isArray(payload.data)
       ? payload.data
-      : payload.data ? [payload.data] : [];
+      : payload.data
+        ? [payload.data]
+        : [];
 
     this.logger.log(`Processing ${transactions.length} transactions.`);
 
@@ -99,7 +111,9 @@ export class WebhooksController {
           );
           try {
             await this.tournamentsService.redeemPaymentCode(code, tx.amount);
-            this.logger.log(`Successfully redeemed registration code ${code} via Webhook.`);
+            this.logger.log(
+              `Successfully redeemed registration code ${code} via Webhook.`,
+            );
           } catch (error) {
             this.logger.error(
               `Failed to redeem registration code ${code} for TxID ${tx.tid}: ${error.message}`,
@@ -118,7 +132,9 @@ export class WebhooksController {
           );
           try {
             await this.tournamentsService.redeemTableFeePayment(code);
-            this.logger.log(`Successfully redeemed table fee code ${code} via Webhook.`);
+            this.logger.log(
+              `Successfully redeemed table fee code ${code} via Webhook.`,
+            );
           } catch (error) {
             this.logger.error(
               `Failed to redeem table fee code ${code} for TxID ${tx.tid}: ${error.message}`,
@@ -128,7 +144,9 @@ export class WebhooksController {
           continue;
         }
 
-        this.logger.log(`Transaction ignored (non-matching description): "${tx.description}"`);
+        this.logger.log(
+          `Transaction ignored (non-matching description): "${tx.description}"`,
+        );
       }
     }
 

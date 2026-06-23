@@ -63,7 +63,8 @@ export class PoolArenaAuthService {
     } catch {
       throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn');
     }
-    if (payload.user_type !== 'pool_arena') throw new UnauthorizedException('Token không hợp lệ');
+    if (payload.user_type !== 'pool_arena')
+      throw new UnauthorizedException('Token không hợp lệ');
     return parseInt(payload.sub, 10);
   }
 
@@ -117,7 +118,9 @@ export class PoolArenaAuthService {
 
     const userRank = data.rank || 'K';
     let defaultPoints = 0;
-    const rankEntity = await this.rankRepo.findOne({ where: { name: userRank } });
+    const rankEntity = await this.rankRepo.findOne({
+      where: { name: userRank },
+    });
     if (rankEntity) {
       defaultPoints = rankEntity.default_score;
     }
@@ -141,13 +144,19 @@ export class PoolArenaAuthService {
   async getMe(auth: string) {
     const userId = this.verifyToken(auth);
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user || !user.is_active) throw new UnauthorizedException('Không tìm thấy người dùng');
+    if (!user || !user.is_active)
+      throw new UnauthorizedException('Không tìm thấy người dùng');
 
     try {
-      const { TournamentRegistrationEntity } = require('../../tournaments/entities');
-      const count = await this.userRepo.manager.count(TournamentRegistrationEntity, {
-        where: { user_id: userId }
-      });
+      const {
+        TournamentRegistrationEntity,
+      } = require('../../tournaments/entities');
+      const count = await this.userRepo.manager.count(
+        TournamentRegistrationEntity,
+        {
+          where: { user_id: userId },
+        },
+      );
       (user as any).tournaments_count = count;
     } catch {
       (user as any).tournaments_count = 0;
@@ -156,7 +165,11 @@ export class PoolArenaAuthService {
     return this.strip(user);
   }
 
-  async changePassword(auth: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    auth: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
     const userId = this.verifyToken(auth);
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new UnauthorizedException();
@@ -184,11 +197,18 @@ export class PoolArenaAuthService {
     const expires = Date.now() + 10 * 60 * 1000;
     this.resetCodes.set(email, { code, expires });
 
-    const mailHost = this.configService.get<string>('MAIL_HOST') || 'smtp.gmail.com';
-    const mailPort = parseInt(this.configService.get<string>('MAIL_PORT') || '587', 10);
-    const mailUser = this.configService.get<string>('MAIL_USER') || 'poolarena.vn@gmail.com';
-    const mailPass = this.configService.get<string>('MAIL_PASS') || 'ywigsoudiofrlwmw';
-    const mailFrom = this.configService.get<string>('MAIL_FROM') || 'poolarena.vn@gmail.com';
+    const mailHost =
+      this.configService.get<string>('MAIL_HOST') || 'smtp.gmail.com';
+    const mailPort = parseInt(
+      this.configService.get<string>('MAIL_PORT') || '587',
+      10,
+    );
+    const mailUser =
+      this.configService.get<string>('MAIL_USER') || 'poolarena.vn@gmail.com';
+    const mailPass =
+      this.configService.get<string>('MAIL_PASS') || 'ywigsoudiofrlwmw';
+    const mailFrom =
+      this.configService.get<string>('MAIL_FROM') || 'poolarena.vn@gmail.com';
 
     const transporter = nodemailer.createTransport({
       host: mailHost,
@@ -224,10 +244,135 @@ export class PoolArenaAuthService {
       await transporter.sendMail(mailOptions);
     } catch (error) {
       console.error('Lỗi gửi email:', error);
-      throw new BadRequestException('Không thể gửi email xác thực. Vui lòng thử lại sau.');
+      throw new BadRequestException(
+        'Không thể gửi email xác thực. Vui lòng thử lại sau.',
+      );
     }
 
     return { message: 'Mã xác thực đã được gửi đến email của bạn' };
+  }
+
+  private generatePassword(): string {
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars[crypto.randomInt(0, chars.length)];
+    }
+    return password;
+  }
+
+  async sendNewPassword(email: string) {
+    if (!email) {
+      throw new BadRequestException('Email không được để trống');
+    }
+
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Email không tồn tại trong hệ thống');
+    }
+
+    const newPassword = this.generatePassword();
+
+    const mailHost =
+      this.configService.get<string>('MAIL_HOST') || 'smtp.gmail.com';
+    const mailPort = parseInt(
+      this.configService.get<string>('MAIL_PORT') || '587',
+      10,
+    );
+    const mailUser =
+      this.configService.get<string>('MAIL_USER') || 'poolarena.vn@gmail.com';
+    const mailPass =
+      this.configService.get<string>('MAIL_PASS') || 'ywigsoudiofrlwmw';
+    const mailFrom =
+      this.configService.get<string>('MAIL_FROM') || 'poolarena.vn@gmail.com';
+
+    const transporter = nodemailer.createTransport({
+      host: mailHost,
+      port: mailPort,
+      secure: false,
+      auth: { user: mailUser, pass: mailPass },
+    });
+
+    const mailOptions = {
+      from: `"Pool Arena" <${mailFrom}>`,
+      to: email,
+      subject: 'Mật khẩu mới của bạn - Pool Arena',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <h2 style="color: #37393E; text-align: center;">Khôi phục mật khẩu Pool Arena</h2>
+          <p>Chào <strong>${user.full_name || 'bạn'}</strong>,</p>
+          <p>Chúng tôi đã tạo mật khẩu mới cho tài khoản của bạn. Dưới đây là mật khẩu mới:</p>
+          <div style="font-size: 28px; font-weight: bold; text-align: center; margin: 30px 0; letter-spacing: 6px; color: #37393E; background: #f5f5f5; padding: 16px; border-radius: 8px;">
+            ${newPassword}
+          </div>
+          <p>Vui lòng đăng nhập bằng mật khẩu mới này và đổi lại mật khẩu trong phần cài đặt tài khoản.</p>
+          <p style="color: #d9534f; font-weight: bold;">Lưu ý: Không chia sẻ mật khẩu này với bất kỳ ai.</p>
+          <p>Nếu bạn không thực hiện yêu cầu này, vui lòng liên hệ với chúng tôi ngay.</p>
+          <hr style="border: 0; border-top: 1px solid #eeeeee; margin: 20px 0;" />
+          <p style="font-size: 12px; color: #777777; text-align: center;">© 2026 Pool Arena. All rights reserved.</p>
+        </div>
+      `,
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error('Lỗi gửi email:', error);
+      throw new BadRequestException(
+        'Không thể gửi email. Vui lòng thử lại sau.',
+      );
+    }
+
+    user.hashed_password = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.save(user);
+
+    return { message: 'Mật khẩu mới đã được gửi đến email của bạn' };
+  }
+
+  async resetWithTempPassword(
+    email: string,
+    tempPassword: string,
+    newPassword: string,
+  ) {
+    if (!email || !tempPassword || !newPassword) {
+      throw new BadRequestException('Thông tin không đầy đủ');
+    }
+
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Email không tồn tại trong hệ thống');
+    }
+
+    const isMatch = await bcrypt.compare(tempPassword, user.hashed_password);
+    if (!isMatch) {
+      throw new BadRequestException('Mật khẩu tạm thời không chính xác');
+    }
+
+    user.hashed_password = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.save(user);
+
+    return { message: 'Đổi mật khẩu thành công' };
+  }
+
+  async verifyOtp(email: string, code: string) {
+    if (!email || !code) {
+      throw new BadRequestException('Thông tin không đầy đủ');
+    }
+
+    const resetInfo = this.resetCodes.get(email);
+    if (!resetInfo) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+    if (resetInfo.code !== code) {
+      throw new BadRequestException('Mã OTP không chính xác');
+    }
+    if (Date.now() > resetInfo.expires) {
+      this.resetCodes.delete(email);
+      throw new BadRequestException('Mã OTP đã hết hạn');
+    }
+
+    return { message: 'OTP hợp lệ' };
   }
 
   async resetPassword(email: string, token: string, password: string) {

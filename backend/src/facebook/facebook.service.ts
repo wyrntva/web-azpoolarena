@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,7 +6,11 @@ import {
   FbCustomerEntity,
   ConversationStatus,
 } from './entities/fb-customer.entity';
-import { FbMessageEntity, MessageRole, MessageSource } from './entities/fb-message.entity';
+import {
+  FbMessageEntity,
+  MessageRole,
+  MessageSource,
+} from './entities/fb-message.entity';
 import { FbPageEntity } from './entities/fb-page.entity';
 import { AiService } from '../ai/ai.service';
 
@@ -80,14 +80,20 @@ export class FacebookService implements OnModuleInit {
    * Nhận tin nhắn vào buffer debounce.
    * Nếu khách nhắn nhiều tin liên tiếp trong 2 giây → gom lại xử lý 1 lần.
    */
-  async handleIncomingMessage(pageId: string, psid: string, text: string): Promise<void> {
+  async handleIncomingMessage(
+    pageId: string,
+    psid: string,
+    text: string,
+  ): Promise<void> {
     const existing = this.debounceMap.get(psid);
 
     if (existing) {
       // Có tin đang chờ — reset timer, thêm tin mới vào buffer
       clearTimeout(existing.timer);
       existing.messages.push(text);
-      this.logger.log(`[Debounce] psid=${psid} buffer=${existing.messages.length} msgs`);
+      this.logger.log(
+        `[Debounce] psid=${psid} buffer=${existing.messages.length} msgs`,
+      );
     } else {
       // Tin đầu tiên — tạo entry mới
       this.debounceMap.set(psid, { messages: [text], timer: null as any });
@@ -98,7 +104,9 @@ export class FacebookService implements OnModuleInit {
     entry.timer = setTimeout(() => {
       this.debounceMap.delete(psid);
       const combined = entry.messages.join('\n');
-      this.logger.log(`[Debounce] Xử lý psid=${psid} | ${entry.messages.length} tin → "${combined.slice(0, 80)}"`);
+      this.logger.log(
+        `[Debounce] Xử lý psid=${psid} | ${entry.messages.length} tin → "${combined.slice(0, 80)}"`,
+      );
       this.processMessage(pageId, psid, combined).catch((err) =>
         this.logger.error(`[FB] Lỗi xử lý message: ${err.message}`, err.stack),
       );
@@ -108,12 +116,21 @@ export class FacebookService implements OnModuleInit {
   /**
    * Xử lý tin nhắn sau khi debounce.
    */
-  private async processMessage(pageId: string, psid: string, text: string): Promise<void> {
+  private async processMessage(
+    pageId: string,
+    psid: string,
+    text: string,
+  ): Promise<void> {
     // 1. Lấy hoặc tạo customer
     const customer = await this.getOrCreateCustomer(pageId, psid);
 
     // 2. Lưu tin nhắn của khách
-    await this.saveMessage(customer.id, MessageRole.USER, text, MessageSource.HUMAN);
+    await this.saveMessage(
+      customer.id,
+      MessageRole.USER,
+      text,
+      MessageSource.HUMAN,
+    );
 
     // 3. Kiểm tra handover
     if (this.isHumanHandoverRequest(text)) {
@@ -139,7 +156,12 @@ export class FacebookService implements OnModuleInit {
     const startTime = Date.now();
     try {
       const { reply, model, tokensUsed, cost } =
-        await this.aiService.answerFacebookMessage(psid, text, history, pageName);
+        await this.aiService.answerFacebookMessage(
+          psid,
+          text,
+          history,
+          pageName,
+        );
 
       const elapsed = Date.now() - startTime;
 
@@ -158,7 +180,10 @@ export class FacebookService implements OnModuleInit {
       // 9. Gửi reply qua Facebook Graph API
       await this.sendTextMessage(pageId, psid, reply);
     } catch (err) {
-      this.logger.error(`[FB] Lỗi xử lý AI cho ${psid}: ${err.message}`, err.stack);
+      this.logger.error(
+        `[FB] Lỗi xử lý AI cho ${psid}: ${err.message}`,
+        err.stack,
+      );
       await this.sendTextMessage(
         pageId,
         psid,
@@ -170,7 +195,11 @@ export class FacebookService implements OnModuleInit {
   /**
    * Xử lý postback (nút bấm trong Messenger).
    */
-  async handlePostback(pageId: string, psid: string, payload: string): Promise<void> {
+  async handlePostback(
+    pageId: string,
+    psid: string,
+    payload: string,
+  ): Promise<void> {
     this.logger.log(`[FB] Postback: psid=${psid} payload=${payload}`);
 
     if (payload === 'GET_STARTED') {
@@ -185,7 +214,12 @@ export class FacebookService implements OnModuleInit {
         `🏆 Thông tin giải đấu\n\n` +
         `Bạn cần hỗ trợ gì ạ?`;
 
-      await this.saveMessage(customer.id, MessageRole.ASSISTANT, welcomeMsg, MessageSource.AI);
+      await this.saveMessage(
+        customer.id,
+        MessageRole.ASSISTANT,
+        welcomeMsg,
+        MessageSource.AI,
+      );
       await this.sendTextMessage(pageId, psid, welcomeMsg);
     }
   }
@@ -197,21 +231,31 @@ export class FacebookService implements OnModuleInit {
   private async getPageAccessToken(pageId: string): Promise<string> {
     if (pageId && pageId !== 'default') {
       try {
-        const page = await this.pageRepo.findOne({ where: { id: pageId, is_active: true } });
+        const page = await this.pageRepo.findOne({
+          where: { id: pageId, is_active: true },
+        });
         if (page && page.access_token) {
           return page.access_token;
         }
       } catch (err) {
-        this.logger.warn(`[FB] Lỗi truy vấn page token cho pageId=${pageId}: ${err.message}`);
+        this.logger.warn(
+          `[FB] Lỗi truy vấn page token cho pageId=${pageId}: ${err.message}`,
+        );
       }
     }
     return this.pageAccessToken; // fallback
   }
 
-  async sendTextMessage(pageId: string, psid: string, text: string): Promise<void> {
+  async sendTextMessage(
+    pageId: string,
+    psid: string,
+    text: string,
+  ): Promise<void> {
     const token = await this.getPageAccessToken(pageId);
     if (!token) {
-      this.logger.warn(`[FB] Không có PAGE_ACCESS_TOKEN cho pageId=${pageId} — bỏ qua gửi tin nhắn`);
+      this.logger.warn(
+        `[FB] Không có PAGE_ACCESS_TOKEN cho pageId=${pageId} — bỏ qua gửi tin nhắn`,
+      );
       return;
     }
 
@@ -232,13 +276,17 @@ export class FacebookService implements OnModuleInit {
 
       if (!res.ok) {
         const detail = await res.text();
-        this.logger.error(`[FB API] HTTP ${res.status} gửi tới ${psid}: ${detail}`);
+        this.logger.error(
+          `[FB API] HTTP ${res.status} gửi tới ${psid}: ${detail}`,
+        );
         throw new Error(`FB API error ${res.status}: ${detail}`);
       }
 
       this.logger.debug(`[FB] Đã gửi tin nhắn tới ${psid}`);
     } catch (err) {
-      this.logger.error(`[FB API] Lỗi gửi tin nhắn tới ${psid}: ${err.message}`);
+      this.logger.error(
+        `[FB API] Lỗi gửi tin nhắn tới ${psid}: ${err.message}`,
+      );
       throw err;
     }
   }
@@ -306,7 +354,12 @@ export class FacebookService implements OnModuleInit {
         `📞 Hotline: ${await this.getStorePhone()}`;
     }
 
-    await this.saveMessage(customer.id, MessageRole.ASSISTANT, msg, MessageSource.HUMAN);
+    await this.saveMessage(
+      customer.id,
+      MessageRole.ASSISTANT,
+      msg,
+      MessageSource.HUMAN,
+    );
     await this.sendTextMessage(pageId, customer.psid, msg);
 
     // Log để nhân viên theo dõi (có thể tích hợp MQTT/email sau)
@@ -319,8 +372,13 @@ export class FacebookService implements OnModuleInit {
   // DATABASE HELPERS
   // ─────────────────────────────────────────────────────────
 
-  private async getOrCreateCustomer(pageId: string, psid: string): Promise<FbCustomerEntity> {
-    let customer = await this.customerRepo.findOne({ where: { psid, page_id: pageId } });
+  private async getOrCreateCustomer(
+    pageId: string,
+    psid: string,
+  ): Promise<FbCustomerEntity> {
+    let customer = await this.customerRepo.findOne({
+      where: { psid, page_id: pageId },
+    });
 
     if (!customer) {
       // Lần đầu gặp — lấy profile từ Facebook
@@ -335,7 +393,9 @@ export class FacebookService implements OnModuleInit {
       });
       await this.customerRepo.save(customer);
 
-      this.logger.log(`[FB] Customer mới: psid=${psid} name="${profile?.name ?? '?'}"`);
+      this.logger.log(
+        `[FB] Customer mới: psid=${psid} name="${profile?.name ?? '?'}"`,
+      );
     }
 
     return customer;
@@ -377,7 +437,9 @@ export class FacebookService implements OnModuleInit {
     psid: string,
     limit = 10,
   ): Promise<Array<{ role: string; content: string }>> {
-    const customer = await this.customerRepo.findOne({ where: { psid, page_id: pageId } });
+    const customer = await this.customerRepo.findOne({
+      where: { psid, page_id: pageId },
+    });
     if (!customer) return [];
 
     const messages = await this.messageRepo.find({
@@ -388,7 +450,9 @@ export class FacebookService implements OnModuleInit {
     });
 
     // Đảo ngược để thứ tự đúng (cũ → mới)
-    return messages.reverse().map((m) => ({ role: m.role, content: m.content }));
+    return messages
+      .reverse()
+      .map((m) => ({ role: m.role, content: m.content }));
   }
 
   private async getStorePhone(): Promise<string> {
@@ -402,7 +466,10 @@ export class FacebookService implements OnModuleInit {
    */
   private async getPageName(pageId: string): Promise<string> {
     try {
-      const page = await this.pageRepo.findOne({ where: { id: pageId }, select: ['name'] });
+      const page = await this.pageRepo.findOne({
+        where: { id: pageId },
+        select: ['name'],
+      });
       return page?.name || 'AZ POOLARENA';
     } catch {
       return 'AZ POOLARENA';

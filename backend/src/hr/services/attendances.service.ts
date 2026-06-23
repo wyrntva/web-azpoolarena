@@ -133,7 +133,10 @@ export class AttendancesService {
   // Consume a one-time QR access token. Returns true if attendance should proceed.
   // Handles the case where QRAccess page already pre-consumed the token (is_used=true)
   // before the user entered their PIN — still valid within the 60s grace period.
-  private async consumeQrAccessToken(token: string, userPin: string): Promise<boolean> {
+  private async consumeQrAccessToken(
+    token: string,
+    userPin: string,
+  ): Promise<boolean> {
     const existing = await this.qrAccessTokenRepo.findOne({
       where: { access_token: token },
     });
@@ -289,13 +292,19 @@ export class AttendancesService {
       if (!consumed) {
         // One-time token was claimed by another concurrent request — roll back
         await this.attendanceRepo.remove(newAttendance);
-        throw new BadRequestException('Mã QR đã được sử dụng bởi người khác, vui lòng thử lại');
+        throw new BadRequestException(
+          'Mã QR đã được sử dụng bởi người khác, vui lòng thử lại',
+        );
       }
 
-      const dateStr = typeof newAttendance.date === 'string'
-        ? newAttendance.date
-        : moment(newAttendance.date).format('YYYY-MM-DD');
-      await this.payrollService.autoGeneratePenaltyForAttendance(user.id, dateStr);
+      const dateStr =
+        typeof newAttendance.date === 'string'
+          ? newAttendance.date
+          : moment(newAttendance.date).format('YYYY-MM-DD');
+      await this.payrollService.autoGeneratePenaltyForAttendance(
+        user.id,
+        dateStr,
+      );
 
       return {
         success: true,
@@ -339,13 +348,19 @@ export class AttendancesService {
         attendance.check_out_qr_token = null;
         recalculateStatus(attendance, workSchedule);
         await this.attendanceRepo.save(attendance);
-        throw new BadRequestException('Mã QR đã được sử dụng bởi người khác, vui lòng thử lại');
+        throw new BadRequestException(
+          'Mã QR đã được sử dụng bởi người khác, vui lòng thử lại',
+        );
       }
 
-      const dateStr = typeof attendance.date === 'string'
-        ? attendance.date
-        : moment(attendance.date).format('YYYY-MM-DD');
-      await this.payrollService.autoGeneratePenaltyForAttendance(user.id, dateStr);
+      const dateStr =
+        typeof attendance.date === 'string'
+          ? attendance.date
+          : moment(attendance.date).format('YYYY-MM-DD');
+      await this.payrollService.autoGeneratePenaltyForAttendance(
+        user.id,
+        dateStr,
+      );
 
       return {
         success: true,
@@ -366,7 +381,9 @@ export class AttendancesService {
   ) {
     // Authenticated check (essentially the same logic, but with Wifi validation added)
     if (user.is_admin) {
-      throw new ForbiddenException('Quản trị viên không chấm công qua endpoint này');
+      throw new ForbiddenException(
+        'Quản trị viên không chấm công qua endpoint này',
+      );
     }
 
     if (!user.pin) {
@@ -405,7 +422,8 @@ export class AttendancesService {
     currentUser: any = null,
   ) {
     // Non-admins can only view their own records
-    const isAdmin = currentUser?.is_admin || currentUser?.role?.name === 'Trưởng ca';
+    const isAdmin =
+      currentUser?.is_admin || currentUser?.role?.name === 'Trưởng ca';
     let targetUserId = userId;
     if (!isAdmin) {
       targetUserId = currentUser?.id ?? null;
@@ -488,20 +506,30 @@ export class AttendancesService {
         attendance.work_schedule.work_date.toString(),
         attendance.work_schedule.start_time,
         attendance.work_schedule.end_time,
-        dto.check_in_time !== undefined ? dto.check_in_time : attendance.check_in_time,
-        dto.check_out_time !== undefined ? dto.check_out_time : attendance.check_out_time,
+        dto.check_in_time !== undefined
+          ? dto.check_in_time
+          : attendance.check_in_time,
+        dto.check_out_time !== undefined
+          ? dto.check_out_time
+          : attendance.check_out_time,
       );
-      if (dto.check_in_time !== undefined) attendance.check_in_time = checkInDt as Date | null;
-      if (dto.check_out_time !== undefined) attendance.check_out_time = checkOutDt as Date | null;
+      if (dto.check_in_time !== undefined)
+        attendance.check_in_time = checkInDt as Date | null;
+      if (dto.check_out_time !== undefined)
+        attendance.check_out_time = checkOutDt as Date | null;
     } else {
-      if (dto.check_in_time !== undefined) attendance.check_in_time = dto.check_in_time as Date | null;
-      if (dto.check_out_time !== undefined) attendance.check_out_time = dto.check_out_time as Date | null;
+      if (dto.check_in_time !== undefined)
+        attendance.check_in_time = dto.check_in_time;
+      if (dto.check_out_time !== undefined)
+        attendance.check_out_time = dto.check_out_time;
     }
 
     if (dto.notes !== undefined) attendance.notes = dto.notes;
 
     if (!attendance.check_in_time && attendance.check_out_time) {
-      throw new BadRequestException('Không thể có giờ tan ca mà không có giờ vào ca');
+      throw new BadRequestException(
+        'Không thể có giờ tan ca mà không có giờ vào ca',
+      );
     }
 
     if (attendance.work_schedule) {
@@ -510,10 +538,14 @@ export class AttendancesService {
 
     await this.attendanceRepo.save(attendance);
 
-    const dateStr = typeof attendance.date === 'string'
-      ? attendance.date
-      : moment(attendance.date).format('YYYY-MM-DD');
-    await this.payrollService.autoGeneratePenaltyForAttendance(attendance.user_id, dateStr);
+    const dateStr =
+      typeof attendance.date === 'string'
+        ? attendance.date
+        : moment(attendance.date).format('YYYY-MM-DD');
+    await this.payrollService.autoGeneratePenaltyForAttendance(
+      attendance.user_id,
+      dateStr,
+    );
 
     return attendance;
   }
@@ -561,10 +593,14 @@ export class AttendancesService {
 
     await this.attendanceRepo.save(attendance);
 
-    const dateStr = typeof attendance.date === 'string'
-      ? attendance.date
-      : moment(attendance.date).format('YYYY-MM-DD');
-    await this.payrollService.autoGeneratePenaltyForAttendance(attendance.user_id, dateStr);
+    const dateStr =
+      typeof attendance.date === 'string'
+        ? attendance.date
+        : moment(attendance.date).format('YYYY-MM-DD');
+    await this.payrollService.autoGeneratePenaltyForAttendance(
+      attendance.user_id,
+      dateStr,
+    );
 
     return attendance;
   }

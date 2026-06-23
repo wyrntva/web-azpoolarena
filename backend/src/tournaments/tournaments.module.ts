@@ -36,7 +36,11 @@ import { TableEntity } from '../areas/entities/area.entity';
     ]),
   ],
   controllers: [TournamentsController, TournamentSettingsController],
-  providers: [TournamentsService, TournamentSettingsService, TournamentSchedulerService],
+  providers: [
+    TournamentsService,
+    TournamentSettingsService,
+    TournamentSchedulerService,
+  ],
   exports: [TournamentsService, TournamentSettingsService],
 })
 export class TournamentsModule {}

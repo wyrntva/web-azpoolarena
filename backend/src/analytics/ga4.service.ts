@@ -73,7 +73,9 @@ export class Ga4Service {
     this.propertyId = propertyId;
 
     const keyJson = this.configService.get<string>('GA4_SERVICE_ACCOUNT_JSON');
-    const keyPath = this.configService.get<string>('GA4_SERVICE_ACCOUNT_KEY_PATH');
+    const keyPath = this.configService.get<string>(
+      'GA4_SERVICE_ACCOUNT_KEY_PATH',
+    );
 
     if (!keyJson && !keyPath) {
       this.logger.warn(
@@ -84,7 +86,8 @@ export class Ga4Service {
 
     try {
       // Dynamic import để không bắt buộc cài package nếu không dùng GA4
-      const { BetaAnalyticsDataClient } = await import('@google-analytics/data');
+      const { BetaAnalyticsDataClient } =
+        await import('@google-analytics/data');
 
       if (keyJson) {
         const credentials = JSON.parse(keyJson);
@@ -94,7 +97,9 @@ export class Ga4Service {
       }
 
       this.ready = true;
-      this.logger.log(`GA4 client khởi tạo thành công (property: ${propertyId})`);
+      this.logger.log(
+        `GA4 client khởi tạo thành công (property: ${propertyId})`,
+      );
     } catch (err: any) {
       this.logger.error(
         'Khởi tạo GA4 client thất bại — kiểm tra package @google-analytics/data và credentials',
@@ -103,57 +108,63 @@ export class Ga4Service {
     }
   }
 
-  async getMetrics(startDate: string, endDate: string): Promise<Ga4Data | null> {
+  async getMetrics(
+    startDate: string,
+    endDate: string,
+  ): Promise<Ga4Data | null> {
     if (!this.ready || !this.client || !this.propertyId) return null;
 
     try {
       const property = `properties/${this.propertyId}`;
       const dateRanges = [{ startDate, endDate }];
 
-      const [summaryRes, topPagesRes, sourcesRes, devicesRes, countriesRes] = await Promise.all([
-        this.client.runReport({
-          property,
-          dateRanges,
-          metrics: [
-            { name: 'sessions' },
-            { name: 'totalUsers' },
-            { name: 'screenPageViews' },
-            { name: 'bounceRate' },
-            { name: 'averageSessionDuration' },
-          ],
-        }),
-        this.client.runReport({
-          property,
-          dateRanges,
-          dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
-          metrics: [{ name: 'screenPageViews' }, { name: 'totalUsers' }],
-          orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-          limit: 10,
-        }),
-        this.client.runReport({
-          property,
-          dateRanges,
-          dimensions: [{ name: 'sessionSource' }, { name: 'sessionMedium' }],
-          metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
-          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-          limit: 10,
-        }),
-        this.client.runReport({
-          property,
-          dateRanges,
-          dimensions: [{ name: 'deviceCategory' }],
-          metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
-          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        }),
-        this.client.runReport({
-          property,
-          dateRanges,
-          dimensions: [{ name: 'country' }],
-          metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
-          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-          limit: 10,
-        }),
-      ]);
+      const [summaryRes, topPagesRes, sourcesRes, devicesRes, countriesRes] =
+        await Promise.all([
+          this.client.runReport({
+            property,
+            dateRanges,
+            metrics: [
+              { name: 'sessions' },
+              { name: 'totalUsers' },
+              { name: 'screenPageViews' },
+              { name: 'bounceRate' },
+              { name: 'averageSessionDuration' },
+            ],
+          }),
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+            metrics: [{ name: 'screenPageViews' }, { name: 'totalUsers' }],
+            orderBys: [
+              { metric: { metricName: 'screenPageViews' }, desc: true },
+            ],
+            limit: 10,
+          }),
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'sessionSource' }, { name: 'sessionMedium' }],
+            metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: 10,
+          }),
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'deviceCategory' }],
+            metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          }),
+          this.client.runReport({
+            property,
+            dateRanges,
+            dimensions: [{ name: 'country' }],
+            metrics: [{ name: 'sessions' }, { name: 'totalUsers' }],
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            limit: 10,
+          }),
+        ]);
 
       const mv = summaryRes[0]?.rows?.[0]?.metricValues ?? [];
       const summary: Ga4Summary = {
@@ -173,14 +184,14 @@ export class Ga4Service {
         }),
       );
 
-      const traffic_sources: Ga4TrafficSource[] = (sourcesRes[0]?.rows ?? []).map(
-        (row: any) => ({
-          source: row.dimensionValues?.[0]?.value ?? '',
-          medium: row.dimensionValues?.[1]?.value ?? '',
-          sessions: parseInt(row.metricValues?.[0]?.value ?? '0', 10),
-          users: parseInt(row.metricValues?.[1]?.value ?? '0', 10),
-        }),
-      );
+      const traffic_sources: Ga4TrafficSource[] = (
+        sourcesRes[0]?.rows ?? []
+      ).map((row: any) => ({
+        source: row.dimensionValues?.[0]?.value ?? '',
+        medium: row.dimensionValues?.[1]?.value ?? '',
+        sessions: parseInt(row.metricValues?.[0]?.value ?? '0', 10),
+        users: parseInt(row.metricValues?.[1]?.value ?? '0', 10),
+      }));
 
       const devices: Ga4Device[] = (devicesRes[0]?.rows ?? []).map(
         (row: any) => ({

@@ -10,9 +10,9 @@ import {
 import { FbMessageEntity } from './fb-message.entity';
 
 export enum ConversationStatus {
-  ACTIVE = 'active',            // AI đang trả lời
+  ACTIVE = 'active', // AI đang trả lời
   HUMAN_SUPPORT = 'human_support', // Chuyển nhân viên
-  RESOLVED = 'resolved',        // Đã giải quyết xong
+  RESOLVED = 'resolved', // Đã giải quyết xong
 }
 
 @Entity('fb_customers')

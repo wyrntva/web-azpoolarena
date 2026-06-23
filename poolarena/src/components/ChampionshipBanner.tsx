@@ -67,7 +67,7 @@ export default function ChampionshipBanner({
             src={url}
             alt={`Tournament Banner ${i + 1}`}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1360px) 90vw, 1360px"
+            unoptimized
             className="object-cover"
             priority={i === 0}
           />

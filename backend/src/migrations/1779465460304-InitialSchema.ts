@@ -1,1193 +1,3268 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class InitialSchema1779465460304 implements MigrationInterface {
-    name = 'InitialSchema1779465460304'
+  name = 'InitialSchema1779465460304';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        // Pre-populate NULL values for columns being changed to NOT NULL
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "is_phone_verified" = false WHERE "is_phone_verified" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "is_email_verified" = false WHERE "is_email_verified" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "points" = 0 WHERE "points" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "total_games" = 0 WHERE "total_games" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "wins" = 0 WHERE "wins" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "losses" = 0 WHERE "losses" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "pool_arena_users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // Pre-populate NULL values for columns being changed to NOT NULL
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "is_phone_verified" = false WHERE "is_phone_verified" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "is_email_verified" = false WHERE "is_email_verified" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "points" = 0 WHERE "points" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "total_games" = 0 WHERE "total_games" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "wins" = 0 WHERE "wins" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "losses" = 0 WHERE "losses" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pool_arena_users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "tournament_ranks" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "tournament_ranks" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "tournament_ranks" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournament_ranks" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "tournament_rounds" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "tournament_rounds" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "tournament_rounds" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournament_rounds" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "scoring_rules" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "scoring_rules" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "scoring_rules" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "scoring_rules" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "tournaments" SET "can_register" = true WHERE "can_register" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "free_table_fee" = false WHERE "free_table_fee" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "pre_payment" = false WHERE "pre_payment" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "has_draw" = false WHERE "has_draw" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "round_1_64" = false WHERE "round_1_64" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "round_1_16" = false WHERE "round_1_16" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "round_1_32" = false WHERE "round_1_32" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "round_1_8" = false WHERE "round_1_8" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "tournaments" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "can_register" = true WHERE "can_register" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "free_table_fee" = false WHERE "free_table_fee" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "pre_payment" = false WHERE "pre_payment" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "has_draw" = false WHERE "has_draw" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "round_1_64" = false WHERE "round_1_64" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "round_1_16" = false WHERE "round_1_16" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "round_1_32" = false WHERE "round_1_32" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "round_1_8" = false WHERE "round_1_8" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournaments" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "tournament_registrations" SET "registered_at" = NOW() WHERE "registered_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "tournament_registrations" SET "registered_at" = NOW() WHERE "registered_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "tournament_matches" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "tournament_matches" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "tournament_matches" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tournament_matches" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "store_settings" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "store_settings" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "store_settings" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "store_settings" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "pos_orders" SET "customer_count" = 1 WHERE "customer_count" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_orders" SET "order_type" = 'dine-in' WHERE "order_type" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_orders" SET "status" = 'pending' WHERE "status" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_orders" SET "total_amount" = 0 WHERE "total_amount" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_orders" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_orders" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "pos_orders" SET "customer_count" = 1 WHERE "customer_count" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_orders" SET "order_type" = 'dine-in' WHERE "order_type" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_orders" SET "status" = 'pending' WHERE "status" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_orders" SET "total_amount" = 0 WHERE "total_amount" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_orders" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_orders" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "pos_order_items" SET "quantity" = 1 WHERE "quantity" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_order_items" SET "price" = 0 WHERE "price" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_order_items" SET "is_time_based" = false WHERE "is_time_based" IS NULL`);
-        await queryRunner.query(`UPDATE "pos_order_items" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "pos_order_items" SET "quantity" = 1 WHERE "quantity" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_order_items" SET "price" = 0 WHERE "price" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_order_items" SET "is_time_based" = false WHERE "is_time_based" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "pos_order_items" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "roles" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "roles" SET "is_system" = false WHERE "is_system" IS NULL`);
-        await queryRunner.query(`UPDATE "roles" SET "requires_timekeeping" = false WHERE "requires_timekeeping" IS NULL`);
-        await queryRunner.query(`UPDATE "roles" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "roles" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "roles" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "roles" SET "is_system" = false WHERE "is_system" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "roles" SET "requires_timekeeping" = false WHERE "requires_timekeeping" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "roles" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "roles" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "users" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "users" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "users" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "users" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "categories" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "categories" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "categories" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "categories" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "categories" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "categories" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "units" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "units" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "units" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "units" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "units" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "units" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "inventories" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "inventories" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "inventories" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "inventories" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "inventory_transactions" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "inventory_transactions" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "inventory_transaction_details" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "inventory_transaction_details" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "wifi_configs" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "wifi_configs" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "wifi_configs" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "wifi_configs" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "wifi_configs" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "wifi_configs" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "qr_sessions" SET "is_used" = false WHERE "is_used" IS NULL`);
-        await queryRunner.query(`UPDATE "qr_sessions" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "qr_sessions" SET "is_used" = false WHERE "is_used" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "qr_sessions" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "work_schedules" SET "allowed_late_minutes" = 0 WHERE "allowed_late_minutes" IS NULL`);
-        await queryRunner.query(`UPDATE "work_schedules" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "work_schedules" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "work_schedules" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "work_schedules" SET "allowed_late_minutes" = 0 WHERE "allowed_late_minutes" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "work_schedules" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "work_schedules" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "work_schedules" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "attendances" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "attendances" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "attendances" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "attendances" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "attendance_settings" SET "missing_checkout_penalty" = 0 WHERE "missing_checkout_penalty" IS NULL`);
-        await queryRunner.query(`UPDATE "attendance_settings" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "attendance_settings" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "attendance_settings" SET "missing_checkout_penalty" = 0 WHERE "missing_checkout_penalty" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "attendance_settings" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "attendance_settings" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "advance_payments" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "advance_payments" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "advance_payments" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "advance_payments" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "bonuses" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "bonuses" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "bonuses" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "bonuses" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "penalties" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "penalties" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "penalties" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "penalties" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "qr_access_devices" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "qr_access_devices" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "qr_access_devices" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "qr_access_devices" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "qr_access_tokens" SET "is_used" = false WHERE "is_used" IS NULL`);
-        await queryRunner.query(`UPDATE "qr_access_tokens" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "qr_access_tokens" SET "is_used" = false WHERE "is_used" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "qr_access_tokens" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "receipt_types" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "receipt_types" SET "is_inventory" = false WHERE "is_inventory" IS NULL`);
-        await queryRunner.query(`UPDATE "receipt_types" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "receipt_types" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "receipt_types" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "receipt_types" SET "is_inventory" = false WHERE "is_inventory" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "receipt_types" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "receipt_types" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "receipts" SET "is_income" = false WHERE "is_income" IS NULL`);
-        await queryRunner.query(`UPDATE "receipts" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "receipts" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "receipts" SET "is_income" = false WHERE "is_income" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "receipts" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "receipts" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "revenues" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "revenues" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "revenues" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "revenues" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "exchanges" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "exchanges" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "exchanges" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "exchanges" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "safes" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "safes" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "safes" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "safes" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "debts" SET "is_paid" = false WHERE "is_paid" IS NULL`);
-        await queryRunner.query(`UPDATE "debts" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "debts" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "debts" SET "is_paid" = false WHERE "is_paid" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "debts" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "debts" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "switches" SET "is_active" = true WHERE "is_active" IS NULL`);
-        await queryRunner.query(`UPDATE "switches" SET "sort_order" = 0 WHERE "sort_order" IS NULL`);
-        await queryRunner.query(`UPDATE "switches" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "switches" SET "is_active" = true WHERE "is_active" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "switches" SET "sort_order" = 0 WHERE "sort_order" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "switches" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "devices" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "devices" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "areas" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "areas" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "areas" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "areas" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`UPDATE "tables" SET "x" = 0 WHERE "x" IS NULL`);
-        await queryRunner.query(`UPDATE "tables" SET "y" = 0 WHERE "y" IS NULL`);
-        await queryRunner.query(`UPDATE "tables" SET "width" = 100 WHERE "width" IS NULL`);
-        await queryRunner.query(`UPDATE "tables" SET "height" = 60 WHERE "height" IS NULL`);
-        await queryRunner.query(`UPDATE "tables" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "tables" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
+    await queryRunner.query(`UPDATE "tables" SET "x" = 0 WHERE "x" IS NULL`);
+    await queryRunner.query(`UPDATE "tables" SET "y" = 0 WHERE "y" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "tables" SET "width" = 100 WHERE "width" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tables" SET "height" = 60 WHERE "height" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tables" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "tables" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
 
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" DROP CONSTRAINT "tournament_registrations_user_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" DROP CONSTRAINT "tournament_registrations_tournament_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_winner_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_tournament_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_player2_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_player1_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" DROP CONSTRAINT "pos_orders_table_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" DROP CONSTRAINT "pos_orders_area_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" DROP CONSTRAINT "pos_order_items_product_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" DROP CONSTRAINT "pos_order_items_order_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT "users_role_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "inventories_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "inventories_conversion_unit_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "inventories_base_unit_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "inventories_category_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" DROP CONSTRAINT "inventory_transactions_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "inventory_transaction_details_inventory_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "inventory_transaction_details_transaction_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" DROP CONSTRAINT "qr_sessions_used_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" DROP CONSTRAINT "work_schedules_user_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "attendances" DROP CONSTRAINT "attendances_work_schedule_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "attendances" DROP CONSTRAINT "attendances_user_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" DROP CONSTRAINT "advance_payments_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" DROP CONSTRAINT "advance_payments_user_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "bonuses" DROP CONSTRAINT "bonuses_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "bonuses" DROP CONSTRAINT "bonuses_user_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "penalties" DROP CONSTRAINT "penalties_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "penalties" DROP CONSTRAINT "penalties_user_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" DROP CONSTRAINT "qr_access_tokens_device_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" DROP CONSTRAINT "receipt_types_category_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "receipts" DROP CONSTRAINT "receipts_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "receipts" DROP CONSTRAINT "receipts_receipt_type_id_fkey"`);
-        await queryRunner.query(`ALTER TABLE "revenues" DROP CONSTRAINT "revenues_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "exchanges" DROP CONSTRAINT "exchanges_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "safes" DROP CONSTRAINT "safes_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "debts" DROP CONSTRAINT "debts_created_by_fkey"`);
-        await queryRunner.query(`ALTER TABLE "tables" DROP CONSTRAINT "tables_area_id_fkey"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_phone_number"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_email"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_is_active"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_points"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_rank"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_ranks_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_ranks_order"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_ranks_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_rounds_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_rounds_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_rounds_order"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_scoring_rules_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_scoring_rules_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_scoring_rules_position"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournaments_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournaments_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournaments_slug"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_registrations_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_registrations_tournament_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_registrations_user_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_matches_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_matches_match_no"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tournament_matches_tournament_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_store_settings_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_menus_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_products_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_products_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_products_category_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_products_code"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pos_orders_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_pos_order_items_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_roles_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_roles_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_users_email"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_users_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_users_pin"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_users_username"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_categories_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_categories_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_units_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_units_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_inventories_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_inventories_product_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_inventory_transactions_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_inventory_transactions_transaction_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_inventory_transaction_details_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_wifi_configs_ssid"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_wifi_configs_ip_subnet"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_wifi_configs_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_sessions_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_sessions_qr_token"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_work_schedules_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_work_schedules_work_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_attendances_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_attendances_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_attendance_settings_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_advance_payments_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_advance_payments_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_bonuses_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_bonuses_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_penalties_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_penalties_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_access_devices_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_access_devices_device_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_access_tokens_expires_at"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_access_tokens_access_token"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_access_tokens_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_qr_access_tokens_is_used"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_receipt_types_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_receipt_types_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_receipts_receipt_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_receipts_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_revenues_revenue_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_revenues_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_exchanges_exchange_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_exchanges_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_safes_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_safes_safe_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_debts_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_debts_debt_date"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_switches_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_devices_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_devices_device_code"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_areas_id"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_areas_name"`);
-        await queryRunner.query(`DROP INDEX "public"."ix_tables_id"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "ck_tournament_matches_bracket"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "ck_tournament_matches_status"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_status_check"`);
-        await queryRunner.query(`ALTER TYPE "public"."poolarenausergender" RENAME TO "poolarenausergender_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."pool_arena_users_gender_enum" AS ENUM('male', 'female', 'other')`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "gender" TYPE "public"."pool_arena_users_gender_enum" USING "gender"::"text"::"public"."pool_arena_users_gender_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."poolarenausergender_old"`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ADD CONSTRAINT "UQ_fe02c0853cb5dbaef91e53562a0" UNIQUE ("phone_number")`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ADD CONSTRAINT "UQ_148f828bb5f98aea3c83c40bf7e" UNIQUE ("email")`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_phone_verified" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_email_verified" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "points" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "points" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "total_games" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "wins" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "losses" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ADD CONSTRAINT "UQ_b98ae94aef330fb3756b93d992d" UNIQUE ("order")`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ADD CONSTRAINT "UQ_267e8bbb6bbe066f899ec41a179" UNIQUE ("name")`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ADD CONSTRAINT "UQ_3122830ef65a6fc5e966f63a54e" UNIQUE ("order")`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ADD CONSTRAINT "UQ_82a2a0ef1e032a71a087847a066" UNIQUE ("position")`);
-        await queryRunner.query(`ALTER TYPE "public"."scoringruletype" RENAME TO "scoringruletype_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."scoring_rules_rule_type_enum" AS ENUM('win', 'lose', 'draw', 'bonus', 'penalty')`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "rule_type" TYPE "public"."scoring_rules_rule_type_enum" USING "rule_type"::"text"::"public"."scoring_rules_rule_type_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."scoringruletype_old"`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ADD CONSTRAINT "UQ_517ca03e32d7ff1162ab4631c82" UNIQUE ("slug")`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "display" SET DEFAULT 'public'`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "status" SET DEFAULT 'upcoming'`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "tournament_type" SET DEFAULT 'knockout'`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "number_of_players" SET DEFAULT '32'`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "can_register" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "can_register" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "has_draw" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "has_draw" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "round" SET DEFAULT '1'`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "player1_score" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "player2_score" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "status" SET DEFAULT 'upcoming'`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "menus" ALTER COLUMN "icon" SET DEFAULT 'GamepadIcon'`);
-        await queryRunner.query(`ALTER TABLE "menus" ALTER COLUMN "product_ids" SET DEFAULT '[]'`);
-        await queryRunner.query(`ALTER TABLE "menus" ALTER COLUMN "sort_order" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "created_at"`);
-        await queryRunner.query(`ALTER TABLE "menus" ADD "created_at" TIMESTAMP NOT NULL DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "updated_at"`);
-        await queryRunner.query(`ALTER TABLE "menus" ADD "updated_at" TIMESTAMP NOT NULL DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "type" SET DEFAULT 'Tính tiền theo số lượng'`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "show_on_scoreboard" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "first_hour_enabled" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "special_hour_enabled" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "created_at"`);
-        await queryRunner.query(`ALTER TABLE "products" ADD "created_at" TIMESTAMP NOT NULL DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "updated_at"`);
-        await queryRunner.query(`ALTER TABLE "products" ADD "updated_at" TIMESTAMP NOT NULL DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" SET DEFAULT '1'`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "order_type" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "order_type" SET DEFAULT 'dine-in'`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "status" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "status" SET DEFAULT 'pending'`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" SET DEFAULT '1'`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "price" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "price" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "roles" ADD CONSTRAINT "UQ_648e3f5447f725579d7d4ffdfb7" UNIQUE ("name")`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_system" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_system" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "requires_timekeeping" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "UQ_fe0bb3f6520ee0469504521e710" UNIQUE ("username")`);
-        await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email")`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TYPE "public"."salarytype" RENAME TO "salarytype_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."users_salary_type_enum" AS ENUM('hourly', 'fixed')`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" TYPE "public"."users_salary_type_enum" USING "salary_type"::"text"::"public"."users_salary_type_enum"`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" SET DEFAULT 'hourly'`);
-        await queryRunner.query(`DROP TYPE "public"."salarytype_old"`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" SET DEFAULT 'hourly'`);
-        await queryRunner.query(`UPDATE "users" SET "created_at" = NOW() WHERE "created_at" IS NULL`);
-        await queryRunner.query(`UPDATE "users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "categories" ADD CONSTRAINT "UQ_8b0be371d28245da6e4f4b61878" UNIQUE ("name")`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "units" ADD CONSTRAINT "UQ_cd34e4bfea359fa09d997a0b87d" UNIQUE ("name")`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "quantity" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "min_quantity" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TYPE "public"."inventorystatus" RENAME TO "inventorystatus_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."inventories_status_enum" AS ENUM('in_stock', 'out_of_stock', 'low_stock')`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "status" TYPE "public"."inventories_status_enum" USING "status"::"text"::"public"."inventories_status_enum"`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "status" SET DEFAULT 'in_stock'`);
-        await queryRunner.query(`DROP TYPE "public"."inventorystatus_old"`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "status" SET DEFAULT 'in_stock'`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TYPE "public"."transactiontype" RENAME TO "transactiontype_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."inventory_transactions_transaction_type_enum" AS ENUM('in', 'out')`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ALTER COLUMN "transaction_type" TYPE "public"."inventory_transactions_transaction_type_enum" USING "transaction_type"::"text"::"public"."inventory_transactions_transaction_type_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."transactiontype_old"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "unit_type" SET DEFAULT 'base'`);
-        await queryRunner.query(`ALTER TYPE "public"."accounttype" RENAME TO "accounttype_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."inventory_transaction_details_payment_method_enum" AS ENUM('cash', 'bank')`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "payment_method" TYPE "public"."inventory_transaction_details_payment_method_enum" USING "payment_method"::"text"::"public"."inventory_transaction_details_payment_method_enum"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ADD CONSTRAINT "UQ_7fedd95b0349371f0d8fdce4204" UNIQUE ("qr_token")`);
-        await queryRunner.query(`ALTER TYPE "public"."qrtokentype" RENAME TO "qrtokentype_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."qr_sessions_token_type_enum" AS ENUM('check_in', 'check_out', 'attendance')`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "token_type" TYPE "public"."qr_sessions_token_type_enum" USING "token_type"::"text"::"public"."qr_sessions_token_type_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."qrtokentype_old"`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TYPE "public"."attendancestatus" RENAME TO "attendancestatus_old"`);
-        await queryRunner.query(`CREATE TYPE "public"."attendances_status_enum" AS ENUM('present', 'late', 'absent', 'early_checkout')`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "status" TYPE "public"."attendances_status_enum" USING "status"::"text"::"public"."attendances_status_enum"`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "status" SET DEFAULT 'absent'`);
-        await queryRunner.query(`DROP TYPE "public"."attendancestatus_old"`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "status" SET DEFAULT 'absent'`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "allowed_late_minutes" SET DEFAULT '15'`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_grace_minutes" SET DEFAULT '10'`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_penalty" SET DEFAULT '50000'`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "missing_checkout_penalty" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "absent_penalty" SET DEFAULT '100000'`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "auto_absent_enabled" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ADD CONSTRAINT "UQ_179b87cb9c77e442df7cc4cc90c" UNIQUE ("device_id")`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ADD CONSTRAINT "UQ_222ae74f23a472b174aab729fe5" UNIQUE ("access_token")`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ADD CONSTRAINT "UQ_b9518b54867eb613ebe20290692" UNIQUE ("name")`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "is_income" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "is_income" SET DEFAULT false`);
-        await queryRunner.query(`CREATE TYPE "public"."receipts_payment_method_enum" AS ENUM('cash', 'bank')`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "payment_method" TYPE "public"."receipts_payment_method_enum" USING "payment_method"::"text"::"public"."receipts_payment_method_enum"`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "payment_method" SET DEFAULT 'cash'`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "payment_method" SET DEFAULT 'cash'`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "revenues" ADD CONSTRAINT "UQ_ae4442f3ffa4d8897b1e0adc994" UNIQUE ("revenue_date")`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "cash_revenue" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "bank_revenue" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`CREATE TYPE "public"."exchanges_from_account_enum" AS ENUM('cash', 'bank')`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "from_account" TYPE "public"."exchanges_from_account_enum" USING "from_account"::"text"::"public"."exchanges_from_account_enum"`);
-        await queryRunner.query(`CREATE TYPE "public"."exchanges_to_account_enum" AS ENUM('cash', 'bank')`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "to_account" TYPE "public"."exchanges_to_account_enum" USING "to_account"::"text"::"public"."exchanges_to_account_enum"`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "is_paid" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "is_paid" SET DEFAULT false`);
-        await queryRunner.query(`CREATE TYPE "public"."debts_payment_method_enum" AS ENUM('cash', 'bank')`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "payment_method" TYPE "public"."debts_payment_method_enum" USING "payment_method"::"text"::"public"."debts_payment_method_enum"`);
-        await queryRunner.query(`DROP TYPE "public"."accounttype_old"`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "is_active" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "is_active" SET DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "sort_order" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "sort_order" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "devices" ADD CONSTRAINT "UQ_df5d82e6dde4ce1e6c1029c0b27" UNIQUE ("device_code")`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "device_type" SET DEFAULT 'POS'`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "is_activated" SET DEFAULT false`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "areas" ADD CONSTRAINT "UQ_8c2ad80240e18fcac9e7c526311" UNIQUE ("name")`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "table_count" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "x" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "x" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "y" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "y" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "width" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "width" SET DEFAULT '100'`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "height" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "height" SET DEFAULT '60'`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "created_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "created_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "updated_at" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "updated_at" SET DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ADD CONSTRAINT "FK_a422cd63ff5891961bc7c996aa2" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ADD CONSTRAINT "FK_ca269aa26624da44fe02ec20f83" FOREIGN KEY ("user_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_f5f88089acccfab95274a158911" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_b861c4e658ead3ad35a8f54448b" FOREIGN KEY ("player1_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_0cbf67b46121b71e3a94c8b0e30" FOREIGN KEY ("player2_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_b674515b15e7f92e72a77a30bac" FOREIGN KEY ("winner_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ADD CONSTRAINT "FK_e36f2aace55b70811dbaa69f9f4" FOREIGN KEY ("order_id") REFERENCES "pos_orders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ADD CONSTRAINT "FK_3ca731abad68bcf8aeccb1e3147" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "FK_a2cecd1a3531c0b041e29ba46e1" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "FK_c6755c34c98ddd49a1d1226ea03" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "FK_85e09f62b3421df796c3eb3f687" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "FK_01ce132821c2dce0c0f1a0002ae" FOREIGN KEY ("base_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "FK_6b50c137f4009410bf33bd60ca0" FOREIGN KEY ("conversion_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ADD CONSTRAINT "FK_d9a2ac973b889087b33f84d3517" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "FK_3c71c966bded542e359090e66d0" FOREIGN KEY ("transaction_id") REFERENCES "inventory_transactions"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "FK_dbcb339208ad0f9c404526d4902" FOREIGN KEY ("inventory_id") REFERENCES "inventories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ADD CONSTRAINT "FK_a227fc13276caa5c42c59e4f362" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "attendances" ADD CONSTRAINT "FK_f4280375b005af67a3780912dde" FOREIGN KEY ("work_schedule_id") REFERENCES "work_schedules"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "attendances" ADD CONSTRAINT "FK_aa902e05aeb5fde7c1dd4ced2b7" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ADD CONSTRAINT "FK_8081dbbc35cad9b0d4b0b10f628" FOREIGN KEY ("device_id") REFERENCES "qr_access_devices"("device_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ADD CONSTRAINT "FK_b3516e918b913c30ff242e60a59" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "receipts" ADD CONSTRAINT "FK_e676b1bb681d1d0e566e1a64b75" FOREIGN KEY ("receipt_type_id") REFERENCES "receipt_types"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "receipts" ADD CONSTRAINT "FK_eee1cdcc032068c53ba58a7d8e6" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "revenues" ADD CONSTRAINT "FK_374042927c583dd6c37b11e40f1" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ADD CONSTRAINT "FK_905b1ebdeb10be7b9312dc4300f" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "safes" ADD CONSTRAINT "FK_84eaf4655a3c905530e60dc73c7" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "debts" ADD CONSTRAINT "FK_b8f5646c414d863eef62e5fd57f" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tables" ADD CONSTRAINT "FK_9371712959bf7427eb104769ac6" FOREIGN KEY ("area_id") REFERENCES "areas"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-    }
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" DROP CONSTRAINT "tournament_registrations_user_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" DROP CONSTRAINT "tournament_registrations_tournament_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_winner_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_tournament_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_player2_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_player1_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" DROP CONSTRAINT "pos_orders_table_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" DROP CONSTRAINT "pos_orders_area_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" DROP CONSTRAINT "pos_order_items_product_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" DROP CONSTRAINT "pos_order_items_order_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP CONSTRAINT "users_role_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "inventories_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "inventories_conversion_unit_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "inventories_base_unit_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "inventories_category_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" DROP CONSTRAINT "inventory_transactions_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "inventory_transaction_details_inventory_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "inventory_transaction_details_transaction_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" DROP CONSTRAINT "qr_sessions_used_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" DROP CONSTRAINT "work_schedules_user_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" DROP CONSTRAINT "attendances_work_schedule_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" DROP CONSTRAINT "attendances_user_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" DROP CONSTRAINT "advance_payments_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" DROP CONSTRAINT "advance_payments_user_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" DROP CONSTRAINT "bonuses_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" DROP CONSTRAINT "bonuses_user_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" DROP CONSTRAINT "penalties_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" DROP CONSTRAINT "penalties_user_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" DROP CONSTRAINT "qr_access_tokens_device_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" DROP CONSTRAINT "receipt_types_category_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" DROP CONSTRAINT "receipts_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" DROP CONSTRAINT "receipts_receipt_type_id_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" DROP CONSTRAINT "revenues_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" DROP CONSTRAINT "exchanges_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" DROP CONSTRAINT "safes_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" DROP CONSTRAINT "debts_created_by_fkey"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" DROP CONSTRAINT "tables_area_id_fkey"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_pool_arena_users_phone_number"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_email"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_pool_arena_users_is_active"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_points"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_pool_arena_users_rank"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournament_ranks_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournament_ranks_order"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournament_ranks_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournament_rounds_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournament_rounds_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournament_rounds_order"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_scoring_rules_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_scoring_rules_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_scoring_rules_position"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournaments_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournaments_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tournaments_slug"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_tournament_registrations_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_tournament_registrations_tournament_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_tournament_registrations_user_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_tournament_matches_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_tournament_matches_match_no"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_tournament_matches_tournament_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_store_settings_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_menus_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_products_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_products_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_products_category_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_products_code"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_pos_orders_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_pos_order_items_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_roles_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_roles_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_users_email"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_users_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_users_pin"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_users_username"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_categories_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_categories_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_units_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_units_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_inventories_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_inventories_product_name"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_inventory_transactions_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_inventory_transactions_transaction_date"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_inventory_transaction_details_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_wifi_configs_ssid"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_wifi_configs_ip_subnet"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_wifi_configs_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_qr_sessions_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_qr_sessions_qr_token"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_work_schedules_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_work_schedules_work_date"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_attendances_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_attendances_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_attendance_settings_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_advance_payments_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_advance_payments_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_bonuses_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_bonuses_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_penalties_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_penalties_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_qr_access_devices_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_qr_access_devices_device_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_qr_access_tokens_expires_at"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_qr_access_tokens_access_token"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_qr_access_tokens_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."ix_qr_access_tokens_is_used"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."ix_receipt_types_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_receipt_types_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_receipts_receipt_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_receipts_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_revenues_revenue_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_revenues_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_exchanges_exchange_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_exchanges_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_safes_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_safes_safe_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_debts_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_debts_debt_date"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_switches_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_devices_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_devices_device_code"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_areas_id"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_areas_name"`);
+    await queryRunner.query(`DROP INDEX "public"."ix_tables_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "ck_tournament_matches_bracket"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "ck_tournament_matches_status"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "tournament_matches_status_check"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."poolarenausergender" RENAME TO "poolarenausergender_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."pool_arena_users_gender_enum" AS ENUM('male', 'female', 'other')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "gender" TYPE "public"."pool_arena_users_gender_enum" USING "gender"::"text"::"public"."pool_arena_users_gender_enum"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."poolarenausergender_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ADD CONSTRAINT "UQ_fe02c0853cb5dbaef91e53562a0" UNIQUE ("phone_number")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ADD CONSTRAINT "UQ_148f828bb5f98aea3c83c40bf7e" UNIQUE ("email")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_phone_verified" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_email_verified" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "points" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "points" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "total_games" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "wins" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "losses" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ADD CONSTRAINT "UQ_b98ae94aef330fb3756b93d992d" UNIQUE ("order")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ADD CONSTRAINT "UQ_267e8bbb6bbe066f899ec41a179" UNIQUE ("name")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ADD CONSTRAINT "UQ_3122830ef65a6fc5e966f63a54e" UNIQUE ("order")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ADD CONSTRAINT "UQ_82a2a0ef1e032a71a087847a066" UNIQUE ("position")`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."scoringruletype" RENAME TO "scoringruletype_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."scoring_rules_rule_type_enum" AS ENUM('win', 'lose', 'draw', 'bonus', 'penalty')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "rule_type" TYPE "public"."scoring_rules_rule_type_enum" USING "rule_type"::"text"::"public"."scoring_rules_rule_type_enum"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."scoringruletype_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ADD CONSTRAINT "UQ_517ca03e32d7ff1162ab4631c82" UNIQUE ("slug")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "display" SET DEFAULT 'public'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "status" SET DEFAULT 'upcoming'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "tournament_type" SET DEFAULT 'knockout'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "number_of_players" SET DEFAULT '32'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "can_register" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "can_register" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "has_draw" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "has_draw" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "round" SET DEFAULT '1'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "player1_score" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "player2_score" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "status" SET DEFAULT 'upcoming'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "menus" ALTER COLUMN "icon" SET DEFAULT 'GamepadIcon'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "menus" ALTER COLUMN "product_ids" SET DEFAULT '[]'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "menus" ALTER COLUMN "sort_order" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "created_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "menus" ADD "created_at" TIMESTAMP NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "updated_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "menus" ADD "updated_at" TIMESTAMP NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "type" SET DEFAULT 'Tính tiền theo số lượng'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "show_on_scoreboard" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "first_hour_enabled" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "special_hour_enabled" SET DEFAULT false`,
+    );
+    await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "created_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD "created_at" TIMESTAMP NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "updated_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD "updated_at" TIMESTAMP NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" SET DEFAULT '1'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "order_type" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "order_type" SET DEFAULT 'dine-in'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "status" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "status" SET DEFAULT 'pending'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" SET DEFAULT '1'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "price" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "price" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ADD CONSTRAINT "UQ_648e3f5447f725579d7d4ffdfb7" UNIQUE ("name")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_system" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_system" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "requires_timekeeping" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD CONSTRAINT "UQ_fe0bb3f6520ee0469504521e710" UNIQUE ("username")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."salarytype" RENAME TO "salarytype_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."users_salary_type_enum" AS ENUM('hourly', 'fixed')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "salary_type" TYPE "public"."users_salary_type_enum" USING "salary_type"::"text"::"public"."users_salary_type_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "salary_type" SET DEFAULT 'hourly'`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."salarytype_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "salary_type" SET DEFAULT 'hourly'`,
+    );
+    await queryRunner.query(
+      `UPDATE "users" SET "created_at" = NOW() WHERE "created_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `UPDATE "users" SET "updated_at" = NOW() WHERE "updated_at" IS NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ADD CONSTRAINT "UQ_8b0be371d28245da6e4f4b61878" UNIQUE ("name")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ADD CONSTRAINT "UQ_cd34e4bfea359fa09d997a0b87d" UNIQUE ("name")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "quantity" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "min_quantity" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."inventorystatus" RENAME TO "inventorystatus_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."inventories_status_enum" AS ENUM('in_stock', 'out_of_stock', 'low_stock')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "status" TYPE "public"."inventories_status_enum" USING "status"::"text"::"public"."inventories_status_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "status" SET DEFAULT 'in_stock'`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."inventorystatus_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "status" SET DEFAULT 'in_stock'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."transactiontype" RENAME TO "transactiontype_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."inventory_transactions_transaction_type_enum" AS ENUM('in', 'out')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ALTER COLUMN "transaction_type" TYPE "public"."inventory_transactions_transaction_type_enum" USING "transaction_type"::"text"::"public"."inventory_transactions_transaction_type_enum"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."transactiontype_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "unit_type" SET DEFAULT 'base'`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."accounttype" RENAME TO "accounttype_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."inventory_transaction_details_payment_method_enum" AS ENUM('cash', 'bank')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "payment_method" TYPE "public"."inventory_transaction_details_payment_method_enum" USING "payment_method"::"text"::"public"."inventory_transaction_details_payment_method_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ADD CONSTRAINT "UQ_7fedd95b0349371f0d8fdce4204" UNIQUE ("qr_token")`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."qrtokentype" RENAME TO "qrtokentype_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."qr_sessions_token_type_enum" AS ENUM('check_in', 'check_out', 'attendance')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "token_type" TYPE "public"."qr_sessions_token_type_enum" USING "token_type"::"text"::"public"."qr_sessions_token_type_enum"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."qrtokentype_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."attendancestatus" RENAME TO "attendancestatus_old"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."attendances_status_enum" AS ENUM('present', 'late', 'absent', 'early_checkout')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "status" TYPE "public"."attendances_status_enum" USING "status"::"text"::"public"."attendances_status_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "status" SET DEFAULT 'absent'`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."attendancestatus_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "status" SET DEFAULT 'absent'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "allowed_late_minutes" SET DEFAULT '15'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_grace_minutes" SET DEFAULT '10'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_penalty" SET DEFAULT '50000'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "missing_checkout_penalty" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "absent_penalty" SET DEFAULT '100000'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "auto_absent_enabled" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ADD CONSTRAINT "UQ_179b87cb9c77e442df7cc4cc90c" UNIQUE ("device_id")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ADD CONSTRAINT "UQ_222ae74f23a472b174aab729fe5" UNIQUE ("access_token")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ADD CONSTRAINT "UQ_b9518b54867eb613ebe20290692" UNIQUE ("name")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "is_income" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "is_income" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."receipts_payment_method_enum" AS ENUM('cash', 'bank')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "payment_method" TYPE "public"."receipts_payment_method_enum" USING "payment_method"::"text"::"public"."receipts_payment_method_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "payment_method" SET DEFAULT 'cash'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "payment_method" SET DEFAULT 'cash'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ADD CONSTRAINT "UQ_ae4442f3ffa4d8897b1e0adc994" UNIQUE ("revenue_date")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "cash_revenue" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "bank_revenue" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."exchanges_from_account_enum" AS ENUM('cash', 'bank')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "from_account" TYPE "public"."exchanges_from_account_enum" USING "from_account"::"text"::"public"."exchanges_from_account_enum"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."exchanges_to_account_enum" AS ENUM('cash', 'bank')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "to_account" TYPE "public"."exchanges_to_account_enum" USING "to_account"::"text"::"public"."exchanges_to_account_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "is_paid" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "is_paid" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."debts_payment_method_enum" AS ENUM('cash', 'bank')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "payment_method" TYPE "public"."debts_payment_method_enum" USING "payment_method"::"text"::"public"."debts_payment_method_enum"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."accounttype_old"`);
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "is_active" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "is_active" SET DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "sort_order" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "sort_order" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ADD CONSTRAINT "UQ_df5d82e6dde4ce1e6c1029c0b27" UNIQUE ("device_code")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "device_type" SET DEFAULT 'POS'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "is_activated" SET DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ADD CONSTRAINT "UQ_8c2ad80240e18fcac9e7c526311" UNIQUE ("name")`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "table_count" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "x" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "x" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "y" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "y" SET DEFAULT '0'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "width" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "width" SET DEFAULT '100'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "height" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "height" SET DEFAULT '60'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "created_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "created_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "updated_at" SET NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "updated_at" SET DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ADD CONSTRAINT "FK_a422cd63ff5891961bc7c996aa2" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ADD CONSTRAINT "FK_ca269aa26624da44fe02ec20f83" FOREIGN KEY ("user_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_f5f88089acccfab95274a158911" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_b861c4e658ead3ad35a8f54448b" FOREIGN KEY ("player1_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_0cbf67b46121b71e3a94c8b0e30" FOREIGN KEY ("player2_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "FK_b674515b15e7f92e72a77a30bac" FOREIGN KEY ("winner_id") REFERENCES "pool_arena_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ADD CONSTRAINT "FK_e36f2aace55b70811dbaa69f9f4" FOREIGN KEY ("order_id") REFERENCES "pos_orders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ADD CONSTRAINT "FK_3ca731abad68bcf8aeccb1e3147" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD CONSTRAINT "FK_a2cecd1a3531c0b041e29ba46e1" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "FK_c6755c34c98ddd49a1d1226ea03" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "FK_85e09f62b3421df796c3eb3f687" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "FK_01ce132821c2dce0c0f1a0002ae" FOREIGN KEY ("base_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "FK_6b50c137f4009410bf33bd60ca0" FOREIGN KEY ("conversion_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ADD CONSTRAINT "FK_d9a2ac973b889087b33f84d3517" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "FK_3c71c966bded542e359090e66d0" FOREIGN KEY ("transaction_id") REFERENCES "inventory_transactions"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "FK_dbcb339208ad0f9c404526d4902" FOREIGN KEY ("inventory_id") REFERENCES "inventories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ADD CONSTRAINT "FK_a227fc13276caa5c42c59e4f362" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ADD CONSTRAINT "FK_f4280375b005af67a3780912dde" FOREIGN KEY ("work_schedule_id") REFERENCES "work_schedules"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ADD CONSTRAINT "FK_aa902e05aeb5fde7c1dd4ced2b7" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ADD CONSTRAINT "FK_8081dbbc35cad9b0d4b0b10f628" FOREIGN KEY ("device_id") REFERENCES "qr_access_devices"("device_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ADD CONSTRAINT "FK_b3516e918b913c30ff242e60a59" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ADD CONSTRAINT "FK_e676b1bb681d1d0e566e1a64b75" FOREIGN KEY ("receipt_type_id") REFERENCES "receipt_types"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ADD CONSTRAINT "FK_eee1cdcc032068c53ba58a7d8e6" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ADD CONSTRAINT "FK_374042927c583dd6c37b11e40f1" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ADD CONSTRAINT "FK_905b1ebdeb10be7b9312dc4300f" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ADD CONSTRAINT "FK_84eaf4655a3c905530e60dc73c7" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ADD CONSTRAINT "FK_b8f5646c414d863eef62e5fd57f" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ADD CONSTRAINT "FK_9371712959bf7427eb104769ac6" FOREIGN KEY ("area_id") REFERENCES "areas"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "tables" DROP CONSTRAINT "FK_9371712959bf7427eb104769ac6"`);
-        await queryRunner.query(`ALTER TABLE "debts" DROP CONSTRAINT "FK_b8f5646c414d863eef62e5fd57f"`);
-        await queryRunner.query(`ALTER TABLE "safes" DROP CONSTRAINT "FK_84eaf4655a3c905530e60dc73c7"`);
-        await queryRunner.query(`ALTER TABLE "exchanges" DROP CONSTRAINT "FK_905b1ebdeb10be7b9312dc4300f"`);
-        await queryRunner.query(`ALTER TABLE "revenues" DROP CONSTRAINT "FK_374042927c583dd6c37b11e40f1"`);
-        await queryRunner.query(`ALTER TABLE "receipts" DROP CONSTRAINT "FK_eee1cdcc032068c53ba58a7d8e6"`);
-        await queryRunner.query(`ALTER TABLE "receipts" DROP CONSTRAINT "FK_e676b1bb681d1d0e566e1a64b75"`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" DROP CONSTRAINT "FK_b3516e918b913c30ff242e60a59"`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" DROP CONSTRAINT "FK_8081dbbc35cad9b0d4b0b10f628"`);
-        await queryRunner.query(`ALTER TABLE "attendances" DROP CONSTRAINT "FK_aa902e05aeb5fde7c1dd4ced2b7"`);
-        await queryRunner.query(`ALTER TABLE "attendances" DROP CONSTRAINT "FK_f4280375b005af67a3780912dde"`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" DROP CONSTRAINT "FK_a227fc13276caa5c42c59e4f362"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "FK_dbcb339208ad0f9c404526d4902"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "FK_3c71c966bded542e359090e66d0"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" DROP CONSTRAINT "FK_d9a2ac973b889087b33f84d3517"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "FK_6b50c137f4009410bf33bd60ca0"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "FK_01ce132821c2dce0c0f1a0002ae"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "FK_85e09f62b3421df796c3eb3f687"`);
-        await queryRunner.query(`ALTER TABLE "inventories" DROP CONSTRAINT "FK_c6755c34c98ddd49a1d1226ea03"`);
-        await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT "FK_a2cecd1a3531c0b041e29ba46e1"`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" DROP CONSTRAINT "FK_3ca731abad68bcf8aeccb1e3147"`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" DROP CONSTRAINT "FK_e36f2aace55b70811dbaa69f9f4"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_b674515b15e7f92e72a77a30bac"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_0cbf67b46121b71e3a94c8b0e30"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_b861c4e658ead3ad35a8f54448b"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_f5f88089acccfab95274a158911"`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" DROP CONSTRAINT "FK_ca269aa26624da44fe02ec20f83"`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" DROP CONSTRAINT "FK_a422cd63ff5891961bc7c996aa2"`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "height" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "height" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "width" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "width" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "y" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "y" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "x" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tables" ALTER COLUMN "x" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "areas" ALTER COLUMN "table_count" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "areas" DROP CONSTRAINT "UQ_8c2ad80240e18fcac9e7c526311"`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "is_activated" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "devices" ALTER COLUMN "device_type" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "devices" DROP CONSTRAINT "UQ_df5d82e6dde4ce1e6c1029c0b27"`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "sort_order" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "sort_order" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "switches" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "player2_score" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "player1_score" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "round" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "number_of_players" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "tournament_type" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "display" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" DROP CONSTRAINT "UQ_517ca03e32d7ff1162ab4631c82"`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."scoringruletype_old" AS ENUM('win', 'lose', 'draw', 'bonus', 'penalty')`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "rule_type" TYPE "public"."scoringruletype_old" USING "rule_type"::"text"::"public"."scoringruletype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."scoring_rules_rule_type_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."scoringruletype_old" RENAME TO "scoringruletype"`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" DROP CONSTRAINT "UQ_82a2a0ef1e032a71a087847a066"`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" DROP CONSTRAINT "UQ_3122830ef65a6fc5e966f63a54e"`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_267e8bbb6bbe066f899ec41a179"`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_b98ae94aef330fb3756b93d992d"`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "losses" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "wins" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "total_games" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_email_verified" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_phone_verified" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_148f828bb5f98aea3c83c40bf7e"`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_fe02c0853cb5dbaef91e53562a0"`);
-        await queryRunner.query(`CREATE TYPE "public"."poolarenausergender_old" AS ENUM('male', 'female', 'other')`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "gender" TYPE "public"."poolarenausergender_old" USING "gender"::"text"::"public"."poolarenausergender_old"`);
-        await queryRunner.query(`DROP TYPE "public"."pool_arena_users_gender_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."poolarenausergender_old" RENAME TO "poolarenausergender"`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "payment_method" TYPE "public"."accounttype_old" USING "payment_method"::"text"::"public"."accounttype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."debts_payment_method_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "is_paid" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "debts" ALTER COLUMN "is_paid" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "safes" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "to_account" TYPE "public"."accounttype_old" USING "to_account"::"text"::"public"."accounttype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."exchanges_to_account_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`);
-        await queryRunner.query(`CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ALTER COLUMN "from_account" TYPE "public"."accounttype_old" USING "from_account"::"text"::"public"."accounttype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."exchanges_from_account_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "bank_revenue" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "revenues" ALTER COLUMN "cash_revenue" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "revenues" DROP CONSTRAINT "UQ_ae4442f3ffa4d8897b1e0adc994"`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "payment_method" DROP DEFAULT`);
-        await queryRunner.query(`CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "payment_method" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "payment_method" TYPE "public"."accounttype_old" USING "payment_method"::"text"::"public"."accounttype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."receipts_payment_method_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "is_income" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipts" ALTER COLUMN "is_income" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" DROP CONSTRAINT "UQ_b9518b54867eb613ebe20290692"`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" DROP CONSTRAINT "UQ_222ae74f23a472b174aab729fe5"`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_access_devices" DROP CONSTRAINT "UQ_179b87cb9c77e442df7cc4cc90c"`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "penalties" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "auto_absent_enabled" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "absent_penalty" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "missing_checkout_penalty" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_penalty" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_grace_minutes" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendance_settings" ALTER COLUMN "allowed_late_minutes" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`CREATE TYPE "public"."attendancestatus_old" AS ENUM('present', 'late', 'absent', 'early_checkout')`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "attendances" ALTER COLUMN "status" TYPE "public"."attendancestatus_old" USING "status"::"text"::"public"."attendancestatus_old"`);
-        await queryRunner.query(`DROP TYPE "public"."attendances_status_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."attendancestatus_old" RENAME TO "attendancestatus"`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" DROP NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."qrtokentype_old" AS ENUM('check_in', 'check_out', 'attendance')`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ALTER COLUMN "token_type" TYPE "public"."qrtokentype_old" USING "token_type"::"text"::"public"."qrtokentype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."qr_sessions_token_type_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."qrtokentype_old" RENAME TO "qrtokentype"`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" DROP CONSTRAINT "UQ_7fedd95b0349371f0d8fdce4204"`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "payment_method" TYPE "public"."accounttype_old" USING "payment_method"::"text"::"public"."accounttype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."inventory_transaction_details_payment_method_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ALTER COLUMN "unit_type" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."transactiontype_old" AS ENUM('in', 'out')`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ALTER COLUMN "transaction_type" TYPE "public"."transactiontype_old" USING "transaction_type"::"text"::"public"."transactiontype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."inventory_transactions_transaction_type_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."transactiontype_old" RENAME TO "transactiontype"`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`CREATE TYPE "public"."inventorystatus_old" AS ENUM('in_stock', 'out_of_stock', 'low_stock')`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "status" TYPE "public"."inventorystatus_old" USING "status"::"text"::"public"."inventorystatus_old"`);
-        await queryRunner.query(`DROP TYPE "public"."inventories_status_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."inventorystatus_old" RENAME TO "inventorystatus"`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "min_quantity" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "inventories" ALTER COLUMN "quantity" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "units" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "units" DROP CONSTRAINT "UQ_cd34e4bfea359fa09d997a0b87d"`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "categories" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "categories" DROP CONSTRAINT "UQ_8b0be371d28245da6e4f4b61878"`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" DROP DEFAULT`);
-        await queryRunner.query(`CREATE TYPE "public"."salarytype_old" AS ENUM('hourly', 'fixed')`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "salary_type" TYPE "public"."salarytype_old" USING "salary_type"::"text"::"public"."salarytype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."users_salary_type_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."salarytype_old" RENAME TO "salarytype"`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "users" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3"`);
-        await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT "UQ_fe0bb3f6520ee0469504521e710"`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "requires_timekeeping" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_system" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_system" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_active" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "roles" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "roles" DROP CONSTRAINT "UQ_648e3f5447f725579d7d4ffdfb7"`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "price" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "price" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "status" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "order_type" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "order_type" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "updated_at"`);
-        await queryRunner.query(`ALTER TABLE "products" ADD "updated_at" TIMESTAMP WITH TIME ZONE`);
-        await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "created_at"`);
-        await queryRunner.query(`ALTER TABLE "products" ADD "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "special_hour_enabled" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "first_hour_enabled" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "show_on_scoreboard" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "products" ALTER COLUMN "type" SET DEFAULT 'item'`);
-        await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "updated_at"`);
-        await queryRunner.query(`ALTER TABLE "menus" ADD "updated_at" TIMESTAMP WITH TIME ZONE`);
-        await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "created_at"`);
-        await queryRunner.query(`ALTER TABLE "menus" ADD "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "menus" ALTER COLUMN "sort_order" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "menus" ALTER COLUMN "product_ids" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "menus" ALTER COLUMN "icon" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "player2_score" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "player1_score" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ALTER COLUMN "round" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "number_of_players" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "tournament_type" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "status" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" ALTER COLUMN "display" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournaments" DROP CONSTRAINT "UQ_517ca03e32d7ff1162ab4631c82"`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`CREATE TYPE "public"."scoringruletype_old" AS ENUM('win', 'lose', 'draw', 'bonus', 'penalty')`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" ALTER COLUMN "rule_type" TYPE "public"."scoringruletype_old" USING "rule_type"::"text"::"public"."scoringruletype_old"`);
-        await queryRunner.query(`DROP TYPE "public"."scoring_rules_rule_type_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."scoringruletype_old" RENAME TO "scoringruletype"`);
-        await queryRunner.query(`ALTER TABLE "scoring_rules" DROP CONSTRAINT "UQ_82a2a0ef1e032a71a087847a066"`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_rounds" DROP CONSTRAINT "UQ_3122830ef65a6fc5e966f63a54e"`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_267e8bbb6bbe066f899ec41a179"`);
-        await queryRunner.query(`ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_b98ae94aef330fb3756b93d992d"`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "losses" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "wins" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "total_games" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP DEFAULT`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_email_verified" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_phone_verified" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "is_active" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_148f828bb5f98aea3c83c40bf7e"`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_fe02c0853cb5dbaef91e53562a0"`);
-        await queryRunner.query(`CREATE TYPE "public"."poolarenausergender_old" AS ENUM('male', 'female', 'other')`);
-        await queryRunner.query(`ALTER TABLE "pool_arena_users" ALTER COLUMN "gender" TYPE "public"."poolarenausergender_old" USING "gender"::"text"::"public"."poolarenausergender_old"`);
-        await queryRunner.query(`DROP TYPE "public"."pool_arena_users_gender_enum"`);
-        await queryRunner.query(`ALTER TYPE "public"."poolarenausergender_old" RENAME TO "poolarenausergender"`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_status_check" CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'upcoming'::character varying, 'ongoing'::character varying, 'completed'::character varying])::text[])))`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "ck_tournament_matches_status" CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'upcoming'::character varying, 'ongoing'::character varying, 'completed'::character varying])::text[])))`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "ck_tournament_matches_bracket" CHECK (((bracket)::text = ANY (ARRAY['winners'::text, 'losers'::text, 'knockout'::text])))`);
-        await queryRunner.query(`CREATE INDEX "ix_tables_id" ON "tables" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_areas_name" ON "areas" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_areas_id" ON "areas" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_devices_device_code" ON "devices" ("device_code") `);
-        await queryRunner.query(`CREATE INDEX "ix_devices_id" ON "devices" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_switches_id" ON "switches" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_debts_debt_date" ON "debts" ("debt_date") `);
-        await queryRunner.query(`CREATE INDEX "ix_debts_id" ON "debts" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_safes_safe_date" ON "safes" ("safe_date") `);
-        await queryRunner.query(`CREATE INDEX "ix_safes_id" ON "safes" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_exchanges_id" ON "exchanges" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_exchanges_exchange_date" ON "exchanges" ("exchange_date") `);
-        await queryRunner.query(`CREATE INDEX "ix_revenues_id" ON "revenues" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_revenues_revenue_date" ON "revenues" ("revenue_date") `);
-        await queryRunner.query(`CREATE INDEX "ix_receipts_id" ON "receipts" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_receipts_receipt_date" ON "receipts" ("receipt_date") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_receipt_types_name" ON "receipt_types" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_receipt_types_id" ON "receipt_types" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_qr_access_tokens_is_used" ON "qr_access_tokens" ("is_used") `);
-        await queryRunner.query(`CREATE INDEX "ix_qr_access_tokens_id" ON "qr_access_tokens" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_qr_access_tokens_access_token" ON "qr_access_tokens" ("access_token") `);
-        await queryRunner.query(`CREATE INDEX "ix_qr_access_tokens_expires_at" ON "qr_access_tokens" ("expires_at") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_qr_access_devices_device_id" ON "qr_access_devices" ("device_id") `);
-        await queryRunner.query(`CREATE INDEX "ix_qr_access_devices_id" ON "qr_access_devices" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_penalties_date" ON "penalties" ("date") `);
-        await queryRunner.query(`CREATE INDEX "ix_penalties_id" ON "penalties" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_bonuses_date" ON "bonuses" ("date") `);
-        await queryRunner.query(`CREATE INDEX "ix_bonuses_id" ON "bonuses" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_advance_payments_id" ON "advance_payments" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_advance_payments_date" ON "advance_payments" ("date") `);
-        await queryRunner.query(`CREATE INDEX "ix_attendance_settings_id" ON "attendance_settings" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_attendances_date" ON "attendances" ("date") `);
-        await queryRunner.query(`CREATE INDEX "ix_attendances_id" ON "attendances" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_work_schedules_work_date" ON "work_schedules" ("work_date") `);
-        await queryRunner.query(`CREATE INDEX "ix_work_schedules_id" ON "work_schedules" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_qr_sessions_qr_token" ON "qr_sessions" ("qr_token") `);
-        await queryRunner.query(`CREATE INDEX "ix_qr_sessions_id" ON "qr_sessions" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_wifi_configs_id" ON "wifi_configs" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_wifi_configs_ip_subnet" ON "wifi_configs" ("ip_subnet") `);
-        await queryRunner.query(`CREATE INDEX "ix_wifi_configs_ssid" ON "wifi_configs" ("ssid") `);
-        await queryRunner.query(`CREATE INDEX "ix_inventory_transaction_details_id" ON "inventory_transaction_details" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_inventory_transactions_transaction_date" ON "inventory_transactions" ("transaction_date") `);
-        await queryRunner.query(`CREATE INDEX "ix_inventory_transactions_id" ON "inventory_transactions" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_inventories_product_name" ON "inventories" ("product_name") `);
-        await queryRunner.query(`CREATE INDEX "ix_inventories_id" ON "inventories" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_units_id" ON "units" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_units_name" ON "units" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_categories_id" ON "categories" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_categories_name" ON "categories" ("name") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_users_username" ON "users" ("username") `);
-        await queryRunner.query(`CREATE INDEX "ix_users_pin" ON "users" ("pin") `);
-        await queryRunner.query(`CREATE INDEX "ix_users_id" ON "users" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_users_email" ON "users" ("email") `);
-        await queryRunner.query(`CREATE INDEX "ix_roles_id" ON "roles" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_roles_name" ON "roles" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_pos_order_items_id" ON "pos_order_items" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_pos_orders_id" ON "pos_orders" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_products_code" ON "products" ("code") `);
-        await queryRunner.query(`CREATE INDEX "ix_products_category_id" ON "products" ("category_id") `);
-        await queryRunner.query(`CREATE INDEX "ix_products_name" ON "products" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_products_id" ON "products" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_menus_id" ON "menus" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_store_settings_id" ON "store_settings" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_matches_tournament_id" ON "tournament_matches" ("tournament_id") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_matches_match_no" ON "tournament_matches" ("match_no") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_matches_id" ON "tournament_matches" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_registrations_user_id" ON "tournament_registrations" ("user_id") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_registrations_tournament_id" ON "tournament_registrations" ("tournament_id") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_registrations_id" ON "tournament_registrations" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_tournaments_slug" ON "tournaments" ("slug") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournaments_name" ON "tournaments" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournaments_id" ON "tournaments" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_scoring_rules_position" ON "scoring_rules" ("position") `);
-        await queryRunner.query(`CREATE INDEX "ix_scoring_rules_name" ON "scoring_rules" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_scoring_rules_id" ON "scoring_rules" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_tournament_rounds_order" ON "tournament_rounds" ("order") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_rounds_name" ON "tournament_rounds" ("name") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_rounds_id" ON "tournament_rounds" ("id") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_tournament_ranks_name" ON "tournament_ranks" ("name") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_tournament_ranks_order" ON "tournament_ranks" ("order") `);
-        await queryRunner.query(`CREATE INDEX "ix_tournament_ranks_id" ON "tournament_ranks" ("id") `);
-        await queryRunner.query(`CREATE INDEX "ix_pool_arena_users_rank" ON "pool_arena_users" ("rank") `);
-        await queryRunner.query(`CREATE INDEX "ix_pool_arena_users_points" ON "pool_arena_users" ("points") `);
-        await queryRunner.query(`CREATE INDEX "ix_pool_arena_users_is_active" ON "pool_arena_users" ("is_active") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_pool_arena_users_email" ON "pool_arena_users" ("email") `);
-        await queryRunner.query(`CREATE UNIQUE INDEX "ix_pool_arena_users_phone_number" ON "pool_arena_users" ("phone_number") `);
-        await queryRunner.query(`CREATE INDEX "ix_pool_arena_users_id" ON "pool_arena_users" ("id") `);
-        await queryRunner.query(`ALTER TABLE "tables" ADD CONSTRAINT "tables_area_id_fkey" FOREIGN KEY ("area_id") REFERENCES "areas"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "debts" ADD CONSTRAINT "debts_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "safes" ADD CONSTRAINT "safes_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "exchanges" ADD CONSTRAINT "exchanges_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "revenues" ADD CONSTRAINT "revenues_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "receipts" ADD CONSTRAINT "receipts_receipt_type_id_fkey" FOREIGN KEY ("receipt_type_id") REFERENCES "receipt_types"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "receipts" ADD CONSTRAINT "receipts_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "receipt_types" ADD CONSTRAINT "receipt_types_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "qr_access_tokens" ADD CONSTRAINT "qr_access_tokens_device_id_fkey" FOREIGN KEY ("device_id") REFERENCES "qr_access_devices"("device_id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "penalties" ADD CONSTRAINT "penalties_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "penalties" ADD CONSTRAINT "penalties_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ADD CONSTRAINT "bonuses_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "bonuses" ADD CONSTRAINT "bonuses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ADD CONSTRAINT "advance_payments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "advance_payments" ADD CONSTRAINT "advance_payments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "attendances" ADD CONSTRAINT "attendances_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "attendances" ADD CONSTRAINT "attendances_work_schedule_id_fkey" FOREIGN KEY ("work_schedule_id") REFERENCES "work_schedules"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "work_schedules" ADD CONSTRAINT "work_schedules_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "qr_sessions" ADD CONSTRAINT "qr_sessions_used_by_fkey" FOREIGN KEY ("used_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "inventory_transaction_details_transaction_id_fkey" FOREIGN KEY ("transaction_id") REFERENCES "inventory_transactions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "inventory_transaction_details_inventory_id_fkey" FOREIGN KEY ("inventory_id") REFERENCES "inventories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventory_transactions" ADD CONSTRAINT "inventory_transactions_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "inventories_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "inventories_base_unit_id_fkey" FOREIGN KEY ("base_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "inventories_conversion_unit_id_fkey" FOREIGN KEY ("conversion_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "inventories" ADD CONSTRAINT "inventories_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "users" ADD CONSTRAINT "users_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ADD CONSTRAINT "pos_order_items_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "pos_orders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pos_order_items" ADD CONSTRAINT "pos_order_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ADD CONSTRAINT "pos_orders_area_id_fkey" FOREIGN KEY ("area_id") REFERENCES "areas"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "pos_orders" ADD CONSTRAINT "pos_orders_table_id_fkey" FOREIGN KEY ("table_id") REFERENCES "tables"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_player1_id_fkey" FOREIGN KEY ("player1_id") REFERENCES "pool_arena_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_player2_id_fkey" FOREIGN KEY ("player2_id") REFERENCES "pool_arena_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_winner_id_fkey" FOREIGN KEY ("winner_id") REFERENCES "pool_arena_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ADD CONSTRAINT "tournament_registrations_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "tournament_registrations" ADD CONSTRAINT "tournament_registrations_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "pool_arena_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "tables" DROP CONSTRAINT "FK_9371712959bf7427eb104769ac6"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" DROP CONSTRAINT "FK_b8f5646c414d863eef62e5fd57f"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" DROP CONSTRAINT "FK_84eaf4655a3c905530e60dc73c7"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" DROP CONSTRAINT "FK_905b1ebdeb10be7b9312dc4300f"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" DROP CONSTRAINT "FK_374042927c583dd6c37b11e40f1"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" DROP CONSTRAINT "FK_eee1cdcc032068c53ba58a7d8e6"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" DROP CONSTRAINT "FK_e676b1bb681d1d0e566e1a64b75"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" DROP CONSTRAINT "FK_b3516e918b913c30ff242e60a59"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" DROP CONSTRAINT "FK_8081dbbc35cad9b0d4b0b10f628"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" DROP CONSTRAINT "FK_aa902e05aeb5fde7c1dd4ced2b7"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" DROP CONSTRAINT "FK_f4280375b005af67a3780912dde"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" DROP CONSTRAINT "FK_a227fc13276caa5c42c59e4f362"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "FK_dbcb339208ad0f9c404526d4902"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" DROP CONSTRAINT "FK_3c71c966bded542e359090e66d0"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" DROP CONSTRAINT "FK_d9a2ac973b889087b33f84d3517"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "FK_6b50c137f4009410bf33bd60ca0"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "FK_01ce132821c2dce0c0f1a0002ae"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "FK_85e09f62b3421df796c3eb3f687"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" DROP CONSTRAINT "FK_c6755c34c98ddd49a1d1226ea03"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP CONSTRAINT "FK_a2cecd1a3531c0b041e29ba46e1"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" DROP CONSTRAINT "FK_3ca731abad68bcf8aeccb1e3147"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" DROP CONSTRAINT "FK_e36f2aace55b70811dbaa69f9f4"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_b674515b15e7f92e72a77a30bac"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_0cbf67b46121b71e3a94c8b0e30"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_b861c4e658ead3ad35a8f54448b"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" DROP CONSTRAINT "FK_f5f88089acccfab95274a158911"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" DROP CONSTRAINT "FK_ca269aa26624da44fe02ec20f83"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" DROP CONSTRAINT "FK_a422cd63ff5891961bc7c996aa2"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "height" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "height" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "width" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "width" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "y" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "y" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "x" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ALTER COLUMN "x" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" ALTER COLUMN "table_count" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "areas" DROP CONSTRAINT "UQ_8c2ad80240e18fcac9e7c526311"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "is_activated" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" ALTER COLUMN "device_type" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "devices" DROP CONSTRAINT "UQ_df5d82e6dde4ce1e6c1029c0b27"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "sort_order" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "sort_order" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "switches" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "player2_score" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "player1_score" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "round" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "number_of_players" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "tournament_type" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "display" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" DROP CONSTRAINT "UQ_517ca03e32d7ff1162ab4631c82"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."scoringruletype_old" AS ENUM('win', 'lose', 'draw', 'bonus', 'penalty')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "rule_type" TYPE "public"."scoringruletype_old" USING "rule_type"::"text"::"public"."scoringruletype_old"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."scoring_rules_rule_type_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."scoringruletype_old" RENAME TO "scoringruletype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" DROP CONSTRAINT "UQ_82a2a0ef1e032a71a087847a066"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" DROP CONSTRAINT "UQ_3122830ef65a6fc5e966f63a54e"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_267e8bbb6bbe066f899ec41a179"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_b98ae94aef330fb3756b93d992d"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "losses" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "wins" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "total_games" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_email_verified" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_phone_verified" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_148f828bb5f98aea3c83c40bf7e"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_fe02c0853cb5dbaef91e53562a0"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."poolarenausergender_old" AS ENUM('male', 'female', 'other')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "gender" TYPE "public"."poolarenausergender_old" USING "gender"::"text"::"public"."poolarenausergender_old"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."pool_arena_users_gender_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."poolarenausergender_old" RENAME TO "poolarenausergender"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "payment_method" TYPE "public"."accounttype_old" USING "payment_method"::"text"::"public"."accounttype_old"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."debts_payment_method_enum"`);
+    await queryRunner.query(
+      `ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "is_paid" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ALTER COLUMN "is_paid" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "to_account" TYPE "public"."accounttype_old" USING "to_account"::"text"::"public"."accounttype_old"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."exchanges_to_account_enum"`);
+    await queryRunner.query(
+      `ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ALTER COLUMN "from_account" TYPE "public"."accounttype_old" USING "from_account"::"text"::"public"."accounttype_old"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."exchanges_from_account_enum"`);
+    await queryRunner.query(
+      `ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "bank_revenue" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ALTER COLUMN "cash_revenue" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" DROP CONSTRAINT "UQ_ae4442f3ffa4d8897b1e0adc994"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "payment_method" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "payment_method" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "payment_method" TYPE "public"."accounttype_old" USING "payment_method"::"text"::"public"."accounttype_old"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."receipts_payment_method_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "is_income" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ALTER COLUMN "is_income" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_inventory" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" DROP CONSTRAINT "UQ_b9518b54867eb613ebe20290692"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ALTER COLUMN "is_used" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" DROP CONSTRAINT "UQ_222ae74f23a472b174aab729fe5"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_devices" DROP CONSTRAINT "UQ_179b87cb9c77e442df7cc4cc90c"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "auto_absent_enabled" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "absent_penalty" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "missing_checkout_penalty" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_penalty" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "early_checkout_grace_minutes" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendance_settings" ALTER COLUMN "allowed_late_minutes" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."attendancestatus_old" AS ENUM('present', 'late', 'absent', 'early_checkout')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ALTER COLUMN "status" TYPE "public"."attendancestatus_old" USING "status"::"text"::"public"."attendancestatus_old"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."attendances_status_enum"`);
+    await queryRunner.query(
+      `ALTER TYPE "public"."attendancestatus_old" RENAME TO "attendancestatus"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ALTER COLUMN "allowed_late_minutes" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "is_used" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."qrtokentype_old" AS ENUM('check_in', 'check_out', 'attendance')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ALTER COLUMN "token_type" TYPE "public"."qrtokentype_old" USING "token_type"::"text"::"public"."qrtokentype_old"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."qr_sessions_token_type_enum"`);
+    await queryRunner.query(
+      `ALTER TYPE "public"."qrtokentype_old" RENAME TO "qrtokentype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" DROP CONSTRAINT "UQ_7fedd95b0349371f0d8fdce4204"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "wifi_configs" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."accounttype_old" AS ENUM('CASH', 'BANK')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "payment_method" TYPE "public"."accounttype_old" USING "payment_method"::"text"::"public"."accounttype_old"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."inventory_transaction_details_payment_method_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."accounttype_old" RENAME TO "accounttype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ALTER COLUMN "unit_type" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."transactiontype_old" AS ENUM('in', 'out')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ALTER COLUMN "transaction_type" TYPE "public"."transactiontype_old" USING "transaction_type"::"text"::"public"."transactiontype_old"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."inventory_transactions_transaction_type_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."transactiontype_old" RENAME TO "transactiontype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."inventorystatus_old" AS ENUM('in_stock', 'out_of_stock', 'low_stock')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "status" TYPE "public"."inventorystatus_old" USING "status"::"text"::"public"."inventorystatus_old"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."inventories_status_enum"`);
+    await queryRunner.query(
+      `ALTER TYPE "public"."inventorystatus_old" RENAME TO "inventorystatus"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "min_quantity" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ALTER COLUMN "quantity" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "units" DROP CONSTRAINT "UQ_cd34e4bfea359fa09d997a0b87d"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "categories" DROP CONSTRAINT "UQ_8b0be371d28245da6e4f4b61878"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "salary_type" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."salarytype_old" AS ENUM('hourly', 'fixed')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "salary_type" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "salary_type" TYPE "public"."salarytype_old" USING "salary_type"::"text"::"public"."salarytype_old"`,
+    );
+    await queryRunner.query(`DROP TYPE "public"."users_salary_type_enum"`);
+    await queryRunner.query(
+      `ALTER TYPE "public"."salarytype_old" RENAME TO "salarytype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP CONSTRAINT "UQ_fe0bb3f6520ee0469504521e710"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "requires_timekeeping" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_system" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_system" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_active" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "roles" DROP CONSTRAINT "UQ_648e3f5447f725579d7d4ffdfb7"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "is_time_based" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "price" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "price" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ALTER COLUMN "quantity" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "total_amount" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "status" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "order_type" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "order_type" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ALTER COLUMN "customer_count" DROP NOT NULL`,
+    );
+    await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "updated_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD "updated_at" TIMESTAMP WITH TIME ZONE`,
+    );
+    await queryRunner.query(`ALTER TABLE "products" DROP COLUMN "created_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "products" ADD "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "special_hour_enabled" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "first_hour_enabled" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "show_on_scoreboard" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "products" ALTER COLUMN "type" SET DEFAULT 'item'`,
+    );
+    await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "updated_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "menus" ADD "updated_at" TIMESTAMP WITH TIME ZONE`,
+    );
+    await queryRunner.query(`ALTER TABLE "menus" DROP COLUMN "created_at"`);
+    await queryRunner.query(
+      `ALTER TABLE "menus" ADD "created_at" TIMESTAMP WITH TIME ZONE DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "menus" ALTER COLUMN "sort_order" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "menus" ALTER COLUMN "product_ids" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "menus" ALTER COLUMN "icon" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "store_settings" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "player2_score" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "player1_score" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ALTER COLUMN "round" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ALTER COLUMN "registered_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_8" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_32" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_16" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "round_1_64" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "has_draw" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "pre_payment" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "free_table_fee" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "can_register" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "number_of_players" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "tournament_type" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "status" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" ALTER COLUMN "display" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournaments" DROP CONSTRAINT "UQ_517ca03e32d7ff1162ab4631c82"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."scoringruletype_old" AS ENUM('win', 'lose', 'draw', 'bonus', 'penalty')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" ALTER COLUMN "rule_type" TYPE "public"."scoringruletype_old" USING "rule_type"::"text"::"public"."scoringruletype_old"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."scoring_rules_rule_type_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."scoringruletype_old" RENAME TO "scoringruletype"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "scoring_rules" DROP CONSTRAINT "UQ_82a2a0ef1e032a71a087847a066"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_rounds" DROP CONSTRAINT "UQ_3122830ef65a6fc5e966f63a54e"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_267e8bbb6bbe066f899ec41a179"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_ranks" DROP CONSTRAINT "UQ_b98ae94aef330fb3756b93d992d"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "updated_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "created_at" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "losses" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "wins" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "total_games" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP DEFAULT`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "points" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_email_verified" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_phone_verified" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "is_active" DROP NOT NULL`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_148f828bb5f98aea3c83c40bf7e"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" DROP CONSTRAINT "UQ_fe02c0853cb5dbaef91e53562a0"`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."poolarenausergender_old" AS ENUM('male', 'female', 'other')`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pool_arena_users" ALTER COLUMN "gender" TYPE "public"."poolarenausergender_old" USING "gender"::"text"::"public"."poolarenausergender_old"`,
+    );
+    await queryRunner.query(
+      `DROP TYPE "public"."pool_arena_users_gender_enum"`,
+    );
+    await queryRunner.query(
+      `ALTER TYPE "public"."poolarenausergender_old" RENAME TO "poolarenausergender"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_status_check" CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'upcoming'::character varying, 'ongoing'::character varying, 'completed'::character varying])::text[])))`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "ck_tournament_matches_status" CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'upcoming'::character varying, 'ongoing'::character varying, 'completed'::character varying])::text[])))`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "ck_tournament_matches_bracket" CHECK (((bracket)::text = ANY (ARRAY['winners'::text, 'losers'::text, 'knockout'::text])))`,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_tables_id" ON "tables" ("id") `);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_areas_name" ON "areas" ("name") `,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_areas_id" ON "areas" ("id") `);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_devices_device_code" ON "devices" ("device_code") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_devices_id" ON "devices" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_switches_id" ON "switches" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_debts_debt_date" ON "debts" ("debt_date") `,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_debts_id" ON "debts" ("id") `);
+    await queryRunner.query(
+      `CREATE INDEX "ix_safes_safe_date" ON "safes" ("safe_date") `,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_safes_id" ON "safes" ("id") `);
+    await queryRunner.query(
+      `CREATE INDEX "ix_exchanges_id" ON "exchanges" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_exchanges_exchange_date" ON "exchanges" ("exchange_date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_revenues_id" ON "revenues" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_revenues_revenue_date" ON "revenues" ("revenue_date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_receipts_id" ON "receipts" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_receipts_receipt_date" ON "receipts" ("receipt_date") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_receipt_types_name" ON "receipt_types" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_receipt_types_id" ON "receipt_types" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_qr_access_tokens_is_used" ON "qr_access_tokens" ("is_used") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_qr_access_tokens_id" ON "qr_access_tokens" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_qr_access_tokens_access_token" ON "qr_access_tokens" ("access_token") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_qr_access_tokens_expires_at" ON "qr_access_tokens" ("expires_at") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_qr_access_devices_device_id" ON "qr_access_devices" ("device_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_qr_access_devices_id" ON "qr_access_devices" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_penalties_date" ON "penalties" ("date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_penalties_id" ON "penalties" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_bonuses_date" ON "bonuses" ("date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_bonuses_id" ON "bonuses" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_advance_payments_id" ON "advance_payments" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_advance_payments_date" ON "advance_payments" ("date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_attendance_settings_id" ON "attendance_settings" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_attendances_date" ON "attendances" ("date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_attendances_id" ON "attendances" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_work_schedules_work_date" ON "work_schedules" ("work_date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_work_schedules_id" ON "work_schedules" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_qr_sessions_qr_token" ON "qr_sessions" ("qr_token") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_qr_sessions_id" ON "qr_sessions" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_wifi_configs_id" ON "wifi_configs" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_wifi_configs_ip_subnet" ON "wifi_configs" ("ip_subnet") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_wifi_configs_ssid" ON "wifi_configs" ("ssid") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_inventory_transaction_details_id" ON "inventory_transaction_details" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_inventory_transactions_transaction_date" ON "inventory_transactions" ("transaction_date") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_inventory_transactions_id" ON "inventory_transactions" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_inventories_product_name" ON "inventories" ("product_name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_inventories_id" ON "inventories" ("id") `,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_units_id" ON "units" ("id") `);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_units_name" ON "units" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_categories_id" ON "categories" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_categories_name" ON "categories" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_users_username" ON "users" ("username") `,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_users_pin" ON "users" ("pin") `);
+    await queryRunner.query(`CREATE INDEX "ix_users_id" ON "users" ("id") `);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_users_email" ON "users" ("email") `,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_roles_id" ON "roles" ("id") `);
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_roles_name" ON "roles" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_pos_order_items_id" ON "pos_order_items" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_pos_orders_id" ON "pos_orders" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_products_code" ON "products" ("code") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_products_category_id" ON "products" ("category_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_products_name" ON "products" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_products_id" ON "products" ("id") `,
+    );
+    await queryRunner.query(`CREATE INDEX "ix_menus_id" ON "menus" ("id") `);
+    await queryRunner.query(
+      `CREATE INDEX "ix_store_settings_id" ON "store_settings" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_matches_tournament_id" ON "tournament_matches" ("tournament_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_matches_match_no" ON "tournament_matches" ("match_no") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_matches_id" ON "tournament_matches" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_registrations_user_id" ON "tournament_registrations" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_registrations_tournament_id" ON "tournament_registrations" ("tournament_id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_registrations_id" ON "tournament_registrations" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_tournaments_slug" ON "tournaments" ("slug") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournaments_name" ON "tournaments" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournaments_id" ON "tournaments" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_scoring_rules_position" ON "scoring_rules" ("position") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_scoring_rules_name" ON "scoring_rules" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_scoring_rules_id" ON "scoring_rules" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_tournament_rounds_order" ON "tournament_rounds" ("order") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_rounds_name" ON "tournament_rounds" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_rounds_id" ON "tournament_rounds" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_tournament_ranks_name" ON "tournament_ranks" ("name") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_tournament_ranks_order" ON "tournament_ranks" ("order") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_tournament_ranks_id" ON "tournament_ranks" ("id") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_pool_arena_users_rank" ON "pool_arena_users" ("rank") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_pool_arena_users_points" ON "pool_arena_users" ("points") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_pool_arena_users_is_active" ON "pool_arena_users" ("is_active") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_pool_arena_users_email" ON "pool_arena_users" ("email") `,
+    );
+    await queryRunner.query(
+      `CREATE UNIQUE INDEX "ix_pool_arena_users_phone_number" ON "pool_arena_users" ("phone_number") `,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "ix_pool_arena_users_id" ON "pool_arena_users" ("id") `,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tables" ADD CONSTRAINT "tables_area_id_fkey" FOREIGN KEY ("area_id") REFERENCES "areas"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "debts" ADD CONSTRAINT "debts_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "safes" ADD CONSTRAINT "safes_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "exchanges" ADD CONSTRAINT "exchanges_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "revenues" ADD CONSTRAINT "revenues_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ADD CONSTRAINT "receipts_receipt_type_id_fkey" FOREIGN KEY ("receipt_type_id") REFERENCES "receipt_types"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipts" ADD CONSTRAINT "receipts_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "receipt_types" ADD CONSTRAINT "receipt_types_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_access_tokens" ADD CONSTRAINT "qr_access_tokens_device_id_fkey" FOREIGN KEY ("device_id") REFERENCES "qr_access_devices"("device_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ADD CONSTRAINT "penalties_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "penalties" ADD CONSTRAINT "penalties_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ADD CONSTRAINT "bonuses_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "bonuses" ADD CONSTRAINT "bonuses_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ADD CONSTRAINT "advance_payments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "advance_payments" ADD CONSTRAINT "advance_payments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ADD CONSTRAINT "attendances_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "attendances" ADD CONSTRAINT "attendances_work_schedule_id_fkey" FOREIGN KEY ("work_schedule_id") REFERENCES "work_schedules"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "work_schedules" ADD CONSTRAINT "work_schedules_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "qr_sessions" ADD CONSTRAINT "qr_sessions_used_by_fkey" FOREIGN KEY ("used_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "inventory_transaction_details_transaction_id_fkey" FOREIGN KEY ("transaction_id") REFERENCES "inventory_transactions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transaction_details" ADD CONSTRAINT "inventory_transaction_details_inventory_id_fkey" FOREIGN KEY ("inventory_id") REFERENCES "inventories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventory_transactions" ADD CONSTRAINT "inventory_transactions_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "inventories_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "inventories_base_unit_id_fkey" FOREIGN KEY ("base_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "inventories_conversion_unit_id_fkey" FOREIGN KEY ("conversion_unit_id") REFERENCES "units"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "inventories" ADD CONSTRAINT "inventories_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD CONSTRAINT "users_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ADD CONSTRAINT "pos_order_items_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "pos_orders"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_order_items" ADD CONSTRAINT "pos_order_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ADD CONSTRAINT "pos_orders_area_id_fkey" FOREIGN KEY ("area_id") REFERENCES "areas"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "pos_orders" ADD CONSTRAINT "pos_orders_table_id_fkey" FOREIGN KEY ("table_id") REFERENCES "tables"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_player1_id_fkey" FOREIGN KEY ("player1_id") REFERENCES "pool_arena_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_player2_id_fkey" FOREIGN KEY ("player2_id") REFERENCES "pool_arena_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_matches" ADD CONSTRAINT "tournament_matches_winner_id_fkey" FOREIGN KEY ("winner_id") REFERENCES "pool_arena_users"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ADD CONSTRAINT "tournament_registrations_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "tournaments"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "tournament_registrations" ADD CONSTRAINT "tournament_registrations_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "pool_arena_users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+  }
 }

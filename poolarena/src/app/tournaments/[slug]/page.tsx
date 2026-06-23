@@ -336,7 +336,7 @@ export default function TournamentDetailPage() {
             src={bannerSrc}
             alt={tournament.title}
             fill
-            sizes="100vw"
+            unoptimized
             className="object-cover"
             priority
             onError={() => setBannerSrc('/images/tour_banner.webp')}
@@ -685,6 +685,7 @@ export default function TournamentDetailPage() {
             src={bannerSrc}
             alt={tournament.title}
             fill
+            unoptimized
             className="object-cover object-top"
             priority
             onError={() => setBannerSrc('/images/tour_banner.webp')}

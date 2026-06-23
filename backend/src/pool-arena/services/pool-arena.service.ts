@@ -44,7 +44,13 @@ export class PoolArenaService {
     return this.repo.save(user);
   }
 
-  async findAll(skip = 0, limit = 50, search?: string, rank?: string, gender?: string) {
+  async findAll(
+    skip = 0,
+    limit = 50,
+    search?: string,
+    rank?: string,
+    gender?: string,
+  ) {
     const qb = this.repo
       .createQueryBuilder('u')
       .where('u.user_type IN (:...types)', { types: ['player', 'both'] })
@@ -71,12 +77,18 @@ export class PoolArenaService {
   async findOne(id: number) {
     const user = await this.repo
       .createQueryBuilder('u')
-      .where('u.id = :id AND u.user_type IN (:...types)', { id, types: ['player', 'both'] })
+      .where('u.id = :id AND u.user_type IN (:...types)', {
+        id,
+        types: ['player', 'both'],
+      })
       .getOne();
     if (!user) throw new NotFoundException('PoolArena user not found');
 
     try {
-      const { TournamentRegistrationEntity, TournamentEntity } = require('../../tournaments/entities');
+      const {
+        TournamentRegistrationEntity,
+        TournamentEntity,
+      } = require('../../tournaments/entities');
       const count = await this.repo.manager
         .createQueryBuilder(TournamentRegistrationEntity, 'reg')
         .innerJoin(TournamentEntity, 'tour', 'tour.id = reg.tournament_id')
@@ -128,7 +140,9 @@ export class PoolArenaService {
     const fullPath = path.join(uploadsDir, relativePath);
     try {
       if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   async getRankings(limit = 100) {

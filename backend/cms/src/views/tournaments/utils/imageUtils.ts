@@ -77,24 +77,14 @@ export function createImageHandlers(
     const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            try {
-                const croppedFile = await cropImageToSize(file, 1920, 450);
-                setFormData(prev => ({ ...prev, banner: croppedFile }));
-            } catch (_error) {
-                alert(`Lỗi khi xử lý ảnh banner "${file.name}"`);
-            }
+            setFormData(prev => ({ ...prev, banner: file }));
         }
     };
 
     const handleOrganizerLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            try {
-                const croppedFile = await cropImageToSize(file, 300, 100);
-                setFormData(prev => ({ ...prev, organizer_logo: croppedFile }));
-            } catch (_error) {
-                alert(`Lỗi khi xử lý ảnh logo "${file.name}"`);
-            }
+            setFormData(prev => ({ ...prev, organizer_logo: file }));
         }
     };
 
@@ -102,20 +92,7 @@ export function createImageHandlers(
         const files = e.target.files;
         if (files) {
             const fileArray = Array.from(files);
-            const processedFiles: File[] = [];
-
-            for (const file of fileArray) {
-                try {
-                    const croppedFile = await cropImageToSize(file, 220, 100);
-                    processedFiles.push(croppedFile);
-                } catch (_error) {
-                    alert(`Lỗi khi xử lý ảnh "${file.name}"`);
-                }
-            }
-
-            if (processedFiles.length > 0) {
-                setFormData(prev => ({ ...prev, sponsor_logos: [...prev.sponsor_logos, ...processedFiles] }));
-            }
+            setFormData(prev => ({ ...prev, sponsor_logos: [...prev.sponsor_logos, ...fileArray] }));
         }
     };
 
@@ -155,12 +132,7 @@ export function createImageHandlers(
     const handleDetailLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            try {
-                const croppedFile = await cropImageToSize(file, 300, 100);
-                setFormData(prev => ({ ...prev, detail_logo: croppedFile }));
-            } catch (_error) {
-                alert(`Lỗi khi xử lý ảnh logo trang giải "${file.name}"`);
-            }
+            setFormData(prev => ({ ...prev, detail_logo: file }));
         }
     };
 

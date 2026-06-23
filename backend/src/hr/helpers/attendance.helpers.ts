@@ -126,7 +126,10 @@ export function recalculateStatus(
 ) {
   if (attendance.check_in_time) {
     // Clear seconds/milliseconds for lateness check to avoid seconds (like :47s) causing on-minute check-ins to show as late
-    const checkInMom = moment(attendance.check_in_time).utcOffset(7).second(0).millisecond(0);
+    const checkInMom = moment(attendance.check_in_time)
+      .utcOffset(7)
+      .second(0)
+      .millisecond(0);
     const dateStr =
       typeof attendance.date === 'string'
         ? attendance.date

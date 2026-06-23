@@ -49,10 +49,9 @@ export function cropImageToSize(file: File, targetWidth: number, targetHeight: n
                         reject(new Error('Failed to crop image'));
                         return;
                     }
-                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    resolve(new File([blob], file.name, { type: 'image/png' }));
                 },
-                'image/jpeg',
-                0.92
+                'image/png'
             );
         };
 

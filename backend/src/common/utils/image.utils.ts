@@ -14,7 +14,7 @@ export async function convertToWebp(filePath: string): Promise<string> {
   if (!CONVERTIBLE_EXTENSIONS.has(ext)) return filePath;
 
   const webpPath = filePath.slice(0, -ext.length) + '.webp';
-  await sharp(filePath).webp({ quality: 85 }).toFile(webpPath);
+  await sharp(filePath).webp({ quality: 95, smartSubsample: true, effort: 6 }).toFile(webpPath);
   fs.unlinkSync(filePath);
   return webpPath;
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Subject } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, Not } from 'typeorm';
@@ -29,25 +33,43 @@ const formatLevel = (rank: string | null | undefined): string => {
   if (!rank) return 'Chưa có level';
   const cleanRank = rank.trim().toUpperCase();
   switch (cleanRank) {
-    case 'I': return 'Level 1';
-    case 'K': return 'Level 1';
-    case 'H': return 'Level 2';
-    case 'G': return 'Level 3';
-    case 'F': return 'Level 4';
-    case 'E': return 'Level 5';
-    case 'D': return 'Level 6';
-    case 'C': return 'Level 7';
-    case 'B': return 'Level 8';
-    case 'A': return 'Level 9';
-    case 'S': return 'Level 10 (MASTER)';
-    default: return `Level ${rank}`;
+    case 'I':
+      return 'Level 1';
+    case 'K':
+      return 'Level 1';
+    case 'H':
+      return 'Level 2';
+    case 'G':
+      return 'Level 3';
+    case 'F':
+      return 'Level 4';
+    case 'E':
+      return 'Level 5';
+    case 'D':
+      return 'Level 6';
+    case 'C':
+      return 'Level 7';
+    case 'B':
+      return 'Level 8';
+    case 'A':
+      return 'Level 9';
+    case 'S':
+      return 'Level 10 (MASTER)';
+    default:
+      return `Level ${rank}`;
   }
 };
 
 @Injectable()
 export class TournamentsService {
-  private readonly matchUpdates$ = new Subject<{ tournamentId: number; match: any }>();
-  private readonly paymentSuccess$ = new Subject<{ tournamentId: number; userId: number }>();
+  private readonly matchUpdates$ = new Subject<{
+    tournamentId: number;
+    match: any;
+  }>();
+  private readonly paymentSuccess$ = new Subject<{
+    tournamentId: number;
+    userId: number;
+  }>();
 
   getMatchUpdatesStream() {
     return this.matchUpdates$.asObservable();
@@ -63,7 +85,10 @@ export class TournamentsService {
       relations: ['player1', 'player2', 'winner'],
     });
     if (reloaded) {
-      this.matchUpdates$.next({ tournamentId: reloaded.tournament_id, match: reloaded });
+      this.matchUpdates$.next({
+        tournamentId: reloaded.tournament_id,
+        match: reloaded,
+      });
     }
   }
 
@@ -97,15 +122,22 @@ export class TournamentsService {
     return `POOLARENA${random}`;
   }
 
-  async createPaymentCode(tournamentId: number, userId: number): Promise<string> {
+  async createPaymentCode(
+    tournamentId: number,
+    userId: number,
+  ): Promise<string> {
     const existing = await this.regRepo.findOne({
       where: { tournament_id: tournamentId, user_id: userId },
     });
     if (existing) {
-      throw new BadRequestException('User already registered for this tournament');
+      throw new BadRequestException(
+        'User already registered for this tournament',
+      );
     }
 
-    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    const tournament = await this.tourRepo.findOne({
+      where: { id: tournamentId },
+    });
     if (!tournament) {
       throw new NotFoundException('Tournament not found');
     }
@@ -121,7 +153,9 @@ export class TournamentsService {
 
     if (tournament.free_registration_fee || tournament.registration_fee === 0) {
       await this.registerPlayer(tournamentId, userId, 0);
-      throw new BadRequestException('User already registered for this tournament');
+      throw new BadRequestException(
+        'User already registered for this tournament',
+      );
     }
 
     let allowedRanks: string[] = [];
@@ -135,7 +169,9 @@ export class TournamentsService {
 
     if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
       const userRank = user.rank ? user.rank.toUpperCase() : '';
-      const isAllowed = allowedRanks.map((r) => r.toUpperCase()).includes(userRank);
+      const isAllowed = allowedRanks
+        .map((r) => r.toUpperCase())
+        .includes(userRank);
       if (!isAllowed) {
         throw new BadRequestException(
           `Level của bạn (${user.rank ? formatLevel(user.rank) : 'N/A'}) không được tham gia giải đấu này (Chỉ nhận các level: ${allowedRanks.map(formatLevel).join(', ')})`,
@@ -165,9 +201,13 @@ export class TournamentsService {
   }
 
   async redeemPaymentCode(code: string, paidAmount: number): Promise<void> {
-    const record = await this.paymentCodeRepo.findOne({ where: { code, used: false } });
+    const record = await this.paymentCodeRepo.findOne({
+      where: { code, used: false },
+    });
     if (!record) {
-      throw new NotFoundException(`Payment code "${code}" not found or already used`);
+      throw new NotFoundException(
+        `Payment code "${code}" not found or already used`,
+      );
     }
 
     await this.registerPlayer(record.tournament_id, record.user_id, paidAmount);
@@ -175,7 +215,10 @@ export class TournamentsService {
     record.used = true;
     await this.paymentCodeRepo.save(record);
 
-    this.paymentSuccess$.next({ tournamentId: record.tournament_id, userId: record.user_id });
+    this.paymentSuccess$.next({
+      tournamentId: record.tournament_id,
+      userId: record.user_id,
+    });
   }
 
   private mapTournament(t: TournamentEntity) {
@@ -252,13 +295,21 @@ export class TournamentsService {
   }
 
   async create(dto: CreateTournamentDto) {
-    const { sponsor_logos, ranks, enabled_tables, priority_tables, ...rest } = dto;
+    const { sponsor_logos, ranks, enabled_tables, priority_tables, ...rest } =
+      dto;
     const entity = new TournamentEntity();
     Object.assign(entity, rest);
-    if (sponsor_logos !== undefined) entity.sponsor_logos = JSON.stringify(sponsor_logos);
+    if (sponsor_logos !== undefined)
+      entity.sponsor_logos = JSON.stringify(sponsor_logos);
     if (ranks !== undefined) entity.ranks = JSON.stringify(ranks);
-    if (enabled_tables !== undefined) entity.enabled_tables = enabled_tables ? JSON.stringify(enabled_tables) : null;
-    if (priority_tables !== undefined) entity.priority_tables = priority_tables ? JSON.stringify(priority_tables) : null;
+    if (enabled_tables !== undefined)
+      entity.enabled_tables = enabled_tables
+        ? JSON.stringify(enabled_tables)
+        : null;
+    if (priority_tables !== undefined)
+      entity.priority_tables = priority_tables
+        ? JSON.stringify(priority_tables)
+        : null;
     const saved = await this.tourRepo.save(entity);
     return this.mapTournament(saved);
   }
@@ -267,12 +318,20 @@ export class TournamentsService {
     const tour = await this.tourRepo.findOne({ where: { id } });
     if (!tour) throw new NotFoundException('Tournament not found');
 
-    const { sponsor_logos, ranks, enabled_tables, priority_tables, ...rest } = dto;
+    const { sponsor_logos, ranks, enabled_tables, priority_tables, ...rest } =
+      dto;
     const updates: any = { ...rest };
-    if (sponsor_logos !== undefined) updates.sponsor_logos = JSON.stringify(sponsor_logos);
+    if (sponsor_logos !== undefined)
+      updates.sponsor_logos = JSON.stringify(sponsor_logos);
     if (ranks !== undefined) updates.ranks = JSON.stringify(ranks);
-    if (enabled_tables !== undefined) updates.enabled_tables = enabled_tables ? JSON.stringify(enabled_tables) : null;
-    if (priority_tables !== undefined) updates.priority_tables = priority_tables ? JSON.stringify(priority_tables) : null;
+    if (enabled_tables !== undefined)
+      updates.enabled_tables = enabled_tables
+        ? JSON.stringify(enabled_tables)
+        : null;
+    if (priority_tables !== undefined)
+      updates.priority_tables = priority_tables
+        ? JSON.stringify(priority_tables)
+        : null;
 
     const playerCountChanged =
       dto.number_of_players !== undefined &&
@@ -307,7 +366,9 @@ export class TournamentsService {
     const fullPath = path.join(uploadsDir, relativePath);
     try {
       if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   async removeImage(id: number, imageType: string, sponsorIndex?: number) {
@@ -325,8 +386,16 @@ export class TournamentsService {
       (tour as any).detail_logo = null;
     } else if (imageType === 'sponsor_logo') {
       let logos: string[] = [];
-      try { logos = JSON.parse(tour.sponsor_logos || '[]'); } catch { logos = []; }
-      if (sponsorIndex !== undefined && sponsorIndex >= 0 && sponsorIndex < logos.length) {
+      try {
+        logos = JSON.parse(tour.sponsor_logos || '[]');
+      } catch {
+        logos = [];
+      }
+      if (
+        sponsorIndex !== undefined &&
+        sponsorIndex >= 0 &&
+        sponsorIndex < logos.length
+      ) {
         this.deleteLocalFile(logos[sponsorIndex]);
         logos.splice(sponsorIndex, 1);
       }
@@ -369,7 +438,9 @@ export class TournamentsService {
   async findOne(id: number) {
     const tour = await this.tourRepo.findOne({ where: { id } });
     if (!tour) throw new NotFoundException('Tournament not found');
-    const registration_count = await this.regRepo.count({ where: { tournament_id: tour.id } });
+    const registration_count = await this.regRepo.count({
+      where: { tournament_id: tour.id },
+    });
     return {
       ...this.mapTournament(tour),
       registration_count,
@@ -379,7 +450,9 @@ export class TournamentsService {
   async findBySlug(slug: string) {
     const tour = await this.tourRepo.findOne({ where: { slug } });
     if (!tour) throw new NotFoundException('Tournament not found');
-    const registration_count = await this.regRepo.count({ where: { tournament_id: tour.id } });
+    const registration_count = await this.regRepo.count({
+      where: { tournament_id: tour.id },
+    });
     return {
       ...this.mapTournament(tour),
       registration_count,
@@ -408,7 +481,9 @@ export class TournamentsService {
     Object.assign(match, dto);
 
     if (dto.match_time !== undefined) {
-      match.match_time = dto.match_time ? new Date(dto.match_time) : null as any;
+      match.match_time = dto.match_time
+        ? new Date(dto.match_time)
+        : (null as any);
     }
 
     // If winner is assigned and status is not COMPLETED, mark it as COMPLETED
@@ -423,8 +498,10 @@ export class TournamentsService {
       } else if (match.player2_check_in === 'absent' && match.player1_id) {
         match.winner_id = match.player1_id;
       } else if (match.player1_id && match.player2_id) {
-        if (match.player1_score > match.player2_score) match.winner_id = match.player1_id;
-        else if (match.player2_score > match.player1_score) match.winner_id = match.player2_id;
+        if (match.player1_score > match.player2_score)
+          match.winner_id = match.player1_id;
+        else if (match.player2_score > match.player1_score)
+          match.winner_id = match.player2_id;
       }
     }
 
@@ -457,9 +534,18 @@ export class TournamentsService {
         tournament_id: tournamentId,
       });
       // Không gán start_date làm match_time cho Tứ kết — sẽ dùng logic 75% khi có đủ người
-      const isQF = this.getMatchRoundLabel(match.match_no, tournament.number_of_players) === 'qf'
-        && match.bracket === TournamentMatchBracket.KNOCKOUT;
-      if (!match.match_time && tournament.start_date && match.player1_id && match.player2_id && !isQF) {
+      const isQF =
+        this.getMatchRoundLabel(
+          match.match_no,
+          tournament.number_of_players,
+        ) === 'qf' && match.bracket === TournamentMatchBracket.KNOCKOUT;
+      if (
+        !match.match_time &&
+        tournament.start_date &&
+        match.player1_id &&
+        match.player2_id &&
+        !isQF
+      ) {
         match.match_time = tournament.start_date;
       }
       return match;
@@ -476,13 +562,19 @@ export class TournamentsService {
     if (match.status === TournamentMatchStatus.COMPLETED) {
       if (match.player1_id && !match.player1_rank) {
         const reg = await this.regRepo.findOne({
-          where: { tournament_id: match.tournament_id, user_id: match.player1_id },
+          where: {
+            tournament_id: match.tournament_id,
+            user_id: match.player1_id,
+          },
         });
         match.player1_rank = reg?.rank || null;
       }
       if (match.player2_id && !match.player2_rank) {
         const reg = await this.regRepo.findOne({
-          where: { tournament_id: match.tournament_id, user_id: match.player2_id },
+          where: {
+            tournament_id: match.tournament_id,
+            user_id: match.player2_id,
+          },
         });
         match.player2_rank = reg?.rank || null;
       }
@@ -492,7 +584,9 @@ export class TournamentsService {
     }
   }
 
-  private async assignAllRegisteredPlayersToRound1(tournamentId: number): Promise<void> {
+  private async assignAllRegisteredPlayersToRound1(
+    tournamentId: number,
+  ): Promise<void> {
     const registrations = await this.regRepo.find({
       where: { tournament_id: tournamentId },
       order: { registered_at: 'ASC' },
@@ -517,9 +611,15 @@ export class TournamentsService {
       phone_number: r.user?.phone_number || '',
       rank: r.rank || r.user?.rank || null,
       avatar_url: r.user?.avatar_url || null,
-      points: r.points !== undefined && r.points !== null ? r.points : (r.user?.points || 0),
-      current_points: r.user?.points !== undefined && r.user?.points !== null ? r.user.points : 0,
-      registered_at: r.registered_at ? (r.registered_at as Date).toISOString() : null,
+      points:
+        r.points !== undefined && r.points !== null
+          ? r.points
+          : r.user?.points || 0,
+      current_points:
+        r.user?.points !== undefined && r.user?.points !== null
+          ? r.user.points
+          : 0,
+      registered_at: r.registered_at ? r.registered_at.toISOString() : null,
     }));
   }
 
@@ -537,7 +637,12 @@ export class TournamentsService {
 
   // ==== DEVICE API ==== //
 
-  private computeRoundName(round: number, numberOfPlayers: number, bracket?: string, tournamentType?: string): string {
+  private computeRoundName(
+    round: number,
+    numberOfPlayers: number,
+    bracket?: string,
+    tournamentType?: string,
+  ): string {
     let totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
     if (tournamentType === 'double_elimination' && bracket === 'knockout') {
       totalRounds -= 1;
@@ -552,13 +657,19 @@ export class TournamentsService {
     return `Vòng ${round}`;
   }
 
-  private computeRaceTo(round: number, numberOfPlayers: number, t: TournamentEntity, bracket?: string): number | null {
+  private computeRaceTo(
+    round: number,
+    numberOfPlayers: number,
+    t: TournamentEntity,
+    bracket?: string,
+  ): number | null {
     let totalRounds = Math.ceil(Math.log2(Math.max(numberOfPlayers || 32, 2)));
     if (t?.tournament_type === 'double_elimination' && bracket === 'knockout') {
       totalRounds -= 1;
     }
     const fromFinal = totalRounds - round;
-    const parse = (v: string | null | undefined) => v ? (parseInt(v, 10) || null) : null;
+    const parse = (v: string | null | undefined) =>
+      v ? parseInt(v, 10) || null : null;
     if (fromFinal <= 0) return parse(t.final);
     if (fromFinal === 1) return parse(t.semi_final);
     if (fromFinal === 2) return parse(t.quarter_final);
@@ -581,10 +692,20 @@ export class TournamentsService {
 
     const [reg1, reg2, maxRoundResult] = await Promise.all([
       match.player1_id
-        ? this.regRepo.findOne({ where: { tournament_id: match.tournament_id, user_id: match.player1_id } })
+        ? this.regRepo.findOne({
+            where: {
+              tournament_id: match.tournament_id,
+              user_id: match.player1_id,
+            },
+          })
         : null,
       match.player2_id
-        ? this.regRepo.findOne({ where: { tournament_id: match.tournament_id, user_id: match.player2_id } })
+        ? this.regRepo.findOne({
+            where: {
+              tournament_id: match.tournament_id,
+              user_id: match.player2_id,
+            },
+          })
         : null,
       match.bracket === 'knockout'
         ? this.matchRepo
@@ -606,9 +727,12 @@ export class TournamentsService {
       const drawFromIdx = DRAW_ROUND_ORDER.indexOf(t.draw_from_round);
       const roundIdx = DRAW_ROUND_ORDER.indexOf(roundLabel);
       if (drawFromIdx >= 0 && roundIdx >= 0 && roundIdx >= drawFromIdx) {
-        if (roundLabel === 'qf') effectiveRaceTo = parseInt(t.quarter_final || '0', 10) || null;
-        else if (roundLabel === 'sf') effectiveRaceTo = parseInt(t.semi_final || '0', 10) || null;
-        else if (roundLabel === 'f')  effectiveRaceTo = parseInt(t.final || '0', 10) || null;
+        if (roundLabel === 'qf')
+          effectiveRaceTo = parseInt(t.quarter_final || '0', 10) || null;
+        else if (roundLabel === 'sf')
+          effectiveRaceTo = parseInt(t.semi_final || '0', 10) || null;
+        else if (roundLabel === 'f')
+          effectiveRaceTo = parseInt(t.final || '0', 10) || null;
         else effectiveRaceTo = parseInt(t.draw_touch || '0', 10) || null;
       }
     }
@@ -616,7 +740,7 @@ export class TournamentsService {
     // Formatting for the exact keys QML expects payload
     return {
       id: match.id,
-      match_id: match.id,  // QML checks m.match_id to detect active match
+      match_id: match.id, // QML checks m.match_id to detect active match
       tournament_id: match.tournament_id,
       tournament_name: t?.name || '',
       banner: t?.banner || '',
@@ -624,7 +748,12 @@ export class TournamentsService {
       match_no: match.match_no,
       round: match.round,
       bracket: match.bracket,
-      round_name: this.computeRoundName(match.round, numPlayers, match.bracket, t?.tournament_type),
+      round_name: this.computeRoundName(
+        match.round,
+        numPlayers,
+        match.bracket,
+        t?.tournament_type,
+      ),
       race_to: this.computeRaceTo(match.round, numPlayers, t, match.bracket),
       effective_race_to: effectiveRaceTo,
       match_time: match.match_time ? match.match_time.toISOString() : null,
@@ -657,8 +786,10 @@ export class TournamentsService {
 
     const statusBefore = match.status;
 
-    if (dto.player1_score !== undefined) match.player1_score = dto.player1_score;
-    if (dto.player2_score !== undefined) match.player2_score = dto.player2_score;
+    if (dto.player1_score !== undefined)
+      match.player1_score = dto.player1_score;
+    if (dto.player2_score !== undefined)
+      match.player2_score = dto.player2_score;
     if (dto.status !== undefined) match.status = dto.status;
     if (dto.winner_id !== undefined) match.winner_id = dto.winner_id;
 
@@ -676,7 +807,7 @@ export class TournamentsService {
 
     await this.freezeOrUnfreezeMatchRanks(match);
     await this.matchRepo.save(match);
-    
+
     // Broadcast the update immediately over SSE so viewers see score changes instantly!
     await this.emitMatchUpdate(match.id);
 
@@ -687,7 +818,7 @@ export class TournamentsService {
       await this.propagateWR2LoserToLR2(match);
     }
     await this.autoScheduleQualificationMatches(match.tournament_id);
-    
+
     return { success: true };
   }
 
@@ -704,7 +835,7 @@ export class TournamentsService {
       match.player2_check_in = dto.player2_check_in;
       updated = true;
     }
-    
+
     // Auto-start match if both checked in (from any non-completed status)
     if (
       match.player1_check_in === 'confirmed' &&
@@ -723,7 +854,9 @@ export class TournamentsService {
   }
 
   async getEligibleUsers(tournamentId: number, search?: string) {
-    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    const tournament = await this.tourRepo.findOne({
+      where: { id: tournamentId },
+    });
     if (!tournament) {
       throw new NotFoundException('Tournament not found');
     }
@@ -767,7 +900,11 @@ export class TournamentsService {
     return qb.limit(50).getMany();
   }
 
-  async registerPlayer(tournamentId: number, userId: number, paidAmount?: number) {
+  async registerPlayer(
+    tournamentId: number,
+    userId: number,
+    paidAmount?: number,
+  ) {
     const existing = await this.regRepo.findOne({
       where: { tournament_id: tournamentId, user_id: userId },
     });
@@ -775,7 +912,9 @@ export class TournamentsService {
       return existing;
     }
 
-    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    const tournament = await this.tourRepo.findOne({
+      where: { id: tournamentId },
+    });
     if (!tournament) {
       throw new NotFoundException('Tournament not found');
     }
@@ -805,7 +944,9 @@ export class TournamentsService {
 
     if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
       const userRank = user.rank ? user.rank.toUpperCase() : '';
-      const isAllowed = allowedRanks.map((r) => r.toUpperCase()).includes(userRank);
+      const isAllowed = allowedRanks
+        .map((r) => r.toUpperCase())
+        .includes(userRank);
       if (!isAllowed) {
         throw new BadRequestException(
           `Cơ thủ ${user.full_name} có level ${user.rank ? formatLevel(user.rank) : 'N/A'}, không nằm trong các level được phép của giải đấu: ${allowedRanks.map(formatLevel).join(', ')}`,
@@ -829,14 +970,20 @@ export class TournamentsService {
     });
   }
 
-  private async assignPlayerToRound1(tournamentId: number, userId: number): Promise<void> {
-    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+  private async assignPlayerToRound1(
+    tournamentId: number,
+    userId: number,
+  ): Promise<void> {
+    const tournament = await this.tourRepo.findOne({
+      where: { id: tournamentId },
+    });
     if (!tournament) return;
 
     // Fetch only the initial stage bracket matches (WINNERS for double elimination, KNOCKOUT for single elimination)
-    const targetBracket = tournament.tournament_type === 'double_elimination'
-      ? TournamentMatchBracket.WINNERS
-      : TournamentMatchBracket.KNOCKOUT;
+    const targetBracket =
+      tournament.tournament_type === 'double_elimination'
+        ? TournamentMatchBracket.WINNERS
+        : TournamentMatchBracket.KNOCKOUT;
 
     let allMatches = await this.matchRepo.find({
       where: {
@@ -888,9 +1035,17 @@ export class TournamentsService {
     match.player2_score = 0;
 
     // Set match time to tournament start date only if both players are present (not QF — handled by 75% threshold)
-    const isQFMatch = this.getMatchRoundLabel(match.match_no, tournament?.number_of_players ?? 16) === 'qf'
-      && match.bracket === TournamentMatchBracket.KNOCKOUT;
-    if (!isQFMatch && tournament?.start_date && match.player1_id && match.player2_id) {
+    const isQFMatch =
+      this.getMatchRoundLabel(
+        match.match_no,
+        tournament?.number_of_players ?? 16,
+      ) === 'qf' && match.bracket === TournamentMatchBracket.KNOCKOUT;
+    if (
+      !isQFMatch &&
+      tournament?.start_date &&
+      match.player1_id &&
+      match.player2_id
+    ) {
       match.match_time = tournament.start_date;
     } else if (!isQFMatch) {
       match.match_time = null as any;
@@ -899,12 +1054,17 @@ export class TournamentsService {
     await this.matchRepo.save(match);
   }
 
-  private async autoGenerateRound1Matches(tournamentId: number): Promise<TournamentMatchEntity[]> {
-    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+  private async autoGenerateRound1Matches(
+    tournamentId: number,
+  ): Promise<TournamentMatchEntity[]> {
+    const tournament = await this.tourRepo.findOne({
+      where: { id: tournamentId },
+    });
     if (!tournament) return [];
 
     const n = tournament.number_of_players || 16;
-    const is24 = tournament.tournament_type === 'double_elimination' && n === 24;
+    const is24 =
+      tournament.tournament_type === 'double_elimination' && n === 24;
 
     const matches: TournamentMatchEntity[] = [];
 
@@ -934,9 +1094,10 @@ export class TournamentsService {
       }
     } else {
       const matchCount = this.getQualConfig(n).wr1.count;
-      const targetBracket = tournament.tournament_type === 'double_elimination'
-        ? TournamentMatchBracket.WINNERS
-        : TournamentMatchBracket.KNOCKOUT;
+      const targetBracket =
+        tournament.tournament_type === 'double_elimination'
+          ? TournamentMatchBracket.WINNERS
+          : TournamentMatchBracket.KNOCKOUT;
 
       for (let i = 1; i <= matchCount; i++) {
         matches.push(
@@ -987,21 +1148,35 @@ export class TournamentsService {
     }
   }
 
-  private async applyMatchStateAndTimerLogic(match: TournamentMatchEntity): Promise<void> {
+  private async applyMatchStateAndTimerLogic(
+    match: TournamentMatchEntity,
+  ): Promise<void> {
     // Tứ kết (QF) trong bracket knockout: dùng ngưỡng 75%
-    const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    const tournament = await this.tourRepo.findOne({
+      where: { id: match.tournament_id },
+    });
     const numPlayers = tournament?.number_of_players ?? 16;
     const roundLabel = this.getMatchRoundLabel(match.match_no, numPlayers);
 
-    if (roundLabel === 'qf' && match.bracket === TournamentMatchBracket.KNOCKOUT) {
+    if (
+      roundLabel === 'qf' &&
+      match.bracket === TournamentMatchBracket.KNOCKOUT
+    ) {
       await this.applyKnockoutQFThresholdLogic(match);
       return;
     }
 
-    const isNewLogic = !(match.round === 1 && (match.bracket === 'winners' || match.bracket === 'knockout'));
+    const isNewLogic = !(
+      match.round === 1 &&
+      (match.bracket === 'winners' || match.bracket === 'knockout')
+    );
     if (isNewLogic) {
       // Transition from PENDING to UPCOMING if we have >= 1 player and a table assigned
-      if (match.status === TournamentMatchStatus.PENDING && (match.player1_id || match.player2_id) && match.table_no) {
+      if (
+        match.status === TournamentMatchStatus.PENDING &&
+        (match.player1_id || match.player2_id) &&
+        match.table_no
+      ) {
         match.status = TournamentMatchStatus.UPCOMING;
       }
 
@@ -1014,7 +1189,10 @@ export class TournamentsService {
                 tournament_id: match.tournament_id,
                 table_no: match.table_no,
                 id: Not(match.id || -1),
-                status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
+                status: In([
+                  TournamentMatchStatus.ONGOING,
+                  TournamentMatchStatus.UPCOMING,
+                ]),
               },
             });
             if (!isTableBusy) {
@@ -1027,13 +1205,21 @@ export class TournamentsService {
       }
     } else {
       // Original round 1 winners / knockout logic
-      if (match.player1_id && match.player2_id && match.table_no && !match.match_time) {
+      if (
+        match.player1_id &&
+        match.player2_id &&
+        match.table_no &&
+        !match.match_time
+      ) {
         const isTableBusy = await this.matchRepo.findOne({
           where: {
             tournament_id: match.tournament_id,
             table_no: match.table_no,
             id: Not(match.id || -1),
-            status: In([TournamentMatchStatus.ONGOING, TournamentMatchStatus.UPCOMING]),
+            status: In([
+              TournamentMatchStatus.ONGOING,
+              TournamentMatchStatus.UPCOMING,
+            ]),
           },
         });
         if (!isTableBusy) {
@@ -1046,19 +1232,27 @@ export class TournamentsService {
   // Logic 75% cho Tứ kết (QF knockout):
   // - Khi < 75% trận có đủ 2 người: trận nào có ≥1 người + đã xếp bàn → UPCOMING
   // - Khi ≥ 75% trận có đủ 2 người: tất cả trận có 2 người (chưa có giờ) → set match_time = now + 3min
-  private async applyKnockoutQFThresholdLogic(match: TournamentMatchEntity): Promise<void> {
+  private async applyKnockoutQFThresholdLogic(
+    match: TournamentMatchEntity,
+  ): Promise<void> {
     const allQFInDB = await this.matchRepo.find({
-      where: { tournament_id: match.tournament_id, bracket: match.bracket as any, round: match.round },
+      where: {
+        tournament_id: match.tournament_id,
+        bracket: match.bracket as any,
+        round: match.round,
+      },
     });
 
     // Merge DB state với in-memory state của trận hiện tại (chưa save)
-    const allQF = allQFInDB.map(m => (m.id && m.id === match.id ? match : m));
-    if (!match.id || !allQF.some(m => m.id === match.id)) allQF.push(match);
+    const allQF = allQFInDB.map((m) => (m.id && m.id === match.id ? match : m));
+    if (!match.id || !allQF.some((m) => m.id === match.id)) allQF.push(match);
 
     const totalQF = allQF.length;
     if (totalQF === 0) return;
 
-    const withBothCount = allQF.filter(m => m.player1_id && m.player2_id).length;
+    const withBothCount = allQF.filter(
+      (m) => m.player1_id && m.player2_id,
+    ).length;
     const threshold = Math.ceil(totalQF * 0.75); // ceil(4 * 0.75) = 3
 
     if (withBothCount >= threshold) {
@@ -1073,7 +1267,10 @@ export class TournamentsService {
               where: { id: qf.id },
               relations: ['player1', 'player2'],
             });
-            this.matchUpdates$.next({ tournamentId: match.tournament_id, match: reloaded || qf });
+            this.matchUpdates$.next({
+              tournamentId: match.tournament_id,
+              match: reloaded || qf,
+            });
           }
         }
       }
@@ -1093,7 +1290,11 @@ export class TournamentsService {
     }
   }
 
-  async upsertMatch(tournamentId: number, matchNo: number, dto: UpdateMatchDto) {
+  async upsertMatch(
+    tournamentId: number,
+    matchNo: number,
+    dto: UpdateMatchDto,
+  ) {
     let match = await this.matchRepo.findOne({
       where: { tournament_id: tournamentId, match_no: matchNo },
     });
@@ -1121,11 +1322,17 @@ export class TournamentsService {
           p2.points = Math.max(0, (p2.points || 0) - oldP2Points);
         }
         p1.wins = Math.max(0, (p1.wins || 0) - (oldWinnerId === p1.id ? 1 : 0));
-        p1.losses = Math.max(0, (p1.losses || 0) - (oldWinnerId === p1.id ? 0 : 1));
+        p1.losses = Math.max(
+          0,
+          (p1.losses || 0) - (oldWinnerId === p1.id ? 0 : 1),
+        );
         p1.total_games = Math.max(0, (p1.total_games || 0) - 1);
 
         p2.wins = Math.max(0, (p2.wins || 0) - (oldWinnerId === p2.id ? 1 : 0));
-        p2.losses = Math.max(0, (p2.losses || 0) - (oldWinnerId === p2.id ? 0 : 1));
+        p2.losses = Math.max(
+          0,
+          (p2.losses || 0) - (oldWinnerId === p2.id ? 0 : 1),
+        );
         p2.total_games = Math.max(0, (p2.total_games || 0) - 1);
 
         await this.userRepo.save([p1, p2]);
@@ -1155,14 +1362,17 @@ export class TournamentsService {
       !dto.winner_id &&
       dto.status === TournamentMatchStatus.COMPLETED;
     if (hasValidResult && isStaleSave) {
-      const { player1_score, player2_score, winner_id, status, ...safeDto } = dto as any;
+      const { player1_score, player2_score, winner_id, status, ...safeDto } =
+        dto as any;
       Object.assign(match, safeDto);
     } else {
       Object.assign(match, dto);
     }
 
     if (dto.match_time !== undefined) {
-      match.match_time = dto.match_time ? new Date(dto.match_time) : null as any;
+      match.match_time = dto.match_time
+        ? new Date(dto.match_time)
+        : (null as any);
     }
 
     if (match.winner_id && match.status !== TournamentMatchStatus.COMPLETED) {
@@ -1176,8 +1386,10 @@ export class TournamentsService {
       } else if (match.player2_check_in === 'absent' && match.player1_id) {
         match.winner_id = match.player1_id;
       } else if (match.player1_id && match.player2_id) {
-        if (match.player1_score > match.player2_score) match.winner_id = match.player1_id;
-        else if (match.player2_score > match.player1_score) match.winner_id = match.player2_id;
+        if (match.player1_score > match.player2_score)
+          match.winner_id = match.player1_id;
+        else if (match.player2_score > match.player1_score)
+          match.winner_id = match.player2_id;
       }
     }
 
@@ -1243,9 +1455,12 @@ export class TournamentsService {
     return reloaded;
   }
 
-  private getMatchRoundLabel(matchNo: number, numberOfPlayers: number): string | null {
+  private getMatchRoundLabel(
+    matchNo: number,
+    numberOfPlayers: number,
+  ): string | null {
     if (numberOfPlayers > 32) {
-      if (matchNo >= 81 && matchNo <= 96)  return 'r16';
+      if (matchNo >= 81 && matchNo <= 96) return 'r16';
       if (matchNo >= 97 && matchNo <= 104) return 'r8';
       if (matchNo >= 105 && matchNo <= 108) return 'qf';
       if (matchNo >= 109 && matchNo <= 110) return 'sf';
@@ -1269,14 +1484,17 @@ export class TournamentsService {
   }
 
   private readonly ROUND_LABEL_TO_NAME: Record<string, string> = {
-    'qf':  'Tứ kết',
-    'sf':  'Bán kết',
-    'f':   'Chung kết',
-    'r8':  'Vòng 1/8',
-    'r16': 'Vòng 1/16',
+    qf: 'Tứ kết',
+    sf: 'Bán kết',
+    f: 'Chung kết',
+    r8: 'Vòng 1/8',
+    r16: 'Vòng 1/16',
   };
 
-  private async getRoundCoefficient(matchNo: number, numberOfPlayers: number): Promise<number> {
+  private async getRoundCoefficient(
+    matchNo: number,
+    numberOfPlayers: number,
+  ): Promise<number> {
     const label = this.getMatchRoundLabel(matchNo, numberOfPlayers);
     if (!label) return 1.0;
     const roundName = this.ROUND_LABEL_TO_NAME[label];
@@ -1288,12 +1506,19 @@ export class TournamentsService {
     return Number(roundConfig.multiplier);
   }
 
-  async calculateAndApplyRating(match: TournamentMatchEntity, winnerId: number) {
+  async calculateAndApplyRating(
+    match: TournamentMatchEntity,
+    winnerId: number,
+  ) {
     if (!match.player1_id || !match.player2_id) return;
 
     // Fetch players from DB with full profiles
-    const player1 = await this.userRepo.findOne({ where: { id: match.player1_id } });
-    const player2 = await this.userRepo.findOne({ where: { id: match.player2_id } });
+    const player1 = await this.userRepo.findOne({
+      where: { id: match.player1_id },
+    });
+    const player2 = await this.userRepo.findOne({
+      where: { id: match.player2_id },
+    });
 
     if (!player1 || !player2) return;
 
@@ -1305,8 +1530,12 @@ export class TournamentsService {
     if (rank1Name && rank2Name) {
       // Fetch all tournament ranks ordered by order ASC
       const ranks = await this.rankRepo.find({ order: { order: 'ASC' } });
-      const rank1 = ranks.find((r) => r.name.toUpperCase() === rank1Name.toUpperCase());
-      const rank2 = ranks.find((r) => r.name.toUpperCase() === rank2Name.toUpperCase());
+      const rank1 = ranks.find(
+        (r) => r.name.toUpperCase() === rank1Name.toUpperCase(),
+      );
+      const rank2 = ranks.find(
+        (r) => r.name.toUpperCase() === rank2Name.toUpperCase(),
+      );
 
       if (rank1 && rank2) {
         const order1 = rank1.order;
@@ -1317,7 +1546,8 @@ export class TournamentsService {
         // Note: lower order value represents higher rank (e.g. order 1 is higher rank than order 2)
         const isPlayer1Fav = order1 < order2;
         const isWinnerFav =
-          (winnerId === player1.id && isPlayer1Fav) || (winnerId === player2.id && !isPlayer1Fav);
+          (winnerId === player1.id && isPlayer1Fav) ||
+          (winnerId === player2.id && !isPlayer1Fav);
 
         // Load dynamic matrix
         let ratingMatrix = [
@@ -1326,7 +1556,14 @@ export class TournamentsService {
           { diff: 2, winFav: 5, winUnd: 30, loseFav: -30, loseUnd: -5 },
         ];
 
-        const filePath = path.join(__dirname, '..', '..', '..', 'uploads', 'rating_matrix.json');
+        const filePath = path.join(
+          __dirname,
+          '..',
+          '..',
+          '..',
+          'uploads',
+          'rating_matrix.json',
+        );
         if (fs.existsSync(filePath)) {
           try {
             const content = fs.readFileSync(filePath, 'utf8');
@@ -1341,13 +1578,19 @@ export class TournamentsService {
 
         const matrixItem = ratingMatrix.find((item) => item.diff === diff);
         if (matrixItem) {
-          pointsChange = isWinnerFav ? Math.abs(matrixItem.winFav) : Math.abs(matrixItem.winUnd);
+          pointsChange = isWinnerFav
+            ? Math.abs(matrixItem.winFav)
+            : Math.abs(matrixItem.winUnd);
         } else {
           // If chênh lệch is larger than configured diff, fallback to the last config or default cap
-          const sortedMatrix = [...ratingMatrix].sort((a, b) => b.diff - a.diff);
+          const sortedMatrix = [...ratingMatrix].sort(
+            (a, b) => b.diff - a.diff,
+          );
           if (sortedMatrix.length > 0) {
             const maxConfig = sortedMatrix[0];
-            pointsChange = isWinnerFav ? Math.abs(maxConfig.winFav) : Math.abs(maxConfig.winUnd);
+            pointsChange = isWinnerFav
+              ? Math.abs(maxConfig.winFav)
+              : Math.abs(maxConfig.winUnd);
           } else {
             pointsChange = isWinnerFav ? 5 : 35;
           }
@@ -1356,9 +1599,14 @@ export class TournamentsService {
     }
 
     // Look up tournament coefficient for winner only
-    const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    const tournament = await this.tourRepo.findOne({
+      where: { id: match.tournament_id },
+    });
     const coefficient = tournament
-      ? await this.getRoundCoefficient(match.match_no, tournament.number_of_players)
+      ? await this.getRoundCoefficient(
+          match.match_no,
+          tournament.number_of_players,
+        )
       : 1.0;
 
     let p1PointsChange = 0;
@@ -1368,18 +1616,20 @@ export class TournamentsService {
       p1PointsChange = match.player1_points;
     } else {
       // Winner gets base points × coefficient, loser gets -base points (no multiplier)
-      p1PointsChange = winnerId === player1.id
-        ? Math.round(pointsChange * coefficient)
-        : -pointsChange;
+      p1PointsChange =
+        winnerId === player1.id
+          ? Math.round(pointsChange * coefficient)
+          : -pointsChange;
       match.player1_points = p1PointsChange;
     }
 
     if (match.player2_points !== null && match.player2_points !== undefined) {
       p2PointsChange = match.player2_points;
     } else {
-      p2PointsChange = winnerId === player2.id
-        ? Math.round(pointsChange * coefficient)
-        : -pointsChange;
+      p2PointsChange =
+        winnerId === player2.id
+          ? Math.round(pointsChange * coefficient)
+          : -pointsChange;
       match.player2_points = p2PointsChange;
     }
 
@@ -1421,7 +1671,9 @@ export class TournamentsService {
         reg.rank = matchingRank.name;
         await this.regRepo.save(reg);
       }
-      console.log(`Rank updated for player ${player.full_name} to ${matchingRank.name}`);
+      console.log(
+        `Rank updated for player ${player.full_name} to ${matchingRank.name}`,
+      );
     }
   }
 
@@ -1544,17 +1796,33 @@ export class TournamentsService {
     if (numberOfPlayers === 24) {
       return {
         size: 24 as any,
-        wr1: { start: 1,  count: 8  },
-        lr1: { start: 17, count: 8  },
-        wr2: { start: 9,  count: 8  },
-        lr2: { start: 0,  count: 0  },
+        wr1: { start: 1, count: 8 },
+        lr1: { start: 17, count: 8 },
+        wr2: { start: 9, count: 8 },
+        lr2: { start: 0, count: 0 },
       };
     }
-    const size: 16 | 32 | 64 = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
+    const size: 16 | 32 | 64 =
+      numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
     const cfg = {
-      16: { wr1: { start: 1,  count: 8  }, lr1: { start: 9,  count: 4  }, wr2: { start: 13, count: 4  }, lr2: { start: 17, count: 4  } },
-      32: { wr1: { start: 1,  count: 16 }, lr1: { start: 17, count: 8  }, wr2: { start: 25, count: 8  }, lr2: { start: 33, count: 8  } },
-      64: { wr1: { start: 1,  count: 32 }, lr1: { start: 33, count: 16 }, wr2: { start: 49, count: 16 }, lr2: { start: 65, count: 16 } },
+      16: {
+        wr1: { start: 1, count: 8 },
+        lr1: { start: 9, count: 4 },
+        wr2: { start: 13, count: 4 },
+        lr2: { start: 17, count: 4 },
+      },
+      32: {
+        wr1: { start: 1, count: 16 },
+        lr1: { start: 17, count: 8 },
+        wr2: { start: 25, count: 8 },
+        lr2: { start: 33, count: 8 },
+      },
+      64: {
+        wr1: { start: 1, count: 32 },
+        lr1: { start: 33, count: 16 },
+        wr2: { start: 49, count: 16 },
+        lr2: { start: 65, count: 16 },
+      },
     };
     return { size, ...cfg[size] };
   }
@@ -1572,13 +1840,22 @@ export class TournamentsService {
     playerId: number,
     slot: 1 | 2,
   ): Promise<void> {
-    let m = await this.matchRepo.findOne({ where: { tournament_id: tournamentId, match_no: matchNo } });
+    let m = await this.matchRepo.findOne({
+      where: { tournament_id: tournamentId, match_no: matchNo },
+    });
     if (!m) {
-      m = this.matchRepo.create({ tournament_id: tournamentId, match_no: matchNo, bracket, round, status: TournamentMatchStatus.PENDING });
+      m = this.matchRepo.create({
+        tournament_id: tournamentId,
+        match_no: matchNo,
+        bracket,
+        round,
+        status: TournamentMatchStatus.PENDING,
+      });
     }
     const current = slot === 1 ? m.player1_id : m.player2_id;
     if (current === playerId) return;
-    if (slot === 1) m.player1_id = playerId; else m.player2_id = playerId;
+    if (slot === 1) m.player1_id = playerId;
+    else m.player2_id = playerId;
     if (m.status === TournamentMatchStatus.COMPLETED) {
       m.status = TournamentMatchStatus.PENDING;
       m.winner_id = null;
@@ -1591,9 +1868,12 @@ export class TournamentsService {
       await this.matchRepo.save(m);
     } catch (err: any) {
       if (seedIsNew && err?.code === '23505') {
-        const existing = await this.matchRepo.findOne({ where: { tournament_id: tournamentId, match_no: matchNo } });
+        const existing = await this.matchRepo.findOne({
+          where: { tournament_id: tournamentId, match_no: matchNo },
+        });
         if (!existing) throw err;
-        if (slot === 1) existing.player1_id = playerId; else existing.player2_id = playerId;
+        if (slot === 1) existing.player1_id = playerId;
+        else existing.player2_id = playerId;
         await this.applyMatchStateAndTimerLogic(existing);
         await this.matchRepo.save(existing);
         m = existing;
@@ -1605,60 +1885,145 @@ export class TournamentsService {
   }
 
   // WR1 loser → LR1
-  private async propagateLoserToLR1(match: TournamentMatchEntity): Promise<void> {
-    if (match.bracket !== 'winners' || !match.winner_id || !match.player1_id || !match.player2_id) return;
-    const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+  private async propagateLoserToLR1(
+    match: TournamentMatchEntity,
+  ): Promise<void> {
+    if (
+      match.bracket !== 'winners' ||
+      !match.winner_id ||
+      !match.player1_id ||
+      !match.player2_id
+    )
+      return;
+    const tour = await this.tourRepo.findOne({
+      where: { id: match.tournament_id },
+    });
     if (!tour || tour.tournament_type !== 'double_elimination') return;
     if (tour.number_of_players === 24) {
       if (match.match_no >= 1 && match.match_no <= 8) {
-        const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+        const loserId =
+          match.winner_id === match.player1_id
+            ? match.player2_id
+            : match.player1_id;
         const lr1MatchNo = match.match_no + 16;
-        await this.seedPlayerToMatch(match.tournament_id, lr1MatchNo, TournamentMatchBracket.LOSERS, 1, loserId, 2);
+        await this.seedPlayerToMatch(
+          match.tournament_id,
+          lr1MatchNo,
+          TournamentMatchBracket.LOSERS,
+          1,
+          loserId,
+          2,
+        );
       }
       return;
     }
     const cfg = this.getQualConfig(tour.number_of_players);
-    if (match.match_no < cfg.wr1.start || match.match_no >= cfg.wr1.start + cfg.wr1.count) return;
-    const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+    if (
+      match.match_no < cfg.wr1.start ||
+      match.match_no >= cfg.wr1.start + cfg.wr1.count
+    )
+      return;
+    const loserId =
+      match.winner_id === match.player1_id
+        ? match.player2_id
+        : match.player1_id;
     const idx = match.match_no - cfg.wr1.start;
     const lr1MatchNo = cfg.lr1.start + Math.floor(idx / 2);
     const slot: 1 | 2 = idx % 2 === 0 ? 1 : 2;
-    await this.seedPlayerToMatch(match.tournament_id, lr1MatchNo, TournamentMatchBracket.LOSERS, 1, loserId, slot);
+    await this.seedPlayerToMatch(
+      match.tournament_id,
+      lr1MatchNo,
+      TournamentMatchBracket.LOSERS,
+      1,
+      loserId,
+      slot,
+    );
   }
 
   // LR1 winner → LR2 player1
-  private async propagateLR1WinnerToLR2(match: TournamentMatchEntity): Promise<void> {
-    if (match.bracket !== 'losers' || match.round !== 1 || !match.winner_id) return;
-    const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+  private async propagateLR1WinnerToLR2(
+    match: TournamentMatchEntity,
+  ): Promise<void> {
+    if (match.bracket !== 'losers' || match.round !== 1 || !match.winner_id)
+      return;
+    const tour = await this.tourRepo.findOne({
+      where: { id: match.tournament_id },
+    });
     if (!tour || tour.tournament_type !== 'double_elimination') return;
     if (tour.number_of_players === 24) return; // LR1 winners qualify directly to Knockout stage, no further propagation in this stage
     const cfg = this.getQualConfig(tour.number_of_players);
-    if (match.match_no < cfg.lr1.start || match.match_no >= cfg.lr1.start + cfg.lr1.count) return;
+    if (
+      match.match_no < cfg.lr1.start ||
+      match.match_no >= cfg.lr1.start + cfg.lr1.count
+    )
+      return;
     const idx = match.match_no - cfg.lr1.start;
     const lr2MatchNo = cfg.lr2.start + idx;
-    await this.seedPlayerToMatch(match.tournament_id, lr2MatchNo, TournamentMatchBracket.LOSERS, 2, match.winner_id, 1);
+    await this.seedPlayerToMatch(
+      match.tournament_id,
+      lr2MatchNo,
+      TournamentMatchBracket.LOSERS,
+      2,
+      match.winner_id,
+      1,
+    );
   }
 
   // WR2 loser → LR2 player2 (reversed index)
-  private async propagateWR2LoserToLR2(match: TournamentMatchEntity): Promise<void> {
-    if (match.bracket !== 'winners' || match.round !== 2 || !match.winner_id || !match.player1_id || !match.player2_id) return;
-    const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+  private async propagateWR2LoserToLR2(
+    match: TournamentMatchEntity,
+  ): Promise<void> {
+    if (
+      match.bracket !== 'winners' ||
+      match.round !== 2 ||
+      !match.winner_id ||
+      !match.player1_id ||
+      !match.player2_id
+    )
+      return;
+    const tour = await this.tourRepo.findOne({
+      where: { id: match.tournament_id },
+    });
     if (!tour || tour.tournament_type !== 'double_elimination') return;
     if (tour.number_of_players === 24) {
       if (match.match_no >= 9 && match.match_no <= 16) {
-        const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+        const loserId =
+          match.winner_id === match.player1_id
+            ? match.player2_id
+            : match.player1_id;
         const lr1MatchNo = 33 - match.match_no;
-        await this.seedPlayerToMatch(match.tournament_id, lr1MatchNo, TournamentMatchBracket.LOSERS, 1, loserId, 1);
+        await this.seedPlayerToMatch(
+          match.tournament_id,
+          lr1MatchNo,
+          TournamentMatchBracket.LOSERS,
+          1,
+          loserId,
+          1,
+        );
       }
       return;
     }
     const cfg = this.getQualConfig(tour.number_of_players);
-    if (match.match_no < cfg.wr2.start || match.match_no >= cfg.wr2.start + cfg.wr2.count) return;
-    const loserId = match.winner_id === match.player1_id ? match.player2_id : match.player1_id;
+    if (
+      match.match_no < cfg.wr2.start ||
+      match.match_no >= cfg.wr2.start + cfg.wr2.count
+    )
+      return;
+    const loserId =
+      match.winner_id === match.player1_id
+        ? match.player2_id
+        : match.player1_id;
     const idx = match.match_no - cfg.wr2.start;
     const reversedIdx = cfg.wr2.count - 1 - idx;
     const lr2MatchNo = cfg.lr2.start + reversedIdx;
-    await this.seedPlayerToMatch(match.tournament_id, lr2MatchNo, TournamentMatchBracket.LOSERS, 2, loserId, 2);
+    await this.seedPlayerToMatch(
+      match.tournament_id,
+      lr2MatchNo,
+      TournamentMatchBracket.LOSERS,
+      2,
+      loserId,
+      2,
+    );
   }
 
   // Tự động xếp bàn + giờ khi có bàn trống (knockout: tất cả vòng; double_elimination: WR1→LR1→WR2→LR2)
@@ -1667,7 +2032,9 @@ export class TournamentsService {
     return;
   }
 
-  private async propagateWinnerToNextRound(match: TournamentMatchEntity): Promise<void> {
+  private async propagateWinnerToNextRound(
+    match: TournamentMatchEntity,
+  ): Promise<void> {
     const tournament = await this.tourRepo.findOne({
       where: { id: match.tournament_id },
     });
@@ -1735,7 +2102,10 @@ export class TournamentsService {
         where: { id: nextMatch.id },
         relations: ['player1', 'player2'],
       });
-      this.matchUpdates$.next({ tournamentId: nextMatch.tournament_id, match: reloadedNext || nextMatch });
+      this.matchUpdates$.next({
+        tournamentId: nextMatch.tournament_id,
+        match: reloadedNext || nextMatch,
+      });
 
       // Recursively propagate
       await this.propagateWinnerToNextRound(nextMatch);
@@ -1753,14 +2123,31 @@ export class TournamentsService {
     return `TFEE${random}`;
   }
 
-  private getTableFeeConfig(): { price: number; per_minutes: number; surcharge: number } {
+  private getTableFeeConfig(): {
+    price: number;
+    per_minutes: number;
+    surcharge: number;
+  } {
     try {
-      const filePath = path.join(__dirname, '..', '..', '..', 'uploads', 'table_fee.json');
+      const filePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'uploads',
+        'table_fee.json',
+      );
       if (fs.existsSync(filePath)) {
         const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        return { price: data.price ?? 0, per_minutes: data.per_minutes ?? 1, surcharge: data.surcharge ?? 0 };
+        return {
+          price: data.price ?? 0,
+          per_minutes: data.per_minutes ?? 1,
+          surcharge: data.surcharge ?? 0,
+        };
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return { price: 0, per_minutes: 1, surcharge: 0 };
   }
 
@@ -1768,11 +2155,19 @@ export class TournamentsService {
     const match = await this.matchRepo.findOne({ where: { id: matchId } });
     if (!match) throw new NotFoundException('Match not found');
 
-    const tournament = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+    const tournament = await this.tourRepo.findOne({
+      where: { id: match.tournament_id },
+    });
     const config = this.getTableFeeConfig();
 
-    const roundName = this.computeRoundName(match.round, tournament?.number_of_players || 32, match.bracket, tournament?.tournament_type);
-    const isSemiOrFinal = roundName.includes('Bán Kết') || roundName.includes('Chung Kết');
+    const roundName = this.computeRoundName(
+      match.round,
+      tournament?.number_of_players || 32,
+      match.bracket,
+      tournament?.tournament_type,
+    );
+    const isSemiOrFinal =
+      roundName.includes('Bán Kết') || roundName.includes('Chung Kết');
 
     if (tournament?.free_table_fee || config.price === 0 || isSemiOrFinal) {
       return { skip: true };
@@ -1807,11 +2202,18 @@ export class TournamentsService {
     const ACCOUNT_NAME = 'TRAN VIET ANH';
     const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact2.png?amount=${totalAmount}&addInfo=${code}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
 
-    return { skip: false, payment_code: code, amount: totalAmount, qr_url: qrUrl };
+    return {
+      skip: false,
+      payment_code: code,
+      amount: totalAmount,
+      qr_url: qrUrl,
+    };
   }
 
   async getTableFeePaymentStatus(matchId: number, code: string) {
-    const payment = await this.tableFeePaymentRepo.findOne({ where: { code, match_id: matchId } });
+    const payment = await this.tableFeePaymentRepo.findOne({
+      where: { code, match_id: matchId },
+    });
     if (!payment) throw new NotFoundException('Payment not found');
     return { paid: payment.paid, amount: payment.amount };
   }
@@ -1825,9 +2227,10 @@ export class TournamentsService {
 
     // Fetch user info separately to avoid TypeORM relation dependency
     const userIds = [...new Set(codes.map((c) => c.user_id))];
-    const users = userIds.length > 0
-      ? await this.userRepo.find({ where: { id: In(userIds) } })
-      : [];
+    const users =
+      userIds.length > 0
+        ? await this.userRepo.find({ where: { id: In(userIds) } })
+        : [];
     const userMap = new Map(users.map((u) => [u.id, u]));
 
     const registrationCodes = codes.map((c) => ({
@@ -1838,7 +2241,10 @@ export class TournamentsService {
       used: c.used,
       created_at: c.created_at,
       user: userMap.has(c.user_id)
-        ? { full_name: userMap.get(c.user_id)!.full_name, phone_number: userMap.get(c.user_id)!.phone_number }
+        ? {
+            full_name: userMap.get(c.user_id)!.full_name,
+            phone_number: userMap.get(c.user_id)!.phone_number,
+          }
         : null,
     }));
 
@@ -1935,7 +2341,9 @@ export class TournamentsService {
   async redeemTableFeePayment(code: string, paymentMethod?: string) {
     const payment = await this.tableFeePaymentRepo.findOne({ where: { code } });
     if (!payment) {
-      throw new NotFoundException(`Table fee payment with code "${code}" not found`);
+      throw new NotFoundException(
+        `Table fee payment with code "${code}" not found`,
+      );
     }
     if (payment.paid) return;
 
@@ -1945,7 +2353,9 @@ export class TournamentsService {
     payment.payment_method = paymentMethod || 'bank_transfer';
     await this.tableFeePaymentRepo.save(payment);
 
-    const match = await this.matchRepo.findOne({ where: { id: payment.match_id } });
+    const match = await this.matchRepo.findOne({
+      where: { id: payment.match_id },
+    });
     if (match && match.status !== TournamentMatchStatus.COMPLETED) {
       match.status = TournamentMatchStatus.COMPLETED;
 
@@ -1979,7 +2389,9 @@ export class TournamentsService {
 
       // Auto-complete tournament when the final match finishes
       if (match.winner_id) {
-        const tour = await this.tourRepo.findOne({ where: { id: match.tournament_id } });
+        const tour = await this.tourRepo.findOne({
+          where: { id: match.tournament_id },
+        });
         if (tour && tour.status !== 'completed') {
           const finalMatchNo = this.getFinalMatchNo(tour.number_of_players);
           if (match.match_no === finalMatchNo) {
@@ -1994,9 +2406,13 @@ export class TournamentsService {
   }
 
   async payTableFeeCash(paymentId: number) {
-    const payment = await this.tableFeePaymentRepo.findOne({ where: { id: paymentId } });
+    const payment = await this.tableFeePaymentRepo.findOne({
+      where: { id: paymentId },
+    });
     if (!payment) {
-      throw new NotFoundException(`Table fee payment with ID "${paymentId}" not found`);
+      throw new NotFoundException(
+        `Table fee payment with ID "${paymentId}" not found`,
+      );
     }
     if (payment.paid) return { success: true };
     await this.redeemTableFeePayment(payment.code, 'cash');

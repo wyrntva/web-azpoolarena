@@ -195,7 +195,12 @@ export class PayrollService {
       throw new BadRequestException('Invalid month format');
     }
 
-    const users = await this.userRepo.find({ where: [{ is_active: true, user_type: 'staff' }, { is_active: true, user_type: 'both' }] });
+    const users = await this.userRepo.find({
+      where: [
+        { is_active: true, user_type: 'staff' },
+        { is_active: true, user_type: 'both' },
+      ],
+    });
     const userIds = users.map((u) => u.id);
     if (userIds.length === 0) return [];
 
@@ -336,13 +341,23 @@ export class PayrollService {
     const now = moment().utcOffset(7);
     const created: any[] = [];
     for (const sch of schedules) {
-      const workDateStr = typeof sch.work_date === 'string' ? sch.work_date : moment(sch.work_date).format('YYYY-MM-DD');
+      const workDateStr =
+        typeof sch.work_date === 'string'
+          ? sch.work_date
+          : moment(sch.work_date).format('YYYY-MM-DD');
       const key = `${sch.user_id}-${workDateStr}`;
       const att = attMap[key];
 
-      const effectiveLateMinutes = sch.allowed_late_minutes ?? settings.allowed_late_minutes ?? 0;
-      const shiftStartDt = moment(`${workDateStr} ${sch.start_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
-      const shiftEndDt = moment(`${workDateStr} ${sch.end_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
+      const effectiveLateMinutes =
+        sch.allowed_late_minutes ?? settings.allowed_late_minutes ?? 0;
+      const shiftStartDt = moment(
+        `${workDateStr} ${sch.start_time} +07:00`,
+        'YYYY-MM-DD HH:mm Z',
+      ).utcOffset(7);
+      const shiftEndDt = moment(
+        `${workDateStr} ${sch.end_time} +07:00`,
+        'YYYY-MM-DD HH:mm Z',
+      ).utcOffset(7);
       if (shiftEndDt.isBefore(shiftStartDt)) shiftEndDt.add(1, 'days');
 
       let amount = 0;
@@ -351,7 +366,9 @@ export class PayrollService {
 
       if (!att || !att.check_in_time) {
         // Only penalize ABSENT after the check-in grace window has passed
-        const latestCheckInDt = shiftStartDt.clone().add(effectiveLateMinutes, 'minutes');
+        const latestCheckInDt = shiftStartDt
+          .clone()
+          .add(effectiveLateMinutes, 'minutes');
         if (settings.auto_absent_enabled && now.isAfter(latestCheckInDt)) {
           type = 'ABSENT';
           amount = settings.absent_penalty;
@@ -366,8 +383,14 @@ export class PayrollService {
         }
       } else if (att.status === AttendanceStatus.LATE) {
         // Normalize seconds/milliseconds to 0 to be consistent with recalculateStatus
-        const checkInMom = moment(att.check_in_time).utcOffset(7).second(0).millisecond(0);
-        const lateSeconds = Math.max(0, checkInMom.diff(shiftStartDt, 'seconds'));
+        const checkInMom = moment(att.check_in_time)
+          .utcOffset(7)
+          .second(0)
+          .millisecond(0);
+        const lateSeconds = Math.max(
+          0,
+          checkInMom.diff(shiftStartDt, 'seconds'),
+        );
         const lateMins = Math.floor(lateSeconds / 60);
 
         if (lateSeconds > effectiveLateMinutes * 60) {
@@ -454,33 +477,54 @@ export class PayrollService {
       typeof sch.work_date === 'string'
         ? sch.work_date
         : moment(sch.work_date).format('YYYY-MM-DD');
-    const shiftStartDt = moment(`${workDate} ${sch.start_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
-    const shiftEndDt = moment(`${workDate} ${sch.end_time} +07:00`, 'YYYY-MM-DD HH:mm Z').utcOffset(7);
+    const shiftStartDt = moment(
+      `${workDate} ${sch.start_time} +07:00`,
+      'YYYY-MM-DD HH:mm Z',
+    ).utcOffset(7);
+    const shiftEndDt = moment(
+      `${workDate} ${sch.end_time} +07:00`,
+      'YYYY-MM-DD HH:mm Z',
+    ).utcOffset(7);
     if (shiftEndDt.isBefore(shiftStartDt)) shiftEndDt.add(1, 'days');
     const now = moment().utcOffset(7);
 
     const toCreate: Array<{ amount: number; reason: string }> = [];
 
     // Use per-schedule grace period (matches how LATE status is determined)
-    const effectiveLateMinutes = sch.allowed_late_minutes ?? settings.allowed_late_minutes ?? 0;
+    const effectiveLateMinutes =
+      sch.allowed_late_minutes ?? settings.allowed_late_minutes ?? 0;
 
     if (!att?.check_in_time) {
       // ABSENT — once the check-in window has closed (start + grace period)
-      const latestCheckInDt = shiftStartDt.clone().add(effectiveLateMinutes, 'minutes');
+      const latestCheckInDt = shiftStartDt
+        .clone()
+        .add(effectiveLateMinutes, 'minutes');
       if (settings.auto_absent_enabled && now.isAfter(latestCheckInDt)) {
-        toCreate.push({ amount: settings.absent_penalty, reason: 'Vắng mặt không phép' });
+        toCreate.push({
+          amount: settings.absent_penalty,
+          reason: 'Vắng mặt không phép',
+        });
       }
     } else {
       if (att.status === AttendanceStatus.LATE) {
         // Normalize seconds/milliseconds to 0 to be consistent with recalculateStatus
-        const checkInMom = moment(att.check_in_time).utcOffset(7).second(0).millisecond(0);
-        const lateSeconds = Math.max(0, checkInMom.diff(shiftStartDt, 'seconds'));
+        const checkInMom = moment(att.check_in_time)
+          .utcOffset(7)
+          .second(0)
+          .millisecond(0);
+        const lateSeconds = Math.max(
+          0,
+          checkInMom.diff(shiftStartDt, 'seconds'),
+        );
         const lateMins = Math.floor(lateSeconds / 60);
         if (lateSeconds > effectiveLateMinutes * 60) {
           for (const t of tiers) {
             if (t.max_minutes === null || lateMins <= t.max_minutes) {
               if (t.penalty_amount > 0) {
-                toCreate.push({ amount: t.penalty_amount, reason: `Đi muộn ${lateMins} phút` });
+                toCreate.push({
+                  amount: t.penalty_amount,
+                  reason: `Đi muộn ${lateMins} phút`,
+                });
               }
               break;
             }
@@ -492,8 +536,14 @@ export class PayrollService {
       if (att.check_out_time) {
         const checkOutMom = moment(att.check_out_time).utcOffset(7);
         const earliestCheckout = shiftEndDt.clone().subtract(10, 'minutes');
-        if (checkOutMom.isBefore(earliestCheckout) && settings.early_checkout_penalty > 0) {
-          toCreate.push({ amount: settings.early_checkout_penalty, reason: 'Về sớm' });
+        if (
+          checkOutMom.isBefore(earliestCheckout) &&
+          settings.early_checkout_penalty > 0
+        ) {
+          toCreate.push({
+            amount: settings.early_checkout_penalty,
+            reason: 'Về sớm',
+          });
         }
       }
 
@@ -503,7 +553,10 @@ export class PayrollService {
         now.isAfter(shiftEndDt.clone().add(2, 'hours'))
       ) {
         if (settings.missing_checkout_penalty > 0) {
-          toCreate.push({ amount: settings.missing_checkout_penalty, reason: 'Quên chấm ca ra' });
+          toCreate.push({
+            amount: settings.missing_checkout_penalty,
+            reason: 'Quên chấm ca ra',
+          });
         }
       }
     }

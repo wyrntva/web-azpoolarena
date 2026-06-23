@@ -44,7 +44,9 @@ export class FacebookController {
       return res.status(200).send(challenge);
     }
 
-    this.logger.warn('[FB Webhook Verify] Xác thực THẤT BẠI — token không khớp');
+    this.logger.warn(
+      '[FB Webhook Verify] Xác thực THẤT BẠI — token không khớp',
+    );
     return res.status(403).send('Forbidden');
   }
 
@@ -56,16 +58,23 @@ export class FacebookController {
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
   async handleWebhook(@Body() payload: any) {
-    this.logger.log(`[FB Webhook POST] object="${payload?.object}" entries=${payload?.entry?.length ?? 0}`);
+    this.logger.log(
+      `[FB Webhook POST] object="${payload?.object}" entries=${payload?.entry?.length ?? 0}`,
+    );
 
     if (payload?.object !== 'page') {
-      this.logger.warn(`[FB Webhook POST] Bỏ qua — object="${payload?.object}" | body=${JSON.stringify(payload).slice(0, 200)}`);
+      this.logger.warn(
+        `[FB Webhook POST] Bỏ qua — object="${payload?.object}" | body=${JSON.stringify(payload).slice(0, 200)}`,
+      );
       return 'ignored';
     }
 
     // Xử lý bất đồng bộ — không await để tránh timeout
     this.processMessagingEvents(payload as FbWebhookPayloadDto).catch((err) =>
-      this.logger.error(`[FB Webhook] Lỗi xử lý event: ${err.message}`, err.stack),
+      this.logger.error(
+        `[FB Webhook] Lỗi xử lý event: ${err.message}`,
+        err.stack,
+      ),
     );
 
     return 'EVENT_RECEIVED';
@@ -88,7 +97,9 @@ export class FacebookController {
   private async processOneEvent(pageId: string, event: FbMessagingDto) {
     const psid = event.sender?.id;
     // Log toàn bộ event để debug
-    this.logger.log(`[FB Event] pageId=${pageId} psid=${psid} keys=${Object.keys(event).join(',')} msg=${JSON.stringify(event.message)?.slice(0, 120)}`);
+    this.logger.log(
+      `[FB Event] pageId=${pageId} psid=${psid} keys=${Object.keys(event).join(',')} msg=${JSON.stringify(event.message)?.slice(0, 120)}`,
+    );
 
     if (!psid) return;
 
@@ -106,7 +117,9 @@ export class FacebookController {
       await this.facebookService.handleIncomingMessage(pageId, psid, text);
     } else if (attachments?.length) {
       // Khách gửi ảnh/sticker/file → trả lời hướng dẫn
-      this.logger.log(`[FB] Attachment từ ${psid}: type=${attachments[0]?.type}`);
+      this.logger.log(
+        `[FB] Attachment từ ${psid}: type=${attachments[0]?.type}`,
+      );
       await this.facebookService.sendTextMessage(
         pageId,
         psid,
@@ -114,7 +127,11 @@ export class FacebookController {
       );
     } else if (event.postback) {
       this.logger.log(`[FB] Postback từ ${psid}: ${event.postback.payload}`);
-      await this.facebookService.handlePostback(pageId, psid, event.postback.payload);
+      await this.facebookService.handlePostback(
+        pageId,
+        psid,
+        event.postback.payload,
+      );
     }
   }
 }

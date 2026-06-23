@@ -93,12 +93,18 @@ export class AuthService {
       .leftJoinAndSelect('u.role', 'role')
       .where(
         'u.username = :username OR u.email = :email OR u.phone_number = :phone',
-        { username: username.trim(), email: username.trim(), phone: normalizedPhone },
+        {
+          username: username.trim(),
+          email: username.trim(),
+          phone: normalizedPhone,
+        },
       )
       .getOne();
 
     if (!user || !(await this.verifyPassword(password, user.hashed_password))) {
-      throw new UnauthorizedException('Tài khoản không tồn tại hoặc sai mật khẩu');
+      throw new UnauthorizedException(
+        'Tài khoản không tồn tại hoặc sai mật khẩu',
+      );
     }
 
     if (!user.is_active) {
@@ -106,7 +112,9 @@ export class AuthService {
     }
 
     if (user.user_type !== 'staff' && user.user_type !== 'both') {
-      throw new ForbiddenException('Tài khoản này không có quyền truy cập hệ thống quản lý');
+      throw new ForbiddenException(
+        'Tài khoản này không có quyền truy cập hệ thống quản lý',
+      );
     }
 
     void this.writeLoginLog(user.id, ipAddress, userAgent);

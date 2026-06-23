@@ -46,7 +46,11 @@ export class UsersController {
     @CurrentUser() user: UserEntity,
     @Body() dto: { old_password?: string; password?: string },
   ) {
-    return this.usersService.updateMyPassword(user.id, dto.old_password, dto.password);
+    return this.usersService.updateMyPassword(
+      user.id,
+      dto.old_password,
+      dto.password,
+    );
   }
 
   @Patch(':id')

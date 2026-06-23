@@ -2,7 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
-import { QRSessionEntity, QRAccessTokenEntity, WorkScheduleEntity } from '../entities';
+import {
+  QRSessionEntity,
+  QRAccessTokenEntity,
+  WorkScheduleEntity,
+} from '../entities';
 import { PayrollService } from '../services/payroll.service';
 import moment from 'moment';
 
@@ -33,9 +37,14 @@ export class AttendanceSchedulerService {
 
       for (const sch of schedules) {
         try {
-          await this.payrollService.autoGeneratePenaltyForAttendance(sch.user_id, dateStr);
+          await this.payrollService.autoGeneratePenaltyForAttendance(
+            sch.user_id,
+            dateStr,
+          );
         } catch (e: any) {
-          this.logger.error(`Penalty check failed user_id=${sch.user_id} date=${dateStr}: ${e.message}`);
+          this.logger.error(
+            `Penalty check failed user_id=${sch.user_id} date=${dateStr}: ${e.message}`,
+          );
         }
       }
     }

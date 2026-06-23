@@ -2,7 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TournamentEntity, TournamentMatchEntity, TournamentMatchStatus, TournamentMatchBracket } from '../entities';
+import {
+  TournamentEntity,
+  TournamentMatchEntity,
+  TournamentMatchStatus,
+  TournamentMatchBracket,
+} from '../entities';
 import { TournamentsService } from './tournaments.service';
 
 @Injectable()
@@ -40,10 +45,9 @@ export class TournamentSchedulerService {
       .update(TournamentMatchEntity)
       .set({ status: TournamentMatchStatus.PENDING, match_time: () => 'NULL' })
       .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
-      .andWhere(
-        '(round > 1 OR (round = 1 AND bracket = :loserBracket))',
-        { loserBracket: TournamentMatchBracket.LOSERS }
-      )
+      .andWhere('(round > 1 OR (round = 1 AND bracket = :loserBracket))', {
+        loserBracket: TournamentMatchBracket.LOSERS,
+      })
       .andWhere(
         '((player1_id IS NULL AND player2_id IS NULL) OR table_no IS NULL)',
       )
@@ -70,7 +74,10 @@ export class TournamentSchedulerService {
       .execute();
 
     // Helper: kiểm tra bàn có đang bận không (có trận ongoing/upcoming khác dùng bàn này)
-    const isTableBusy = async (tableNo: string, excludeId: number): Promise<boolean> => {
+    const isTableBusy = async (
+      tableNo: string,
+      excludeId: number,
+    ): Promise<boolean> => {
       const busy = await this.matchRepo.findOne({
         where: [
           { table_no: tableNo, status: TournamentMatchStatus.ONGOING },
@@ -107,9 +114,15 @@ export class TournamentSchedulerService {
         // Knockout bracket: enforce 75% threshold
         if (m.bracket === 'knockout') {
           const allKoR1 = await this.matchRepo.find({
-            where: { tournament_id: m.tournament_id, bracket: TournamentMatchBracket.KNOCKOUT, round: 1 },
+            where: {
+              tournament_id: m.tournament_id,
+              bracket: TournamentMatchBracket.KNOCKOUT,
+              round: 1,
+            },
           });
-          const filledCount = allKoR1.filter(x => x.player1_id && x.player2_id).length;
+          const filledCount = allKoR1.filter(
+            (x) => x.player1_id && x.player2_id,
+          ).length;
           const threshold = Math.ceil(allKoR1.length * 0.75);
           if (filledCount < threshold) {
             this.logger.log(
@@ -120,7 +133,9 @@ export class TournamentSchedulerService {
         }
         // Bàn không được đang bận
         if (await isTableBusy(m.table_no, m.id)) {
-          this.logger.log(`Match ${m.match_no}: bàn ${m.table_no} đang bận — bỏ qua UPCOMING`);
+          this.logger.log(
+            `Match ${m.match_no}: bàn ${m.table_no} đang bận — bỏ qua UPCOMING`,
+          );
           continue;
         }
         round1ToUpcoming.push(m);
@@ -129,13 +144,19 @@ export class TournamentSchedulerService {
       if (round1ToUpcoming.length > 0) {
         for (const m of round1ToUpcoming) {
           m.status = TournamentMatchStatus.UPCOMING;
-          this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) → upcoming (vòng 1)`);
+          this.logger.log(
+            `Match ${m.match_no} (tour ${m.tournament_id}) → upcoming (vòng 1)`,
+          );
         }
         await this.matchRepo.save(round1ToUpcoming);
         for (const m of round1ToUpcoming) {
-          await this.tournamentsService.emitMatchUpdate(m.id).catch((err) =>
-            this.logger.error(`Emit upcoming failed for match ${m.match_no}: ${err.message}`),
-          );
+          await this.tournamentsService
+            .emitMatchUpdate(m.id)
+            .catch((err) =>
+              this.logger.error(
+                `Emit upcoming failed for match ${m.match_no}: ${err.message}`,
+              ),
+            );
         }
       }
     }
@@ -146,7 +167,7 @@ export class TournamentSchedulerService {
       .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
       .andWhere(
         '(m.round > 1 OR (m.round = 1 AND m.bracket = :loserBracket))',
-        { loserBracket: TournamentMatchBracket.LOSERS }
+        { loserBracket: TournamentMatchBracket.LOSERS },
       )
       .andWhere('(m.player1_id IS NOT NULL OR m.player2_id IS NOT NULL)')
       .andWhere('m.table_no IS NOT NULL')
@@ -165,13 +186,19 @@ export class TournamentSchedulerService {
         } else {
           m.match_time = null as any;
         }
-        this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) → upcoming`);
+        this.logger.log(
+          `Match ${m.match_no} (tour ${m.tournament_id}) → upcoming`,
+        );
       }
       await this.matchRepo.save(pendingToUpcoming);
       for (const m of pendingToUpcoming) {
-        await this.tournamentsService.emitMatchUpdate(m.id).catch((err) =>
-          this.logger.error(`Emit upcoming failed for match ${m.match_no}: ${err.message}`),
-        );
+        await this.tournamentsService
+          .emitMatchUpdate(m.id)
+          .catch((err) =>
+            this.logger.error(
+              `Emit upcoming failed for match ${m.match_no}: ${err.message}`,
+            ),
+          );
       }
     }
 
@@ -183,7 +210,7 @@ export class TournamentSchedulerService {
       .where('m.status = :status', { status: TournamentMatchStatus.UPCOMING })
       .andWhere(
         '(m.round > 1 OR (m.round = 1 AND m.bracket = :loserBracket))',
-        { loserBracket: TournamentMatchBracket.LOSERS }
+        { loserBracket: TournamentMatchBracket.LOSERS },
       )
       .getMany();
 
@@ -194,14 +221,18 @@ export class TournamentSchedulerService {
           if (!(await isTableBusy(m.table_no, m.id))) {
             m.match_time = new Date(now.getTime() + 3 * 60 * 1000);
             upcomingToSave.push(m);
-            this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) đủ 2 người chơi -> đặt match_time = +3 phút`);
+            this.logger.log(
+              `Match ${m.match_no} (tour ${m.tournament_id}) đủ 2 người chơi -> đặt match_time = +3 phút`,
+            );
           }
         }
       } else {
         if (m.match_time) {
           m.match_time = null as any;
           upcomingToSave.push(m);
-          this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) thiếu người chơi -> reset match_time = null`);
+          this.logger.log(
+            `Match ${m.match_no} (tour ${m.tournament_id}) thiếu người chơi -> reset match_time = null`,
+          );
         }
       }
     }
@@ -209,9 +240,13 @@ export class TournamentSchedulerService {
     if (upcomingToSave.length > 0) {
       await this.matchRepo.save(upcomingToSave);
       for (const m of upcomingToSave) {
-        await this.tournamentsService.emitMatchUpdate(m.id).catch((err) =>
-          this.logger.error(`Emit upcoming update failed for match ${m.match_no}: ${err.message}`),
-        );
+        await this.tournamentsService
+          .emitMatchUpdate(m.id)
+          .catch((err) =>
+            this.logger.error(
+              `Emit upcoming update failed for match ${m.match_no}: ${err.message}`,
+            ),
+          );
       }
     }
 
@@ -233,7 +268,9 @@ export class TournamentSchedulerService {
         where: { table_no: m.table_no, status: TournamentMatchStatus.ONGOING },
       });
       if (ongoingOnTable && ongoingOnTable.id !== m.id) {
-        this.logger.log(`Match ${m.match_no}: bàn ${m.table_no} đang có trận ongoing — chờ`);
+        this.logger.log(
+          `Match ${m.match_no}: bàn ${m.table_no} đang có trận ongoing — chờ`,
+        );
         continue;
       }
       upcomingToOngoing.push(m);
@@ -242,13 +279,19 @@ export class TournamentSchedulerService {
     if (upcomingToOngoing.length > 0) {
       for (const m of upcomingToOngoing) {
         m.status = TournamentMatchStatus.ONGOING;
-        this.logger.log(`Match ${m.match_no} (tour ${m.tournament_id}) → ongoing`);
+        this.logger.log(
+          `Match ${m.match_no} (tour ${m.tournament_id}) → ongoing`,
+        );
       }
       await this.matchRepo.save(upcomingToOngoing);
       for (const m of upcomingToOngoing) {
-        await this.tournamentsService.emitMatchUpdate(m.id).catch((err) =>
-          this.logger.error(`Emit ongoing failed for match ${m.match_no}: ${err.message}`),
-        );
+        await this.tournamentsService
+          .emitMatchUpdate(m.id)
+          .catch((err) =>
+            this.logger.error(
+              `Emit ongoing failed for match ${m.match_no}: ${err.message}`,
+            ),
+          );
       }
     }
   }
@@ -270,15 +313,18 @@ export class TournamentSchedulerService {
     for (const tour of tours) {
       // 1. Nhánh thắng / knockout: trận vòng 1 chỉ có 1 player → bye thật (người kia không đăng kí)
       // Với double_elimination: chỉ xét 'winners' bracket (bỏ 'knockout' vì trận 21+ chờ kết quả LR2)
-      const allowedBrackets = tour.tournament_type === 'double_elimination'
-        ? "'winners'"
-        : "'winners', 'knockout'";
+      const allowedBrackets =
+        tour.tournament_type === 'double_elimination'
+          ? "'winners'"
+          : "'winners', 'knockout'";
       const byeMatches = await this.matchRepo
         .createQueryBuilder('m')
         .where('m.tournament_id = :id', { id: tour.id })
         .andWhere('m.round = 1')
         .andWhere(`m.bracket IN (${allowedBrackets})`)
-        .andWhere('m.status != :completed', { completed: TournamentMatchStatus.COMPLETED })
+        .andWhere('m.status != :completed', {
+          completed: TournamentMatchStatus.COMPLETED,
+        })
         .andWhere(
           '((m.player1_id IS NOT NULL AND m.player2_id IS NULL) OR (m.player1_id IS NULL AND m.player2_id IS NOT NULL))',
         )
@@ -299,14 +345,21 @@ export class TournamentSchedulerService {
       //    Nếu WR1 feeder còn đang chơi → slot đang chờ loser, KHÔNG phải bye
       if (tour.tournament_type === 'double_elimination') {
         const wr1Start = 1;
-        const lr1Start = tour.number_of_players > 32 ? 33 : tour.number_of_players > 16 ? 17 : 9;
+        const lr1Start =
+          tour.number_of_players > 32
+            ? 33
+            : tour.number_of_players > 16
+              ? 17
+              : 9;
 
         const lr1ByeCandidates = await this.matchRepo
           .createQueryBuilder('m')
           .where('m.tournament_id = :id', { id: tour.id })
           .andWhere('m.round = 1')
           .andWhere("m.bracket = 'losers'")
-          .andWhere('m.status != :completed', { completed: TournamentMatchStatus.COMPLETED })
+          .andWhere('m.status != :completed', {
+            completed: TournamentMatchStatus.COMPLETED,
+          })
           .andWhere(
             '((m.player1_id IS NOT NULL AND m.player2_id IS NULL) OR (m.player1_id IS NULL AND m.player2_id IS NOT NULL))',
           )
@@ -321,17 +374,20 @@ export class TournamentSchedulerService {
           let feederMatchNo: number;
           let feederRound: number;
           if (tour.number_of_players === 24) {
-            feederMatchNo = emptySlot === 1 ? (16 - lrIdx) : (wr1Start + lrIdx);
+            feederMatchNo = emptySlot === 1 ? 16 - lrIdx : wr1Start + lrIdx;
             feederRound = emptySlot === 1 ? 2 : 1; // slot1 feeds from WR2, slot2 from WR1
           } else {
-            feederMatchNo = emptySlot === 1
-              ? wr1Start + lrIdx * 2
-              : wr1Start + lrIdx * 2 + 1;
+            feederMatchNo =
+              emptySlot === 1 ? wr1Start + lrIdx * 2 : wr1Start + lrIdx * 2 + 1;
             feederRound = 1;
           }
 
           const feeder = await this.matchRepo.findOne({
-            where: { tournament_id: tour.id, match_no: feederMatchNo, round: feederRound },
+            where: {
+              tournament_id: tour.id,
+              match_no: feederMatchNo,
+              round: feederRound,
+            },
           });
 
           // Chỉ complete WO khi feeder đã kết thúc VÀ là bye (chỉ có 1 người)
@@ -369,7 +425,9 @@ export class TournamentSchedulerService {
     const now = new Date();
 
     // upcoming → ongoing: khi đến ngày bắt đầu
-    const upcomingTours = await this.tourRepo.find({ where: { status: 'upcoming' } });
+    const upcomingTours = await this.tourRepo.find({
+      where: { status: 'upcoming' },
+    });
     const toStart = upcomingTours.filter(
       (t) => t.start_date && now >= new Date(t.start_date),
     );
@@ -377,12 +435,16 @@ export class TournamentSchedulerService {
       for (const t of toStart) t.status = 'ongoing';
       await this.tourRepo.save(toStart);
       toStart.forEach((t) =>
-        this.logger.log(`Tournament ${t.id} "${t.name}" → ongoing (start_date: ${t.start_date})`),
+        this.logger.log(
+          `Tournament ${t.id} "${t.name}" → ongoing (start_date: ${t.start_date})`,
+        ),
       );
     }
 
     // ongoing → completed: khi trận chung kết đã có người thắng
-    const ongoingTours = await this.tourRepo.find({ where: { status: 'ongoing' } });
+    const ongoingTours = await this.tourRepo.find({
+      where: { status: 'ongoing' },
+    });
     const toComplete: TournamentEntity[] = [];
     for (const t of ongoingTours) {
       const finalMatchNo = this.getFinalMatchNo(t.number_of_players);

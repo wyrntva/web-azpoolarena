@@ -4,7 +4,6 @@ import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import { newsAPI, type NewsArticle, type NewsPayload } from '../../api/news.api';
 import { API_BASE } from '../../constants/shared';
-import { cropImageToSize } from '../tournaments/utils/imageUtils';
 import QuillEditor from '../../components/QuillEditor';
 
 const CATEGORIES = ['Tin tức', 'Giải đấu', 'Thông báo', 'Hướng dẫn & Mẹo', 'Khuyến mãi'];
@@ -115,9 +114,8 @@ const News = () => {
 
     setImageUploading(true);
     try {
-      const cropped = await cropImageToSize(file, IMAGE_W, IMAGE_H);
-      const url = await newsAPI.uploadImage(cropped);
-      setForm((f) => ({ ...f, imageFile: cropped, imageUrl: url }));
+      const url = await newsAPI.uploadImage(file);
+      setForm((f) => ({ ...f, imageFile: file, imageUrl: url }));
       toast.success('Đã tải ảnh lên');
     } catch {
       toast.error('Tải ảnh lên thất bại');
@@ -403,7 +401,7 @@ const News = () => {
                       Xóa ảnh
                     </Button>
                   )}
-                  <span className="text-xs text-gray-400">Ảnh sẽ tự động crop {IMAGE_W}×{IMAGE_H}px</span>
+                  <span className="text-xs text-gray-400">Khuyến nghị {IMAGE_W}×{IMAGE_H}px (tải ảnh gốc không crop)</span>
                 </div>
 
                 {resolvedPreview && (

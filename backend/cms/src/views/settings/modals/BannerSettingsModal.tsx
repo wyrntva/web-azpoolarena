@@ -95,8 +95,7 @@ const BannerSettingsModal = ({
     const handleBannerUpload = async (type: BannerType, file: File) => {
         try {
             setUploadingBanners(prev => ({ ...prev, [type]: true }));
-            const croppedFile = await cropImageForBannerType(type, file);
-            const response = await storeSettingsAPI.uploadBanner(type, croppedFile);
+            const response = await storeSettingsAPI.uploadBanner(type, file);
             onSettingsChange(response.data);
             toast.success('Tải banner lên thành công');
         } catch (error) {
@@ -110,25 +109,12 @@ const BannerSettingsModal = ({
         const fileArray = Array.from(files);
         try {
             setUploadingBanners(prev => ({ ...prev, [type]: true }));
-            const croppedFiles: File[] = [];
-            for (const file of fileArray) {
-                try {
-                    const cropped = await cropImageForBannerType(type, file);
-                    croppedFiles.push(cropped);
-                } catch {
-                    // ignore
-                }
-            }
-            if (croppedFiles.length === 0) {
-                toast.error('Không thể xử lý ảnh để tải lên');
-                return;
-            }
             let latestSettings: StoreSettings | null = null;
             let successCount = 0;
             let failCount = 0;
-            for (const cropped of croppedFiles) {
+            for (const file of fileArray) {
                 try {
-                    const response = await storeSettingsAPI.uploadBanner(type, cropped);
+                    const response = await storeSettingsAPI.uploadBanner(type, file);
                     latestSettings = response.data;
                     successCount++;
                 } catch {

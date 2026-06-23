@@ -10,7 +10,7 @@ import {
 import { FbCustomerEntity } from './fb-customer.entity';
 
 export enum MessageRole {
-  USER = 'user',           // Khách hàng gửi
+  USER = 'user', // Khách hàng gửi
   ASSISTANT = 'assistant', // AI/nhân viên trả lời
 }
 

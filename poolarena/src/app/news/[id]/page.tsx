@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { FaCalendarAlt, FaUser, FaTag, FaArrowLeft, FaNewspaper, FaArrowRight, FaChevronLeft, FaChevronRight } from "react-icons/fa";
@@ -11,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { storeSettingsAPI } from "@/api/storeSettings.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
 import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
+import { fixNewsButtons, newsHref } from "@/lib/news-utils";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -48,6 +49,7 @@ function getHeaderTitle(category: string): string {
 
 export default function ArticleDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const numericId = parseInt(id, 10);
 
@@ -57,6 +59,13 @@ export default function ArticleDetailPage() {
     enabled: !isNaN(numericId),
     staleTime: 2 * 60 * 1000,
   });
+
+  // Redirect /news/1 → /news/1-tieu-de-bai-viet
+  useEffect(() => {
+    if (article && id === String(numericId)) {
+      router.replace(newsHref(article.id, article.title));
+    }
+  }, [article, id, numericId, router]);
 
   const { data: newsData } = useQuery({
     queryKey: ['news-public'],
@@ -177,7 +186,7 @@ export default function ArticleDetailPage() {
             src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
-            sizes="100vw"
+            unoptimized
             className="object-cover"
             priority
           />
@@ -208,7 +217,10 @@ export default function ArticleDetailPage() {
             </h1>
 
             {/* Meta */}
-            <div className="flex flex-wrap items-center gap-3 text-sm font-bold text-text-tertiary border-b border-gray-100 pb-3">
+            <div
+              className="flex flex-wrap items-center gap-3 text-base font-normal leading-6 border-b border-gray-100 pb-3"
+              style={{ color: '#575E70', fontFamily: 'Montserrat, sans-serif' }}
+            >
               <span className="flex items-center gap-1.5">
                 <FaCalendarAlt size={14} />
                 Ngày đăng: {article.date}
@@ -221,11 +233,10 @@ export default function ArticleDetailPage() {
             </div>
 
             {/* Body content */}
-            <div className="space-y-4 text-text-primary text-base leading-relaxed font-normal">
-              {article.content.map((p, idx) => (
-                <p key={idx}>{p}</p>
-              ))}
-            </div>
+            <div
+              className="news-content text-text-primary text-base leading-relaxed font-normal"
+              dangerouslySetInnerHTML={{ __html: fixNewsButtons(article.content.join('')) }}
+            />
           </article>
 
           {/* Related Articles Section for Mobile */}
@@ -281,7 +292,7 @@ export default function ArticleDetailPage() {
                 {related.map((art) => (
                   <div key={art.id} className="w-full flex-shrink-0 px-2">
                     <Link
-                      href={`/news/${art.id}`}
+                      href={newsHref(art.id, art.title)}
                       className="bg-white rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(23,35,57,0.03)] border border-gray-100/80 flex flex-col"
                     >
                       <div className="relative h-[150px] w-full overflow-hidden bg-gray-100">
@@ -289,8 +300,8 @@ export default function ArticleDetailPage() {
                           src={resolveImageUrl(art.image, '/images/logo.png')}
                           alt={art.title}
                           fill
+                          unoptimized
                           className="object-cover"
-                          sizes="100vw"
                         />
                         <div className="absolute inset-0 bg-black/40"></div>
                         <div className="absolute top-2.5 left-2.5 z-10">
@@ -344,6 +355,7 @@ export default function ArticleDetailPage() {
             src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
+            unoptimized
             className="object-cover object-center"
             priority
           />
@@ -375,24 +387,26 @@ export default function ArticleDetailPage() {
               </h1>
 
               {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-text-tertiary border-b border-gray-100 pb-4">
+              <div
+                className="flex flex-wrap items-center gap-4 text-base font-normal leading-6 border-b border-gray-100 pb-4"
+                style={{ color: '#575E70', fontFamily: 'Montserrat, sans-serif' }}
+              >
                 <span className="flex items-center gap-2">
-                  <FaCalendarAlt size={14} className="text-text-tertiary" />
+                  <FaCalendarAlt size={14} />
                   Ngày đăng: {article.date}
                 </span>
-                <span className="text-grey-300">•</span>
+                <span>•</span>
                 <span className="flex items-center gap-2">
-                  <FaUser size={14} className="text-text-tertiary" />
+                  <FaUser size={14} />
                   Người đăng: {article.author}
                 </span>
               </div>
 
               {/* Body Text */}
-              <div className="space-y-4 text-text-primary text-sm sm:text-base leading-relaxed font-normal">
-                {article.content.map((p, idx) => (
-                  <p key={idx}>{p}</p>
-                ))}
-              </div>
+              <div
+                className="news-content text-text-primary text-sm sm:text-base leading-relaxed font-normal"
+                dangerouslySetInnerHTML={{ __html: fixNewsButtons(article.content.join('')) }}
+              />
             </article>
 
             {/* Related Articles Section */}
@@ -452,7 +466,7 @@ export default function ArticleDetailPage() {
                       className="w-full md:w-1/3 flex-shrink-0 px-3"
                     >
                       <Link
-                        href={`/news/${art.id}`}
+                        href={newsHref(art.id, art.title)}
                         className="bg-white rounded-2xl overflow-hidden shadow-[0_10px_30px_rgba(23,35,57,0.03)] border border-gray-100/80 hover:shadow-[0_15px_40px_rgba(23,35,57,0.07)] transition-all duration-300 cursor-pointer group flex flex-col h-full"
                         style={{
                           animationDelay: `${idx * 80}ms`,
@@ -464,8 +478,8 @@ export default function ArticleDetailPage() {
                             src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill
+                            unoptimized
                             className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
-                            sizes="(max-width: 768px) 100vw, 33vw"
                           />
                           <div className="absolute inset-0 bg-black/40"></div>
                           <div className="absolute top-3 left-3 z-10">

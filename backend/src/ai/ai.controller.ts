@@ -65,9 +65,10 @@ export class AiController {
    */
   @Delete('history/:sessionId')
   @HttpCode(HttpStatus.OK)
-  clearHistory(
-    @Param('sessionId') sessionId: string,
-  ): { cleared: boolean; session_id: string } {
+  clearHistory(@Param('sessionId') sessionId: string): {
+    cleared: boolean;
+    session_id: string;
+  } {
     this.logger.log(`[DELETE /api/ai/history/${sessionId}]`);
     return this.aiService.clearHistory(sessionId);
   }

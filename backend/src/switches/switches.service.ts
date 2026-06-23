@@ -71,7 +71,7 @@ export class SwitchesService {
         where: { id: table.area_id },
       });
       const areaName = area?.name ?? '';
-      
+
       // Auto-sync Scoreboard switch (Chỉ giữ lại của Scoreboard)
       const switchNamePC = `Scoreboard - ${table.name}`;
       const descriptionPC = `Máy tính bảng tỉ số ${table.name}`;
@@ -81,9 +81,18 @@ export class SwitchesService {
 
       if (existingPC) {
         let changed = false;
-        if (existingPC.description !== descriptionPC) { existingPC.description = descriptionPC; changed = true; }
-        if (existingPC.area_name !== areaName) { existingPC.area_name = areaName; changed = true; }
-        if (existingPC.sort_order !== table.id) { existingPC.sort_order = table.id; changed = true; }
+        if (existingPC.description !== descriptionPC) {
+          existingPC.description = descriptionPC;
+          changed = true;
+        }
+        if (existingPC.area_name !== areaName) {
+          existingPC.area_name = areaName;
+          changed = true;
+        }
+        if (existingPC.sort_order !== table.id) {
+          existingPC.sort_order = table.id;
+          changed = true;
+        }
         if (changed) await this.switchRepo.save(existingPC);
       } else {
         await this.switchRepo.save(
@@ -136,12 +145,23 @@ export class SwitchesService {
     if (dto.is_active !== undefined) {
       if (sw.switch_type === 'scoreboard') {
         const tableName = sw.name.replace('Scoreboard - ', '');
-        const payload = JSON.stringify({ type: 'scoreboard', table_name: tableName, action: dto.is_active ? 'ON' : 'OFF' });
+        const payload = JSON.stringify({
+          type: 'scoreboard',
+          table_name: tableName,
+          action: dto.is_active ? 'ON' : 'OFF',
+        });
         this.mqttClient.publish('azpool/master_esp/control', payload);
         this.logger.log(`[MQTT] Lệnh tắt/bật PC: ${payload}`);
-      } else if (['tv', 'light', 'other', 'fan', 'ac'].includes(sw.switch_type) && !sw.ip_address) {
+      } else if (
+        ['tv', 'light', 'other', 'fan', 'ac'].includes(sw.switch_type) &&
+        !sw.ip_address
+      ) {
         // Nếu không có ip_address (nghĩa là Node WiFi thông qua Master ESP)
-        const payload = JSON.stringify({ type: sw.switch_type, target: sw.name, action: dto.is_active ? 'ON' : 'OFF' });
+        const payload = JSON.stringify({
+          type: sw.switch_type,
+          target: sw.name,
+          action: dto.is_active ? 'ON' : 'OFF',
+        });
         this.mqttClient.publish('azpool/master_esp/control', payload);
         this.logger.log(`[MQTT] Lệnh điều khiển thiết bị: ${payload}`);
       } else if (sw.ip_address) {
@@ -191,21 +211,29 @@ export class SwitchesService {
     const sw = await this.switchRepo.findOne({
       where: { name: switchName, switch_type: 'scoreboard' },
     });
-    
+
     if (sw && sw.is_active !== isActive) {
       sw.is_active = isActive;
       await this.switchRepo.save(sw);
-      this.logger.log(`[MQTT Sync] Bảng ${tableName} -> ${isActive ? 'ON' : 'OFF'}`);
+      this.logger.log(
+        `[MQTT Sync] Bảng ${tableName} -> ${isActive ? 'ON' : 'OFF'}`,
+      );
     }
   }
 
   // Tự động nhận dạng và cập nhật thiết bị (Plug And Play + Actual Status Sync)
-  async handleDiscovery(data: { name: string; switch_type: string; is_active?: boolean }) {
+  async handleDiscovery(data: {
+    name: string;
+    switch_type: string;
+    is_active?: boolean;
+  }) {
     if (!data || !data.name || !data.switch_type) return;
 
     if (!VALID_SWITCH_TYPES.includes(data.switch_type)) return;
 
-    const existing = await this.switchRepo.findOne({ where: { name: data.name, switch_type: data.switch_type } });
+    const existing = await this.switchRepo.findOne({
+      where: { name: data.name, switch_type: data.switch_type },
+    });
     if (!existing) {
       await this.switchRepo.save(
         this.switchRepo.create({
@@ -218,13 +246,20 @@ export class SwitchesService {
           updated_at: new Date(),
         } as Partial<SwitchEntity>),
       );
-      this.logger.log(`[Auto-Discovery] Đã thêm thiết bị cắm-là-chạy ngầm: ${data.name}`);
+      this.logger.log(
+        `[Auto-Discovery] Đã thêm thiết bị cắm-là-chạy ngầm: ${data.name}`,
+      );
     } else {
       // Thiết bị đã có, kiểm tra CẬP NHẬT TRẠNG THÁI THỰC TẾ
-      if (data.is_active !== undefined && existing.is_active !== data.is_active) {
+      if (
+        data.is_active !== undefined &&
+        existing.is_active !== data.is_active
+      ) {
         existing.is_active = data.is_active;
         await this.switchRepo.save(existing);
-        this.logger.log(`[Hardware Sync] Trạng thái thực tế thiết bị ${data.name} đè lên UI: ${data.is_active ? 'ON' : 'OFF'}`);
+        this.logger.log(
+          `[Hardware Sync] Trạng thái thực tế thiết bị ${data.name} đè lên UI: ${data.is_active ? 'ON' : 'OFF'}`,
+        );
       }
     }
   }

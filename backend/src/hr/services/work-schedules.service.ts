@@ -49,8 +49,11 @@ export class WorkSchedulesService {
       );
     }
 
-    const settings = await this.scheduleRepo.manager.query('SELECT allowed_late_minutes FROM attendance_settings WHERE is_active = true LIMIT 1');
-    const globalLate = settings.length > 0 ? settings[0].allowed_late_minutes : 0;
+    const settings = await this.scheduleRepo.manager.query(
+      'SELECT allowed_late_minutes FROM attendance_settings WHERE is_active = true LIMIT 1',
+    );
+    const globalLate =
+      settings.length > 0 ? settings[0].allowed_late_minutes : 0;
 
     const schedule = this.scheduleRepo.create({
       user_id: dto.user_id,
@@ -180,7 +183,10 @@ export class WorkSchedulesService {
     }
 
     // Tính lại phạt ngay khi lịch thay đổi, bất kể ngày nào
-    await this.payrollService.autoGeneratePenaltyForAttendance(ws.user_id, ws.work_date);
+    await this.payrollService.autoGeneratePenaltyForAttendance(
+      ws.user_id,
+      ws.work_date,
+    );
 
     return ws;
   }

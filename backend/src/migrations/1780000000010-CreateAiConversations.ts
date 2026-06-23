@@ -35,9 +35,15 @@ export class CreateAiConversations1780000000010 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_ai_conversations_created_at"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_ai_conversations_conversation_type"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_ai_conversations_session_id"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_ai_conversations_created_at"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_ai_conversations_conversation_type"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_ai_conversations_session_id"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "ai_conversations"`);
   }
 }

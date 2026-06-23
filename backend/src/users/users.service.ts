@@ -30,7 +30,7 @@ export class UsersService {
     const existing = await this.userRepo.findOne({
       where: { username: dto.username },
     });
-    
+
     if (existing) {
       if (!existing.is_active) {
         // Reactivate soft-deleted user
@@ -40,14 +40,18 @@ export class UsersService {
           existing.email = dto.email.trim() !== '' ? dto.email : null;
         }
         if (dto.password) {
-          existing.hashed_password = await this.authService.hashPassword(dto.password);
+          existing.hashed_password = await this.authService.hashPassword(
+            dto.password,
+          );
         }
         if (dto.role_id) existing.role_id = dto.role_id;
         if (dto.pin) existing.pin = dto.pin;
         if (dto.salary_type) existing.salary_type = dto.salary_type;
-        if (dto.hourly_rate !== undefined) existing.hourly_rate = dto.hourly_rate;
-        if (dto.fixed_salary !== undefined) existing.fixed_salary = dto.fixed_salary;
-        
+        if (dto.hourly_rate !== undefined)
+          existing.hourly_rate = dto.hourly_rate;
+        if (dto.fixed_salary !== undefined)
+          existing.fixed_salary = dto.fixed_salary;
+
         const saved = await this.userRepo.save(existing);
         const full = await this.userRepo.findOne({
           where: { id: saved.id },
@@ -100,7 +104,7 @@ export class UsersService {
     });
 
     const userIds = users.map((u) => u.id);
-    let firstScheduleMap: Record<number, string> = {};
+    const firstScheduleMap: Record<number, string> = {};
     if (userIds.length > 0) {
       const rows: { user_id: number; min_date: string }[] =
         await this.userRepo.manager.query(
@@ -158,7 +162,7 @@ export class UsersService {
     if (dto.email !== undefined && dto.email.trim() === '') {
       dto.email = null;
     }
-    
+
     Object.assign(user, dto);
     const saved = await this.userRepo.save(user);
     const full = await this.userRepo.findOne({
@@ -168,16 +172,26 @@ export class UsersService {
     return this.parseUserPermissions(full!);
   }
 
-  async updateMyPassword(userId: number, oldPassword?: string, newPassword?: string) {
+  async updateMyPassword(
+    userId: number,
+    oldPassword?: string,
+    newPassword?: string,
+  ) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    if (!oldPassword) throw new BadRequestException('Vui lòng nhập mật khẩu cũ');
-    
-    const isPasswordValid = await this.authService.verifyPassword(oldPassword, user.hashed_password);
-    if (!isPasswordValid) throw new BadRequestException('Mật khẩu cũ không chính xác');
+    if (!oldPassword)
+      throw new BadRequestException('Vui lòng nhập mật khẩu cũ');
 
-    if (!newPassword || newPassword.length < 6) throw new BadRequestException('Mật khẩu mới phải có ít nhất 6 ký tự');
+    const isPasswordValid = await this.authService.verifyPassword(
+      oldPassword,
+      user.hashed_password,
+    );
+    if (!isPasswordValid)
+      throw new BadRequestException('Mật khẩu cũ không chính xác');
+
+    if (!newPassword || newPassword.length < 6)
+      throw new BadRequestException('Mật khẩu mới phải có ít nhất 6 ký tự');
 
     user.hashed_password = await this.authService.hashPassword(newPassword);
     await this.userRepo.save(user);
@@ -210,7 +224,9 @@ export class UsersService {
     fixed_salary?: number;
     is_active?: boolean;
   }) {
-    const user = await this.userRepo.findOne({ where: { id: dto.pool_arena_user_id } });
+    const user = await this.userRepo.findOne({
+      where: { id: dto.pool_arena_user_id },
+    });
     if (!user) throw new NotFoundException('Khách hàng không tồn tại');
     if (!['player', 'both'].includes(user.user_type))
       throw new BadRequestException('Người dùng không phải khách hàng');
@@ -223,7 +239,9 @@ export class UsersService {
     const username = '0' + user.phone_number.slice(3);
     const existing = await this.userRepo.findOne({ where: { username } });
     if (existing && existing.id !== user.id)
-      throw new BadRequestException('Số điện thoại này đã được đăng ký làm nhân viên');
+      throw new BadRequestException(
+        'Số điện thoại này đã được đăng ký làm nhân viên',
+      );
 
     const role = await this.roleRepo.findOne({ where: { id: dto.role_id } });
     if (!role) throw new NotFoundException('Vai trò không tồn tại');
@@ -233,8 +251,10 @@ export class UsersService {
     user.role_id = dto.role_id;
     user.pin = dto.pin;
     user.salary_type = dto.salary_type as SalaryType;
-    user.hourly_rate = dto.salary_type === 'hourly' ? (dto.hourly_rate ?? 20000) : (null as any);
-    user.fixed_salary = dto.salary_type === 'fixed' ? (dto.fixed_salary ?? 0) : (null as any);
+    user.hourly_rate =
+      dto.salary_type === 'hourly' ? (dto.hourly_rate ?? 20000) : (null as any);
+    user.fixed_salary =
+      dto.salary_type === 'fixed' ? (dto.fixed_salary ?? 0) : (null as any);
     user.is_active = dto.is_active !== undefined ? dto.is_active : true;
 
     const saved = await this.userRepo.save(user);

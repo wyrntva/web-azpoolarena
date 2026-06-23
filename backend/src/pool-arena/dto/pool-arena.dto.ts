@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsEmail, IsEnum, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+} from 'class-validator';
 import { PoolArenaUserGender } from '../entities';
 
 export class CreatePoolArenaUserDto {

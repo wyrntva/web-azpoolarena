@@ -20,6 +20,8 @@ export class CreateTableFeePayments1781300000003 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP TABLE IF EXISTS "tournament_table_fee_payments"`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "tournament_table_fee_payments"`,
+    );
   }
 }

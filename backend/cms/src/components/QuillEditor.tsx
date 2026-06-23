@@ -186,7 +186,9 @@ export default function QuillEditor({
       toast.error('Vui lòng nhập đủ văn bản và URL');
       return;
     }
-    const html = `<a href="${btnModal.url}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:9px 22px;background:#ED1C1F;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;line-height:1;">${btnModal.label}</a>&nbsp;`;
+    const rawUrl = btnModal.url.trim();
+    const safeUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+    const html = `<div style="text-align:center;margin:12px 0;"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 24px;border-radius:24px;background:#C6010B;color:#fff;text-decoration:none;font-weight:500;font-size:16px;line-height:24px;font-family:Montserrat,sans-serif;">${btnModal.label}</a></div>`;
     restoreSelection();
     document.execCommand('insertHTML', false, html);
     emitChange();
@@ -204,9 +206,11 @@ export default function QuillEditor({
 
   return (
     <>
-      <div className="rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+      <div className="rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+        {/* Scrollable container — toolbar sticks inside this */}
+        <div className="overflow-y-auto" style={{ maxHeight: 520 }}>
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 px-2 py-1.5 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
 
           {/* Heading buttons */}
           <button type="button" title="Tiêu đề (18px)" onMouseDown={(e) => { e.preventDefault(); applyBlock('h3'); }} className={tbBtn + ' text-xs font-bold w-auto px-1.5'}>H3</button>
@@ -331,6 +335,8 @@ export default function QuillEditor({
           ].join(' ')}
         />
 
+        </div>{/* end scroll container */}
+
         {/* Hidden file input for inline image */}
         <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
       </div>
@@ -370,7 +376,7 @@ export default function QuillEditor({
                   <a
                     href="#"
                     onClick={(e) => e.preventDefault()}
-                    style={{ background: '#ED1C1F', color: '#fff', borderRadius: 6, padding: '9px 22px', textDecoration: 'none', fontWeight: 600, fontSize: 14, display: 'inline-block' }}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 24px', borderRadius: 24, background: '#C6010B', color: '#fff', textDecoration: 'none', fontWeight: 500, fontSize: 16, lineHeight: '24px', fontFamily: 'Montserrat, sans-serif' }}
                   >
                     {btnModal.label}
                   </a>

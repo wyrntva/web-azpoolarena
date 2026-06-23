@@ -29,6 +29,14 @@ export const authAPI = {
     const response = await api.post('/api/pool-arena/auth/forgot-password', { email })
     return response.data
   },
+  sendNewPassword: async (email: string) => {
+    const response = await api.post('/api/pool-arena/auth/send-new-password', { email })
+    return response.data
+  },
+  verifyOtp: async (data: { email: string; code: string }) => {
+    const response = await api.post('/api/pool-arena/auth/verify-otp', data)
+    return response.data
+  },
   resetPassword: async (data: { email: string; token: string; password: string }) => {
     const response = await api.post('/api/pool-arena/auth/reset-password', data)
     return response.data

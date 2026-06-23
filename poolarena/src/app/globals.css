@@ -494,4 +494,61 @@ body {
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;               /* Chrome/Safari/Opera */
+}
+
+/* ── News article rendered HTML content ─────────────────────── */
+.news-content {
+  line-height: 1.75;
+}
+.news-content > * + * {
+  margin-top: 0.5rem;
+}
+.news-content h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #172339;
+  margin-top: 1.25rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+/* Collapse blank-line divs (<div><br></div>) to minimal height */
+.news-content div:has(> br:only-child) {
+  margin-top: 0 !important;
+  line-height: 0.5;
+  height: 0.5rem;
+}
+.news-content ul,
+.news-content ol {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+.news-content ul { list-style-type: disc; }
+.news-content ol { list-style-type: decimal; }
+.news-content a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+/* Button links chèn từ CMS editor */
+.news-content a[style*="background:#ED1C1F"],
+.news-content a[style*="background:#D22E39"],
+.news-content a[style*="background:#C6010B"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 8px 24px !important;
+  border-radius: 24px !important;
+  background: #C6010B !important;
+  color: #fff !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  line-height: 24px !important;
+  font-family: Montserrat, sans-serif !important;
+  transition: background 0.2s;
+}
+.news-content a[style*="background:#ED1C1F"]:hover,
+.news-content a[style*="background:#D22E39"]:hover,
+.news-content a[style*="background:#C6010B"]:hover {
+  background: #a50009 !important;
 }

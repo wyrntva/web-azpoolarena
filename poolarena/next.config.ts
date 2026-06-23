@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   allowedDevOrigins: ['192.168.1.187', 'localhost'],
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

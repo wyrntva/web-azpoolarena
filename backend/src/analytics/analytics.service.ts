@@ -59,7 +59,8 @@ export class AnalyticsService {
     const growth_percent =
       yesterdayCount === 0
         ? null
-        : Math.round(((todayCount - yesterdayCount) / yesterdayCount) * 1000) / 10;
+        : Math.round(((todayCount - yesterdayCount) / yesterdayCount) * 1000) /
+          10;
 
     return { count: todayCount, growth_percent };
   }

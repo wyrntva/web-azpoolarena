@@ -37,10 +37,14 @@ export class PayrollController {
     @Query('end_date') endDate?: string,
     @Query('user_id') userIdStr?: string,
   ) {
-    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
-    const userId = isAdmin 
-        ? (userIdStr ? parseInt(userIdStr, 10) : undefined)
-        : req.user.id;
+    const isAdmin =
+      req.user.is_admin ||
+      ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    const userId = isAdmin
+      ? userIdStr
+        ? parseInt(userIdStr, 10)
+        : undefined
+      : req.user.id;
     return this.payrollService.findAllAdvances(userId, startDate, endDate);
   }
 
@@ -74,10 +78,14 @@ export class PayrollController {
     @Query('end_date') endDate?: string,
     @Query('user_id') userIdStr?: string,
   ) {
-    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
-    const userId = isAdmin 
-        ? (userIdStr ? parseInt(userIdStr, 10) : undefined)
-        : req.user.id;
+    const isAdmin =
+      req.user.is_admin ||
+      ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    const userId = isAdmin
+      ? userIdStr
+        ? parseInt(userIdStr, 10)
+        : undefined
+      : req.user.id;
     return this.payrollService.findAllBonuses(userId, startDate, endDate);
   }
 
@@ -111,10 +119,14 @@ export class PayrollController {
     @Query('end_date') endDate?: string,
     @Query('user_id') userIdStr?: string,
   ) {
-    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
-    const userId = isAdmin 
-        ? (userIdStr ? parseInt(userIdStr, 10) : undefined)
-        : req.user.id;
+    const isAdmin =
+      req.user.is_admin ||
+      ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    const userId = isAdmin
+      ? userIdStr
+        ? parseInt(userIdStr, 10)
+        : undefined
+      : req.user.id;
     return this.payrollService.findAllPenalties(userId, startDate, endDate);
   }
 
@@ -144,9 +156,11 @@ export class PayrollController {
   @Get('summary')
   async getSummary(@Request() req, @Query('month') month: string) {
     const summary = await this.payrollService.getSummary(month);
-    const isAdmin = req.user.is_admin || ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
+    const isAdmin =
+      req.user.is_admin ||
+      ['admin', 'Quản trị', 'Quản lý'].includes(req.user.role?.name);
     if (!isAdmin) {
-      return summary.filter(item => item.user_id === req.user.id);
+      return summary.filter((item) => item.user_id === req.user.id);
     }
     return summary;
   }

@@ -34,7 +34,7 @@ export class StoreSettingsService {
   async addBanner(type: string, url: string) {
     const settings = await this.getSettings();
     const fieldName = `banner_${type}`;
-    
+
     // For single banners
     if (type === 'ranking' || type === 'member') {
       (settings as any)[fieldName] = url;
@@ -45,21 +45,22 @@ export class StoreSettingsService {
         try {
           current = JSON.parse((settings as any)[fieldName]);
         } catch {
-          if ((settings as any)[fieldName]) current = [(settings as any)[fieldName]];
+          if ((settings as any)[fieldName])
+            current = [(settings as any)[fieldName]];
         }
       }
       if (!Array.isArray(current)) current = [];
       current.push(url);
       (settings as any)[fieldName] = JSON.stringify(current);
     }
-    
+
     return this.repo.save(settings);
   }
 
   async removeBanner(type: string, index: number) {
     const settings = await this.getSettings();
     const fieldName = `banner_${type}`;
-    
+
     if ((settings as any)[fieldName]) {
       try {
         const current = JSON.parse((settings as any)[fieldName]);

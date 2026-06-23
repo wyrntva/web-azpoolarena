@@ -71,6 +71,20 @@ export const forgotPasswordThunk = createAsyncThunk<
   }
 );
 
+export const verifyOtpThunk = createAsyncThunk<
+  void,
+  { email: string; code: string }
+>(
+  'auth/verifyOtp',
+  async (payload, { rejectWithValue }) => {
+    try {
+      await authService.verifyOtp(payload);
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message ?? error?.response?.data?.detail ?? error?.message ?? 'OTP không hợp lệ');
+    }
+  }
+);
+
 export const resetPasswordThunk = createAsyncThunk<
   void,
   { email: string; token: string; password: string }
