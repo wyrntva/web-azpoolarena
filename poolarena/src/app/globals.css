@@ -551,4 +551,13 @@ body {
 .news-content a[style*="background:#D22E39"]:hover,
 .news-content a[style*="background:#C6010B"]:hover {
   background: #a50009 !important;
+}
+
+/* Make images in news article body 30% smaller and center them */
+.news-content img {
+  max-width: 70% !important;
+  height: auto !important;
+  display: block;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
