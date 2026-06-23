@@ -12,6 +12,7 @@ import { storeSettingsAPI } from "@/api/storeSettings.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
 import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
 import { fixNewsButtons, newsHref } from "@/lib/news-utils";
+import SafeImage from "@/components/SafeImage";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -182,7 +183,7 @@ export default function ArticleDetailPage() {
       <div className="block sm:hidden bg-[#F0F2F4] flex-1">
         {/* Banner Image */}
         <div className="relative w-full h-[180px] bg-gray-200 overflow-hidden">
-          <Image
+          <SafeImage
             src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
@@ -296,7 +297,7 @@ export default function ArticleDetailPage() {
                       className="bg-white rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(23,35,57,0.03)] border border-gray-100/80 flex flex-col"
                     >
                       <div className="relative h-[150px] w-full overflow-hidden bg-gray-100">
-                        <Image
+                        <SafeImage
                           src={resolveImageUrl(art.image, '/images/logo.png')}
                           alt={art.title}
                           fill
@@ -351,7 +352,7 @@ export default function ArticleDetailPage() {
       <div className="hidden sm:block relative w-full flex-1">
         {/* Banner Background */}
         <div className="absolute top-0 left-0 w-full h-[450px] bg-[#172339] overflow-hidden">
-          <Image
+          <SafeImage
             src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
@@ -474,7 +475,7 @@ export default function ArticleDetailPage() {
                         }}
                       >
                         <div className="relative h-[200px] overflow-hidden bg-gray-100">
-                          <Image
+                          <SafeImage
                             src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill

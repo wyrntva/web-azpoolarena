@@ -12,6 +12,7 @@ import { storeSettingsAPI } from "@/api/storeSettings.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
 import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
 import { newsHref } from "@/lib/news-utils";
+import SafeImage from "@/components/SafeImage";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -209,7 +210,7 @@ export default function NewsPage() {
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-12">
                     <div className="lg:col-span-7 relative h-[250px] sm:h-[350px] lg:h-[420px] overflow-hidden bg-gray-100">
-                      <Image
+                      <SafeImage
                         src={resolveImageUrl(featuredArticle.image, '/images/logo.png')}
                         alt={featuredArticle.title}
                         fill
@@ -284,7 +285,7 @@ export default function NewsPage() {
                         }}
                       >
                         <div className="relative h-[200px] overflow-hidden bg-gray-100">
-                          <Image
+                          <SafeImage
                             src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill
