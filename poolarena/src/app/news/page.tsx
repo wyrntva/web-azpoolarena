@@ -233,12 +233,18 @@ export default function NewsPage() {
                             <FaTag size={12} />
                             {featuredArticle.category}
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            <FaCalendarAlt size={12} />
+                          <span 
+                            className="flex items-center gap-1.5 text-base font-normal leading-6"
+                            style={{ color: '#575E70', fontFamily: 'Montserrat, sans-serif' }}
+                          >
+                            <FaCalendarAlt size={16} />
                             {featuredArticle.date}
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            <FaUser size={12} />
+                          <span 
+                            className="flex items-center gap-1.5 text-base font-normal leading-6"
+                            style={{ color: '#575E70', fontFamily: 'Montserrat, sans-serif' }}
+                          >
+                            <FaUser size={16} />
                             {featuredArticle.author}
                           </span>
                         </div>
@@ -297,13 +303,19 @@ export default function NewsPage() {
                         <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                           <div className="space-y-2">
                             <div className="flex items-center gap-3 text-[11px] font-semibold text-text-tertiary">
-                              <span className="flex items-center gap-1">
-                                <FaCalendarAlt size={10} />
+                              <span 
+                                className="flex items-center gap-1 text-base font-normal leading-6"
+                                style={{ color: '#575E70', fontFamily: 'Montserrat, sans-serif' }}
+                              >
+                                <FaCalendarAlt size={16} />
                                 {art.date}
                               </span>
                               <span>•</span>
-                              <span className="flex items-center gap-1">
-                                <FaUser size={10} />
+                              <span 
+                                className="flex items-center gap-1 text-base font-normal leading-6"
+                                style={{ color: '#575E70', fontFamily: 'Montserrat, sans-serif' }}
+                              >
+                                <FaUser size={16} />
                                 {art.author}
                               </span>
                             </div>
