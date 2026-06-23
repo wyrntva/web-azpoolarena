@@ -132,15 +132,18 @@ export class FacebookService implements OnModuleInit {
     // 5. Lấy lịch sử hội thoại gần nhất
     const history = await this.getRecentMessages(pageId, psid, 10);
 
-    // 6. Gọi AI trả lời
+    // 6. Lấy tên Fanpage từ DB
+    const pageName = await this.getPageName(pageId);
+
+    // 7. Gọi AI trả lời
     const startTime = Date.now();
     try {
       const { reply, model, tokensUsed, cost } =
-        await this.aiService.answerFacebookMessage(psid, text, history);
+        await this.aiService.answerFacebookMessage(psid, text, history, pageName);
 
       const elapsed = Date.now() - startTime;
 
-      // 7. Lưu reply của AI
+      // 8. Lưu reply của AI
       await this.saveMessage(
         customer.id,
         MessageRole.ASSISTANT,
@@ -152,7 +155,7 @@ export class FacebookService implements OnModuleInit {
         elapsed,
       );
 
-      // 8. Gửi reply qua Facebook Graph API
+      // 9. Gửi reply qua Facebook Graph API
       await this.sendTextMessage(pageId, psid, reply);
     } catch (err) {
       this.logger.error(`[FB] Lỗi xử lý AI cho ${psid}: ${err.message}`, err.stack);
@@ -172,8 +175,9 @@ export class FacebookService implements OnModuleInit {
 
     if (payload === 'GET_STARTED') {
       const customer = await this.getOrCreateCustomer(pageId, psid);
+      const pageName = await this.getPageName(pageId);
       const welcomeMsg =
-        `Xin chào! 👋 Tôi là trợ lý AI của AZ Pool Arena.\n` +
+        `Xin chào! 👋 Tôi là trợ lý AI của ${pageName}.\n` +
         `Tôi có thể giúp bạn:\n` +
         `🎱 Thông tin bàn bida & đặt chỗ\n` +
         `💰 Bảng giá dịch vụ\n` +
@@ -390,5 +394,18 @@ export class FacebookService implements OnModuleInit {
   private async getStorePhone(): Promise<string> {
     // Giá trị fallback — AiService/StoreSettings sẽ cung cấp thực tế
     return this.config.get<string>('STORE_PHONE', '0xxxxxxxxx');
+  }
+
+  /**
+   * Lấy tên Fanpage từ bảng fb_pages theo pageId.
+   * Fallback: 'AZ POOLARENA' nếu không tìm thấy.
+   */
+  private async getPageName(pageId: string): Promise<string> {
+    try {
+      const page = await this.pageRepo.findOne({ where: { id: pageId }, select: ['name'] });
+      return page?.name || 'AZ POOLARENA';
+    } catch {
+      return 'AZ POOLARENA';
+    }
   }
 }

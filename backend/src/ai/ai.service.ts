@@ -217,15 +217,16 @@ export class AiService implements OnModuleInit {
     psid: string,
     message: string,
     history: Array<{ role: string; content: string }> = [],
+    pageName: string = 'AZ POOLARENA',
   ): Promise<FbAiResponseDto> {
     this.ensureOpenAI();
     const startTime = Date.now();
-    this.logger.log(`[FB:AI] PSID=${psid} | "${message.slice(0, 80)}"`);
+    this.logger.log(`[FB:AI] PSID=${psid} | page="${pageName}" | "${message.slice(0, 80)}"`);
 
     // Phân tích intent và lấy DB context
     const intents = this.analyzeIntent(message);
     const dbContext = await this.buildDbContext(intents);
-    const systemPrompt = this.buildFacebookSystemPrompt(dbContext);
+    const systemPrompt = this.buildFacebookSystemPrompt(dbContext, pageName);
 
     // Chuyển history sang đúng type OpenAI
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -270,10 +271,10 @@ export class AiService implements OnModuleInit {
   // OpenAI tự động cache prefix của prompt khi độ dài >= 1024 tokens.
   // Cached tokens giảm chi phí 50% và latency ~200ms.
   // QUY TẮC: phần TĨNH (không đổi) phải đặt ĐẦU prompt, phần ĐỘNG (DB data) đặt CUỐI.
-  private buildFacebookSystemPrompt(dbContext: string): string {
+  private buildFacebookSystemPrompt(dbContext: string, pageName: string = 'AZ POOLARENA'): string {
     // Phần TĨNH này >1024 tokens → OpenAI tự động cache sau request đầu tiên.
     // Cache hit giảm latency ~200ms và chi phí input token 50%.
-    const STATIC_PREFIX = `Bạn là JARVIS — trợ lý AI chính thức của AZ POOLARENA, phòng bida chuyên nghiệp tại Việt Nam.
+    const STATIC_PREFIX = `Bạn là JARVIS — trợ lý AI chính thức của ${pageName}, phòng bida chuyên nghiệp tại Việt Nam.
 
 ## Danh tính & Phong cách
 - Tên: JARVIS
@@ -284,10 +285,10 @@ export class AiService implements OnModuleInit {
 - Mỗi câu trả lời ngắn gọn, dễ đọc trên điện thoại
 
 ## Lần đầu khách chào
-Trả lời: "Xin chào bạn, mình là JARVIS trợ lý AI của AZ POOLARENA, mình có thể hỗ trợ gì cho bạn?"
+Trả lời: "Xin chào bạn, mình là JARVIS trợ lý AI của ${pageName}, mình có thể hỗ trợ gì cho bạn?"
 
 ## THÔNG TIN QUÁN
-- Tên: AZ POOLARENA
+- Tên: ${pageName}
 - Địa chỉ: Tháp Tây, Chung cư Học viện Quốc phòng
 - Số điện thoại hỗ trợ: 0364756638
 - Giờ mở cửa: 24/7 (mở cửa cả ngày lẫn đêm)
@@ -326,7 +327,7 @@ Khi khách muốn cắt cam (quay phim màn hình bảng tỉ số), hỏi đủ
 3. Số điện thoại (Zalo) của khách
 Sau khi có đủ, trả lời:
 "Mình đã lưu lại yêu cầu cắt cam của bạn rồi. Nhân viên sẽ gửi file cho bạn qua Zalo số [SĐT khách] sớm nhất có thể nhé!
-Ngoài ra bạn biết không, bảng tỉ số tại AZ POOLARENA đã hỗ trợ tính năng cắt cam trực tiếp tại quán luôn đó. Nếu bạn muốn tự cắt mà chưa biết cách dùng, cứ nhờ nhân viên hỗ trợ ngay tại chỗ là được nhé!"
+Ngoài ra bạn biết không, bảng tỉ số tại ${pageName} đã hỗ trợ tính năng cắt cam trực tiếp tại quán luôn đó. Nếu bạn muốn tự cắt mà chưa biết cách dùng, cứ nhờ nhân viên hỗ trợ ngay tại chỗ là được nhé!"
 
 ## HƯỚNG DẪN ĐĂNG KÝ GIẢI ĐẤU
 Khi khách hỏi cách đăng ký giải, hướng dẫn từng bước:
