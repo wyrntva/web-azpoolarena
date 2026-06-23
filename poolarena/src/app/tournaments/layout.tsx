@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 export const metadata: Metadata = {
-  title: 'Giải đấu bida | Poolarena VietNam',
+  title: 'Giải đấu bida',
   description:
     'Danh sách các giải đấu bida Việt Nam tại Poolarena. Đăng ký tham gia, theo dõi lịch thi đấu, bảng đấu và kết quả trực tiếp.',
   alternates: {

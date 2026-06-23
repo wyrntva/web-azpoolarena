@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import { Spin } from "antd";
 import {
@@ -10,9 +11,13 @@ import {
   PlayerListSection,
   PrizeSection,
   CountdownTimer,
-  RegisterTournamentModal,
 } from "@/components";
 import NavBar from "@/components/NavBar";
+
+const RegisterTournamentModal = dynamic(
+  () => import("@/components/RegisterTournamentModal").then(m => m.RegisterTournamentModal),
+  { ssr: false }
+);
 import { useAppSelector } from "@/stores/hooks";
 import { tournamentAPI } from "@/api/tournament.api";
 import { sortRanks, resolveImageUrl, formatCurrency, generateSlug, formatLevelRange } from "@/lib/tournament-utils";
@@ -143,13 +148,13 @@ export default function TournamentDetailPage() {
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [rawTournament, setRawTournament] = useState<TournamentDetail | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [bannerSrc, setBannerSrc] = useState<string>("/images/tour_banner.png");
+  const [bannerSrc, setBannerSrc] = useState<string>("/images/tour_banner.webp");
 
   useEffect(() => {
     if (rawTournament?.banner) {
       setBannerSrc(rawTournament.banner);
     } else {
-      setBannerSrc("/images/tour_banner.png");
+      setBannerSrc("/images/tour_banner.webp");
     }
   }, [rawTournament?.banner]);
 
@@ -249,7 +254,7 @@ export default function TournamentDetailPage() {
         freeRegistrationFee: data.free_registration_fee || false,
         canRegister: data.can_register ?? true,
         logo: resolveImageUrl(data.detail_logo, ''),
-        banner: resolveImageUrl(data.banner, '/images/tour_banner.png'),
+        banner: resolveImageUrl(data.banner, '/images/tour_banner.webp'),
         sponsorLogos: Array.isArray(data.sponsor_logos)
           ? data.sponsor_logos.map((logo: string) => resolveImageUrl(logo, ''))
           : [],
@@ -331,11 +336,10 @@ export default function TournamentDetailPage() {
             src={bannerSrc}
             alt={tournament.title}
             fill
-            unoptimized
             sizes="100vw"
             className="object-cover"
             priority
-            onError={() => setBannerSrc('/images/tour_banner.png')}
+            onError={() => setBannerSrc('/images/tour_banner.webp')}
           />
         </div>
 
@@ -681,10 +685,9 @@ export default function TournamentDetailPage() {
             src={bannerSrc}
             alt={tournament.title}
             fill
-            unoptimized
             className="object-cover object-top"
             priority
-            onError={() => setBannerSrc('/images/tour_banner.png')}
+            onError={() => setBannerSrc('/images/tour_banner.webp')}
           />
         </div>
         

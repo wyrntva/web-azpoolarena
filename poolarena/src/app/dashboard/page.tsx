@@ -40,7 +40,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#F0F2F4]">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-blue-600 rounded-lg mr-3 flex items-center justify-center">
@@ -61,7 +61,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 py-8">
         <div className="mb-8">
           <Title level={2}>Chào mừng trở lại!</Title>
           <Text className="text-gray-600">Quản lý hoạt động bida của bạn</Text>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                   ...featuredTournament,
                   id: 1,
                   slug: "giai-dau-arena-pool-13042024",
-                  img: "/images/tournament.png",
+                  img: "/images/tournament.webp",
                   rank: "Gold"
                 }}
                 variant="upcoming"

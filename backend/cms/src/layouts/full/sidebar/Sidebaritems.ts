@@ -300,13 +300,19 @@ const SidebarContent: MenuItem[] = [
     ],
   },
   {
-    heading: "QUẢN LÝ GIẢI ĐẤU",
+    heading: "QUẢN LÝ POOLARENA.VN",
     children: [
       {
         name: "Giải đấu",
         icon: "solar:cup-star-outline",
         id: uniqueId(),
         url: "/tournaments",
+      },
+      {
+        name: "Tin tức",
+        icon: "solar:document-text-outline",
+        id: uniqueId(),
+        url: "/news",
       },
       {
         name: "Bảng xếp hạng",

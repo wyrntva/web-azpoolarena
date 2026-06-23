@@ -197,24 +197,23 @@ const AnalyticsDashboard = () => {
     : 0;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="pt-0 px-6 pb-6 space-y-6">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-dark">Bảng điều khiển phân tích</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Theo dõi traffic, tài khoản mới và tương tác người dùng
-          </p>
+          <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+            PHÂN TÍCH DỮ LIỆU
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {PRESETS.map((p) => (
             <button
               key={p.label}
               onClick={() => setPreset(p)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-1.5 rounded-[24px] text-sm font-medium transition-colors ${
                 preset.label === p.label
-                  ? 'bg-primary text-white'
+                  ? 'bg-[#C6010B] text-white'
                   : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
             >
@@ -224,7 +223,7 @@ const AnalyticsDashboard = () => {
           <button
             onClick={load}
             title="Làm mới"
-            className="p-2 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-primary transition-colors"
+            className="p-2 rounded-[24px] bg-white border border-gray-200 text-gray-500 hover:text-[#C6010B] transition-colors"
           >
             <Icon icon="solar:refresh-outline" className="text-lg" />
           </button>

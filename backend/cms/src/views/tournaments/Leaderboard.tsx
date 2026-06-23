@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Table, TextInput } from 'flowbite-react';
+import { Card, Table, TextInput } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import CustomPagination from '../../components/shared/CustomPagination';
@@ -62,34 +62,39 @@ const Leaderboard = () => {
 
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="pt-0 px-6 pb-6 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Icon icon="solar:chart-square-outline" className="text-3xl" />
-                        Bảng xếp hạng
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        BẢNG XẾP HẠNG
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                        Xếp hạng người chơi theo điểm số từ cao đến thấp
-                    </p>
                 </div>
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="flex-1 md:w-72">
+                <button
+                    onClick={fetchCustomers}
+                    disabled={loading}
+                    className="bg-[#C6010B] hover:bg-[#C6010B]/90 disabled:opacity-60 text-white font-medium px-4 py-2.5 rounded-[24px] flex items-center justify-center transition-colors cursor-pointer"
+                >
+                    <div className="flex items-center gap-2">
+                        <Icon icon="solar:refresh-outline" className="text-xl" />
+                        Làm mới
+                    </div>
+                </button>
+            </div>
+
+            <Card className="overflow-hidden rounded-lg shadow-sm">
+                {/* Search - right aligned */}
+                <div className="flex flex-col md:flex-row justify-end items-center gap-4 p-4 border-b dark:border-gray-700">
+                    <div className="flex items-center gap-2 w-full md:w-auto">
                         <TextInput
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Tìm theo tên, SĐT, email, level"
                             icon={() => <Icon icon="solar:magnifer-outline" />}
+                            className="w-full md:w-auto"
                         />
                     </div>
-                    <Button color="light" size="sm" onClick={fetchCustomers} disabled={loading}>
-                        <Icon icon="solar:refresh-outline" className="mr-1.5" />
-                        Làm mới
-                    </Button>
                 </div>
-            </div>
 
-            <Card>
                 <div className="overflow-x-auto">
                     <Table>
                         <Table.Head>
@@ -172,9 +177,10 @@ const Leaderboard = () => {
                 </div>
 
                 {filteredCustomers.length > 0 && (
-                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between pt-4 p-4 border-t border-gray-200 dark:border-gray-700">
-                        <span className="text-sm text-blue-700 dark:text-blue-400">
-                            Hiển thị từ {indexOfFirstItem + 1} đến {Math.min(indexOfLastItem, filteredCustomers.length)} trên tổng {filteredCustomers.length}
+                    <div className="flex items-center justify-between p-4 border-t dark:border-gray-700">
+                        <span className="text-sm text-[#37393E] dark:text-white/80">
+                            Hiển thị {Math.min(indexOfLastItem, filteredCustomers.length) - indexOfFirstItem} / {filteredCustomers.length} người chơi
+                            {search && ` (tìm kiếm: "${search}")`}
                         </span>
                         <CustomPagination
                             currentPage={currentPage}

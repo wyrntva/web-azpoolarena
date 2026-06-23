@@ -29,7 +29,6 @@ export default function PlayerProfile({
               src={avatarUrl}
               alt={name}
               fill
-              unoptimized
               style={{ objectFit: 'cover' }}
               className="rounded-full"
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

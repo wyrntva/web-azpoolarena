@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {contextHolder}
-      <div className="relative z-10 flex flex-col min-h-screen bg-[url('/images/auth_img.png')] bg-cover bg-center">
+      <div className="relative z-10 flex flex-col min-h-screen bg-[url('/images/auth_img.webp')] bg-cover bg-center">
         <div className="flex-1 flex items-center justify-center px-4 py-8">
           <div className="w-full max-w-md">
             {/* Logo and Welcome Text */}

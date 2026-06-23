@@ -47,14 +47,13 @@ const RankingRow: React.FC<{ data: RankingData; isTop1?: boolean }> = ({ data, i
                 <div className="self-center sm:self-end">
                     <div className={`${isTop1 ? "w-[96px] h-[120px] sm:w-[144px] sm:h-[180px]" : "w-[48px] h-[60px] sm:w-[68px] sm:h-[85px]"} flex-shrink-0 relative transition-transform duration-300 group-hover:scale-105`}>
                         <Image
-                            src={data.player.avatar || '/images/imageprofile.png'}
+                            src={data.player.avatar || '/images/imageprofile.webp'}
                             alt={data.player.name}
                             fill
-                            unoptimized
                             sizes={isTop1 ? "(max-width: 640px) 96px, 144px" : "68px"}
                             className="object-contain object-bottom"
                             onError={(e) => {
-                                e.currentTarget.src = '/images/imageprofile.png';
+                                e.currentTarget.src = '/images/imageprofile.webp';
                             }}
                         />
                     </div>

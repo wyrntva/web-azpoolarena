@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 export const metadata: Metadata = {
-  title: 'Cơ thủ | Poolarena VietNam',
+  title: 'Cơ thủ',
   description:
     'Danh sách cơ thủ bida Việt Nam tại Poolarena. Xem thống kê, cấp độ, thành tích thi đấu của các cơ thủ từ Level 1 đến Level 10.',
   alternates: {

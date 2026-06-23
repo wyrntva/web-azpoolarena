@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, Button, Label, TextInput, Checkbox, ToggleSwitch } from 'flowbite-react';
+import { Icon } from '@iconify/react';
 import toast from 'react-hot-toast';
 import { attendanceSettingsAPI } from '../../api/attendance.api';
 import { formatCurrency } from '../../utils/formatters';
@@ -82,19 +83,23 @@ const AttendanceSettings = () => {
     if (fetching) return <div className="p-10 text-center flex justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="pt-0 px-6 pb-6 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Thiết lập chấm công
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        THIẾT LẬP CHẤM CÔNG
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                        Cấu hình quy tắc đi muộn, về sớm và các mức phạt tự động
-                    </p>
                 </div>
-                <Button onClick={handleSave} color="blue" disabled={loading}>
-                    {loading ? 'Đang lưu...' : 'Lưu thiết lập'}
-                </Button>
+                <button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="bg-[#C6010B] hover:bg-[#C6010B]/90 disabled:opacity-60 text-white font-medium px-4 py-2.5 rounded-[24px] flex items-center justify-center transition-colors cursor-pointer"
+                >
+                    <div className="flex items-center gap-2">
+                        <Icon icon="solar:disk-outline" className="text-xl" />
+                        {loading ? 'Đang lưu...' : 'Lưu thiết lập'}
+                    </div>
+                </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

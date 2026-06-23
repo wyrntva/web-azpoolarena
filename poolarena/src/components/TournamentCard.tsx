@@ -39,10 +39,10 @@ const TournamentCard = memo(function TournamentCard({
   onViewResults,
 }: TournamentCardProps) {
   const isFull = tournament.participants.current >= tournament.participants.max;
-  const [imgSrc, setImgSrc] = useState(tournament.img || "/images/tournament.png");
+  const [imgSrc, setImgSrc] = useState(tournament.img || "/images/tournament.webp");
 
   useEffect(() => {
-    setImgSrc(tournament.img || "/images/tournament.png");
+    setImgSrc(tournament.img || "/images/tournament.webp");
   }, [tournament.img]);
 
   return (
@@ -62,11 +62,10 @@ const TournamentCard = memo(function TournamentCard({
           src={imgSrc}
           alt={tournament.title}
           fill
-          unoptimized
           sizes="(max-width: 640px) 100vw, 439px"
           className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
           priority
-          onError={() => setImgSrc("/images/tournament.png")}
+          onError={() => setImgSrc("/images/tournament.webp")}
         />
 
         {/* Dark Overlay */}

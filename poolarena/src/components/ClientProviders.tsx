@@ -6,7 +6,6 @@ import { ConfigProvider } from 'antd';
 import { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { store } from '@/stores/store';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
     useEffect(() => {
@@ -24,11 +23,11 @@ export default function ClientProviders({ children }: { children: React.ReactNod
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
             queries: {
-                staleTime: 5 * 60 * 1000, // 5 minutes - tăng để giảm refetch
-                gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+                staleTime: 5 * 60 * 1000,
+                gcTime: 10 * 60 * 1000,
                 refetchOnWindowFocus: false,
                 refetchOnReconnect: false,
-                retry: 1, // Giảm retry để tránh request nhiều lần
+                retry: 1,
             },
         },
     }));
@@ -44,9 +43,7 @@ export default function ClientProviders({ children }: { children: React.ReactNod
                         },
                     }}
                 >
-                    <ProtectedRoute>
-                        {children}
-                    </ProtectedRoute>
+                    {children}
                 </ConfigProvider>
             </Provider>
         </QueryClientProvider>

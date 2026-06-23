@@ -1280,7 +1280,7 @@ export default function TournamentLivePage() {
         <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
             <NavBar />
 
-            <main className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 mt-[48px]">
+            <main className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 mt-[48px]">
                 {isLoading || isRedirecting ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                         <Spin size="large" />

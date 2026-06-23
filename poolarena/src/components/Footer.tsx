@@ -13,10 +13,9 @@ export const Footer = () => {
           {/* Logo Section */}
           <div className="relative w-full max-w-[240px] h-16 -mt-[20px]">
             <Image
-              src="/images/logo.png"
+              src="/images/logo-white.png"
               alt="Pool Arena Logo"
               fill
-              unoptimized
               sizes="240px"
               className="object-contain object-left"
               priority
@@ -31,7 +30,7 @@ export const Footer = () => {
                 Về chúng tôi
               </Link>
               <Link
-                href="/introduction"
+                href="/info"
                 className="!text-gray-300 hover:!text-white"
               >
                 Poolarena là gì?

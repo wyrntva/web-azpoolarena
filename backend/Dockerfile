@@ -23,6 +23,9 @@ RUN npm run build
 FROM node:20-alpine AS backend-build
 WORKDIR /app
 
+# vips required by sharp
+RUN apk add --no-cache vips-dev
+
 COPY package*.json ./
 RUN npm ci
 
@@ -32,9 +35,13 @@ RUN npm run build
 # ---- Development (NestJS only, CMS chạy riêng bằng npm run dev:cms) ----
 FROM node:20-alpine AS development
 WORKDIR /app
+
+RUN apk add --no-cache vips-dev
+
 COPY package*.json ./
 RUN npm ci
 COPY . .
+RUN mkdir -p uploads/tournaments uploads/avatars
 CMD ["npm", "run", "start:dev"]
 
 # ---- Production (NestJS + CMS trong một image) ----
@@ -43,6 +50,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV TZ=Asia/Ho_Chi_Minh
+
+# vips runtime required by sharp
+RUN apk add --no-cache vips
 
 COPY package*.json ./
 RUN npm ci --omit=dev && npm cache clean --force

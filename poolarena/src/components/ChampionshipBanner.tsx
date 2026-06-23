@@ -20,7 +20,7 @@ interface ChampionshipBannerProps {
 export default function ChampionshipBanner({
   className = '',
   style,
-  fallbackSrc = '/images/home_banner.png',
+  fallbackSrc = '/images/home_banner.webp',
 }: ChampionshipBannerProps) {
   const [bannerUrls, setBannerUrls] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -67,7 +67,6 @@ export default function ChampionshipBanner({
             src={url}
             alt={`Tournament Banner ${i + 1}`}
             fill
-            unoptimized
             sizes="(max-width: 640px) 100vw, (max-width: 1360px) 90vw, 1360px"
             className="object-cover"
             priority={i === 0}

@@ -1,19 +1,190 @@
 @import "tailwindcss";
 
+/* ================================================================
+   POOLARENA DESIGN TOKENS — Bảng màu thiết kế
+   Tầng 1 — Primitive scale  (giá trị hex thô, đặt tên theo nhóm màu + độ sáng)
+   Tầng 2 — Semantic tokens  (alias theo mục đích sử dụng, tham chiếu Tầng 1)
+   Tầng 3 — Compat aliases   (tên biến cũ, giữ để tương thích ngược — không xoá)
+   ================================================================ */
+
 :root {
-  --background: #F0F2F4;
-  --foreground: #171717;
-  --Primary-Medium: #ED1C1F;
-  --Grey-700: #37393E;
+
+  /* ── Tầng 1 · Nhóm Đỏ (Màu chủ đạo thương hiệu) ──────────── */
+  --color-red-900: #C6010B;   /* đỏ thẫm       — nút CTA, trạng thái nguy hiểm */
+  --color-red-800: #b5242e;   /* đỏ đậm         — hover nút (tối hơn 700) */
+  --color-red-700: #D22E39;   /* đỏ tươi        — trạng thái hover */
+  --color-red-500: #ED1C1F;   /* đỏ thương hiệu — màu nhấn chính */
+  --color-red-400: #e23841;   /* đỏ nhạt        — nhấn trên mobile */
+
+  /* ── Tầng 1 · Nhóm Navy (Nền tối thương hiệu — 3 bước) ─────── */
+  --color-navy-900: #172339;  /* navy đậm nhất  — header, footer, nút */
+  --color-navy-800: #2b3548;  /* navy tối        — scrollbar thumb hover */
+  --color-navy-700: #2f394e;  /* navy vừa        — nền hàng trận đấu */
+
+  /* ── Tầng 1 · Nhóm Blue (Gradient accent — 3 bước) ─────────── */
+  --color-blue-800: #1e3a8a;  /* xanh đậm       — điểm bắt đầu gradient */
+  --color-blue-700: #1e40af;  /* xanh           — điểm giữa gradient */
+  --color-blue-600: #2563eb;  /* xanh sáng      — điểm kết thúc gradient */
+
+  /* ── Tầng 1 · Nhóm Xám ─────────────────────────────────────── */
+  --color-grey-900: #172339;  /* navy đen        — chữ thân trang */
+  --color-grey-800: #37393E;  /* xám than       — chữ phụ */
+  --color-grey-700: #575E70;  /* xám vừa        — nhãn, mô tả */
+  --color-grey-600: #7C8FB5;  /* xám xanh       — chữ cấp ba */
+  --color-grey-400: #808996;  /* xám mờ         — nền nút bị vô hiệu */
+  --color-grey-300: #9A9CA3;  /* xám nhạt       — scrollbar tuỳ chỉnh */
+  --color-grey-200: #ACB3C3;  /* xám rất nhạt   — tên người thua trận */
+  --color-grey-100: #cccccc;  /* xám viền       — scrollbar track, viền */
+  --color-grey-50:  #F0F2F4;  /* trắng ngà      — nền trang */
+  --color-grey-25:  #F4F8FF;  /* gần trắng      — nền khi hover */
+
+  /* ── Tầng 1 · Nhóm Vàng (Xếp hạng / Cúp) ──────────────────── */
+  --color-gold-500: #FAC600;  /* vàng sáng      — viền hạng 1 */
+  --color-gold-400: #FFD700;  /* vàng thuần     — chữ người thắng trận chung kết */
+  --color-gold-200: #CAB765;  /* vàng mờ        — điểm của người xếp hạng 1 */
+  --color-gold-100: #E5BD4F;  /* vàng ấm        — trạng thái cảnh báo/pending (sáng hơn 200) */
+
+  /* ── Tầng 1 · Trạng thái ────────────────────────────────────── */
+  --color-status-success: #60DB80;  /* bàn sẵn sàng / khả dụng */
+  --color-status-warning: var(--color-gold-100);  /* bàn đang chờ */
+  --color-status-error:   #ED1C1F;  /* lỗi form, badge trực tiếp */
+  --color-status-info:    #3793F6;  /* thông tin */
+
+  /* ── Tầng 1 · Màu mạng xã hội / Thương hiệu ngoài ─────────── */
+  --color-social-facebook: #3793F6;
+  --color-social-whatsapp: #00B814;
+
+  /* ── Tầng 1 · Màu đặc biệt ─────────────────────────────────── */
+  --color-white:      #FFFFFF;
+  --color-black:      #000000;
+  --color-badge-full: #1B03DC;  /* badge giải đấu đã đầy (tím) */
+  --color-ant-blue:   #1677ff;  /* màu xanh mặc định avatar của Ant Design */
+
+  /* ── Tầng 2 · Semantic thương hiệu ─────────────────────────── */
+  --color-brand-primary:       var(--color-red-500);
+  --color-brand-primary-dark:  var(--color-red-900);
+  --color-brand-primary-hover: var(--color-red-700);
+  --color-brand-secondary:     var(--color-navy-900);
+
+  /* ── Tầng 2 · Semantic chữ ─────────────────────────────────── */
+  --color-text-primary:   var(--color-grey-900);
+  --color-text-secondary: var(--color-grey-800);
+  --color-text-tertiary:  var(--color-grey-700);
+  --color-text-muted:     var(--color-grey-600);
+  --color-text-disabled:  var(--color-grey-200);
+  --color-text-inverse:   var(--color-white);
+  --color-text-winner:    var(--color-gold-400);
+  --color-text-loser:     var(--color-grey-200);
+
+  /* ── Tầng 2 · Semantic nền ─────────────────────────────────── */
+  --color-bg-base:     var(--color-grey-50);
+  --color-bg-white:    var(--color-white);
+  --color-bg-dark:     var(--color-navy-900);
+  --color-bg-match:    var(--color-navy-700);
+  --color-bg-hover:    var(--color-grey-25);
+  --color-bg-disabled: var(--color-grey-400);
+
+  /* ── Tầng 2 · Semantic viền ─────────────────────────────────── */
+  --color-border-default: var(--color-grey-100);
+  --color-border-rank1:   var(--color-gold-500);
+
+  /* ── Tầng 2 · Semantic thanh cuộn ──────────────────────────── */
+  --color-scrollbar-track:       var(--color-grey-100);
+  --color-scrollbar-thumb:       var(--color-navy-900);
+  --color-scrollbar-thumb-hover: var(--color-navy-800);
+
+  /* ── Tầng 3 · Alias tương thích ngược (không được xoá) ─────── */
+  --background:     var(--color-bg-base);
+  --foreground:     var(--color-text-primary);
+  --Primary-Medium: var(--color-brand-primary);
+  --Grey-700:       var(--color-text-secondary);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Cơ bản */
+  --color-background: var(--color-bg-base);
+  --color-foreground: var(--color-text-primary);
   --font-sans: var(--font-montserrat);
+
+  /* Thương hiệu */
+  --color-brand-primary:       var(--color-brand-primary);
+  --color-brand-primary-dark:  var(--color-brand-primary-dark);
+  --color-brand-primary-hover: var(--color-brand-primary-hover);
+  --color-brand-secondary:     var(--color-brand-secondary);
+
+  /* Nhóm đỏ */
+  --color-red-900: var(--color-red-900);
+  --color-red-800: var(--color-red-800);
+  --color-red-700: var(--color-red-700);
+  --color-red-500: var(--color-red-500);
+  --color-red-400: var(--color-red-400);
+
+  /* Nhóm navy (nền tối thương hiệu) */
+  --color-navy-900: var(--color-navy-900);
+  --color-navy-800: var(--color-navy-800);
+  --color-navy-700: var(--color-navy-700);
+
+  /* Nhóm blue (gradient accent) */
+  --color-blue-800: var(--color-blue-800);
+  --color-blue-700: var(--color-blue-700);
+  --color-blue-600: var(--color-blue-600);
+
+  /* Nhóm xám */
+  --color-grey-900: var(--color-grey-900);
+  --color-grey-800: var(--color-grey-800);
+  --color-grey-700: var(--color-grey-700);
+  --color-grey-600: var(--color-grey-600);
+  --color-grey-400: var(--color-grey-400);
+  --color-grey-300: var(--color-grey-300);
+  --color-grey-200: var(--color-grey-200);
+  --color-grey-100: var(--color-grey-100);
+  --color-grey-50:  var(--color-grey-50);
+  --color-grey-25:  var(--color-grey-25);
+
+  /* Nhóm vàng */
+  --color-gold-500: var(--color-gold-500);
+  --color-gold-400: var(--color-gold-400);
+  --color-gold-200: var(--color-gold-200);
+  --color-gold-100: var(--color-gold-100);
+
+  /* Trạng thái */
+  --color-status-success: var(--color-status-success);
+  --color-status-warning: var(--color-status-warning);
+  --color-status-error:   var(--color-status-error);
+  --color-status-info:    var(--color-status-info);
+
+  /* Mạng xã hội */
+  --color-social-facebook: var(--color-social-facebook);
+  --color-social-whatsapp: var(--color-social-whatsapp);
+
+  /* Semantic chữ */
+  --color-text-primary:   var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary:  var(--color-text-tertiary);
+  --color-text-muted:     var(--color-text-muted);
+  --color-text-disabled:  var(--color-text-disabled);
+  --color-text-inverse:   var(--color-text-inverse);
+  --color-text-winner:    var(--color-text-winner);
+  --color-text-loser:     var(--color-text-loser);
+
+  /* Semantic nền */
+  --color-bg-base:     var(--color-bg-base);
+  --color-bg-white:    var(--color-bg-white);
+  --color-bg-dark:     var(--color-bg-dark);
+  --color-bg-match:    var(--color-bg-match);
+  --color-bg-hover:    var(--color-bg-hover);
+  --color-bg-disabled: var(--color-bg-disabled);
+
+  /* Semantic viền */
+  --color-border-default: var(--color-border-default);
+  --color-border-rank1:   var(--color-border-rank1);
+
+  /* Màu đặc biệt */
+  --color-badge-full: var(--color-badge-full);
+  --color-ant-blue:   var(--color-ant-blue);
 }
 
-/* Dark mode intentionally disabled — app uses a fixed light theme */
+/* Dark mode tắt có chủ đích — app dùng giao diện sáng cố định */
 
 html {
   overflow-y: scroll;
@@ -25,7 +196,7 @@ body {
   font-family: var(--font-montserrat), Arial, Helvetica, sans-serif;
 }
 
-/* Ant Design overrides */
+/* Ghi đè Ant Design */
 .ant-typography {
   margin-bottom: 0 !important;
 }
@@ -94,21 +265,21 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #cccccc;
+  background: var(--color-scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #172339;
+  background: var(--color-scrollbar-thumb);
   border-radius: 0px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2b3548;
+  background: var(--color-scrollbar-thumb-hover);
 }
 
 /* Pool Arena specific styles */
 .pool-arena-gradient {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+  background: linear-gradient(135deg, var(--color-blue-800) 0%, var(--color-blue-700) 50%, var(--color-blue-600) 100%);
 }
 
 .glass-effect {
@@ -148,6 +319,22 @@ body {
   animation: slideIn 0.4s ease-out;
 }
 
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInFromLeft {
+  animation: slideInFromLeft 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
 /* Custom Ant Design Error Notification Toast override */
 .ant-notification-notice-error {
   width: 360px !important;
@@ -155,7 +342,7 @@ body {
   min-width: 360px !important;
   height: 56px !important; /* Fixed H Hug 56px */
   background-color: #ffffff !important;
-  border-left: 5px solid #ED1C1F !important;
+  border-left: 5px solid var(--color-brand-primary) !important;
   border-radius: 8px !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
   padding: 16px !important; /* --g-spacing-6 = 16px all sides */
@@ -235,7 +422,7 @@ body {
 }
 
 .ant-notification-notice-error .ant-notification-notice-close:hover {
-  color: #ED1C1F !important;
+  color: var(--color-brand-primary) !important;
 }
 
 /* Realtime score flash animation */
@@ -247,17 +434,17 @@ body {
   25% {
     opacity: 0.2;
     transform: scale(0.9);
-    color: #ED1C1F;
+    color: var(--color-brand-primary);
   }
   50% {
     opacity: 1;
     transform: scale(1.35);
-    color: #ED1C1F;
+    color: var(--color-brand-primary);
     text-shadow: 0 0 12px rgba(237, 28, 31, 0.9);
   }
   75% {
     transform: scale(0.95);
-    color: #ED1C1F;
+    color: var(--color-brand-primary);
   }
   100% {
     opacity: 1;
@@ -298,4 +485,13 @@ body {
 .w-full-label .ant-form-item-label > label {
   width: 100% !important;
   display: inline-flex !important;
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.no-scrollbar {
+  scrollbar-width: none;       /* Firefox */
+  -ms-overflow-style: none;    /* IE/Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;               /* Chrome/Safari/Opera */
 }

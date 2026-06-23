@@ -66,7 +66,7 @@ function LoginFormContent() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {contextHolder}
-      <div className="relative z-10 flex flex-col min-h-screen bg-[url('/images/auth_img.png')] bg-cover bg-center">
+      <div className="relative z-10 flex flex-col min-h-screen bg-[url('/images/auth_img.webp')] bg-cover bg-center">
         {/* Header */}
         <div className="flex-1 flex items-center justify-center px-4 py-8">
           <div className="w-full max-w-md">
@@ -195,7 +195,7 @@ function LoginFormContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen relative overflow-hidden bg-[url('/images/auth_img.png')] bg-cover bg-center flex items-center justify-center">
+      <div className="min-h-screen relative overflow-hidden bg-[url('/images/auth_img.webp')] bg-cover bg-center flex items-center justify-center">
         <div className="text-white text-lg font-medium">Đang tải...</div>
       </div>
     }>

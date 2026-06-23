@@ -23,6 +23,7 @@ import { filter, map } from 'rxjs/operators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { convertToWebp } from '../../common/utils/image.utils';
 import { TournamentsService } from '../services/tournaments.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -75,7 +76,9 @@ export class TournamentsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
-    const url = `/uploads/tournaments/${file.filename}`;
+    const webpPath = await convertToWebp(file.path);
+    const filename = webpPath.split(/[\\/]/).pop();
+    const url = `/uploads/tournaments/${filename}`;
     return { url };
   }
 

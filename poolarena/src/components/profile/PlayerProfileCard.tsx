@@ -19,12 +19,12 @@ interface PlayerProfileCardProps {
 
 export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
     const [imgSrc, setImgSrc] = useState(() =>
-        resolveImageUrl(user.avatar_url || user.avatarUrl || user.avatar, '/images/imageprofile.png')
+        resolveImageUrl(user.avatar_url || user.avatarUrl || user.avatar, '/images/imageprofile.webp')
     );
     const [activeTab, setActiveTab] = useState<'lich-su' | 'hieu-so'>('lich-su');
 
     useEffect(() => {
-        setImgSrc(resolveImageUrl(user.avatar_url || user.avatarUrl || user.avatar, '/images/imageprofile.png'));
+        setImgSrc(resolveImageUrl(user.avatar_url || user.avatarUrl || user.avatar, '/images/imageprofile.webp'));
     }, [user.avatar_url, user.avatarUrl, user.avatar]);
 
     const [history, setHistory] = useState<any[]>([]);
@@ -201,7 +201,7 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
 
     return (
         <div className="w-full">
-            <div className="flex flex-col lg:flex-row gap-3 h-auto lg:h-[612px] lg:w-[1360px] lg:mx-auto">
+            <div className="flex flex-col lg:flex-row gap-3 h-auto lg:h-[612px] w-full lg:max-w-[1360px] lg:mx-auto">
                 {/* Left Section - Player Image with Dual Background Cards (Two separate blocks) */}
                 <div className="w-full max-w-[361px] lg:max-w-none mx-auto lg:w-[674px] relative h-[588px] lg:h-full flex-shrink-0">
                     {/* Background Cards (Spaced exactly 12px apart) */}
@@ -221,11 +221,10 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                                     src={imgSrc}
                                     alt={user.fullName || user.full_name || "User Avatar"}
                                     fill
-                                    unoptimized
                                     sizes="(max-width: 1024px) 100vw, 50vw"
                                     className="object-contain bg-transparent object-bottom scale-[1.25] lg:scale-[1.0] origin-bottom transition-transform duration-300"
                                     priority
-                                    onError={() => setImgSrc('/images/imageprofile.png')}
+                                    onError={() => setImgSrc('/images/imageprofile.webp')}
                                 />
                             </div>
                         </div>

@@ -1,35 +1,133 @@
+/* ================================================================
+   POOLARENA DESIGN TOKENS — Bảng màu thiết kế
+   Tầng 1 — Primitive scale  (giá trị hex thô, đặt tên theo nhóm màu + độ sáng)
+   Tầng 2 — Semantic tokens  (alias theo mục đích sử dụng, tham chiếu Tầng 1)
+   Tầng 3 — Compat aliases   (tên biến cũ, giữ để tương thích ngược — không xoá)
+   ================================================================ */
+
 :root {
-    --color-primary: #C6010B;
-    --color-secondary: #16CDC7;
-    --color-primary-emphasis: #a50109;
-    --color-secondary-emphasis: #1cc3bd;
-    --color-lightprimary: #C6010B20;
-    --color-lightsecondary: #16CDC740;
-    --color-info: #46CAEB;
-    --color-success: #36c96c;
-    --color-warning: #f8c20a;
-    --color-error: #FF6692;
-    --color-lightsuccess: #2EA95C40;
-    --color-lighterror: #FF669260;
-    --color-lightinfo: #46caeb40;
-    --color-lightwarning: #F8C20A40;
-    --color-white: #fff;
-    --color-dark: #37393E;
-    --color-border: #e0e6eb;
-    --color-bordergray: #f3f3f4;
-    --color-darkborder: #333F55;
-    --color-link: #37393E;
-    --color-muted: #EFF4FA;
-    --color-darkmuted: #2A3851;
-    --color-darklink: #37393E;
-    --color-lightgray: #F4F7FB;
-    --color-lighthover: #f6f7f9;
-    --color-darkgray: #1A2537;
-    --color-sky: #0A2540;
-    --color-error-emphasis: #d9577c;
-    --color-warning-emphasis: #d3a509;
-    --color-success-emphasis: #2ea95c;
-    --color-info-emphasis: #3cacc8;
-    --color-surface-ld: #ffffff;
-    --color-bodytext: #37393E;
+
+  /* ── Tầng 1 · Nhóm Đỏ (Màu chủ đạo thương hiệu) ──────────── */
+  --color-red-900: #C6010B;   /* đỏ thẫm       — nút CTA, trạng thái nguy hiểm */
+  --color-red-800: #b5242e;   /* đỏ đậm         — hover nút (tối hơn 700) */
+  --color-red-700: #D22E39;   /* đỏ tươi        — trạng thái hover */
+  --color-red-500: #ED1C1F;   /* đỏ thương hiệu — màu nhấn chính */
+  --color-red-400: #e23841;   /* đỏ nhạt        — nhấn trên mobile */
+
+  /* ── Tầng 1 · Nhóm Navy (Nền tối thương hiệu — 3 bước) ─────── */
+  --color-navy-900: #172339;  /* navy đậm nhất  — header, footer, nút */
+  --color-navy-800: #2b3548;  /* navy tối        — scrollbar thumb hover */
+  --color-navy-700: #2f394e;  /* navy vừa        — nền hàng trận đấu */
+
+  /* ── Tầng 1 · Nhóm Blue (Gradient accent — 3 bước) ─────────── */
+  --color-blue-800: #1e3a8a;  /* xanh đậm       — điểm bắt đầu gradient */
+  --color-blue-700: #1e40af;  /* xanh           — điểm giữa gradient */
+  --color-blue-600: #2563eb;  /* xanh sáng      — điểm kết thúc gradient */
+
+  /* ── Tầng 1 · Nhóm Xám ─────────────────────────────────────── */
+  --color-grey-900: #172339;  /* navy đen        — chữ thân trang */
+  --color-grey-800: #37393E;  /* xám than       — chữ phụ */
+  --color-grey-700: #575E70;  /* xám vừa        — nhãn, mô tả */
+  --color-grey-600: #7C8FB5;  /* xám xanh       — chữ cấp ba */
+  --color-grey-400: #808996;  /* xám mờ         — nền nút bị vô hiệu */
+  --color-grey-300: #9A9CA3;  /* xám nhạt       — scrollbar tuỳ chỉnh */
+  --color-grey-200: #ACB3C3;  /* xám rất nhạt   — tên người thua trận */
+  --color-grey-100: #cccccc;  /* xám viền       — scrollbar track, viền */
+  --color-grey-50:  #F0F2F4;  /* trắng ngà      — nền trang */
+  --color-grey-25:  #F4F8FF;  /* gần trắng      — nền khi hover */
+
+  /* ── Tầng 1 · Nhóm Vàng (Xếp hạng / Cúp) ──────────────────── */
+  --color-gold-500: #FAC600;  /* vàng sáng      — viền hạng 1 */
+  --color-gold-400: #FFD700;  /* vàng thuần     — chữ người thắng trận chung kết */
+  --color-gold-200: #CAB765;  /* vàng mờ        — điểm của người xếp hạng 1 */
+  --color-gold-100: #E5BD4F;  /* vàng ấm        — trạng thái cảnh báo/pending */
+
+  /* ── Tầng 1 · Trạng thái ────────────────────────────────────── */
+  --color-status-success: #60DB80;
+  --color-status-warning: var(--color-gold-100);
+  --color-status-error:   #ED1C1F;
+  --color-status-info:    #3793F6;
+
+  /* ── Tầng 1 · Màu mạng xã hội / Thương hiệu ngoài ─────────── */
+  --color-social-facebook: #3793F6;
+  --color-social-whatsapp: #00B814;
+
+  /* ── Tầng 1 · Màu đặc biệt ─────────────────────────────────── */
+  --color-white:      #FFFFFF;
+  --color-black:      #000000;
+  --color-badge-full: #1B03DC;
+  --color-ant-blue:   #1677ff;
+
+  /* ── Tầng 2 · Semantic thương hiệu ─────────────────────────── */
+  --color-brand-primary:       var(--color-red-500);
+  --color-brand-primary-dark:  var(--color-red-900);
+  --color-brand-primary-hover: var(--color-red-700);
+  --color-brand-secondary:     var(--color-navy-900);
+
+  /* ── Tầng 2 · Semantic chữ ─────────────────────────────────── */
+  --color-text-primary:   var(--color-grey-900);
+  --color-text-secondary: var(--color-grey-800);
+  --color-text-tertiary:  var(--color-grey-700);
+  --color-text-muted:     var(--color-grey-600);
+  --color-text-disabled:  var(--color-grey-200);
+  --color-text-inverse:   var(--color-white);
+  --color-text-winner:    var(--color-gold-400);
+  --color-text-loser:     var(--color-grey-200);
+
+  /* ── Tầng 2 · Semantic nền ─────────────────────────────────── */
+  --color-bg-base:     var(--color-grey-50);
+  --color-bg-white:    var(--color-white);
+  --color-bg-dark:     var(--color-navy-900);
+  --color-bg-match:    var(--color-navy-700);
+  --color-bg-hover:    var(--color-grey-25);
+  --color-bg-disabled: var(--color-grey-400);
+
+  /* ── Tầng 2 · Semantic viền ─────────────────────────────────── */
+  --color-border-default: var(--color-grey-100);
+  --color-border-rank1:   var(--color-gold-500);
+
+  /* ── Tầng 2 · Semantic thanh cuộn ──────────────────────────── */
+  --color-scrollbar-track:       var(--color-grey-100);
+  --color-scrollbar-thumb:       var(--color-navy-900);
+  --color-scrollbar-thumb-hover: var(--color-navy-800);
+
+  /* ── Tầng 3 · Alias tương thích ngược (không được xoá) ─────── */
+  --background:     var(--color-bg-base);
+  --foreground:     var(--color-text-primary);
+  --Primary-Medium: var(--color-brand-primary);
+  --Grey-700:       var(--color-text-secondary);
+
+  /* ── CMS Tailwind mappings — ánh xạ sang token (tailwind.config.ts) ── */
+  --color-primary:            var(--color-red-900);
+  --color-primary-emphasis:   var(--color-red-800);
+  --color-secondary:          #16CDC7;
+  --color-secondary-emphasis: #1cc3bd;
+  --color-info:               var(--color-status-info);
+  --color-success:            #36c96c;
+  --color-warning:            #f8c20a;
+  --color-error:              #FF6692;
+  --color-lightsuccess:       #2EA95C40;
+  --color-lighterror:         #FF669260;
+  --color-lightinfo:          #46caeb40;
+  --color-lightwarning:       #F8C20A40;
+  --color-lightprimary:       #C6010B20;
+  --color-lightsecondary:     #16CDC740;
+  --color-dark:               var(--color-grey-800);
+  --color-border:             #e0e6eb;
+  --color-bordergray:         #f3f3f4;
+  --color-darkborder:         #333F55;
+  --color-link:               var(--color-grey-800);
+  --color-muted:              #EFF4FA;
+  --color-darkmuted:          #2A3851;
+  --color-darklink:           var(--color-grey-800);
+  --color-lightgray:          #F4F7FB;
+  --color-lighthover:         var(--color-grey-25);
+  --color-darkgray:           #1A2537;
+  --color-sky:                #0A2540;
+  --color-error-emphasis:     #d9577c;
+  --color-warning-emphasis:   #d3a509;
+  --color-success-emphasis:   #2ea95c;
+  --color-info-emphasis:      #3cacc8;
+  --color-surface-ld:         var(--color-white);
+  --color-bodytext:           var(--color-grey-800);
 }

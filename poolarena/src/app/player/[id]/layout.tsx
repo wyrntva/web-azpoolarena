@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { formatFullLevel } from '@/lib/tournament-utils';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.poolarena.vn';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
@@ -26,14 +27,14 @@ export async function generateMetadata({
 
   if (!player) {
     return {
-      title: 'Cơ thủ - Poolarena VietNam',
+      title: 'Cơ thủ',
       description: 'Xem thông tin, thống kê và thành tích thi đấu của cơ thủ tại Poolarena VietNam.',
     };
   }
 
   const name = player.full_name || 'Cơ thủ';
-  const rank = player.rank ? `Level ${player.rank}` : '';
-  const title = `${name}${rank ? ` (${rank})` : ''} | Poolarena VietNam`;
+  const rank = player.rank ? formatFullLevel(player.rank) : '';
+  const title = `${name}${rank ? ` (${rank})` : ''}`;
   const description = `Xem thống kê thi đấu của ${name}${rank ? ` - ${rank}` : ''} tại Poolarena VietNam. Tỉ lệ thắng, điểm số và thành tích nổi bật.`;
 
   const avatarUrl = player.avatar_url

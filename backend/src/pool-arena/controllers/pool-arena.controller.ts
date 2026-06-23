@@ -16,6 +16,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { convertToWebp } from '../../common/utils/image.utils';
 import { PoolArenaService } from '../services/pool-arena.service';
 import {
   CreatePoolArenaUserDto,
@@ -107,7 +108,9 @@ export class PoolArenaController {
     @Param('id', ParseIntPipe) id: number,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    const webpPath = await convertToWebp(file.path);
+    const filename = webpPath.split(/[\\/]/).pop();
+    const avatarUrl = `/uploads/avatars/${filename}`;
     await this.service.updateAvatar(id, avatarUrl);
     return { avatar_url: avatarUrl };
   }

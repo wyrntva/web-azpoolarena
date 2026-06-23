@@ -16,6 +16,7 @@ interface TournamentListProps {
     lg?: number;
     xl?: number;
   };
+  delayOffset?: number;
 }
 
 // Memoize component để tránh re-render không cần thiết
@@ -29,7 +30,8 @@ const TournamentList = memo(function TournamentList({
     xs: 24,
     sm: 12,
     xl: 8
-  }
+  },
+  delayOffset = 0
 }: TournamentListProps) {
   return (
     <Row gutter={[24, 24]}>
@@ -43,9 +45,9 @@ const TournamentList = memo(function TournamentList({
         >
           {/* Sử dụng CSS animation thay vì framer-motion để giảm bundle size và cải thiện performance */}
           <div
-            className="animate-fadeIn"
+            className="animate-slideInFromLeft"
             style={{
-              animationDelay: `${Math.min(index * 50, 300)}ms`, // Cap delay tối đa 300ms
+              animationDelay: `${Math.min((delayOffset + index) * 80, 1600)}ms`, // Cap delay tối đa 1600ms
               animationFillMode: 'backwards'
             }}
           >

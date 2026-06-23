@@ -33,13 +33,13 @@ export default function TournamentRankingsPage() {
         enabled: !!slug,
     });
 
-    const [bannerSrc, setBannerSrc] = React.useState<string>("/images/tour_banner.png");
+    const [bannerSrc, setBannerSrc] = React.useState<string>("/images/tour_banner.webp");
 
     React.useEffect(() => {
         if (tournament?.banner) {
-            setBannerSrc(resolveImageUrl(tournament.banner, '/images/tour_banner.png'));
+            setBannerSrc(resolveImageUrl(tournament.banner, '/images/tour_banner.webp'));
         } else {
-            setBannerSrc("/images/tour_banner.png");
+            setBannerSrc("/images/tour_banner.webp");
         }
     }, [tournament?.banner]);
 
@@ -177,11 +177,10 @@ export default function TournamentRankingsPage() {
                         src={bannerSrc}
                         alt={tournament?.name || "Tournament Banner"}
                         fill
-                        unoptimized
                         sizes="100vw"
                         className="object-cover"
                         priority
-                        onError={() => setBannerSrc('/images/tour_banner.png')}
+                        onError={() => setBannerSrc('/images/tour_banner.webp')}
                     />
                 </div>
 

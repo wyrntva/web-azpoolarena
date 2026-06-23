@@ -25,6 +25,8 @@ import { MqttClientModule } from './mqtt/mqtt.module';
 import { AiModule } from './ai/ai.module';
 import { FacebookModule } from './facebook/facebook.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { NewsModule } from './news/news.module';
+import { HealthController } from './health/health.controller';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { MiddlewareConsumer, NestModule } from '@nestjs/common';
 
@@ -48,7 +50,7 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
         url: config.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
         synchronize: false,
-        logging: config.get<string>('ENV') !== 'production',
+        logging: config.get<string>('ENV') !== 'production' ? ['error', 'warn', 'migration'] : false,
         migrations: [join(__dirname, 'migrations', '*.js')],
         migrationsRun: false,
         migrationsTableName: 'typeorm_migrations',
@@ -125,7 +127,9 @@ import { MiddlewareConsumer, NestModule } from '@nestjs/common';
     AiModule,
     FacebookModule,
     AnalyticsModule,
+    NewsModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

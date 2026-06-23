@@ -16,14 +16,17 @@ export enum ConversationStatus {
 }
 
 @Entity('fb_customers')
-@Index(['psid'], { unique: true })
+@Index(['psid', 'page_id'], { unique: true })
 export class FbCustomerEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
   // Page-Scoped ID — định danh duy nhất Facebook gán cho mỗi user
-  @Column({ type: 'varchar', length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100 })
   psid: string;
+
+  @Column({ type: 'varchar', length: 100, default: 'default' })
+  page_id: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   name: string;

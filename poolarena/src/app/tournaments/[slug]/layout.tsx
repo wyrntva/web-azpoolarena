@@ -26,12 +26,12 @@ export async function generateMetadata({
 
   if (!data) {
     return {
-      title: 'Giải đấu - Poolarena VietNam',
+      title: 'Giải đấu',
       description: 'Xem thông tin chi tiết về giải đấu bida tại Poolarena VietNam',
     };
   }
 
-  const title = `${data.name} - Poolarena VietNam`;
+  const title = data.name;
   const location = data.location || 'AZ Pool Arena';
   const description = `Giải đấu bida ${data.name} tại ${location}. Đăng ký tham gia ngay tại Poolarena VietNam!`;
 

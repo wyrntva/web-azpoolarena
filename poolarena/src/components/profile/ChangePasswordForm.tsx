@@ -30,7 +30,7 @@ export default function ChangePasswordForm() {
     };
 
     return (
-        <div className="bg-white rounded-2xl lg:rounded-3xl overflow-hidden pb-4 lg:pb-0 mb-0 shadow-sm lg:w-[1360px] lg:h-[380px] lg:mx-auto">
+        <div className="bg-white rounded-2xl lg:rounded-3xl overflow-hidden pb-4 lg:pb-0 mb-0 shadow-sm w-full lg:max-w-[1360px] lg:h-[380px] lg:mx-auto">
             {contextHolder}
             <div className="flex justify-center w-full md:mb-4">
                 <div className="bg-[#172339] text-white text-base sm:text-xl font-bold py-3 text-center uppercase tracking-wider w-full rounded-none md:w-[648px] md:h-[56px] md:rounded-t-none md:rounded-b-[32px] md:py-3 md:px-6 md:gap-[10px] md:text-[24px] md:leading-[32px] md:font-bold md:flex md:items-center md:justify-center" style={{ fontFamily: 'Montserrat, sans-serif' }}>

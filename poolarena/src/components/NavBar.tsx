@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { CiUser } from "react-icons/ci";
 import { HiQuestionMarkCircle } from "react-icons/hi";
-import { FaLock } from "react-icons/fa";
+import { FaLock, FaNewspaper } from "react-icons/fa";
 
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -89,14 +89,14 @@ export default function NavBar(props?: { logoUrl?: string }) {
           prefetch
         >
           <img
-            src={logoUrl || "/images/logo-dark.png"}
+            src={logoUrl || "/images/logo.png"}
             alt="Tournament Logo"
             className="w-full h-full object-contain object-center xl:object-right"
           />
         </Link>
       )}
 
-      <div className="flex justify-between items-center max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 w-full h-full relative">
+      <div className="flex justify-between items-center max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 w-full h-full relative">
 
 
 
@@ -108,7 +108,7 @@ export default function NavBar(props?: { logoUrl?: string }) {
             prefetch
           >
             <Image
-              src="/images/logo-dark.png"
+              src="/images/logo.png"
               alt="Pool Arena Logo"
               fill
               sizes="260px"
@@ -138,13 +138,12 @@ export default function NavBar(props?: { logoUrl?: string }) {
               BẢNG XẾP HẠNG
             </Link>
             <Link
-              href="/achievements"
-              className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap flex items-center gap-1"
+              href="/news"
+              className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
               style={{ fontFamily: 'Montserrat, sans-serif' }}
               prefetch
             >
-              <span>THÀNH TÍCH</span>
-              <FaLock size={12} className="text-[#9A9CA3]" />
+              TIN TỨC
             </Link>
           </div>
         )}
@@ -243,7 +242,7 @@ export default function NavBar(props?: { logoUrl?: string }) {
         {!pathname?.endsWith('/bracket') ? (
           <Link href="/tournaments" className="relative w-[180px] h-[36px]" prefetch>
             <Image
-              src="/images/logo-dark.png"
+              src="/images/logo.png"
               alt="Pool Arena Logo"
               fill
               sizes="180px"
@@ -411,36 +410,29 @@ export default function NavBar(props?: { logoUrl?: string }) {
                 <span>BẢNG XẾP HẠNG</span>
               </Link>
               <Link
-                href="/achievements"
+                href="/news"
                 className="flex items-center justify-between text-[#37393E] hover:text-[#D22E39] font-medium text-[16px] leading-[24px] tracking-wide uppercase transition-colors w-full"
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
                 onClick={() => setOpenMenu(false)}
               >
                 <div className="flex items-center space-x-3">
                   <svg 
-                    viewBox="0 0 1024 1024" 
-                    width="20" 
-                    height="20" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
+                    fill="currentColor" 
+                    viewBox="-2 0 19 19" 
+                    xmlns="http://www.w3.org/2000/svg" 
                     className="flex-shrink-0"
+                    width={20}
+                    height={20}
                   >
-                    <path 
-                      d="M352 128a32 32 0 0 0 12.16-2.56 37.12 37.12 0 0 0 10.56-6.72 37.12 37.12 0 0 0 6.72-10.56A32 32 0 0 0 384 96a33.6 33.6 0 0 0-9.28-22.72 32 32 0 0 0-45.44 0A32 32 0 0 0 320 96a32 32 0 0 0 32 32zM480 128h128a32 32 0 0 0 0-64h-128a32 32 0 0 0 0 64z" 
-                      fill="currentColor"
-                    />
-                    <path 
-                      d="M960 32h-32a32 32 0 0 0-22.72 9.28L832 115.2V96a32 32 0 0 0-32-32h-64a32 32 0 0 0 0 64h32c-8 271.68-117.44 480-256 480-143.68 0-256-224-256-512a32 32 0 0 0-64 0v19.2L118.72 41.28A32 32 0 0 0 96 32H64a32 32 0 0 0-32 32v256a32 32 0 0 0 9.28 22.72l96 96A32 32 0 0 0 160 448h96c46.4 111.04 114.88 188.48 196.16 214.4l-115.2 137.6H224a32 32 0 0 0-32 32v128a32 32 0 0 0 32 32h576a32 32 0 0 0 32-32v-128a32 32 0 0 0-32-32h-112.96l-114.88-137.6c81.28-25.6 149.76-103.04 196.16-214.4h96a32 32 0 0 0 22.72-9.28l96-96A32 32 0 0 0 992 320V64a32 32 0 0 0-32-32zM173.12 384L96 306.88V109.12L198.08 211.2A909.76 909.76 0 0 0 232.32 384zM672 864h96v64H256v-64h96a32 32 0 0 0 24.64-11.52L512 689.92l135.36 162.56A32 32 0 0 0 672 864z m256-557.12L850.88 384h-59.2a909.76 909.76 0 0 0 34.56-172.8L928 109.12z" 
-                      fill="currentColor"
-                    />
-                    <path 
-                      d="M384 224a32 32 0 0 0 0 64h256a32 32 0 0 0 0-64zM448 384a32 32 0 0 0 0 64h128a32 32 0 0 0 0-64z" 
-                      fill="#C6010B"
-                    />
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path d="M2.644 15.26a16.9 16.9 0 0 1-.706-.014l-.11-.025a1.51 1.51 0 0 1-1.14-1.185l-.018-.092c-.005-.106-.01-.406-.01-.667V4.434a.477.477 0 0 1 .476-.475H11.77a.476.476 0 0 1 .475.475v1.529h1.591a.506.506 0 0 1 .504.504v7.192a1.6 1.6 0 0 1-1.6 1.6zm0-1.109h8.572a1.598 1.598 0 0 1-.077-.491v-2.174a2.16 2.16 0 0 1-.003-.109v-6.31H1.769v8.21c0 .218.003.43.006.544l.002.008a.401.401 0 0 0 .3.312l.01.002c.133.004.358.008.557.008z M2.95 6.815h6.96v1.109H2.95z M7.033 9.224h2.878v1.109H7.033z M7.033 11.634h2.878v1.108H7.033z M12.248 7.071v6.589a.492.492 0 0 0 .984 0V7.07z"></path>
+                      <path d="M2.95 9.198h2.96v3.532H2.95z" fill="#C6010B"></path>
+                    </g>
                   </svg>
-                  <span>THÀNH TÍCH</span>
+                  <span>TIN TỨC</span>
                 </div>
-                <FaLock size={12} className="text-[#9A9CA3] mr-1" />
               </Link>
 
               {/* Divider */}
@@ -656,39 +648,32 @@ export default function NavBar(props?: { logoUrl?: string }) {
           </span>
         </Link>
 
-        {/* Achievements Tab */}
+        {/* News Tab */}
         <Link
-          href="/achievements"
+          href="/news"
           className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-3 min-[360px]:px-5 rounded-[12px] relative ${
-            pathname === "/achievements"
+            pathname === "/news"
               ? "bg-[#172339] text-white"
               : "text-[#172339]"
           }`}
         >
           <svg 
-            viewBox="0 0 1024 1024" 
-            width="16" 
-            height="16" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-            className="mb-0.5 flex-shrink-0"
+            fill="currentColor" 
+            viewBox="-2 0 19 19" 
+            xmlns="http://www.w3.org/2000/svg" 
+            className={`mb-0.5 flex-shrink-0 ${pathname === "/news" ? "text-white" : "text-[#37393E]"}`}
+            width={16}
+            height={16}
           >
-            <path 
-              d="M352 128a32 32 0 0 0 12.16-2.56 37.12 37.12 0 0 0 10.56-6.72 37.12 37.12 0 0 0 6.72-10.56A32 32 0 0 0 384 96a33.6 33.6 0 0 0-9.28-22.72 32 32 0 0 0-45.44 0A32 32 0 0 0 320 96a32 32 0 0 0 32 32zM480 128h128a32 32 0 0 0 0-64h-128a32 32 0 0 0 0 64z" 
-              fill={pathname === "/achievements" ? "#FFF" : "#37393E"}
-            />
-            <path 
-              d="M960 32h-32a32 32 0 0 0-22.72 9.28L832 115.2V96a32 32 0 0 0-32-32h-64a32 32 0 0 0 0 64h32c-8 271.68-117.44 480-256 480-143.68 0-256-224-256-512a32 32 0 0 0-64 0v19.2L118.72 41.28A32 32 0 0 0 96 32H64a32 32 0 0 0-32 32v256a32 32 0 0 0 9.28 22.72l96 96A32 32 0 0 0 160 448h96c46.4 111.04 114.88 188.48 196.16 214.4l-115.2 137.6H224a32 32 0 0 0-32 32v128a32 32 0 0 0 32 32h576a32 32 0 0 0 32-32v-128a32 32 0 0 0-32-32h-112.96l-114.88-137.6c81.28-25.6 149.76-103.04 196.16-214.4h96a32 32 0 0 0 22.72-9.28l96-96A32 32 0 0 0 992 320V64a32 32 0 0 0-32-32zM173.12 384L96 306.88V109.12L198.08 211.2A909.76 909.76 0 0 0 232.32 384zM672 864h96v64H256v-64h96a32 32 0 0 0 24.64-11.52L512 689.92l135.36 162.56A32 32 0 0 0 672 864z m256-557.12L850.88 384h-59.2a909.76 909.76 0 0 0 34.56-172.8L928 109.12z" 
-              fill={pathname === "/achievements" ? "#FFF" : "#37393E"}
-            />
-            <path 
-              d="M384 224a32 32 0 0 0 0 64h256a32 32 0 0 0 0-64zM448 384a32 32 0 0 0 0 64h128a32 32 0 0 0 0-64z" 
-              fill="#C6010B"
-            />
+            <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+            <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+              <path d="M2.644 15.26a16.9 16.9 0 0 1-.706-.014l-.11-.025a1.51 1.51 0 0 1-1.14-1.185l-.018-.092c-.005-.106-.01-.406-.01-.667V4.434a.477.477 0 0 1 .476-.475H11.77a.476.476 0 0 1 .475.475v1.529h1.591a.506.506 0 0 1 .504.504v7.192a1.6 1.6 0 0 1-1.6 1.6zm0-1.109h8.572a1.598 1.598 0 0 1-.077-.491v-2.174a2.16 2.16 0 0 1-.003-.109v-6.31H1.769v8.21c0 .218.003.43.006.544l.002.008a.401.401 0 0 0 .3.312l.01.002c.133.004.358.008.557.008z M2.95 6.815h6.96v1.109H2.95z M7.033 9.224h2.878v1.109H7.033z M7.033 11.634h2.878v1.108H7.033z M12.248 7.071v6.589a.492.492 0 0 0 .984 0V7.07z"></path>
+              <path d="M2.95 9.198h2.96v3.532H2.95z" fill="#C6010B"></path>
+            </g>
           </svg>
           <span className="text-[10px] font-normal uppercase tracking-wide flex items-center gap-0.5" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            <span>Thành tích</span>
-            <FaLock size={7} className={pathname === "/achievements" ? "text-white/70" : "text-gray-400"} />
+            <span>Tin tức</span>
           </span>
         </Link>
       </div>

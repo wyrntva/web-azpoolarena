@@ -7,7 +7,7 @@ import { formatLevel } from "@/lib/tournament-utils";
 
 const { Title, Text } = Typography;
 
-const defaultAvatar = "/images/imageprofile.png";
+const defaultAvatar = "/images/imageprofile.webp";
 
 interface Player {
   id: number;
@@ -54,7 +54,6 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
                   src={player.avatar || defaultAvatar}
                   alt={player.name}
                   fill
-                  unoptimized
                   sizes="80px"
                   className="object-contain"
                   onError={(e) => {

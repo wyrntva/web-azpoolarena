@@ -10,15 +10,12 @@ const Payroll = () => {
     const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs>(dayjs());
 
     return (
-        <div className="p-3 md:p-6 space-y-4 md:space-y-6">
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+        <div className="pt-0 px-6 pb-6 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                        Quản lý lương
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        QUẢN LÝ LƯƠNG
                     </h1>
-                    <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
-                        Tính toán bảng lương, quản lý thưởng phạt và ứng tiền nhân viên
-                    </p>
                 </div>
                 
                 {/* Month Picker */}

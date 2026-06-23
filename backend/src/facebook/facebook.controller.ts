@@ -77,16 +77,18 @@ export class FacebookController {
 
   private async processMessagingEvents(payload: FbWebhookPayloadDto) {
     for (const entry of payload.entry ?? []) {
+      const pageId = entry.id || 'default';
       for (const event of entry.messaging ?? []) {
-        await this.processOneEvent(event);
+        const actualPageId = pageId || event.recipient?.id || 'default';
+        await this.processOneEvent(actualPageId, event);
       }
     }
   }
 
-  private async processOneEvent(event: FbMessagingDto) {
+  private async processOneEvent(pageId: string, event: FbMessagingDto) {
     const psid = event.sender?.id;
     // Log toàn bộ event để debug
-    this.logger.log(`[FB Event] psid=${psid} keys=${Object.keys(event).join(',')} msg=${JSON.stringify(event.message)?.slice(0, 120)}`);
+    this.logger.log(`[FB Event] pageId=${pageId} psid=${psid} keys=${Object.keys(event).join(',')} msg=${JSON.stringify(event.message)?.slice(0, 120)}`);
 
     if (!psid) return;
 
@@ -101,17 +103,18 @@ export class FacebookController {
 
     if (text) {
       this.logger.log(`[FB] Tin nhắn từ ${psid}: "${text.slice(0, 80)}"`);
-      await this.facebookService.handleIncomingMessage(psid, text);
+      await this.facebookService.handleIncomingMessage(pageId, psid, text);
     } else if (attachments?.length) {
       // Khách gửi ảnh/sticker/file → trả lời hướng dẫn
       this.logger.log(`[FB] Attachment từ ${psid}: type=${attachments[0]?.type}`);
       await this.facebookService.sendTextMessage(
+        pageId,
         psid,
         'Mình chỉ hỗ trợ tin nhắn văn bản bạn ơi. Bạn có thể nhắn câu hỏi bằng chữ để mình hỗ trợ nhé!',
       );
     } else if (event.postback) {
       this.logger.log(`[FB] Postback từ ${psid}: ${event.postback.payload}`);
-      await this.facebookService.handlePostback(psid, event.postback.payload);
+      await this.facebookService.handlePostback(pageId, psid, event.postback.payload);
     }
   }
 }

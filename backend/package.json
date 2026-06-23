@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "author": "",
+  "type": "commonjs",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -55,6 +56,7 @@
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.33.5",
     "typeorm": "^0.3.28",
     "uuid": "^13.0.0",
     "winston": "^3.19.0"
@@ -73,6 +75,7 @@
     "@types/node": "^24.0.0",
     "@types/nodemailer": "^8.0.0",
     "@types/passport-jwt": "^4.0.1",
+    "@types/sharp": "^0.31.1",
     "@types/supertest": "^7.0.0",
     "@types/uuid": "^11.0.0",
     "eslint": "^9.18.0",

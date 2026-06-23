@@ -75,7 +75,7 @@ export default function PlayersPage() {
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <Button
@@ -98,7 +98,7 @@ export default function PlayersPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 py-6">
         {/* Search and Filters */}
         <div className="mb-6">
           <div className="flex flex-col md:flex-row gap-4">

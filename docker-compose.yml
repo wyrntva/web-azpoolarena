@@ -71,6 +71,13 @@ services:
     volumes:
       - ./backend:/app:delegated
       - /app/node_modules
+      - ./backend/uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - azpool-network
 
@@ -83,7 +90,8 @@ services:
     container_name: azpool-cms-dev
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     ports:
@@ -103,20 +111,23 @@ services:
       target: development
     container_name: azpool-poolarena-dev
     restart: unless-stopped
+    command: sh /app/dev-start.sh
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID:-G-SF8SEPE960}
       PORT: 3000
       DOCKER: "true"
+      NODE_OPTIONS: "--max-old-space-size=2048"
     ports:
       - "${POOLARENA_PORT:-5174}:3000"
     volumes:
       - ./poolarena:/app:delegated
       - /app/node_modules
-      - /app/.next
+      - poolarena_next_cache:/app/.next
     networks:
       - azpool-network
 
@@ -129,9 +140,10 @@ services:
     container_name: azpool-member-dev
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
-      VITE_API_URL: ""
+      VITE_API_URL: "${VITE_API_URL:-http://localhost:8000}"
     ports:
       - "${MEMBER_PORT:-5176}:5173"
     volumes:
@@ -199,6 +211,8 @@ volumes:
     name: azpool_mosquitto_data
   mosquitto_log:
     name: azpool_mosquitto_log
+  poolarena_next_cache:
+    name: azpool_poolarena_next_cache
 
 networks:
   azpool-network:

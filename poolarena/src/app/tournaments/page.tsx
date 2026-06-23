@@ -84,8 +84,8 @@ export default function TournamentsPage() {
           (!['upcoming', 'ongoing'].includes(status) && startDate && startDate <= now && status !== 'ongoing');
         const isUpcoming = !isCompleted && !isOngoing;
 
-        const logoUrl = resolveImageUrl(tournament.organizer_logo, resolveImageUrl(tournament.banner, '/images/tournament.png'));
-        const bannerUrl = resolveImageUrl(tournament.banner, '/images/tournament.png');
+        const logoUrl = resolveImageUrl(tournament.organizer_logo, resolveImageUrl(tournament.banner, '/images/tournament.webp'));
+        const bannerUrl = resolveImageUrl(tournament.banner, '/images/tournament.webp');
         const sortedRanks = tournament.ranks?.length > 0 ? sortRanks(tournament.ranks) : [];
         const tournamentSlug = tournament.slug || generateSlug(tournament.name || 'giai-dau-arena-pool', startDate);
 
@@ -200,7 +200,7 @@ export default function TournamentsPage() {
         {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
         {bannerUrls.length > 0 && (
           <div
-            className="mb-6 sm:mb-12 mt-4 sm:mt-6 relative w-full animate-fadeIn rounded-xl overflow-hidden"
+            className="mb-6 sm:mb-12 mt-4 sm:mt-6 relative w-full rounded-xl overflow-hidden"
             style={{ aspectRatio: '361 / 74' }}
           >
             {bannerUrls.map((url, index) => (
@@ -212,7 +212,6 @@ export default function TournamentsPage() {
                   src={url}
                   alt={`Tournament Banner ${index + 1}`}
                   fill
-                  unoptimized
                   sizes="(max-width: 640px) 361px, (max-width: 1024px) 90vw, 1360px"
                   className="object-cover"
                   priority={index === 0}
@@ -253,6 +252,7 @@ export default function TournamentsPage() {
                 tournaments={ongoingTournaments}
                 variant="ongoing"
                 onCardClick={handleCardClick}
+                delayOffset={0}
               />
             </div>
           )}
@@ -272,6 +272,7 @@ export default function TournamentsPage() {
                 variant="upcoming"
                 onCardClick={handleCardClick}
                 onRegister={handleRegister}
+                delayOffset={ongoingTournaments.length}
               />
             )}
           </div>
@@ -291,6 +292,7 @@ export default function TournamentsPage() {
                 variant="completed"
                 onCardClick={handleCardClick}
                 onViewResults={handleViewResults}
+                delayOffset={ongoingTournaments.length + upcomingTournaments.length}
               />
             )}
           </div>

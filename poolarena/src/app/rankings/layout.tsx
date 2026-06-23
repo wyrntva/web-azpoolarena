@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 export const metadata: Metadata = {
-  title: 'Bảng xếp hạng | Poolarena VietNam',
+  title: 'Bảng xếp hạng',
   description:
     'Bảng xếp hạng cơ thủ bida hàng đầu Việt Nam. Theo dõi thứ hạng, điểm số và thành tích thi đấu theo hệ thống cấp độ Level 1-10 tại Poolarena.',
   alternates: {

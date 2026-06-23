@@ -349,20 +349,15 @@ const LiveScores = () => {
   }, []);
 
   return (
-    <div className="p-4 md:p-6 space-y-5">
+    <div className="pt-0 px-6 pb-6 space-y-5">
       {/* Page header */}
-      <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          Bảng tỉ số trực tiếp
-          <Badge color="green" className="text-xs font-semibold px-2.5 py-0.5">Real-time WebSocket</Badge>
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          Đồng bộ thời gian thực
-          {lastUpdated && (
-            <> · Dữ liệu ban đầu: {lastUpdated.toLocaleTimeString('vi-VN')}</>
-          )}
-          <span className="ml-2 text-gray-400 dark:text-gray-500">· Chọn màn hình để chuyển trang · +/− hoặc bấm tên để thay đổi trực tiếp</span>
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+            BẢNG TỈ SỐ TRỰC TIẾP
+            <Badge color="green" className="text-xs font-semibold px-2.5 py-0.5">Real-time</Badge>
+          </h1>
+        </div>
       </div>
 
       {/* Content */}

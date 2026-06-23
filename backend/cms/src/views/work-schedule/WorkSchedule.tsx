@@ -225,15 +225,12 @@ const WorkSchedule = () => {
     };
 
     return (
-        <div className="p-2 md:p-6 space-y-3 md:space-y-6 -mt-2 md:mt-0">
+        <div className="pt-0 px-6 pb-6 space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Lịch làm việc
+                    <h1 className="text-[16px] font-semibold uppercase text-[#37393E] dark:text-white flex items-center gap-2">
+                        LỊCH LÀM VIỆC
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                        Đăng ký và quản lý ca làm cho nhân viên
-                    </p>
                 </div>
                 <div className="flex flex-col md:flex-row items-center justify-center md:justify-end gap-3 w-full md:w-auto">
                     {/* Desktop Date Navigation */}

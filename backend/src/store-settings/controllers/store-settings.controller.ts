@@ -2,6 +2,7 @@ import { Controller, Get, Patch, Put, Post, Delete, Body, Param, UseGuards, UseI
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { convertToWebp } from '../../common/utils/image.utils';
 import { StoreSettingsService } from '../services/store-settings.service';
 import { UpdateStoreSettingsDto } from '../dto/store-settings.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -57,7 +58,9 @@ export class StoreSettingsController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
-    const url = `/uploads/${file.filename}`;
+    const webpPath = await convertToWebp(file.path);
+    const filename = webpPath.split(/[\\/]/).pop();
+    const url = `/uploads/${filename}`;
     return this.service.addBanner(type, url);
   }
 

@@ -53,11 +53,11 @@ const PlayerRow = memo(function PlayerRow({
   isTop5?: boolean;
 }) {
   const [imgSrc, setImgSrc] = useState(() =>
-    resolveImageUrl(player.avatar_url, '/images/imageprofile.png')
+    resolveImageUrl(player.avatar_url, '/images/imageprofile.webp')
   );
 
   useEffect(() => {
-    setImgSrc(resolveImageUrl(player.avatar_url, '/images/imageprofile.png'));
+    setImgSrc(resolveImageUrl(player.avatar_url, '/images/imageprofile.webp'));
   }, [player.avatar_url]);
 
   if (isTop5) {
@@ -93,10 +93,9 @@ const PlayerRow = memo(function PlayerRow({
                 src={imgSrc}
                 alt={player.full_name}
                 fill
-                unoptimized
                 className="object-contain"
                 sizes="60px"
-                onError={() => setImgSrc('/images/imageprofile.png')}
+                onError={() => setImgSrc('/images/imageprofile.webp')}
               />
             </div>
 
@@ -198,7 +197,7 @@ export default function LeaderboardPage() {
 
   const bannerSrc = (() => {
     const raw = storeSettings?.banner_ranking;
-    if (!raw) return "/images/tour_banner.png";
+    if (!raw) return "/images/tour_banner.webp";
     let urls: string[] = [];
     try {
       const parsed = JSON.parse(raw);
@@ -206,8 +205,8 @@ export default function LeaderboardPage() {
       else if (typeof parsed === 'string' && parsed.length > 0) urls = [parsed];
     } catch { urls = [raw]; }
     const first = urls[0];
-    if (!first) return "/images/tour_banner.png";
-    return resolveImageUrl(first, "/images/tour_banner.png");
+    if (!first) return "/images/tour_banner.webp";
+    return resolveImageUrl(first, "/images/tour_banner.webp");
   })();
 
   const isInitialLoad = useRef(true);
@@ -309,17 +308,16 @@ export default function LeaderboardPage() {
           src={bannerSrc}
           alt="Leaderboard banner"
           fill
-          unoptimized
           sizes="100vw"
           className="object-cover"
           priority
         />
       </div>
       <div className="h-[4px] w-full bg-[#172339]" />
-      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 -mt-12 sm:-mt-20 md:-mt-[126px] relative z-10 flex flex-col gap-[12px]">
+      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 -mt-12 sm:-mt-20 md:-mt-[126px] relative z-10 flex flex-col gap-[12px]">
 
         {/* Tabs */}
-        <div className="absolute -top-[25px] min-[360px]:-top-[30px] sm:-top-[56px] left-[32px] min-[360px]:left-[48px] min-[400px]:left-[60px] sm:left-[90px] flex space-x-0 z-10">
+        <div className="absolute -top-[25px] min-[360px]:-top-[30px] sm:-top-[56px] left-[32px] min-[360px]:left-[48px] min-[400px]:left-[60px] sm:left-[90px] xl:left-[80px] 2xl:left-[32px] flex space-x-0 z-10">
           {['logo', 'Woman', 'Man'].map((item, i) => (
             <div
               key={i}

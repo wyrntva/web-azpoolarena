@@ -77,6 +77,12 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./backend/uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - azpool-prod
 
@@ -94,7 +100,8 @@ services:
     container_name: azpool-poolarena-prod
     restart: always
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       HOSTNAME: "0.0.0.0"

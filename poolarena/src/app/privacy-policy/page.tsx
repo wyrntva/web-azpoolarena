@@ -11,11 +11,11 @@ export default function PrivacyPolicyPage() {
       <NavBar />
 
       {/* Hero Banner Section */}
-      <div className="relative h-[200px] sm:h-[300px] md:h-[400px] w-full bg-[url('/images/info_banner.png')] bg-cover bg-center overflow-hidden" />
+      <div className="relative h-[200px] sm:h-[300px] md:h-[400px] w-full bg-[url('/images/info_banner.webp')] bg-cover bg-center overflow-hidden" />
       <div className="h-[4px] w-full bg-[#172339]" />
 
       {/* Main Content Area (Overlapping the banner) */}
-      <div className="flex-1 max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 w-full relative z-10 -mt-12 sm:-mt-20 md:-mt-[126px] pb-16">
+      <div className="flex-1 max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 w-full relative z-10 -mt-12 sm:-mt-20 md:-mt-[126px] pb-16">
         <div className="w-full flex flex-col gap-[12px]">
           
           {/* Card: PRIVACY POLICY */}
