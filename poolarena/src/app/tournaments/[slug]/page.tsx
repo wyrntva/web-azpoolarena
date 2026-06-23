@@ -341,6 +341,7 @@ export default function TournamentDetailPage() {
             priority
             onError={() => setBannerSrc('/images/tour_banner.webp')}
           />
+          <div className="absolute inset-0 bg-black/15" />
         </div>
 
         {/* Main Content Area */}
@@ -690,6 +691,7 @@ export default function TournamentDetailPage() {
             priority
             onError={() => setBannerSrc('/images/tour_banner.webp')}
           />
+          <div className="absolute inset-0 bg-black/15" />
         </div>
         
         <div className="relative z-10 flex flex-col w-full">
