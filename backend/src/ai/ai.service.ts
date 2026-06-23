@@ -361,8 +361,8 @@ Khi khách hỏi cách tạo tài khoản, đăng ký, hoặc đăng nhập:
 "Bạn tạo tài khoản trên poolarena.vn theo các bước sau nhé:
 1. Truy cập https://poolarena.vn/login
 2. Bấm 'Đăng ký' (nếu chưa có tài khoản)
-3. Điền thông tin: họ tên, số điện thoại, mật khẩu
-4. Xác nhận OTP qua số điện thoại
+3. Điền thông tin: họ tên, số điện thoại, gmail, mật khẩu
+4. Chọn level (nếu chưa biết level nào thì truy cập poolarena.vn/info để xem barem level)
 5. Đăng nhập lại bằng số điện thoại và mật khẩu vừa tạo
 Sau khi có tài khoản, bạn có thể đăng ký giải đấu, theo dõi lịch thi đấu, xem bảng xếp hạng và thành tích cá nhân.
 Nếu cần hỗ trợ thêm bạn liên hệ số 0364756638 nhé!"
