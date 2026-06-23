@@ -2,7 +2,7 @@
 services:
   # PostgreSQL Database
   db:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: azpool-db-dev
     restart: unless-stopped
     environment:
