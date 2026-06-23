@@ -13,18 +13,46 @@ export class FacebookService {
     id: number;
     title: string;
     excerpt: string;
+    content?: string[];
     fanpage_image?: string;
   }): Promise<{ post_id: string }> {
     const token = this.config.get<string>('FB_PAGE_ACCESS_TOKEN');
     const pageId = this.config.get<string>('FB_PAGE_ID');
     const frontendUrl = this.config.get<string>('FRONTEND_URL', 'https://azpoolarena.com');
+    const websiteUrl = this.config.get<string>('WEBSITE_URL', 'https://poolarena.vn');
 
     if (!token || !pageId) {
       throw new Error('FB_PAGE_ACCESS_TOKEN hoặc FB_PAGE_ID chưa được cấu hình');
     }
 
-    const articleUrl = `${frontendUrl}/news/${article.id}`;
-    const caption = `${article.title}\n\n${article.excerpt}\n\n🔗 ${articleUrl}`;
+    const stripHtml = (html: string): string => {
+      if (!html) return '';
+      let text = html;
+      text = text.replace(/<(div|p|h[1-6]|li|br\s*\/?)>/gi, '\n');
+      text = text.replace(/<\/(div|p|h[1-6]|li)>/gi, '\n');
+      text = text.replace(/<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '$2 ($1)');
+      text = text.replace(/<[^>]+>/g, '');
+      text = text.replace(/&nbsp;/g, ' ')
+                 .replace(/&amp;/g, '&')
+                 .replace(/&lt;/g, '<')
+                 .replace(/&gt;/g, '>')
+                 .replace(/&quot;/g, '"')
+                 .replace(/&#39;/g, "'");
+      text = text.replace(/\n\s*\n+/g, '\n\n');
+      return text.trim();
+    };
+
+    let plainContent = '';
+    if (article.content && article.content.length > 0) {
+      plainContent = article.content
+        .map((block) => stripHtml(block))
+        .filter(Boolean)
+        .join('\n\n');
+    }
+
+    const postBody = plainContent || article.excerpt;
+    const articleUrl = `${websiteUrl}/news/${article.id}`;
+    const caption = `${article.title}\n\n${postBody}\n\n🔗 ${articleUrl}`;
 
     try {
       if (article.fanpage_image) {
