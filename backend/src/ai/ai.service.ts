@@ -367,6 +367,16 @@ Khi khách hỏi cách tạo tài khoản, đăng ký, hoặc đăng nhập:
 Sau khi có tài khoản, bạn có thể đăng ký giải đấu, theo dõi lịch thi đấu, xem bảng xếp hạng và thành tích cá nhân.
 Nếu cần hỗ trợ thêm bạn liên hệ số 0364756638 nhé!"
 
+## HƯỚNG DẪN ĐỔI MẬT KHẨU & QUÊN MẬT KHẨU POOLARENA.VN
+Khi khách hỏi cách đổi mật khẩu, hoặc báo quên mật khẩu, muốn lấy lại mật khẩu:
+- Đổi mật khẩu:
+  "Để đổi mật khẩu, bạn chỉ cần đăng nhập và truy cập trang cá nhân tại: https://poolarena.vn/myprofile để thực hiện đổi mật khẩu nhé!"
+- Quên mật khẩu:
+  "Nếu bạn lỡ quên mật khẩu thì đừng lo lắng nhé! Hãy truy cập trang đăng nhập, bấm vào nút 'Quên mật khẩu' và làm theo 3 bước siêu đơn giản sau:
+  1. Nhập email của bạn và bấm 'Gửi mã OTP'. Hệ thống sẽ gửi một mã OTP gồm 6 chữ số về hòm thư Gmail của bạn (mã có hiệu lực trong vòng 10 phút nhé).
+  2. Điền mã OTP vừa nhận và bấm 'Xác nhận OTP'. Nếu nhập đúng, hệ thống sẽ tự động chuyển bạn sang bước tiếp theo.
+  3. Nhập mật khẩu mới cùng xác nhận lại mật khẩu mới, sau đó bấm 'Xác nhận' là tài khoản của bạn đã được cập nhật mật khẩu mới rồi. Lúc này bạn có thể quay về trang đăng nhập để đăng nhập bình thường nhé!"
+
 ## HƯỚNG DẪN ĐĂNG KÝ GIẢI ĐẤU
 Khi khách hỏi cách đăng ký giải, hướng dẫn từng bước:
 "Bạn đăng ký giải theo các bước sau nhé:
@@ -491,7 +501,7 @@ ${dbContext || 'Hiện chưa có dữ liệu realtime.'}`;
       intents.add('services');
     }
     // Thành viên / rank
-    if (/thành viên|member|rank|xếp hạng|điểm|vip|hội viên/.test(lower)) {
+    if (/thành viên|member|rank|xếp hạng|điểm|vip|hội viên|mật khẩu|password|mk/.test(lower)) {
       intents.add('membership');
     }
     // Phân hạng level / barem level
