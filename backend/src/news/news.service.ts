@@ -1,32 +1,96 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
+import { IsString, IsNotEmpty, IsOptional, IsArray, IsBoolean } from 'class-validator';
 import { NewsEntity } from './news.entity';
 
 export class CreateNewsDto {
+  @IsString()
+  @IsNotEmpty()
   title: string;
+
+  @IsString()
+  @IsOptional()
   category?: string;
+
+  @IsString()
+  @IsNotEmpty()
   date: string;
+
+  @IsString()
+  @IsNotEmpty()
   author: string;
+
+  @IsString()
+  @IsOptional()
   image?: string;
+
+  @IsString()
+  @IsNotEmpty()
   excerpt: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsNotEmpty()
   content: string[];
+
+  @IsBoolean()
+  @IsOptional()
   featured?: boolean;
+
+  @IsString()
+  @IsOptional()
   fanpage_image?: string;
+
+  @IsBoolean()
+  @IsOptional()
   post_to_fanpage?: boolean;
 }
 
 export class UpdateNewsDto {
+  @IsString()
+  @IsOptional()
   title?: string;
+
+  @IsString()
+  @IsOptional()
   category?: string;
+
+  @IsString()
+  @IsOptional()
   date?: string;
+
+  @IsString()
+  @IsOptional()
   author?: string;
+
+  @IsString()
+  @IsOptional()
   image?: string;
+
+  @IsString()
+  @IsOptional()
   excerpt?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
   content?: string[];
+
+  @IsBoolean()
+  @IsOptional()
   featured?: boolean;
+
+  @IsString()
+  @IsOptional()
   fanpage_image?: string;
+
+  @IsString()
+  @IsOptional()
   fb_post_id?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
   post_to_fanpage?: boolean;
 }
 
