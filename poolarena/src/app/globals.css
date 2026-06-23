@@ -553,9 +553,9 @@ body {
   background: #a50009 !important;
 }
 
-/* Make images in news article body 30% smaller and center them */
+/* Make images in news article body 40% smaller and center them */
 .news-content img {
-  max-width: 70% !important;
+  max-width: 60% !important;
   height: auto !important;
   display: block;
   margin-left: auto !important;
