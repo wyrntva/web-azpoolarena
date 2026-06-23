@@ -3,32 +3,6 @@ import type { MetadataRoute } from 'next';
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://cms.poolarena.vn').replace(/\/$/, '');
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
-async function fetchTournaments(): Promise<{ slug: string; updated_at?: string }[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/tournaments/public`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-  } catch {
-    return [];
-  }
-}
-
-async function fetchUsers(): Promise<{ id: number; updated_at?: string }[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/pool-arena/users`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-  } catch {
-    return [];
-  }
-}
-
 async function fetchNewsArticles(): Promise<{ id: number; updated_at?: string }[]> {
   try {
     const res = await fetch(`${API_BASE}/api/news`, {
@@ -43,9 +17,7 @@ async function fetchNewsArticles(): Promise<{ id: number; updated_at?: string }[
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [tournaments, users, articles] = await Promise.all([
-    fetchTournaments(),
-    fetchUsers(),
+  const [articles] = await Promise.all([
     fetchNewsArticles(),
   ]);
 
@@ -57,28 +29,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
-      url: `${SITE_URL}/tournaments`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${SITE_URL}/rankings`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
       url: `${SITE_URL}/news`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/players`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
     },
     {
       url: `${SITE_URL}/info`,
@@ -106,22 +60,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const tournamentRoutes: MetadataRoute.Sitemap = tournaments
-    .filter((t) => t.slug)
-    .map((t) => ({
-      url: `${SITE_URL}/tournaments/${t.slug}`,
-      lastModified: t.updated_at ? new Date(t.updated_at) : new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
-    }));
-
-  const playerRoutes: MetadataRoute.Sitemap = users.map((u) => ({
-    url: `${SITE_URL}/player/${u.id}`,
-    lastModified: u.updated_at ? new Date(u.updated_at) : new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.6,
-  }));
-
   const newsRoutes: MetadataRoute.Sitemap = articles.map((a) => ({
     url: `${SITE_URL}/news/${a.id}`,
     lastModified: a.updated_at ? new Date(a.updated_at) : new Date(),
@@ -129,5 +67,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...tournamentRoutes, ...playerRoutes, ...newsRoutes];
+  return [...staticRoutes, ...newsRoutes];
 }
