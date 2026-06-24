@@ -514,10 +514,11 @@ export default function NavBar(props?: { logoUrl?: string }) {
       {/* Mobile Bottom Navigation Bar */}
       {!pathname?.endsWith('/bracket') && (
         <div 
-          className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-t-[20px] xl:hidden flex items-center justify-around px-2"
+          className="fixed left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-t-[20px] xl:hidden flex items-center justify-around px-2"
           style={{
-            height: 'calc(52px + env(safe-area-inset-bottom, 0px))',
-            paddingBottom: 'calc(2px + env(safe-area-inset-bottom, 0px))'
+            bottom: '-100px',
+            height: 'calc(52px + env(safe-area-inset-bottom, 0px) + 100px)',
+            paddingBottom: 'calc(2px + env(safe-area-inset-bottom, 0px) + 100px)'
           }}
         >
         {/* Tournaments Tab */}
