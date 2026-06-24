@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 
 const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "https://cms.poolarena.vn";
+const PUBLIC_API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://cms.poolarena.vn";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://poolarena.vn";
 
 async function fetchArticle(id: string) {
@@ -37,7 +38,7 @@ export async function generateMetadata({
   const imageUrl = article.image
     ? article.image.startsWith("http")
       ? article.image
-      : `${API_BASE}${article.image.startsWith("/") ? "" : "/"}${article.image}`
+      : `${PUBLIC_API_BASE}${article.image.startsWith("/") ? "" : "/"}${article.image}`
     : `${SITE_URL}/images/tour_banner.png`;
 
   const pageUrl = `${SITE_URL}/news/${id}`;
@@ -92,7 +93,7 @@ export default async function ArticleDetailLayout({
         image: article.image
           ? article.image.startsWith("http")
             ? article.image
-            : `${API_BASE}${article.image.startsWith("/") ? "" : "/"}${article.image}`
+            : `${PUBLIC_API_BASE}${article.image.startsWith("/") ? "" : "/"}${article.image}`
           : `${SITE_URL}/images/tour_banner.png`,
         datePublished: article.created_at || new Date().toISOString(),
         dateModified: article.updated_at || new Date().toISOString(),

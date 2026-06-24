@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 
 const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const PUBLIC_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://cms.poolarena.vn';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 async function fetchTournament(slug: string) {
@@ -39,7 +40,7 @@ export async function generateMetadata({
   const imageUrl = rawBanner
     ? rawBanner.startsWith('http')
       ? rawBanner
-      : `${API_BASE}${rawBanner}`
+      : `${PUBLIC_API_BASE}${rawBanner}`
     : `${SITE_URL}/images/tour_banner.png`;
 
   const pageUrl = `${SITE_URL}/tournaments/${slug}`;
@@ -108,7 +109,7 @@ export default async function TournamentSlugLayout({
           ? {
               image: (() => {
                 const raw = data.banner || data.detail_logo;
-                return raw.startsWith('http') ? raw : `${API_BASE}${raw}`;
+                return raw.startsWith('http') ? raw : `${PUBLIC_API_BASE}${raw}`;
               })(),
             }
           : {}),

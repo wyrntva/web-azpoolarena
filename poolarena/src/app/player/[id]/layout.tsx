@@ -3,6 +3,7 @@ import Script from 'next/script';
 import { formatFullLevel } from '@/lib/tournament-utils';
 
 const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.poolarena.vn';
+const PUBLIC_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.poolarena.vn';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 async function fetchPlayer(id: string) {
@@ -40,7 +41,7 @@ export async function generateMetadata({
   const avatarUrl = player.avatar_url
     ? player.avatar_url.startsWith('http')
       ? player.avatar_url
-      : `${API_BASE}${player.avatar_url}`
+      : `${PUBLIC_API_BASE}${player.avatar_url}`
     : `${SITE_URL}/images/tour_banner.png`;
 
   const pageUrl = `${SITE_URL}/player/${id}`;
@@ -95,7 +96,7 @@ export default async function PlayerLayout({
         ...(player.avatar_url && {
           image: player.avatar_url.startsWith('http')
             ? player.avatar_url
-            : `${API_BASE}${player.avatar_url}`,
+            : `${PUBLIC_API_BASE}${player.avatar_url}`,
         }),
         ...(player.rank && { description: `Cơ thủ bida Level ${player.rank} tại Poolarena VietNam` }),
         memberOf: {
