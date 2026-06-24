@@ -26,6 +26,9 @@ export const Footer = () => {
           <div>
             <div className="text-white font-semibold text-base mb-4">Poolarena.vn</div>
             <Space direction="vertical" size="small">
+              <Link href="/news" className="!text-gray-300 hover:!text-white">
+                Tin tức
+              </Link>
               <Link href="/about" className="!text-gray-300 hover:!text-white">
                 Về chúng tôi
               </Link>
@@ -44,6 +47,12 @@ export const Footer = () => {
             <Space direction="vertical" size="small">
               <Link href="/contact-cooperation" className="!text-gray-300 hover:!text-white">
                 Liên hệ hợp tác
+              </Link>
+              <Link href="/contact-cooperation" className="!text-gray-300 hover:!text-white">
+                Liên hệ quảng cáo
+              </Link>
+              <Link href="/contact-cooperation" className="!text-gray-300 hover:!text-white">
+                Dành cho nhà tài trợ
               </Link>
               <Link href="/for-clubs" className="!text-gray-300 hover:!text-white">
                 Dành cho câu lạc bộ

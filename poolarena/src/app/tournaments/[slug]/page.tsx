@@ -177,6 +177,14 @@ export default function TournamentDetailPage() {
     }
   } : null;
 
+  const isFull = tournament ? players.length >= tournament.participants.max : false;
+  const isRegistrationEnded = tournament
+    ? tournament.canRegister === false ||
+      (tournament.startDate ? new Date() > new Date(tournament.startDate) : false) ||
+      tournament.status !== "upcoming"
+    : false;
+  const showFullList = isFull || isRegistrationEnded;
+
   useEffect(() => {
     if (!tournamentSlug) return;
     setLoading(true);
@@ -672,7 +680,13 @@ export default function TournamentDetailPage() {
 
           {/* 5. PLAYER LIST SECTION */}
           <div className="w-full">
-            <PlayerListSection players={players} onClose={() => {}} />
+            <PlayerListSection
+              players={players}
+              maxPlayers={tournament?.participants.max}
+              currentUserId={user?.id}
+              showFullList={showFullList}
+              onClose={() => {}}
+            />
           </div>
 
         </div>
@@ -716,7 +730,13 @@ export default function TournamentDetailPage() {
               <SponsorLogos logos={tournament.sponsorLogos || []} />
             </div>
 
-            <PlayerListSection players={players} onClose={() => {}} />
+            <PlayerListSection
+              players={players}
+              maxPlayers={tournament?.participants.max}
+              currentUserId={user?.id}
+              showFullList={showFullList}
+              onClose={() => {}}
+            />
           </main>
         </div>
       </div>
