@@ -17,6 +17,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  applicationName: "Poolarena VietNam",
   verification: {
     google: 'V4fyIm9vnGN9f4Z5d7V9ZEKtdFsbK3e52GuT4B3E6wM',
   },
@@ -57,6 +58,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Poolarena VietNam",
+    "alternateName": ["Pool Arena", "Poolarena"],
+    "url": SITE_URL,
+  };
+
   return (
     <html lang="vi">
       <body className={`${montserrat.variable} antialiased`}>
@@ -77,6 +86,11 @@ export default function RootLayout({
           </>
         )}
         <GoogleAnalytics gaId={GA_ID || ""} />
+        <Script
+          id="website-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <ClientProviders>
           {children}
         </ClientProviders>
@@ -84,3 +98,4 @@ export default function RootLayout({
     </html>
   );
 }
+
