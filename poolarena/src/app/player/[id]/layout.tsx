@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import { formatFullLevel } from '@/lib/tournament-utils';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api.poolarena.vn';
+const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://api.poolarena.vn';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 async function fetchPlayer(id: string) {

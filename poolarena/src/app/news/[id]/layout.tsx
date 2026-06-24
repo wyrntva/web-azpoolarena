@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://cms.poolarena.vn";
+const API_BASE = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "https://cms.poolarena.vn";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://poolarena.vn";
 
 async function fetchArticle(id: string) {

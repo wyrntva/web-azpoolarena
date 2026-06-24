@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://cms.poolarena.vn').replace(/\/$/, '');
+const API_BASE = (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://cms.poolarena.vn').replace(/\/$/, '');
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://poolarena.vn';
 
 async function fetchNewsArticles(): Promise<{ id: number; title: string; updated_at?: string }[]> {

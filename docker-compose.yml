@@ -122,6 +122,7 @@ services:
       PORT: 3000
       DOCKER: "true"
       NODE_OPTIONS: "--max-old-space-size=2048"
+      INTERNAL_API_URL: http://backend:8000
     ports:
       - "${POOLARENA_PORT:-5174}:3000"
     volumes:
