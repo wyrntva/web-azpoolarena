@@ -114,7 +114,13 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
     : "";
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-tl-[20px] rounded-tr-none sm:rounded-tl-[24px] sm:rounded-tr-none h-[52px] sm:h-[65px]">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-tl-[20px] rounded-tr-none sm:rounded-tl-[24px] sm:rounded-tr-none [--nav-h:52px] sm:[--nav-h:65px]"
+      style={{
+        height: 'calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+      }}
+    >
       {logoUrl && (
         <div className="absolute bottom-full right-0 w-[120px] h-[60px] overflow-hidden pointer-events-none z-50">
           <div className="absolute bottom-0 right-0 w-[72px] h-[28px] bg-white rounded-tl-[10px] rounded-tr-none shadow-[0_-8px_30px_rgba(0,0,0,0.08)] flex items-center justify-center p-1.5 pointer-events-auto">
