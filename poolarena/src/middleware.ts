@@ -1,12 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Các route công khai không cần đăng nhập
-const publicRoutes = ['/login', '/register', '/forgot-password', '/info', '/terms-conditions', '/privacy-policy', '/cookie-policy', '/news', '/tournaments', '/player', '/players'];
-
+// Các route công khai không cần đăng nhập đối với người dùng thông thường
+const publicRoutes = ['/login', '/register', '/forgot-password', '/info', '/terms-conditions', '/privacy-policy', '/cookie-policy', '/news', '/player', '/players'];
 
 // Các trang auth — khi đã đăng nhập thì redirect ra ngoài
 const authRoutes = ['/login', '/register', '/forgot-password'];
+
+function isSearchBot(userAgent: string | null): boolean {
+  if (!userAgent) return false;
+  const botKeywords = [
+    'googlebot',
+    'google',
+    'bingbot',
+    'yandexbot',
+    'duckduckbot',
+    'baiduspider',
+    'facebookexternalhit',
+    'zalo-uri-validator',
+    'zalobot',
+    'telegrambot',
+    'twitterbot',
+    'slackbot',
+    'linkedinbot',
+    'pinterest'
+  ];
+  const ua = userAgent.toLowerCase();
+  return botKeywords.some(keyword => ua.includes(keyword));
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -24,10 +45,15 @@ export function middleware(request: NextRequest) {
 
   // Kiểm tra token từ cookies (middleware không thể đọc localStorage)
   const token = request.cookies.get('token')?.value;
+  const userAgent = request.headers.get('user-agent');
+  const isBot = isSearchBot(userAgent);
 
-  // Nếu chưa đăng nhập và không ở trang công khai -> redirect về login
+  // Nếu là bot, cho phép truy cập các trang giải đấu (/tournaments) để Googlebot lập chỉ mục và Zalo hiển thị preview
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  if (!token && !isPublicRoute) {
+  const isAllowedRoute = isPublicRoute || (isBot && pathname.startsWith('/tournaments'));
+
+  // Nếu chưa đăng nhập và không ở trang được phép -> redirect về login
+  if (!token && !isAllowedRoute) {
     const url = new URL('/login', request.url);
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
