@@ -50,9 +50,9 @@ export function middleware(request: NextRequest) {
   const userAgent = request.headers.get('user-agent');
   const isBot = isSearchBot(userAgent);
 
-  // Nếu là bot, cho phép truy cập các trang giải đấu (/tournaments) để Googlebot lập chỉ mục và Zalo hiển thị preview
+  // Nếu là bot, cho phép truy cập các trang giải đấu (/tournaments) và trang chủ ("/") để hiển thị preview và lập chỉ mục
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  const isAllowedRoute = isPublicRoute || (isBot && pathname.startsWith('/tournaments'));
+  const isAllowedRoute = isPublicRoute || (isBot && (pathname.startsWith('/tournaments') || pathname === '/'));
 
   // Nếu chưa đăng nhập và không ở trang được phép -> redirect về login
   if (!token && !isAllowedRoute) {
@@ -61,8 +61,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect từ trang chủ "/" sang "/tournaments"
+  // Redirect từ trang chủ "/" sang "/tournaments" (Chỉ áp dụng cho người dùng thường, Bot giữ nguyên ở trang chủ để đọc metadata)
   if (pathname === '/') {
+    if (isBot) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL('/tournaments', request.url));
   }
 
