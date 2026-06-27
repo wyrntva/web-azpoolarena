@@ -6,6 +6,7 @@ import { UserEntity } from '../../users/entities/user.entity';
 import { TournamentEntity } from '../../tournaments/entities';
 import { StoreSettingsEntity } from '../../store-settings/entities';
 import { ProductEntity, MenuEntity } from '../../pos/entities';
+import { NewsEntity } from '../../news/news.entity';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -24,10 +25,31 @@ export class UploadsService {
     private productRepo: Repository<ProductEntity>,
     @InjectRepository(MenuEntity)
     private menuRepo: Repository<MenuEntity>,
+    @InjectRepository(NewsEntity)
+    private newsRepo: Repository<NewsEntity>,
   ) {}
 
   private extractUrls(urls: Set<string>, value: string | null | undefined) {
-    if (value && typeof value === 'string' && value.startsWith('/uploads/')) {
+    if (!value || typeof value !== 'string') return;
+
+    if (value.startsWith('[') || value.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            this.extractUrls(urls, item);
+          }
+          return;
+        } else if (typeof parsed === 'string') {
+          this.extractUrls(urls, parsed);
+          return;
+        }
+      } catch {
+        // Fall back to matching as plain string
+      }
+    }
+
+    if (value.startsWith('/uploads/')) {
       urls.add(value);
     }
   }
@@ -45,15 +67,7 @@ export class UploadsService {
       this.extractUrls(used, t.banner);
       this.extractUrls(used, t.organizer_logo);
       this.extractUrls(used, t.detail_logo);
-      if (t.sponsor_logos) {
-        try {
-          const logos = JSON.parse(t.sponsor_logos);
-          if (Array.isArray(logos))
-            logos.forEach((url) => this.extractUrls(used, url));
-        } catch {
-          this.extractUrls(used, t.sponsor_logos);
-        }
-      }
+      this.extractUrls(used, t.sponsor_logos);
     }
 
     const settings = await this.settingsRepo.findOne({ where: {} });
@@ -61,15 +75,7 @@ export class UploadsService {
       this.extractUrls(used, settings.banner_tournament);
       this.extractUrls(used, settings.banner_ranking);
       this.extractUrls(used, settings.banner_member);
-      if (settings.banner_scoreboard) {
-        try {
-          const banners = JSON.parse(settings.banner_scoreboard);
-          if (Array.isArray(banners))
-            banners.forEach((url) => this.extractUrls(used, url));
-        } catch {
-          this.extractUrls(used, settings.banner_scoreboard);
-        }
-      }
+      this.extractUrls(used, settings.banner_scoreboard);
     }
 
     const products = await this.productRepo.find({ select: ['image'] });
@@ -77,6 +83,12 @@ export class UploadsService {
 
     const menus = await this.menuRepo.find({ select: ['image'] });
     for (const m of menus) this.extractUrls(used, m.image);
+
+    const news = await this.newsRepo.find({ select: ['image', 'fanpage_image'] });
+    for (const n of news) {
+      this.extractUrls(used, n.image);
+      this.extractUrls(used, n.fanpage_image);
+    }
 
     return used;
   }
