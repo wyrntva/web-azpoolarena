@@ -23,7 +23,9 @@ function isSearchBot(userAgent: string | null): boolean {
     'twitterbot',
     'slackbot',
     'linkedinbot',
-    'pinterest'
+    'pinterest',
+    'whatsapp',
+    'viber'
   ];
   const ua = userAgent.toLowerCase();
   return botKeywords.some(keyword => ua.includes(keyword));
