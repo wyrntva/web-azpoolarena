@@ -39,6 +39,15 @@ export class TournamentSchedulerService {
   async autoUpdateMatchStatus() {
     const now = new Date();
 
+    // Query tournaments whose registration has ended
+    const toursPastRegistration = await this.tourRepo
+      .createQueryBuilder('t')
+      .where('t.registration_end_date IS NOT NULL')
+      .andWhere('t.registration_end_date <= :now', { now })
+      .andWhere("t.status != 'completed'")
+      .getMany();
+    const tourIdsPastReg = toursPastRegistration.map((t) => t.id);
+
     // 1a. Reset vòng mới (Vòng 2+ & Vòng 1 nhánh thua) UPCOMING → PENDING nếu không có người chơi nào hoặc không có bàn
     await this.matchRepo
       .createQueryBuilder()
@@ -54,24 +63,29 @@ export class TournamentSchedulerService {
       .execute();
 
     // 1b. Reset vòng 1 nhánh thắng/knockout UPCOMING → PENDING nếu chưa hết hạn đăng kí HOẶC thiếu người chơi
-    await this.matchRepo
-      .createQueryBuilder()
-      .update(TournamentMatchEntity)
-      .set({ status: TournamentMatchStatus.PENDING })
-      .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
-      .andWhere('round = 1')
-      .andWhere("bracket IN ('winners', 'knockout')")
-      .andWhere(
-        `(player1_id IS NULL OR player2_id IS NULL
-          OR tournament_id NOT IN (
-            SELECT id FROM tournaments
-            WHERE registration_end_date IS NOT NULL
-            AND registration_end_date <= :now
-            AND status != 'completed'
-          ))`,
-        { now },
-      )
-      .execute();
+    if (tourIdsPastReg.length > 0) {
+      await this.matchRepo
+        .createQueryBuilder()
+        .update(TournamentMatchEntity)
+        .set({ status: TournamentMatchStatus.PENDING })
+        .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
+        .andWhere('round = 1')
+        .andWhere("bracket IN ('winners', 'knockout')")
+        .andWhere(
+          '(player1_id IS NULL OR player2_id IS NULL OR tournament_id NOT IN (:...tourIdsPastReg))',
+          { tourIdsPastReg },
+        )
+        .execute();
+    } else {
+      await this.matchRepo
+        .createQueryBuilder()
+        .update(TournamentMatchEntity)
+        .set({ status: TournamentMatchStatus.PENDING })
+        .where('status = :status', { status: TournamentMatchStatus.UPCOMING })
+        .andWhere('round = 1')
+        .andWhere("bracket IN ('winners', 'knockout')")
+        .execute();
+    }
 
     // Helper: kiểm tra bàn có đang bận không (có trận ongoing/upcoming khác dùng bàn này)
     const isTableBusy = async (
@@ -89,15 +103,8 @@ export class TournamentSchedulerService {
 
     // 2. Vòng 1: PENDING → UPCOMING khi hết hạn đăng kí + đủ 2 người + có bàn + bàn không bận
     // Knockout bracket round 1: thêm điều kiện 75% — ít nhất 75% trận trong vòng phải đủ 2 người
-    const toursPastRegistration = await this.tourRepo
-      .createQueryBuilder('t')
-      .where('t.registration_end_date IS NOT NULL')
-      .andWhere('t.registration_end_date <= :now', { now })
-      .andWhere("t.status != 'completed'")
-      .getMany();
-
     if (toursPastRegistration.length > 0) {
-      const tourIds = toursPastRegistration.map((t) => t.id);
+      const tourIds = tourIdsPastReg;
       const round1Candidates = await this.matchRepo
         .createQueryBuilder('m')
         .where('m.status = :status', { status: TournamentMatchStatus.PENDING })
