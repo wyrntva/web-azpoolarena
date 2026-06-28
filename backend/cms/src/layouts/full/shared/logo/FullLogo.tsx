@@ -11,8 +11,8 @@ interface FullLogoProps {
 const FullLogo = ({ theme = 'dark' }: FullLogoProps) => {
   const Logo = theme === 'light' ? LogoLight : LogoDark;
   return (
-    <Link to={"/"}>
-      <img src={Logo} alt="logo" className="block max-h-[40px] w-auto" />
+    <Link to={"/"} className="logo-link !bg-transparent !p-0 !rounded-none !shadow-none">
+      <img src={Logo} alt="logo" className="block max-h-[28px] w-auto" />
     </Link>
   );
 };

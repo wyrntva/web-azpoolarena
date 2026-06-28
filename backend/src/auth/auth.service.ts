@@ -207,6 +207,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       full_name: user.full_name,
+      avatar_url: user.avatar_url || null,
       pin: user.pin,
       is_active: user.is_active,
       is_admin: user.is_admin,

@@ -493,7 +493,11 @@ export class TournamentsService {
 
     // Auto-derive winner_id from scores/check-in when completed but winner not provided
     if (!match.winner_id && match.status === TournamentMatchStatus.COMPLETED) {
-      if (match.player1_check_in === 'absent' && match.player2_id) {
+      if (!match.player2_id && match.player1_id) {
+        match.winner_id = match.player1_id;
+      } else if (!match.player1_id && match.player2_id) {
+        match.winner_id = match.player2_id;
+      } else if (match.player1_check_in === 'absent' && match.player2_id) {
         match.winner_id = match.player2_id;
       } else if (match.player2_check_in === 'absent' && match.player1_id) {
         match.winner_id = match.player1_id;
@@ -1381,7 +1385,11 @@ export class TournamentsService {
 
     // Auto-derive winner_id from scores/check-in when completed but winner not provided
     if (!match.winner_id && match.status === TournamentMatchStatus.COMPLETED) {
-      if (match.player1_check_in === 'absent' && match.player2_id) {
+      if (!match.player2_id && match.player1_id) {
+        match.winner_id = match.player1_id;
+      } else if (!match.player1_id && match.player2_id) {
+        match.winner_id = match.player2_id;
+      } else if (match.player1_check_in === 'absent' && match.player2_id) {
         match.winner_id = match.player2_id;
       } else if (match.player2_check_in === 'absent' && match.player1_id) {
         match.winner_id = match.player1_id;
@@ -1689,11 +1697,82 @@ export class TournamentsService {
     bracket: string,
   ): { nextMatchNo: number; playerSlot: 1 | 2 } | null {
     if (numberOfPlayers === 24) {
-      if (bracket === 'winners' && matchNo >= 1 && matchNo <= 8) {
-        return { nextMatchNo: matchNo + 8, playerSlot: 1 };
+      if (bracket === 'winners') {
+        if (matchNo >= 1 && matchNo <= 8) {
+          return { nextMatchNo: matchNo + 8, playerSlot: 1 };
+        }
+        if (matchNo >= 9 && matchNo <= 16) {
+          return { nextMatchNo: matchNo + 16, playerSlot: 1 };
+        }
+      } else if (bracket === 'losers') {
+        // Vòng 1 nhánh thua (17-24) -> Knockout Vòng 1 (25-32) slot 2
+        // Xếp chéo nhánh để tránh lặp lại trận đấu
+        if (matchNo >= 17 && matchNo <= 20) {
+          return { nextMatchNo: matchNo + 12, playerSlot: 2 };
+        }
+        if (matchNo >= 21 && matchNo <= 24) {
+          return { nextMatchNo: matchNo + 4, playerSlot: 2 };
+        }
+      } else if (bracket === 'knockout') {
+        // Vòng 1/8 (25-32) -> Tứ kết (33-36)
+        if (matchNo >= 25 && matchNo <= 32) {
+          const idx = matchNo - 25;
+          const nextMatchNo = 33 + Math.floor(idx / 2);
+          const playerSlot = idx % 2 === 0 ? 1 : 2;
+          return { nextMatchNo, playerSlot };
+        }
+        // Tứ kết (33-36) -> Bán kết (37-38)
+        if (matchNo >= 33 && matchNo <= 36) {
+          const idx = matchNo - 33;
+          const nextMatchNo = 37 + Math.floor(idx / 2);
+          const playerSlot = idx % 2 === 0 ? 1 : 2;
+          return { nextMatchNo, playerSlot };
+        }
+        // Bán kết (37-38) -> Chung kết (39)
+        if (matchNo >= 37 && matchNo <= 38) {
+          const idx = matchNo - 37;
+          const nextMatchNo = 39;
+          const playerSlot = idx === 0 ? 1 : 2;
+          return { nextMatchNo, playerSlot };
+        }
       }
       return null;
     }
+
+    if (numberOfPlayers === 16) {
+      if (bracket === 'winners') {
+        // Vòng 2 nhánh thắng (13-16) -> Knockout Vòng 1 (21-24) slot 1
+        if (matchNo >= 13 && matchNo <= 16) {
+          return { nextMatchNo: matchNo + 8, playerSlot: 1 };
+        }
+      } else if (bracket === 'losers') {
+        // Vòng 2 nhánh thua (17-20) -> Knockout Vòng 1 (21-24) slot 2
+        // Xếp chéo nhánh để tránh lặp lại trận đấu
+        if (matchNo === 17) return { nextMatchNo: 23, playerSlot: 2 };
+        if (matchNo === 18) return { nextMatchNo: 24, playerSlot: 2 };
+        if (matchNo === 19) return { nextMatchNo: 21, playerSlot: 2 };
+        if (matchNo === 20) return { nextMatchNo: 22, playerSlot: 2 };
+      }
+    }
+
+    if (numberOfPlayers === 32) {
+      if (bracket === 'winners') {
+        // Vòng 2 nhánh thắng (25-32) -> Knockout Vòng 1 (41-48) slot 1
+        if (matchNo >= 25 && matchNo <= 32) {
+          return { nextMatchNo: matchNo + 16, playerSlot: 1 };
+        }
+      } else if (bracket === 'losers') {
+        // Vòng 2 nhánh thua (33-40) -> Knockout Vòng 1 (41-48) slot 2
+        // Xếp chéo nhánh để tránh lặp lại trận đấu
+        if (matchNo >= 33 && matchNo <= 36) {
+          return { nextMatchNo: matchNo + 12, playerSlot: 2 };
+        }
+        if (matchNo >= 37 && matchNo <= 40) {
+          return { nextMatchNo: matchNo + 4, playerSlot: 2 };
+        }
+      }
+    }
+
     const isKO8 = numberOfPlayers <= 16;
     const isKO32 = numberOfPlayers > 32;
 
@@ -2095,6 +2174,19 @@ export class TournamentsService {
         nextMatch.player2_score = 0;
       }
 
+      if (
+        tournament.number_of_players === 24 &&
+        nextMatch.bracket === 'winners' &&
+        nextMatch.round === 2 &&
+        nextMatch.player1_id &&
+        !nextMatch.player2_id
+      ) {
+        nextMatch.status = TournamentMatchStatus.COMPLETED;
+        nextMatch.winner_id = nextMatch.player1_id;
+        nextMatch.player1_score = 7;
+        nextMatch.player2_score = 0;
+      }
+
       await this.applyMatchStateAndTimerLogic(nextMatch);
 
       await this.matchRepo.save(nextMatch);
@@ -2361,7 +2453,11 @@ export class TournamentsService {
 
       // Auto-derive winner if not set
       if (!match.winner_id) {
-        if (match.player1_id && match.player2_id) {
+        if (!match.player2_id && match.player1_id) {
+          match.winner_id = match.player1_id;
+        } else if (!match.player1_id && match.player2_id) {
+          match.winner_id = match.player2_id;
+        } else if (match.player1_id && match.player2_id) {
           if (match.player1_score > match.player2_score) {
             match.winner_id = match.player1_id;
           } else if (match.player2_score > match.player1_score) {

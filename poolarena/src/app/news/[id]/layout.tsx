@@ -112,6 +112,16 @@ export default async function ArticleDetailLayout({
       }
     : null;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Trang chủ", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Tin tức & Khuyến mãi", item: `${SITE_URL}/news` },
+      ...(article ? [{ "@type": "ListItem", position: 3, name: article.title, item: `${SITE_URL}/news/${id}` }] : []),
+    ],
+  };
+
   return (
     <>
       {jsonLd && (
@@ -121,6 +131,11 @@ export default async function ArticleDetailLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
+      <Script
+        id="news-article-breadcrumb-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {children}
     </>
   );

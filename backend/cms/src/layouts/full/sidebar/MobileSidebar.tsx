@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { Sidebar } from "flowbite-react";
 import SidebarContent from "./Sidebaritems";
 import NavItems from "./NavItems";
-import SimpleBar from "simplebar-react";
 import React from "react";
-import FullLogo from "../shared/logo/FullLogo";
 import 'simplebar-react/dist/simplebar.min.css';
 import { useLocation } from "react-router";
 import { useAuth } from "../../../auth/AuthContext";
@@ -62,50 +60,57 @@ const MobileSidebar = () => {
   };
 
   return (
-    <>
-      <div>
-        <Sidebar
-          className="fixed menu-sidebar pt-0 bg-white transition-all shadow-none w-full"
-          aria-label="Sidebar with multi-level dropdown example"
-        >
-          <div className="px-5 py-4 pb-7 flex items-center sidebarlogo">
-            <FullLogo theme="dark" />
-          </div>
-          <SimpleBar className="h-[calc(100vh_-_100px)]">
-            <Sidebar.Items className="px-5 mt-2">
-              <Sidebar.ItemGroup className="sidebar-nav hide-menu">
-                {filteredSidebarContent &&
-                  filteredSidebarContent.map((item, index) => (
-                    <div className="caption" key={item.heading}>
-                      <React.Fragment key={index}>
-                        <h5 className="text-link dark:text-white/70 caption font-semibold leading-6 tracking-widest text-[14px] pb-2 uppercase text-wrap">
-                          {item.heading}
-                        </h5>
-                        {item.children?.map((child, index) => (
-                          <React.Fragment key={child.id && index}>
-                            {child.children ? (
-                              <div className="collpase-items">
-                                <NavCollapse
-                                  item={child}
-                                  isOpen={openItem === child.name}
-                                  onToggle={() => handleToggle(child.name || '')}
-                                />
-                              </div>
-                            ) : (
-                              <NavItems item={child} />
-                            )}
-                          </React.Fragment>
-                        ))}
+    <div className="menu-sidebar mobile-sidebar h-full overflow-x-hidden flex flex-col">
+      <div className="mobile-menu-scroll flex-1 min-h-0 overflow-y-auto">
+        <Sidebar className="!w-full bg-transparent [&>div]:bg-transparent [&>div]:p-0 [&>div]:w-full" aria-label="Mobile Sidebar">
+          <Sidebar.Items className="px-3 mt-4 pb-4">
+            <Sidebar.ItemGroup className="sidebar-nav hide-menu !border-t-0 !mt-0">
+              {filteredSidebarContent &&
+                filteredSidebarContent.map((item, index) => (
+                  <div className="caption" key={item.heading || index}>
+                    <h5 className="text-link dark:text-white/70 caption font-semibold leading-6 tracking-wide text-[12px] pb-2 uppercase whitespace-nowrap mt-4 first:mt-0">
+                      {item.heading}
+                    </h5>
+                    {item.children?.map((child, cIndex) => (
+                      <React.Fragment key={child.id || `${index}-${cIndex}`}>
+                        {child.children ? (
+                          <div className="collpase-items">
+                            <NavCollapse
+                              item={child}
+                              isOpen={openItem === child.name}
+                              onToggle={() => handleToggle(child.name || '')}
+                            />
+                          </div>
+                        ) : (
+                          <NavItems item={child} />
+                        )}
                       </React.Fragment>
-                    </div>
-                  ))}
-              </Sidebar.ItemGroup>
-            </Sidebar.Items>
-          </SimpleBar>
-
+                    ))}
+                  </div>
+                ))}
+            </Sidebar.ItemGroup>
+          </Sidebar.Items>
         </Sidebar>
       </div>
-    </>
+
+      {(!user || (user as unknown as { role_id?: number }).role_id === 1) && (
+        <div className="shrink-0 border-t border-border">
+          <Sidebar className="!w-full bg-transparent [&>div]:bg-transparent [&>div]:p-0 [&>div]:w-full" aria-label="Settings">
+            <Sidebar.Items className="px-3 py-2">
+              <Sidebar.ItemGroup className="sidebar-nav hide-menu !border-t-0 !mt-0">
+                <NavItems
+                  item={{
+                    name: "Thiết lập",
+                    icon: "solar:settings-outline",
+                    url: "/settings",
+                  }}
+                />
+              </Sidebar.ItemGroup>
+            </Sidebar.Items>
+          </Sidebar>
+        </div>
+      )}
+    </div>
   );
 };
 

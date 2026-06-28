@@ -20,11 +20,18 @@ const Profile = () => {
         renderTrigger={() => (
           <span className="h-10 w-10 hover:text-primary hover:bg-lightprimary rounded-full flex justify-center items-center cursor-pointer group-hover/menu:bg-lightprimary group-hover/menu:text-primary">
             <img
-              src={user1}
+              src={
+                user?.avatar_url
+                  ? (user.avatar_url.startsWith('http') || user.avatar_url.startsWith('data:')
+                    ? user.avatar_url
+                    : `${import.meta.env.VITE_API_URL || ''}${user.avatar_url.startsWith('/') ? '' : '/'}${user.avatar_url}`)
+                  : user1
+              }
               alt="profile"
-              height="35"
-              width="35"
-              className="rounded-full"
+              height="32"
+              width="32"
+              className="rounded-full object-cover w-8 h-8"
+              onError={(e) => { (e.target as HTMLImageElement).src = user1; }}
             />
           </span>
         )}

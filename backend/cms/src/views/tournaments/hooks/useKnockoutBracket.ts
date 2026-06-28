@@ -488,14 +488,21 @@ export const useKnockoutBracket = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ko8Round1, isKO8Mode]);
 
-    // KO24 auto-seed: trận 25+i: P1 = winner WR2 (9+i), P2 = winner LR1 (17+i)
+    // KO16 auto-seed: P1 = winner WR2, P2 = winner LR1/LR2
     useEffect(() => {
-        if (!is24Mode) return;
+        if (isKO8Mode || isKO32Mode) return;
 
-        const wr2 = Array.from({ length: 8 }, (_, i) => winnerOf(9 + i));
-        const lr1 = Array.from({ length: 8 }, (_, i) => winnerOf(17 + i));
+        const wrStart = is24Mode ? 9 : 25;
+        const lrStart = is24Mode ? 17 : 33;
 
-        const candidates = ko16R16Nos.map((matchNo, i) => ({ matchNo, i, p1: wr2[i], p2: lr1[i] }))
+        const wr2 = Array.from({ length: 8 }, (_, i) => winnerOf(wrStart + i));
+        const lr1 = Array.from({ length: 8 }, (_, i) => winnerOf(lrStart + i));
+
+        const candidates = ko16R16Nos.map((matchNo, i) => {
+            const p1 = wr2[i];
+            const p2 = i < 4 ? lr1[i + 4] : lr1[i - 4];
+            return { matchNo, i, p1, p2 };
+        })
             .filter(({ matchNo, p1, p2 }) => {
                 if (p1 || p2) return true;
                 // Also clear stale players when source matches no longer have winners
@@ -555,7 +562,7 @@ export const useKnockoutBracket = ({
             }).catch(() => {});
         });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [qualified16Ids, is24Mode]);
+    }, [qualified16Ids, is24Mode, isKO8Mode, isKO32Mode]);
 
     // KO8 propagation
     useEffect(() => {

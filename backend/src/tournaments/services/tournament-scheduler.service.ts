@@ -317,18 +317,36 @@ export class TournamentSchedulerService {
         tour.tournament_type === 'double_elimination'
           ? "'winners'"
           : "'winners', 'knockout'";
-      const byeMatches = await this.matchRepo
-        .createQueryBuilder('m')
-        .where('m.tournament_id = :id', { id: tour.id })
-        .andWhere('m.round = 1')
-        .andWhere(`m.bracket IN (${allowedBrackets})`)
-        .andWhere('m.status != :completed', {
-          completed: TournamentMatchStatus.COMPLETED,
-        })
-        .andWhere(
-          '((m.player1_id IS NOT NULL AND m.player2_id IS NULL) OR (m.player1_id IS NULL AND m.player2_id IS NOT NULL))',
-        )
-        .getMany();
+      let byeMatches: TournamentMatchEntity[] = [];
+      if (tour.number_of_players === 24) {
+        // For 24 players: round 1 has standard byes (either player null),
+        // round 2 has bye if player1 is present but player2 is null (starting slot)
+        byeMatches = await this.matchRepo
+          .createQueryBuilder('m')
+          .where('m.tournament_id = :id', { id: tour.id })
+          .andWhere(`m.bracket IN (${allowedBrackets})`)
+          .andWhere('m.status != :completed', {
+            completed: TournamentMatchStatus.COMPLETED,
+          })
+          .andWhere(
+            '((m.round = 1 AND ((m.player1_id IS NOT NULL AND m.player2_id IS NULL) OR (m.player1_id IS NULL AND m.player2_id IS NOT NULL))) OR ' +
+            '(m.round = 2 AND m.player1_id IS NOT NULL AND m.player2_id IS NULL))'
+          )
+          .getMany();
+      } else {
+        byeMatches = await this.matchRepo
+          .createQueryBuilder('m')
+          .where('m.tournament_id = :id', { id: tour.id })
+          .andWhere('m.round = 1')
+          .andWhere(`m.bracket IN (${allowedBrackets})`)
+          .andWhere('m.status != :completed', {
+            completed: TournamentMatchStatus.COMPLETED,
+          })
+          .andWhere(
+            '((m.player1_id IS NOT NULL AND m.player2_id IS NULL) OR (m.player1_id IS NULL AND m.player2_id IS NOT NULL))',
+          )
+          .getMany();
+      }
 
       for (const match of byeMatches) {
         const winnerId = match.player1_id ?? match.player2_id;

@@ -8,6 +8,7 @@ interface User {
     username: string;
     full_name: string;
     is_admin: boolean;
+    avatar_url?: string | null;
     role: {
         id: number;
         name: string;

@@ -48,6 +48,9 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: {
+      canonical: pageUrl,
+    },
     openGraph: {
       title,
       description,
@@ -117,6 +120,17 @@ export default async function TournamentSlugLayout({
       }
     : null;
 
+  const tournamentName = data?.name || 'Giải đấu';
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Giải đấu bida', item: `${SITE_URL}/tournaments` },
+      { '@type': 'ListItem', position: 3, name: tournamentName, item: `${SITE_URL}/tournaments/${slug}` },
+    ],
+  };
+
   return (
     <>
       {jsonLd && (
@@ -126,6 +140,11 @@ export default async function TournamentSlugLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
+      <Script
+        id="tournament-breadcrumb-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {children}
     </>
   );

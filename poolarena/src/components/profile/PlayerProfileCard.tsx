@@ -235,9 +235,9 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                 <div className="w-full lg:w-[674px] bg-[#172339] text-white p-12 lg:p-12 h-auto lg:h-full flex flex-col rounded-2xl lg:rounded-none lg:rounded-tr-2xl lg:rounded-br-2xl shadow-sm">
                     {/* Player Name and Rank */}
                     <div className="mb-0">
-                        <div className="text-white mb-1.5 text-2xl sm:text-4xl font-bold italic uppercase tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                        <h1 className="text-white mb-1.5 text-2xl sm:text-4xl font-bold italic uppercase tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                             {user.fullName || user.full_name || "Tên Người Chơi"}
-                        </div>
+                        </h1>
                         <div className="flex items-center space-x-3 text-sm sm:text-lg mb-4">
                             <span className="font-semibold text-white">
                                 Điểm: {user.points?.toLocaleString('vi-VN') || 0}

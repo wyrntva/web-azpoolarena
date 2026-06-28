@@ -335,6 +335,7 @@ export default function TournamentDetailPage() {
   return (
     <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
       <NavBar />
+      <h1 className="sr-only">{tournament.title}</h1>
 
       {/* MOBILE LAYOUT ONLY (block sm:hidden) */}
       <div className="block sm:hidden bg-[#F0F2F4]">
@@ -344,7 +345,7 @@ export default function TournamentDetailPage() {
             src={bannerSrc}
             alt={tournament.title}
             fill
-            unoptimized
+
             className="object-cover"
             priority
             onError={() => setBannerSrc('/images/tour_banner.webp')}
@@ -700,7 +701,7 @@ export default function TournamentDetailPage() {
             src={bannerSrc}
             alt={tournament.title}
             fill
-            unoptimized
+
             className="object-cover object-top"
             priority
             onError={() => setBannerSrc('/images/tour_banner.webp')}

@@ -56,7 +56,10 @@ export const toVM = (m: TournamentMatch): MatchVM => ({
 });
 
 export const resolveWinner = (vm: MatchVM, raceTo: number): PlayerIdStr => {
-    if (!vm.player1_id || !vm.player2_id) return '';
+    if (!vm.player1_id || !vm.player2_id) {
+        if (vm.status === 'completed' && vm.winner_id) return vm.winner_id;
+        return '';
+    }
 
     const s1 = parseInt(vm.player1_score, 10) || 0;
     const s2 = parseInt(vm.player2_score, 10) || 0;

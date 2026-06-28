@@ -113,7 +113,7 @@ const SidebarLayout = () => {
           {(!user || (user as unknown as { role_id?: number }).role_id === 1) && (
             <div className="shrink-0 pl-5 pr-2.5 pb-0 h-[50px] flex flex-col justify-end">
               <div className="border-t border-border dark:border-darkborder mb-2"></div>
-              <Sidebar aria-label="Settings Content" className="bg-transparent [&>div]:bg-transparent [&>div]:p-0">
+              <Sidebar aria-label="Settings Content" className="!w-full bg-transparent [&>div]:bg-transparent [&>div]:p-0 [&>div]:w-full">
                 <Sidebar.Items>
                   <Sidebar.ItemGroup className="sidebar-nav hide-menu !border-t-0 !mt-0">
                     <NavItems

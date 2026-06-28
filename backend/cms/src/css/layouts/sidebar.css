@@ -16,6 +16,36 @@
     transition: left .4s ease-in-out;
 }
 
+.menu-sidebar.mobile-sidebar {
+    width: 100% !important;
+}
+
+.mobile-menu-scroll::-webkit-scrollbar {
+    width: revert !important;
+    height: revert !important;
+}
+.mobile-menu-scroll::-webkit-scrollbar-track {
+    background: revert !important;
+    border: revert !important;
+    box-shadow: revert !important;
+    border-radius: revert !important;
+}
+.mobile-menu-scroll::-webkit-scrollbar-thumb {
+    background: revert !important;
+    border-radius: revert !important;
+    border: revert !important;
+    box-shadow: revert !important;
+}
+
+.menu-sidebar.mobile-sidebar a:not(.logo-link),
+.menu-sidebar.mobile-sidebar .sidebar-dropdown li a,
+.menu-sidebar.mobile-sidebar .sidebar-dropdown a {
+    padding-right: 16px !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
 .sidebar-nav .caption {
     padding-top: 20px !important;
     margin-top: 20px !important;
@@ -94,13 +124,13 @@
 }
 
 /* Inactive Sidebar Links / Collapses */
-.menu-sidebar a:not(.active),
+.menu-sidebar a:not(.active):not(.logo-link),
 .menu-sidebar .cursor-pointer:not(.text-primary) {
     color: #37393E !important;
     background-color: transparent !important;
 }
 
-.menu-sidebar a:not(.active) svg,
+.menu-sidebar a:not(.active):not(.logo-link) svg,
 .menu-sidebar .cursor-pointer:not(.text-primary) svg {
     color: #37393E !important;
 }
@@ -116,7 +146,7 @@
 }
 
 /* Style menu items and wrappers as rounded pills */
-.menu-sidebar a,
+.menu-sidebar a:not(.logo-link),
 .menu-sidebar .cursor-pointer,
 .menu-sidebar .sidebar-dropdown li a,
 .menu-sidebar .sidebar-dropdown a {
@@ -212,7 +242,13 @@
 }
 
 /* Colors for Hover State (Inactive Items) */
-.menu-sidebar a:not(.active):hover,
+.menu-sidebar a.logo-link:hover {
+    background-color: transparent !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.menu-sidebar a:not(.active):not(.logo-link):hover,
 .menu-sidebar .cursor-pointer:not(.text-primary):hover,
 .menu-sidebar .sidebar-dropdown li a:not(.active):hover,
 .menu-sidebar .sidebar-dropdown a:not(.active):hover {
@@ -220,7 +256,7 @@
     background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
-.menu-sidebar a:not(.active):hover svg,
+.menu-sidebar a:not(.active):not(.logo-link):hover svg,
 .menu-sidebar .cursor-pointer:not(.text-primary):hover svg,
 .menu-sidebar .sidebar-dropdown li a:not(.active):hover svg,
 .menu-sidebar .sidebar-dropdown a:not(.active):hover svg {

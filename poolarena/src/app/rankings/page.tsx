@@ -308,7 +308,7 @@ export default function LeaderboardPage() {
           src={bannerSrc}
           alt="Leaderboard banner"
           fill
-          unoptimized
+
           className="object-cover"
           priority
         />

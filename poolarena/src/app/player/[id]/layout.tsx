@@ -107,6 +107,17 @@ export default async function PlayerLayout({
       }
     : null;
 
+  const playerName = player?.full_name || 'Cơ thủ';
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Trang chủ', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Cơ thủ', item: `${SITE_URL}/players` },
+      { '@type': 'ListItem', position: 3, name: playerName, item: `${SITE_URL}/player/${id}` },
+    ],
+  };
+
   return (
     <>
       {jsonLd && (
@@ -116,6 +127,11 @@ export default async function PlayerLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
+      <Script
+        id="player-breadcrumb-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {children}
     </>
   );

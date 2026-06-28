@@ -67,7 +67,6 @@ export default function ChampionshipBanner({
             src={url}
             alt={`Tournament Banner ${i + 1}`}
             fill
-            unoptimized
             className="object-cover"
             priority={i === 0}
           />

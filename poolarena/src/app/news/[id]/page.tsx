@@ -187,7 +187,7 @@ export default function ArticleDetailPage() {
             src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
-            unoptimized
+
             className="object-cover"
             priority
           />
@@ -301,7 +301,7 @@ export default function ArticleDetailPage() {
                           src={resolveImageUrl(art.image, '/images/logo.png')}
                           alt={art.title}
                           fill
-                          unoptimized
+              
                           className="object-cover"
                         />
                         <div className="absolute inset-0 bg-black/40"></div>
@@ -356,7 +356,7 @@ export default function ArticleDetailPage() {
             src={resolveImageUrl(article.image, '/images/logo.png')}
             alt={article.title}
             fill
-            unoptimized
+
             className="object-cover object-center"
             priority
           />
@@ -479,7 +479,7 @@ export default function ArticleDetailPage() {
                             src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill
-                            unoptimized
+                
                             className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
                           />
                           <div className="absolute inset-0 bg-black/40"></div>

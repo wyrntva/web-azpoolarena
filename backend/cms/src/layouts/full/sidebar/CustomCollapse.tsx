@@ -27,7 +27,7 @@ const CustomCollapse: React.FC<{
           {!isChild && icon && <Icon icon={icon} height={20} className="mr-6 shrink-0 leading-icon" />}
           <span className="nav-label text-[14px] font-medium">{label}</span>
         </div>
-        <div className="flex items-center gap-0.5" >
+        <div className="flex items-center gap-0.5 mr-[-20px]">
           {isPro ? <span className="py-0.5 px-2.5 text-[10px] bg-lightsecondary text-secondary rounded-sm">Pro</span> : null}
           <HiOutlineChevronDown
             className={twMerge("transform transition-transform duration-300", open ? "rotate-180" : "rotate-0")}

@@ -16,9 +16,38 @@ async function fetchNewsArticles(): Promise<{ id: number; title: string; updated
   }
 }
 
+async function fetchTournaments(): Promise<{ id: number; slug: string | null; start_date?: string }[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/tournaments/public`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json?.data) ? json.data : [];
+  } catch {
+    return [];
+  }
+}
+
+async function fetchPlayers(): Promise<{ id: number; updated_at?: string }[]> {
+  try {
+    // Lấy top 500 cơ thủ để đưa vào sitemap
+    const res = await fetch(`${API_BASE}/api/pool-arena/users?skip=0&limit=500`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return Array.isArray(json?.data) ? json.data : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [articles] = await Promise.all([
+  const [articles, tournaments, players] = await Promise.all([
     fetchNewsArticles(),
+    fetchTournaments(),
+    fetchPlayers(),
   ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -29,10 +58,52 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1,
     },
     {
+      url: `${SITE_URL}/tournaments`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/players`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/rankings`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
       url: `${SITE_URL}/news`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/contact-cooperation`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/for-clubs`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/for-organizers`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
     {
       url: `${SITE_URL}/info`,
@@ -67,5 +138,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...newsRoutes];
+  const tournamentRoutes: MetadataRoute.Sitemap = tournaments.map((t) => ({
+    url: `${SITE_URL}/tournaments/${t.slug || t.id}`,
+    lastModified: t.start_date ? new Date(t.start_date) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
+  const playerRoutes: MetadataRoute.Sitemap = players.map((p) => ({
+    url: `${SITE_URL}/player/${p.id}`,
+    lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...newsRoutes, ...tournamentRoutes, ...playerRoutes];
 }
+

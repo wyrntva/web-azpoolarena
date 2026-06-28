@@ -197,6 +197,12 @@ export default function TournamentsPage() {
       <NavBar />
 
       <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pb-[100px]">
+        <h1
+          className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight mt-4 sm:mt-6 mb-4 sm:mb-6"
+          style={{ fontFamily: 'Montserrat, sans-serif' }}
+        >
+          Giải đấu bida Poolarena VietNam
+        </h1>
         {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
         {bannerUrls.length > 0 && (
           <div
@@ -212,7 +218,7 @@ export default function TournamentsPage() {
                   src={url}
                   alt={`Tournament Banner ${index + 1}`}
                   fill
-                  unoptimized
+
                   className="object-cover"
                   priority={index === 0}
                 />

@@ -180,7 +180,8 @@ function getFallbackPlayerName(
             if (matchNo >= 25 && matchNo <= 32) {
                 const idx = matchNo - 25;
                 if (slot === 1) return `Thắng trận ${9 + idx}`;
-                return `Thắng trận ${17 + idx}`;
+                const lr1MatchNo = idx < 4 ? 21 + idx : 17 + (idx - 4);
+                return `Thắng trận ${lr1MatchNo}`;
             }
         } else {
             const size = numberOfPlayers > 32 ? 64 : numberOfPlayers > 16 ? 32 : 16;
@@ -193,7 +194,8 @@ function getFallbackPlayerName(
             if (size === 32 && matchNo >= 41 && matchNo <= 48) {
                 const idx = matchNo - 41;
                 if (slot === 1) return `Thắng trận ${25 + idx}`;
-                return `Thắng trận ${33 + idx}`;
+                const lr2MatchNo = idx < 4 ? 37 + idx : 33 + (idx - 4);
+                return `Thắng trận ${lr2MatchNo}`;
             }
             if (size === 64 && matchNo >= 81 && matchNo <= 96) {
                 const idx = matchNo - 81;

@@ -118,7 +118,7 @@ export default function NewsPage() {
                   src={url}
                   alt={`Tournament Banner ${index + 1}`}
                   fill
-                  unoptimized
+
                   className="object-cover"
                   priority={index === 0}
                 />
@@ -214,7 +214,7 @@ export default function NewsPage() {
                         src={resolveImageUrl(featuredArticle.image, '/images/logo.png')}
                         alt={featuredArticle.title}
                         fill
-                        unoptimized
+      
                         className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
                         priority
                       />
@@ -289,7 +289,7 @@ export default function NewsPage() {
                             src={resolveImageUrl(art.image, '/images/logo.png')}
                             alt={art.title}
                             fill
-                            unoptimized
+          
                             className="object-cover group-hover:scale-125 transition-transform duration-1000 ease-out"
                           />
                           {/* Dark Overlay matching TournamentCard */}

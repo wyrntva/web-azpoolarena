@@ -1050,7 +1050,7 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                         if (p1Id && p2Id) return m;
 
                         const wr2MatchNo = layout.wr2.start + idx;
-                        const lr1MatchNo = layout.lr1.start + idx;
+                        const lr1MatchNo = idx < 4 ? 21 + idx : 17 + (idx - 4);
                         let p1 = m.player1 || null;
                         let p2 = m.player2 || null;
                         if (!p1Id) p1 = getWinnerOfMatch(wr2MatchNo);
@@ -1071,8 +1071,10 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                     });
 
                     roundFormattedMatches = koMatches.map((match, idx) => {
-                        const p1Fallback = `Thắng trận ${layout.wr2.start + idx}`;
-                        const p2Fallback = `Thắng trận ${layout.lr1.start + idx}`;
+                        const wr2MatchNo = layout.wr2.start + idx;
+                        const lr1MatchNo = idx < 4 ? 21 + idx : 17 + (idx - 4);
+                        const p1Fallback = `Thắng trận ${wr2MatchNo}`;
+                        const p2Fallback = `Thắng trận ${lr1MatchNo}`;
                         return formatMatch(match, tournament, p1Fallback, p2Fallback);
                     });
                 } else {
@@ -1086,6 +1088,8 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                         if (numberOfPlayers <= 16) {
                             const mapping = [19, 20, 17, 18];
                             lr2MatchNo = mapping[idx];
+                        } else if (numberOfPlayers === 32) {
+                            lr2MatchNo = idx < 4 ? 37 + idx : 33 + (idx - 4);
                         }
                         let p1 = m.player1 || null;
                         let p2 = m.player2 || null;
@@ -1112,6 +1116,8 @@ function groupMatches(allMatches: ApiMatch[], tournament: TournamentInfo | null)
                         if (numberOfPlayers <= 16) {
                             const mapping = [19, 20, 17, 18];
                             lr2MatchNo = mapping[idx];
+                        } else if (numberOfPlayers === 32) {
+                            lr2MatchNo = idx < 4 ? 37 + idx : 33 + (idx - 4);
                         }
                         const p1Fallback = `Thắng trận ${wr2MatchNo}`;
                         const p2Fallback = `Thắng trận ${lr2MatchNo}`;

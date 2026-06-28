@@ -134,7 +134,10 @@ const TournamentWinnersBracketTab = ({ numberOfPlayers, players, matches, tourna
             const winner = resolveWinner(item, getRaceToNumber(item.player1_id, item.player2_id, players, tournament));
             // winner_id set but a player slot is empty = inconsistent state (e.g. DB has stale winner
             // from when both players existed, but now one feeder R1 match has no winner).
-            const inconsistentWinner = !!item.winner_id && (!item.player1_id || !item.player2_id);
+            const inconsistentWinner = !!item.winner_id && (
+                !item.player1_id ||
+                (numberOfPlayers === 24 ? false : !item.player2_id)
+            );
             // Don't clear winner_id for completed matches when resolveWinner can't compute one
             // (e.g. walkover/absent matches or players without ranks) — UNLESS a feeder slot was cleared
             // or the state is inconsistent (winner_id set with missing player).
