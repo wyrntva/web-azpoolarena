@@ -8,6 +8,8 @@ import Link from "next/link";
 import Image from "next/image";
 import api from "@/config/axios";
 import { resolveImageUrl, formatFullLevel } from "@/lib/tournament-utils";
+import Skeleton from "@/components/skeletons/Skeleton";
+import PlayerRowSkeleton from "@/components/skeletons/PlayerRowSkeleton";
 
 const { Option } = Select;
 
@@ -287,31 +289,23 @@ export default function LeaderboardPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  if (initialLoading) {
-    return (
-      <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
-        <NavBar />
-        <div className="flex items-center justify-center h-screen">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
       <NavBar />
 
       {/* Banner */}
       <div className="relative h-[200px] sm:h-[300px] md:h-[400px] w-full bg-gray-200 overflow-hidden">
-        <Image
-          src={bannerSrc}
-          alt="Leaderboard banner"
-          fill
-
-          className="object-cover"
-          priority
-        />
+        {storeSettings ? (
+          <Image
+            src={bannerSrc}
+            alt="Leaderboard banner"
+            fill
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <Skeleton className="w-full h-full" />
+        )}
       </div>
       <div className="h-[4px] w-full bg-[#172339]" />
       <main className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 -mt-12 sm:-mt-20 md:-mt-[126px] relative z-10 flex flex-col gap-[12px]">
@@ -321,7 +315,7 @@ export default function LeaderboardPage() {
           {['logo', 'Woman', 'Man'].map((item, i) => (
             <div
               key={i}
-              onClick={() => handleTabChange(i)}
+              onClick={() => !initialLoading && handleTabChange(i)}
               className={`${i === 0 ? 'w-[72px] min-[360px]:w-[84px] sm:w-[130px]' : 'w-[52px] min-[360px]:w-[62px] sm:w-[80px]'} sm:h-[56px] py-1 min-[360px]:py-1.5 sm:py-3 rounded-t-xl font-bold text-xs min-[360px]:text-sm sm:text-lg cursor-pointer transition-colors backdrop-blur-sm shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex items-center justify-center ${activeTab === i ? 'bg-white text-[#282A2F]' : 'bg-white/40 text-[#282A2F] hover:bg-white/50'}`}
             >
               {i === 0 ? (
@@ -335,75 +329,111 @@ export default function LeaderboardPage() {
           ))}
         </div>
 
-        {/* Top 5 Card */}
-        {currentPage === 1 && (
-          <div className="bg-white rounded-[16px] lg:rounded-3xl shadow-md w-full lg:max-w-[1360px] lg:mx-auto min-h-[360px] sm:min-h-[400px] relative flex flex-col lg:pb-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 px-4 sm:px-8 pt-6 mb-4">
-              <div className="w-[200px] hidden md:block" />
-              <div className="bg-[#172339] text-white w-full max-w-[313px] xl:max-w-[648px] xl:w-[648px] h-[56px] flex items-center justify-center rounded-b-[24px] xl:rounded-t-none xl:rounded-b-[32px] xl:py-3 xl:px-6 xl:gap-[10px] -mt-6 shadow-md z-20">
-                <h1 
-                  className="text-base sm:text-xl xl:text-[24px] xl:leading-[32px] xl:font-bold uppercase tracking-wide m-0"
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
-                >
-                  BẢNG XẾP HẠNG
-                </h1>
+        {initialLoading ? (
+          <>
+            {/* Top 5 Card Skeleton */}
+            <div className="bg-white rounded-[16px] lg:rounded-3xl shadow-md w-full lg:max-w-[1360px] lg:mx-auto min-h-[360px] sm:min-h-[400px] relative flex flex-col lg:pb-6">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 px-4 sm:px-8 pt-6 mb-4">
+                <div className="w-[200px] hidden md:block" />
+                <div className="bg-[#172339] text-white w-full max-w-[313px] xl:max-w-[648px] xl:w-[648px] h-[56px] flex items-center justify-center rounded-b-[24px] xl:rounded-t-none xl:rounded-b-[32px] xl:py-3 xl:px-6 xl:gap-[10px] -mt-6 shadow-md z-20">
+                  <h1 
+                    className="text-base sm:text-xl xl:text-[24px] xl:leading-[32px] xl:font-bold uppercase tracking-wide m-0"
+                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  >
+                    BẢNG XẾP HẠNG
+                  </h1>
+                </div>
+                <div className="flex items-center w-full max-w-[313px] xl:max-w-none xl:w-[200px] justify-end">
+                  <Skeleton className="w-[80px] h-[24px] rounded" />
+                </div>
               </div>
-              <div className="flex items-center w-full max-w-[313px] xl:max-w-none xl:w-[200px] justify-end">
-                <span className="hidden md:inline text-gray-500 text-sm sm:text-base font-medium mr-2">Level</span>
-                <Select
-                  value={selectedRank}
-                  style={{ width: 110 }}
-                  onChange={handleFilterChange}
-                  variant="borderless"
-                  className="bg-gray-100 rounded-md text-sm sm:text-base"
-                  popupMatchSelectWidth={false}
-                >
-                  <Option value="all">Tất cả</Option>
-                  {ranks.map((rank) => (
-                    <Option key={rank.id} value={rank.name}>{formatFullLevel(rank.name)}</Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-            <div className="px-6 sm:px-8 lg:px-6 mt-2 flex-1">
-              {top5Players.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-400 py-8">Chưa có dữ liệu người chơi</div>
-              ) : (
+              <div className="px-6 sm:px-8 lg:px-6 mt-2 flex-1">
                 <div className="flex flex-col gap-0 lg:gap-3">
-                  {top5Players.map((player, index) => (
-                    <React.Fragment key={player.id}>
-                      <PlayerRow player={player} index={index} isTop5 />
-                    </React.Fragment>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <PlayerRowSkeleton key={i} isTop5 />
                   ))}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Remaining players */}
-        {otherPlayers.map((player, index) => (
-          <PlayerRow
-            key={player.id}
-            player={player}
-            index={currentPage === 1 ? index + 5 : (currentPage - 1) * ITEMS_PER_PAGE + index}
-            isTop5={false}
-          />
-        ))}
+            {/* Remaining Player Skeletons */}
+            {[1, 2, 3, 4, 5].map((i) => (
+              <PlayerRowSkeleton key={i} />
+            ))}
+          </>
+        ) : (
+          <>
+            {/* Top 5 Card */}
+            {currentPage === 1 && (
+              <div className="bg-white rounded-[16px] lg:rounded-3xl shadow-md w-full lg:max-w-[1360px] lg:mx-auto min-h-[360px] sm:min-h-[400px] relative flex flex-col lg:pb-6">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0 px-4 sm:px-8 pt-6 mb-4">
+                  <div className="w-[200px] hidden md:block" />
+                  <div className="bg-[#172339] text-white w-full max-w-[313px] xl:max-w-[648px] xl:w-[648px] h-[56px] flex items-center justify-center rounded-b-[24px] xl:rounded-t-none xl:rounded-b-[32px] xl:py-3 xl:px-6 xl:gap-[10px] -mt-6 shadow-md z-20">
+                    <h1 
+                      className="text-base sm:text-xl xl:text-[24px] xl:leading-[32px] xl:font-bold uppercase tracking-wide m-0"
+                      style={{ fontFamily: 'Montserrat, sans-serif' }}
+                    >
+                      BẢNG XẾP HẠNG
+                    </h1>
+                  </div>
+                  <div className="flex items-center w-full max-w-[313px] xl:max-w-none xl:w-[200px] justify-end">
+                    <span className="hidden md:inline text-gray-500 text-sm sm:text-base font-medium mr-2">Level</span>
+                    <Select
+                      value={selectedRank}
+                      style={{ width: 110 }}
+                      onChange={handleFilterChange}
+                      variant="borderless"
+                      className="bg-gray-100 rounded-md text-sm sm:text-base"
+                      popupMatchSelectWidth={false}
+                    >
+                      <Option value="all">Tất cả</Option>
+                      {ranks.map((rank) => (
+                        <Option key={rank.id} value={rank.name}>{formatFullLevel(rank.name)}</Option>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+                <div className="px-6 sm:px-8 lg:px-6 mt-2 flex-1">
+                  {top5Players.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-gray-400 py-8">Chưa có dữ liệu người chơi</div>
+                  ) : (
+                    <div className="flex flex-col gap-0 lg:gap-3">
+                      {top5Players.map((player, index) => (
+                        <React.Fragment key={player.id}>
+                          <PlayerRow player={player} index={index} isTop5 />
+                        </React.Fragment>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-        {/* Pagination */}
-        {totalPlayers > ITEMS_PER_PAGE && (
-          <div className="flex justify-center mt-8 mb-4">
-            <Pagination
-              current={currentPage}
-              total={totalPlayers}
-              pageSize={ITEMS_PER_PAGE}
-              onChange={handlePageChange}
-              showSizeChanger={false}
-              showQuickJumper
-              showTotal={(total, range) => `${range[0]}-${range[1]} / ${total} người chơi`}
-            />
-          </div>
+            {/* Remaining players */}
+            {otherPlayers.map((player, index) => (
+              <PlayerRow
+                key={player.id}
+                player={player}
+                index={currentPage === 1 ? index + 5 : (currentPage - 1) * ITEMS_PER_PAGE + index}
+                isTop5={false}
+              />
+            ))}
+
+            {/* Pagination */}
+            {totalPlayers > ITEMS_PER_PAGE && (
+              <div className="flex justify-center mt-8 mb-4">
+                <Pagination
+                  current={currentPage}
+                  total={totalPlayers}
+                  pageSize={ITEMS_PER_PAGE}
+                  onChange={handlePageChange}
+                  showSizeChanger={false}
+                  showQuickJumper
+                  showTotal={(total, range) => `${range[0]}-${range[1]} / ${total} người chơi`}
+                />
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

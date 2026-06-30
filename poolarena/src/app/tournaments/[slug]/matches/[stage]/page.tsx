@@ -13,6 +13,8 @@ import {
 import NavBar from "@/components/NavBar";
 import { tournamentAPI } from "@/api/tournament.api";
 import { formatLevel } from "@/lib/tournament-utils";
+import MatchCardSkeleton from "@/components/skeletons/MatchCardSkeleton";
+import MatchRowSkeleton from "@/components/skeletons/MatchRowSkeleton";
 
 // ---------- Types ----------
 interface ApiPlayerNested {
@@ -1523,7 +1525,11 @@ export default function TournamentMatchesPage() {
 
         let API_BASE = "";
         if (typeof window !== "undefined") {
-            API_BASE = `http://${window.location.hostname}:8000`;
+            if (window.location.protocol === "https:") {
+                API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://cms.poolarena.vn";
+            } else {
+                API_BASE = `http://${window.location.hostname}:8000`;
+            }
         } else {
             API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         }
@@ -1654,14 +1660,37 @@ export default function TournamentMatchesPage() {
 
     const renderMobileContent = () => {
         if (loading || isRegistered === null) {
-            return (
-                <div className="flex items-center justify-center py-16">
-                    <div className="text-center">
-                        <Spin size="large" />
-                        <p className="mt-4 text-gray-600" style={{ fontFamily: "Montserrat, sans-serif" }}>
-                            Đang tải trận đấu...
-                        </p>
-                    </div>
+            return viewMode === "bracket" ? (
+                <div className="w-full overflow-x-auto flex gap-4 py-4 px-2 bg-[#172339] rounded-2xl min-h-[450px]" style={{ scrollbarWidth: "none" }}>
+                    {[...Array(3)].map((_, colIdx) => (
+                        <div key={colIdx} className="flex flex-col justify-around min-w-[260px] gap-4 animate-pulse">
+                            <div className="text-white font-bold text-center border-b border-gray-700/50 pb-2 text-sm uppercase">
+                                {colIdx === 0 ? "VÒNG 1" : colIdx === 1 ? "BÁN KẾT" : "CHUNG KẾT"}
+                            </div>
+                            <div className="flex flex-col gap-4 justify-center flex-1">
+                                {[...Array(colIdx === 0 ? 4 : colIdx === 1 ? 2 : 1)].map((_, i) => (
+                                    <MatchCardSkeleton key={i} />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="flex flex-col gap-[32px] py-4">
+                    {[...Array(2)].map((_, sectionIdx) => (
+                        <div key={sectionIdx} className="w-full">
+                            {/* Round Header Skeleton */}
+                            <div className="bg-[#C6010B]/80 h-[40px] flex items-center px-[16px] rounded-[10px] shadow-sm mb-[6px] animate-pulse">
+                                <div className="w-[100px] h-[16px] bg-red-400/50 rounded" />
+                            </div>
+                            {/* Matches List Skeletons */}
+                            <div className="flex flex-col gap-[8px]">
+                                {[...Array(3)].map((_, i) => (
+                                    <MatchRowSkeleton key={i} />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             );
         }
@@ -1757,12 +1786,40 @@ export default function TournamentMatchesPage() {
 
                     {/* Loading / Access Check */}
                     {(loading || isRegistered === null) ? (
-                        <div className="flex items-center justify-center py-16">
-                            <div className="text-center">
-                                <Spin size="large" />
-                                <p className="mt-4 text-gray-600">Đang tải trận đấu...</p>
+                        viewMode === "bracket" ? (
+                            <div className="w-full overflow-x-auto flex gap-6 p-6 bg-[#172339] rounded-2xl min-h-[500px]" style={{ scrollbarWidth: "none" }}>
+                                {/* Bracket Skeleton */}
+                                {[...Array(3)].map((_, colIdx) => (
+                                    <div key={colIdx} className="flex flex-col justify-around min-w-[280px] gap-4">
+                                        <div className="text-white font-bold text-center border-b border-gray-700/50 pb-2 uppercase animate-pulse">
+                                            {colIdx === 0 ? "VÒNG 1" : colIdx === 1 ? "BÁN KẾT" : "CHUNG KẾT"}
+                                        </div>
+                                        <div className="flex flex-col gap-4 justify-center flex-1">
+                                            {[...Array(colIdx === 0 ? 4 : colIdx === 1 ? 2 : 1)].map((_, i) => (
+                                                <MatchCardSkeleton key={i} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex flex-col gap-[48px]">
+                                {[...Array(2)].map((_, sectionIdx) => (
+                                    <div key={sectionIdx} className="w-full">
+                                        {/* Round Header Skeleton */}
+                                        <div className="bg-[#C6010B]/80 h-[48px] flex items-center px-[22px] rounded-[12px] shadow-sm mb-[8px] animate-pulse">
+                                            <div className="w-[120px] h-[20px] bg-red-400/50 rounded" />
+                                        </div>
+                                        {/* Matches List Skeletons */}
+                                        <div className="flex flex-col gap-[8px]">
+                                            {[...Array(4)].map((_, i) => (
+                                                <MatchRowSkeleton key={i} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
                     ) : (!isRegistered && !isRevealedPhase) ? (
                         renderAccessDenied()
                     ) : (

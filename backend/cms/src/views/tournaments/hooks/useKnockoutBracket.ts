@@ -365,6 +365,7 @@ export const useKnockoutBracket = ({
     // KO8 auto-seed: seed WR2 (13-16) vs LR2 (19,20,17,18)
     // Seeds each player as soon as they qualify — no need to wait for both
     useEffect(() => {
+        return; // Disabled: backend handles propagation on match completion, preventing client-side overwrite bugs.
         if (!isKO8Mode) return;
 
         const wr = [winnerOf(13), winnerOf(14), winnerOf(15), winnerOf(16)];
@@ -445,7 +446,6 @@ export const useKnockoutBracket = ({
                 player2_id: finalP2,
                 player1_score: p1Score,
                 player2_score: p2Score,
-                status: 'pending', winner_id: null,
             }).catch(() => {});
         });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -482,7 +482,6 @@ export const useKnockoutBracket = ({
                 player2_id: parseInt(m.player2_id, 10),
                 player1_score: parseInt(m.player1_score, 10),
                 player2_score: parseInt(m.player2_score, 10),
-                status: 'pending', winner_id: null,
             }).catch(() => { handicapRepairedRef.current.delete(m.match_no); });
         });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -490,6 +489,7 @@ export const useKnockoutBracket = ({
 
     // KO16 auto-seed: P1 = winner WR2, P2 = winner LR1/LR2
     useEffect(() => {
+        return; // Disabled: backend handles propagation on match completion, preventing client-side overwrite bugs.
         if (isKO8Mode || isKO32Mode) return;
 
         const wrStart = is24Mode ? 9 : 25;
@@ -558,7 +558,6 @@ export const useKnockoutBracket = ({
                 bracket: 'knockout', round: 1,
                 player1_id: finalP1, player2_id: finalP2,
                 player1_score: p1Score, player2_score: p2Score,
-                status: 'pending', winner_id: null,
             }).catch(() => {});
         });
     // eslint-disable-next-line react-hooks/exhaustive-deps

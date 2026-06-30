@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
-import { Spin } from "antd";
 import {
   ChampionshipBanner,
   TournamentNavbar,
@@ -13,6 +12,7 @@ import {
   CountdownTimer,
 } from "@/components";
 import NavBar from "@/components/NavBar";
+import TournamentDetailSkeleton from "@/components/skeletons/TournamentDetailSkeleton";
 
 const RegisterTournamentModal = dynamic(
   () => import("@/components/RegisterTournamentModal").then(m => m.RegisterTournamentModal),
@@ -315,11 +315,10 @@ export default function TournamentDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
-        <div className="text-center">
-          <Spin size="large" />
-          <p className="mt-4 text-gray-600">Đang tải thông tin giải đấu...</p>
-        </div>
+      <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
+        <NavBar />
+        <TournamentDetailSkeleton />
+        <TournamentNavbar activeTab="info" />
       </div>
     );
   }

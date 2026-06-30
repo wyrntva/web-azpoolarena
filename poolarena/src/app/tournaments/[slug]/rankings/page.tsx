@@ -9,6 +9,8 @@ import {
 } from "@/components";
 import NavBar from "@/components/NavBar";
 import { RankingsTable, RankingData } from "@/components/RankingsTable";
+import RankingRowSkeleton from "@/components/skeletons/RankingRowSkeleton";
+import Skeleton from "@/components/skeletons/Skeleton";
 import { tournamentAPI } from "@/api/tournament.api";
 import { resolveImageUrl, formatFullLevel } from "@/lib/tournament-utils";
 import Image from "next/image";
@@ -173,22 +175,28 @@ export default function TournamentRankingsPage() {
             <div className="block sm:hidden bg-[#F0F2F4]">
                 {/* Banner Image */}
                 <div className="relative w-full h-[180px] bg-gray-200 overflow-hidden">
-                    <Image
-                        src={bannerSrc}
-                        alt={tournament?.name || "Tournament Banner"}
-                        fill
-
-                        className="object-cover"
-                        priority
-                        onError={() => setBannerSrc('/images/tour_banner.webp')}
-                    />
+                    {tournament ? (
+                        <Image
+                            src={bannerSrc}
+                            alt={tournament?.name || "Tournament Banner"}
+                            fill
+                            className="object-cover"
+                            priority
+                            onError={() => setBannerSrc('/images/tour_banner.webp')}
+                        />
+                    ) : (
+                        <Skeleton className="w-full h-full" />
+                    )}
                 </div>
 
                 {/* Main Content Area */}
                 <div className="px-4 -mt-[40px] pb-8 relative z-10 flex flex-col gap-4">
                     {isLoading ? (
-                        <div className="flex justify-center py-12">
-                            <Spin size="large" />
+                        <div className="flex flex-col gap-3">
+                            <RankingRowSkeleton isTop1 />
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <RankingRowSkeleton key={i} />
+                            ))}
                         </div>
                     ) : rankings.length === 0 ? (
                         <div className="bg-white rounded-2xl p-10 text-center text-gray-500 shadow-md border border-gray-100/50">
@@ -202,29 +210,38 @@ export default function TournamentRankingsPage() {
 
             {/* DESKTOP LAYOUT (hidden sm:block) */}
             <div className="hidden sm:block">
-                <div 
-                    className="flex flex-col bg-no-repeat"
-                    style={{ 
-                        backgroundImage: `url(${bannerSrc})`,
-                        backgroundSize: '1920px 450px'
-                    }}
-                >
-                    <main className="w-full max-w-[1360px] mx-auto mt-[288px] flex flex-col items-center px-4">
-                        <div className="w-full z-10 flex flex-col gap-2">
-                            {isLoading ? (
-                                <div className="flex justify-center py-12">
-                                    <Spin size="large" />
-                                </div>
-                            ) : rankings.length === 0 ? (
-                                <div className="bg-white rounded-2xl p-10 text-center text-gray-500">
-                                    Chưa có người đăng ký giải đấu này
-                                </div>
-                            ) : (
-                                <RankingsTable data={rankings} />
-                            )}
-                        </div>
-                    </main>
-                </div>
+                {tournament ? (
+                    <div 
+                        className="flex flex-col bg-no-repeat"
+                        style={{ 
+                            backgroundImage: `url(${bannerSrc})`,
+                            backgroundSize: '1920px 450px'
+                        }}
+                    >
+                        <main className="w-full max-w-[1360px] mx-auto mt-[288px] flex flex-col items-center px-4">
+                            <div className="w-full z-10 flex flex-col gap-2">
+                                {isLoading ? (
+                                    <div className="w-full flex flex-col gap-3">
+                                        <RankingRowSkeleton isTop1 />
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <RankingRowSkeleton key={i} />
+                                        ))}
+                                    </div>
+                                ) : rankings.length === 0 ? (
+                                    <div className="bg-white rounded-2xl p-10 text-center text-gray-500">
+                                        Chưa có người đăng ký giải đấu này
+                                    </div>
+                                ) : (
+                                    <RankingsTable data={rankings} />
+                                )}
+                            </div>
+                        </main>
+                    </div>
+                ) : (
+                    <div className="w-full h-[450px] bg-[#172339] overflow-hidden">
+                        <Skeleton className="w-full h-full" />
+                    </div>
+                )}
             </div>
 
             <TournamentNavbar activeTab="rankings" />

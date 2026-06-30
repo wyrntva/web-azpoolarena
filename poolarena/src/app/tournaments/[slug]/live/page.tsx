@@ -7,6 +7,7 @@ import { Spin } from "antd";
 import { TournamentNavbar } from "@/components";
 import NavBar from "@/components/NavBar";
 import { tournamentAPI } from "@/api/tournament.api";
+import MatchCardSkeleton from "@/components/skeletons/MatchCardSkeleton";
 
 // ---------- Types ----------
 interface ApiPlayerNested {
@@ -1189,11 +1190,15 @@ export default function TournamentLivePage() {
 
         let API_BASE = "";
         if (typeof window !== "undefined") {
-            API_BASE = `http://${window.location.hostname}:8000`;
+            if (window.location.protocol === "https:") {
+                API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://cms.poolarena.vn";
+            } else {
+                API_BASE = `http://${window.location.hostname}:8000`;
+            }
         } else {
             API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         }
-        const sseUrl = `${API_BASE}/api/tournaments/${tournament.id}/matches/live`;
+        const sseUrl = `${tournament.id ? `${API_BASE}/api/tournaments/${tournament.id}/matches/live` : ""}`;
         console.log("Connecting to live match updates SSE in live page:", sseUrl);
 
         const eventSource = new EventSource(sseUrl, { withCredentials: true });
@@ -1287,12 +1292,18 @@ export default function TournamentLivePage() {
             <NavBar />
 
             <main className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 mt-[48px]">
-                {isLoading || isRedirecting ? (
+                {isRedirecting ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
                         <Spin size="large" />
                         <p className="text-gray-500 font-medium text-sm font-['Montserrat']">
-                            {isRedirecting ? "Đang chuyển hướng..." : "Đang tải danh sách trận đấu..."}
+                            Đang chuyển hướng...
                         </p>
+                    </div>
+                ) : isLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                            <MatchCardSkeleton key={i} />
+                        ))}
                     </div>
                 ) : activeFormattedMatches.length === 0 ? (
                     <div className="bg-white p-12 rounded-[16px] text-center shadow-sm border border-gray-100 max-w-md mx-auto mt-12">

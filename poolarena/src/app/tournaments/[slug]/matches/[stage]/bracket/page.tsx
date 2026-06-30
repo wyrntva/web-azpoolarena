@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Spin } from "antd";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/stores/store";
 import NavBar from "@/components/NavBar";
+import { TournamentNavbar } from "@/components";
+import MatchCardSkeleton from "@/components/skeletons/MatchCardSkeleton";
 import { tournamentAPI } from "@/api/tournament.api";
 import { resolveImageUrl, formatLevel } from "@/lib/tournament-utils";
 
@@ -896,13 +897,44 @@ export default function TournamentStageBracketPage() {
     // Render loading state
     if (loading || isRegistered === null) {
         return (
-            <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
-                <div className="text-center">
-                    <Spin size="large" />
-                    <p className="mt-4 text-gray-600" style={{ fontFamily: "Montserrat, sans-serif" }}>
-                        Đang tải sơ đồ...
-                    </p>
-                </div>
+            <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
+                <NavBar />
+                <main className="w-full max-w-[1360px] mx-auto mt-[48px] flex flex-col gap-6 px-4">
+                    <div className="w-full overflow-x-auto flex gap-6 p-6 bg-[#172339] rounded-2xl min-h-[500px]" style={{ scrollbarWidth: "none" }}>
+                        {/* Round 1 */}
+                        <div className="flex flex-col justify-around min-w-[280px] gap-4">
+                            <div className="text-white font-bold text-center border-b border-gray-700/50 pb-2 uppercase animate-pulse">
+                                VÒNG 1
+                            </div>
+                            <div className="flex flex-col gap-4 justify-center flex-1">
+                                {[1, 2, 3, 4].map((i) => (
+                                    <MatchCardSkeleton key={i} />
+                                ))}
+                            </div>
+                        </div>
+                        {/* Round 2 */}
+                        <div className="flex flex-col justify-around min-w-[280px] gap-4">
+                            <div className="text-white font-bold text-center border-b border-gray-700/50 pb-2 uppercase animate-pulse">
+                                BÁN KẾT
+                            </div>
+                            <div className="flex flex-col gap-4 justify-center flex-1">
+                                {[1, 2].map((i) => (
+                                    <MatchCardSkeleton key={i} />
+                                ))}
+                            </div>
+                        </div>
+                        {/* Round 3 */}
+                        <div className="flex flex-col justify-around min-w-[280px] gap-4">
+                            <div className="text-white font-bold text-center border-b border-gray-700/50 pb-2 uppercase animate-pulse">
+                                CHUNG KẾT
+                            </div>
+                            <div className="flex flex-col gap-4 justify-center flex-1">
+                                <MatchCardSkeleton />
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <TournamentNavbar activeTab="matches" />
             </div>
         );
     }

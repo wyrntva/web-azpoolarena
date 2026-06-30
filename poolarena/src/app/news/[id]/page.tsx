@@ -13,6 +13,7 @@ import { resolveImageUrl } from "@/lib/tournament-utils";
 import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
 import { fixNewsButtons, newsHref } from "@/lib/news-utils";
 import SafeImage from "@/components/SafeImage";
+import NewsDetailSkeleton from "@/components/skeletons/NewsDetailSkeleton";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -139,9 +140,7 @@ export default function ArticleDetailPage() {
     return (
       <div className="min-h-screen bg-[#F0F2F4] flex flex-col font-sans">
         <NavBar />
-        <main className="flex-1 flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary"></div>
-        </main>
+        <NewsDetailSkeleton />
         <Footer />
       </div>
     );

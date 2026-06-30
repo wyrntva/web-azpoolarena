@@ -24,6 +24,7 @@ export class TournamentSchedulerService {
 
   // Trả về match_no của trận chung kết dựa theo số người chơi
   private getFinalMatchNo(numberOfPlayers: number): number {
+    if (numberOfPlayers === 24) return 39;
     if (numberOfPlayers > 32) return 111;
     if (numberOfPlayers > 16) return 55;
     return 27;

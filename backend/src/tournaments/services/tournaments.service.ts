@@ -1303,6 +1303,60 @@ export class TournamentsService {
       where: { tournament_id: tournamentId, match_no: matchNo },
     });
 
+    const tournament = await this.tourRepo.findOne({
+      where: { id: tournamentId },
+    });
+    if (
+      tournament &&
+      tournament.number_of_players === 24 &&
+      matchNo >= 25 &&
+      matchNo <= 32 &&
+      dto.bracket === 'knockout'
+    ) {
+      const idx = matchNo - 25;
+      const wr2MatchNo = 9 + idx;
+      const wr2 = await this.matchRepo.findOne({
+        where: { tournament_id: tournamentId, match_no: wr2MatchNo },
+      });
+      const expectedP1 =
+        wr2 && wr2.status === TournamentMatchStatus.COMPLETED
+          ? wr2.winner_id
+          : null;
+      if (dto.player1_id !== undefined && dto.player1_id !== expectedP1) {
+        dto.player1_id = expectedP1 as any;
+      }
+
+      const lr1MatchNo = idx < 4 ? 21 + idx : 17 + (idx - 4);
+      const lr1 = await this.matchRepo.findOne({
+        where: { tournament_id: tournamentId, match_no: lr1MatchNo },
+      });
+      const expectedP2 =
+        lr1 && lr1.status === TournamentMatchStatus.COMPLETED
+          ? lr1.winner_id
+          : null;
+      if (dto.player2_id !== undefined && dto.player2_id !== expectedP2) {
+        dto.player2_id = expectedP2 as any;
+      }
+    }
+
+    if (match) {
+      const isPlayState =
+        match.status === TournamentMatchStatus.UPCOMING ||
+        match.status === TournamentMatchStatus.ONGOING;
+
+      if (isPlayState) {
+        if (dto.status === TournamentMatchStatus.PENDING) {
+          delete dto.status;
+        }
+        if (dto.player1_id !== undefined && dto.player1_id !== match.player1_id) {
+          delete dto.player1_id;
+        }
+        if (dto.player2_id !== undefined && dto.player2_id !== match.player2_id) {
+          delete dto.player2_id;
+        }
+      }
+    }
+
     const statusBefore = match ? match.status : null;
     const oldP1Points = match ? match.player1_points : null;
     const oldP2Points = match ? match.player2_points : null;
@@ -1686,6 +1740,7 @@ export class TournamentsService {
   }
 
   private getFinalMatchNo(numberOfPlayers: number): number {
+    if (numberOfPlayers === 24) return 39;
     if (numberOfPlayers > 32) return 111;
     if (numberOfPlayers > 16) return 55;
     return 27;

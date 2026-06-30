@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Spin } from "antd";
+import { Row, Col } from "antd";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
@@ -11,6 +11,8 @@ import { Tournament } from "@/components/TournamentCard";
 import { tournamentAPI } from "@/api/tournament.api";
 import { storeSettingsAPI } from "@/api/storeSettings.api";
 import { sortRanks, generateSlug, resolveImageUrl } from "@/lib/tournament-utils";
+import BannerSkeleton from "@/components/skeletons/BannerSkeleton";
+import TournamentCardSkeleton from "@/components/skeletons/TournamentCardSkeleton";
 
 interface TournamentData {
   id: number;
@@ -181,128 +183,131 @@ export default function TournamentsPage() {
     router.push(`/tournaments/${tournament.slug || tournament.id}`);
   }, [router]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F0F2F4] flex items-center justify-center">
-        <div className="text-center">
-          <Spin size="large" />
-          <p className="mt-4 text-gray-600">Đang tải danh sách giải đấu...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F0F2F4]">
       <NavBar />
 
       <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pb-[100px]">
-        <h1
-          className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight mt-4 sm:mt-6 mb-4 sm:mb-6"
-          style={{ fontFamily: 'Montserrat, sans-serif' }}
-        >
+        <h1 className="sr-only">
           Giải đấu bida Poolarena VietNam
         </h1>
-        {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
-        {bannerUrls.length > 0 && (
-          <div
-            className="mb-6 sm:mb-12 mt-4 sm:mt-6 relative w-full rounded-xl overflow-hidden"
-            style={{ aspectRatio: '361 / 74' }}
-          >
-            {bannerUrls.map((url, index) => (
-              <div
-                key={index}
-                className={`absolute inset-0 transition-opacity duration-500 ${index === currentBannerIndex ? 'opacity-100' : 'opacity-0'}`}
-              >
-                <Image
-                  src={url}
-                  alt={`Tournament Banner ${index + 1}`}
-                  fill
 
-                  className="object-cover"
-                  priority={index === 0}
-                />
-              </div>
-            ))}
-
-            {bannerUrls.length > 1 && (
-              <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
-                {bannerUrls.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentBannerIndex(index)}
-                    className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${index === currentBannerIndex ? 'bg-white w-4 sm:w-6' : 'bg-white/50 hover:bg-white/75'}`}
-                    aria-label={`Go to banner ${index + 1}`}
-                  />
+        {loading ? (
+          <>
+            <BannerSkeleton />
+            <div className="mt-6 sm:mt-12">
+              <Row gutter={[24, 24]}>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Col xs={24} sm={12} xl={8} key={i}>
+                    <TournamentCardSkeleton />
+                  </Col>
                 ))}
+              </Row>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
+            {bannerUrls.length > 0 && (
+              <div
+                className="mb-6 sm:mb-12 mt-4 sm:mt-6 relative w-full rounded-xl overflow-hidden"
+                style={{ aspectRatio: '361 / 74' }}
+              >
+                {bannerUrls.map((url, index) => (
+                  <div
+                    key={index}
+                    className={`absolute inset-0 transition-opacity duration-500 ${index === currentBannerIndex ? 'opacity-100' : 'opacity-0'}`}
+                  >
+                    <Image
+                      src={url}
+                      alt={`Tournament Banner ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      priority={index === 0}
+                    />
+                  </div>
+                ))}
+
+                {bannerUrls.length > 1 && (
+                  <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5 sm:gap-2 z-10">
+                    {bannerUrls.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentBannerIndex(index)}
+                        className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${index === currentBannerIndex ? 'bg-white w-4 sm:w-6' : 'bg-white/50 hover:bg-white/75'}`}
+                        aria-label={`Go to banner ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
-        {/* Tournament Sections */}
-        <div className="space-y-6 sm:space-y-12">
-          {ongoingTournaments.length > 0 && (
-            <div className="space-y-4 sm:space-y-6">
-              <h2
-                className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight flex items-center gap-2"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                GIẢI ĐẤU ĐANG DIỄN RA
-                <span className="flex h-3 w-3 relative sm:h-4 sm:w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 sm:h-4 sm:w-4 bg-red-500"></span>
-                </span>
-              </h2>
-              <TournamentList
-                tournaments={ongoingTournaments}
-                variant="ongoing"
-                onCardClick={handleCardClick}
-                delayOffset={0}
-              />
+            {/* Tournament Sections */}
+            <div className="space-y-6 sm:space-y-12">
+              {ongoingTournaments.length > 0 && (
+                <div className="space-y-4 sm:space-y-6">
+                  <h2
+                    className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight flex items-center gap-2"
+                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  >
+                    GIẢI ĐẤU ĐANG DIỄN RA
+                    <span className="flex h-3 w-3 relative sm:h-4 sm:w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 sm:h-4 sm:w-4 bg-red-500"></span>
+                    </span>
+                  </h2>
+                  <TournamentList
+                    tournaments={ongoingTournaments}
+                    variant="ongoing"
+                    onCardClick={handleCardClick}
+                    delayOffset={0}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-4 sm:space-y-6">
+                <h2
+                  className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight"
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                >
+                  GIẢI ĐẤU SẮP DIỄN RA
+                </h2>
+                {upcomingTournaments.length === 0 ? (
+                  <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">Chưa có giải đấu sắp diễn ra</div>
+                ) : (
+                  <TournamentList
+                    tournaments={upcomingTournaments}
+                    variant="upcoming"
+                    onCardClick={handleCardClick}
+                    onRegister={handleRegister}
+                    delayOffset={ongoingTournaments.length}
+                  />
+                )}
+              </div>
+
+              <div className="space-y-4 sm:space-y-6">
+                <h2
+                  className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight"
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                >
+                  GIẢI ĐẤU ĐÃ KẾT THÚC
+                </h2>
+                {completedTournaments.length === 0 ? (
+                  <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">Chưa có giải đấu đã kết thúc</div>
+                ) : (
+                  <TournamentList
+                    tournaments={completedTournaments}
+                    variant="completed"
+                    onCardClick={handleCardClick}
+                    onViewResults={handleViewResults}
+                    delayOffset={ongoingTournaments.length + upcomingTournaments.length}
+                  />
+                )}
+              </div>
             </div>
-          )}
-
-          <div className="space-y-4 sm:space-y-6">
-            <h2
-              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              GIẢI ĐẤU SẮP DIỄN RA
-            </h2>
-            {upcomingTournaments.length === 0 ? (
-              <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">Chưa có giải đấu sắp diễn ra</div>
-            ) : (
-              <TournamentList
-                tournaments={upcomingTournaments}
-                variant="upcoming"
-                onCardClick={handleCardClick}
-                onRegister={handleRegister}
-                delayOffset={ongoingTournaments.length}
-              />
-            )}
-          </div>
-
-          <div className="space-y-4 sm:space-y-6">
-            <h2
-              className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              GIẢI ĐẤU ĐÃ KẾT THÚC
-            </h2>
-            {completedTournaments.length === 0 ? (
-              <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">Chưa có giải đấu đã kết thúc</div>
-            ) : (
-              <TournamentList
-                tournaments={completedTournaments}
-                variant="completed"
-                onCardClick={handleCardClick}
-                onViewResults={handleViewResults}
-                delayOffset={ongoingTournaments.length + upcomingTournaments.length}
-              />
-            )}
-          </div>
-        </div>
+          </>
+        )}
       </main>
     </div>
   );

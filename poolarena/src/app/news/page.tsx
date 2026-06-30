@@ -13,6 +13,9 @@ import { resolveImageUrl } from "@/lib/tournament-utils";
 import { newsPublicAPI, type NewsArticle } from "@/api/news.api";
 import { newsHref } from "@/lib/news-utils";
 import SafeImage from "@/components/SafeImage";
+import BannerSkeleton from "@/components/skeletons/BannerSkeleton";
+import NewsCardSkeleton from "@/components/skeletons/NewsCardSkeleton";
+import NewsFeaturedSkeleton from "@/components/skeletons/NewsFeaturedSkeleton";
 
 function parseBannerUrls(bannerTournament: string | null | undefined): string[] {
   if (!bannerTournament) return [];
@@ -104,7 +107,9 @@ export default function NewsPage() {
 
       <main className={`flex-1 max-w-[1360px] w-full mx-auto px-4 sm:px-6 md:px-8 xl:px-12 2xl:px-0 pb-24 md:pb-16 ${bannerUrls.length > 0 ? "pt-0" : "pt-8 md:pt-12"}`}>
         {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
-        {bannerUrls.length > 0 && (
+        {storeSettings === undefined ? (
+          <BannerSkeleton />
+        ) : bannerUrls.length > 0 ? (
           <div
             className="mb-6 sm:mb-12 mt-4 sm:mt-6 relative w-full rounded-xl overflow-hidden"
             style={{ aspectRatio: '361 / 74' }}
@@ -118,7 +123,6 @@ export default function NewsPage() {
                   src={url}
                   alt={`Tournament Banner ${index + 1}`}
                   fill
-
                   className="object-cover"
                   priority={index === 0}
                 />
@@ -138,7 +142,7 @@ export default function NewsPage() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
         <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1
             className="text-[#37393E] font-bold italic uppercase tracking-wide animate-slideIn whitespace-nowrap text-[18px] min-[360px]:text-[21px] min-[390px]:text-[23px] min-[430px]:text-[26px] sm:text-[36px] leading-tight"
@@ -190,8 +194,13 @@ export default function NewsPage() {
 
         <AnimatePresence mode="wait">
           {newsLoading ? (
-            <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary"></div>
+            <div className="space-y-10">
+              <NewsFeaturedSkeleton />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {[1, 2, 3].map((i) => (
+                  <NewsCardSkeleton key={i} />
+                ))}
+              </div>
             </div>
           ) : filteredArticles.length > 0 ? (
             <motion.div
