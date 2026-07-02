@@ -77,6 +77,7 @@ export const useTournamentForm = () => {
     const [ranks, setRanks] = useState<TournamentRank[]>([]);
     const [editingTournamentId, setEditingTournamentId] = useState<number | null>(null);
     const [loadedTournament, setLoadedTournament] = useState<Tournament | null>(null);
+    const [submitting, setSubmitting] = useState(false);
 
     // --- Fetch ranks on mount ---
 
@@ -165,28 +166,34 @@ export const useTournamentForm = () => {
 
     const handleSubmit = async (e: React.FormEvent, tournamentId?: number, existingTournament?: Tournament | Record<string, unknown>) => {
         e.preventDefault();
-        // Upload any File objects → get URLs
-        const existing = existingTournament as Record<string, unknown> | undefined;
-        const { banner, organizer_logo, detail_logo, sponsor_logos } = await uploadFormImages(formData, existing);
+        if (submitting) return;
+        setSubmitting(true);
+        try {
+            // Upload any File objects → get URLs
+            const existing = existingTournament as Record<string, unknown> | undefined;
+            const { banner, organizer_logo, detail_logo, sponsor_logos } = await uploadFormImages(formData, existing);
 
-        const formDataWithUrls = {
-            ...formData,
-            banner,
-            organizer_logo,
-            detail_logo,
-            sponsor_logos,
-        };
+            const formDataWithUrls = {
+                ...formData,
+                banner,
+                organizer_logo,
+                detail_logo,
+                sponsor_logos,
+            };
 
-        const apiData = convertFormDataToAPI(formDataWithUrls, !!tournamentId, existing);
+            const apiData = convertFormDataToAPI(formDataWithUrls, !!tournamentId, existing);
 
-        if (tournamentId) {
-            await tournamentAPI.updateTournament(tournamentId, apiData as TournamentUpdate);
-            toast.success('Cập nhật giải đấu thành công');
-        } else {
-            await tournamentAPI.createTournament(apiData as unknown as TournamentCreate);
-            toast.success('Thêm giải đấu thành công');
+            if (tournamentId) {
+                await tournamentAPI.updateTournament(tournamentId, apiData as TournamentUpdate);
+                toast.success('Cập nhật giải đấu thành công');
+            } else {
+                await tournamentAPI.createTournament(apiData as unknown as TournamentCreate);
+                toast.success('Thêm giải đấu thành công');
+            }
+            resetForm();
+        } finally {
+            setSubmitting(false);
         }
-        resetForm();
     };
 
     // --- Load existing tournament ---
@@ -262,6 +269,7 @@ export const useTournamentForm = () => {
         setFormData,
         ranks,
         loadedTournament,
+        submitting,
         handleRankToggle,
         ...imageHandlers,
         handleCurrencyChange,

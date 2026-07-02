@@ -37,6 +37,7 @@ const Tournaments = () => {
         handleNameChange,
         handleStartDateChange,
         loadTournament,
+        submitting,
     } = useTournamentForm();
 
     const onPageChange = (page: number) => setCurrentPage(page);
@@ -148,11 +149,11 @@ const Tournaments = () => {
                 showFooter={true}
                 footer={
                     <>
-                        <Button type="button" color="gray" onClick={handleCloseDialog}>
+                        <Button type="button" color="gray" onClick={handleCloseDialog} disabled={submitting}>
                             Hủy
                         </Button>
-                        <Button type="submit" form="tournament-form" color="blue">
-                            Lưu và trở lại
+                        <Button type="submit" form="tournament-form" color="blue" disabled={submitting}>
+                            {submitting ? 'Đang lưu...' : 'Lưu và trở lại'}
                         </Button>
                     </>
                 }
@@ -187,11 +188,11 @@ const Tournaments = () => {
                 showFooter={true}
                 footer={
                     <>
-                        <Button type="button" color="gray" onClick={handleCloseUpdateDialog}>
+                        <Button type="button" color="gray" onClick={handleCloseUpdateDialog} disabled={submitting}>
                             Hủy
                         </Button>
-                        <Button type="submit" form="tournament-form" color="blue">
-                            Cập nhật
+                        <Button type="submit" form="tournament-form" color="blue" disabled={submitting}>
+                            {submitting ? 'Đang cập nhật...' : 'Cập nhật'}
                         </Button>
                     </>
                 }
