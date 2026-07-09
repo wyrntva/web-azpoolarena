@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Wavy Member",
+    "slug": "wavy-member",
+    "version": "1.0.0",
+    "newArchEnabled": false,
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.wavy.member"
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#FFFFFF",
+      "barStyle": "dark-content"
+    },
+    "plugins": [
+      "expo-system-ui",
+      "expo-font",
+      "expo-asset"
+    ]
+  }
+}

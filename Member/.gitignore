@@ -1,0 +1,14 @@
+node_modules/
+.expo/
+.idea/
+android/.gradle/
+android/.idea/
+android/app/.cxx/
+android/app/build/
+android/build/
+android/local.properties
+android/app/debug.keystore
+ios/build/
+dist/
+*.log
+.env.local

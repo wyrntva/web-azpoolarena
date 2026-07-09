@@ -1,0 +1,37 @@
+﻿import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { colors } from "../constants/colors";
+import { BookingScreen } from "../screens/Booking/BookingScreen";
+import { HomeScreen } from "../screens/Home/HomeScreen";
+import { CardScreen } from "../screens/Member/CardScreen";
+import { HistoryScreen } from "../screens/Member/HistoryScreen";
+import { NotificationScreen } from "../screens/Notification/NotificationScreen";
+import { DeleteAccountScreen } from "../screens/Profile/DeleteAccountScreen";
+import { ProfileScreen } from "../screens/Profile/ProfileScreen";
+import { TournamentScreen } from "../screens/Tournament/TournamentScreen";
+import type { AppStackParamList } from "./types";
+
+const Stack = createNativeStackNavigator<AppStackParamList>();
+
+export function AppNavigator() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        headerTitleStyle: { fontFamily: "Montserrat_700Bold" },
+        statusBarTranslucent: false,
+        statusBarStyle: "dark",
+      }}
+    >
+      <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Notification" component={NotificationScreen} options={{ title: "ThÃ´ng bÃ¡o" }} />
+      <Stack.Screen name="MemberCard" component={CardScreen} options={{ title: "Tháº» thÃ nh viÃªn" }} />
+      <Stack.Screen name="MemberHistory" component={HistoryScreen} options={{ title: "Lá»‹ch sá»­ tÃ­ch Ä‘iá»ƒm" }} />
+      <Stack.Screen name="Booking" component={BookingScreen} options={{ title: "Äáº·t bÃ n Billiards" }} />
+      <Stack.Screen name="Tournament" component={TournamentScreen} options={{ title: "Giáº£i Ä‘áº¥u CLB" }} />
+      <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "ThÃ´ng tin thÃ nh viÃªn" }} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ title: "XÃ³a tÃ i khoáº£n" }} />
+    </Stack.Navigator>
+  );
+}

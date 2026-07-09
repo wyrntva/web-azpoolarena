@@ -404,7 +404,6 @@ Container: azpool-db-dev    postgres:15-alpine   port 5432
 Container: azpool-backend-dev                    port 8000
 Container: azpool-frontend-dev                   port 5173
 Container: azpool-mqtt-dev  eclipse-mosquitto:2  port 1883/9001
-Container: azpool-member-dev                     port 5176
 Container: azpool-poolarena-dev                  port 5174
 ```
 

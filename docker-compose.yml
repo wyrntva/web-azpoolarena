@@ -132,29 +132,6 @@ services:
     networks:
       - azpool-network
 
-  # Member Service (Client/Membership Interface)
-  member:
-    build:
-      context: ./member
-      dockerfile: Dockerfile
-      target: development
-    container_name: azpool-member-dev
-    restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_healthy
-    environment:
-      VITE_API_URL: "${VITE_API_URL:-http://localhost:8000}"
-    ports:
-      - "${MEMBER_PORT:-5176}:5173"
-    volumes:
-      # Mount source code for hot reload
-      - ./member:/app:delegated
-      - /app/node_modules
-    networks:
-      - azpool-network
-
-
   # Scoreboard Desktop Application (PySide6/Qt)
   # NOTE: This is a GUI application that requires X11 forwarding
   # Run with: ./scoreboard/docker-run.sh
