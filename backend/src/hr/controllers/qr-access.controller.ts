@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QrAccessService } from '../services/qr-access.service';
 import { InternalApiGuard } from '../guards/internal-api.guard';
@@ -15,6 +15,7 @@ export class QrAccessController {
   // =======================
 
   @Post('api/internal/qr-access/create')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(InternalApiGuard)
   async createToken(
     @Body() body: { device_id: string; purpose: string; ttl_seconds?: number },
@@ -55,6 +56,7 @@ export class QrAccessController {
   // =======================
 
   @Post('api/qr-access/validate')
+  @HttpCode(HttpStatus.OK)
   async validateToken(
     @Body() body: { access_token: string; user_pin?: string },
   ) {
@@ -77,6 +79,7 @@ export class QrAccessController {
   }
 
   @Post('api/qr-access/consume')
+  @HttpCode(HttpStatus.OK)
   async consumeToken(@Body() body: { access_token: string; user_pin: string }) {
     await this.qrAccessService.consumeToken(body.access_token, body.user_pin);
     return {

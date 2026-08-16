@@ -23,9 +23,28 @@ env_path = os.path.join(get_base_path(), '.env')
 load_dotenv(env_path)
 
 
+def normalize_url(url: str, default_scheme: str = "https") -> str:
+    """Normalize and fix malformed URLs like 'http:cms.poolarena.vn' or 'cms.poolarena.vn'"""
+    if not url:
+        return ""
+    url = url.strip().rstrip("/")
+    
+    # Fix missing double slashes after scheme, e.g. "http:domain.com" -> "http://domain.com"
+    if url.startswith("http:") and not url.startswith("http://"):
+        url = "http://" + url[5:].lstrip("/")
+    elif url.startswith("https:") and not url.startswith("https://"):
+        url = "https://" + url[6:].lstrip("/")
+    elif not url.startswith("http://") and not url.startswith("https://"):
+        url = f"{default_scheme}://" + url
+        
+    return url
+
+
 class Config:
     # API Configuration
-    API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+    raw_api_url = os.getenv("API_BASE_URL", "http://localhost:8000")
+    API_BASE_URL = normalize_url(raw_api_url, default_scheme="https")
+    
     INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
 
     # Device Configuration
@@ -38,7 +57,8 @@ class Config:
     QR_BORDER = int(os.getenv("QR_BORDER", "4"))
 
     # Frontend URL
-    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    raw_frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    FRONTEND_URL = normalize_url(raw_frontend_url, default_scheme="https")
 
     # Validate required config
     @classmethod
@@ -51,3 +71,4 @@ class Config:
 
 # Initialize config
 config = Config()
+

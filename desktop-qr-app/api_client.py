@@ -55,7 +55,7 @@ class APIClient:
             print(f"[API] Status Code: {response.status_code}")
             print(f"[API] Response: {response.text}")
 
-            if response.status_code == 200:
+            if response.status_code in (200, 201):
                 result = response.json()
                 
                 # Get server time from Date header for clock synchronization
@@ -104,7 +104,7 @@ class APIClient:
                 timeout=10
             )
 
-            if response.status_code == 200:
+            if response.status_code in (200, 201):
                 return response.json()
             else:
                 return None
@@ -134,7 +134,7 @@ class APIClient:
                 timeout=10
             )
 
-            if response.status_code == 200:
+            if response.status_code in (200, 201):
                 return response.json()
             else:
                 return None
