@@ -18,6 +18,7 @@ import { TournamentSettingsController } from './controllers/tournament-settings.
 import { TournamentSchedulerService } from './services/tournament-scheduler.service';
 import { UserEntity } from '../users/entities/user.entity';
 import { TableEntity } from '../areas/entities/area.entity';
+import { MqttClientModule } from '../mqtt/mqtt.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { TableEntity } from '../areas/entities/area.entity';
       UserEntity,
       TableEntity,
     ]),
+    MqttClientModule,
   ],
   controllers: [TournamentsController, TournamentSettingsController],
   providers: [

@@ -28,6 +28,8 @@ import { TournamentsService } from '../services/tournaments.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TableEntity } from '../../areas/entities/area.entity';
+import { Optional } from '@nestjs/common';
+import { MqttService } from '../../mqtt/mqtt.service';
 import {
   CreateTournamentDto,
   UpdateTournamentDto,
@@ -46,6 +48,8 @@ export class TournamentsController {
     private readonly service: TournamentsService,
     @InjectRepository(TableEntity)
     private readonly tableRepo: Repository<TableEntity>,
+    @Optional()
+    private readonly mqttService?: MqttService,
   ) {}
 
   @Post()
@@ -222,17 +226,47 @@ export class TournamentsController {
   >();
 
   @Put('device/live-score')
-  updateLiveScore(
+  async updateLiveScore(
     @Body() body: { table_name: string; mode: string; players: any[] },
   ) {
     const { table_name, mode, players } = body ?? {};
     if (!table_name) return { ok: false, error: 'table_name required' };
-    this.liveScores.set(table_name, {
+    const entry = {
       table_name,
       mode,
       players: players ?? [],
       updated_at: new Date().toISOString(),
-    });
+    };
+    this.liveScores.set(table_name, entry);
+
+    // Broadcast update to scoreboard device and web CMS via MQTT if table has device_code
+    try {
+      if (this.mqttService) {
+        const table = await this.tableRepo.findOne({ where: { name: table_name } });
+        if (table?.device_code) {
+          // 1. Gửi lệnh điều khiển tới thiết bị bảng điểm tại bàn
+          const controlTopic = `azpool/scoreboard/${table.device_code}/control`;
+          this.mqttService.publish(controlTopic, {
+            action: 'update_players',
+            players: players ?? [],
+          });
+
+          // 2. Gửi trạng thái mới tới Web CMS LiveScores
+          const stateTopic = `azpool/scoreboard/${table.device_code}/state`;
+          this.mqttService.publish(stateTopic, {
+            table_name,
+            mode: mode || (players?.length > 2 ? 'multi' : 'two'),
+            players: players ?? [],
+            updated_at: entry.updated_at,
+          });
+
+          this.logger.log(`Synced score to scoreboard device & CMS for ${table.device_code} (${table_name}) via MQTT`);
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to push live score to MQTT: ${err.message}`);
+    }
+
     return { ok: true };
   }
 
