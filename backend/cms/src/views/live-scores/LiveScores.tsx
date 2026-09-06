@@ -261,7 +261,7 @@ const LiveScores = () => {
       const res = await liveScoreAPI.getAll();
       const raw = res.data ?? {};
       const list = Object.values(raw).sort((a, b) =>
-        a.table_name.localeCompare(b.table_name, 'vi'),
+        a.table_name.localeCompare(b.table_name, 'vi', { numeric: true, sensitivity: 'base' }),
       );
       setTables(list);
       setLastUpdated(new Date());
@@ -301,7 +301,10 @@ const LiveScores = () => {
 
     client.on('message', (topic, message) => {
       try {
-        const payload = JSON.parse(message.toString());
+        let payload = JSON.parse(message.toString());
+        if (payload && payload.data && typeof payload.data === 'object' && !payload.players && !payload.status) {
+          payload = payload.data;
+        }
         const topicParts = topic.split('/');
         const deviceCode = topicParts[2];
         const type = topicParts[3]; // 'state' or 'status'

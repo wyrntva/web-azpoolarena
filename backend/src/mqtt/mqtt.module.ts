@@ -16,6 +16,11 @@ import { MqttController } from './mqtt.controller';
           options: {
             url: config.get<string>('MQTT_URL', 'mqtt://localhost:1883'),
             clientId: `azpool-publisher-${Date.now()}`,
+            serializer: {
+              serialize(value: any) {
+                return value?.data !== undefined ? value.data : value;
+              },
+            },
           },
         }),
       },

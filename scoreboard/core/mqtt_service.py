@@ -176,6 +176,8 @@ class ScoreboardMqttService(QObject):
             return
 
         print(f"[MQTT] Received command: {payload}")
+        if isinstance(payload, dict) and "data" in payload and isinstance(payload["data"], dict) and "action" not in payload:
+            payload = payload["data"]
         action = payload.get("action")
         if not action:
             return
