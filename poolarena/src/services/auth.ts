@@ -7,4 +7,5 @@ export const authService = {
   verifyOtp: authAPI.verifyOtp,
   resetPassword: authAPI.resetPassword,
   profile: authAPI.profile,
+  updateProfile: authAPI.updateProfile,
 };

@@ -103,7 +103,17 @@ const PlayerRow = memo(function PlayerRow({
 
             {/* Mobile: Stacked Details */}
             <div className="flex md:hidden flex-1 flex-col justify-start min-w-0">
-              <h3 className="text-base font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h3 className="text-base font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
+                {player.is_phone_verified && (
+                  <span title="Tài khoản đã xác thực" className="inline-flex shrink-0">
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                      <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                )}
+              </div>
               <span className="text-xs font-medium text-gray-400 mt-0.5">
                 {formatFullLevel(player.rank)}
               </span>
@@ -115,7 +125,17 @@ const PlayerRow = memo(function PlayerRow({
             {/* Desktop: Standard Layout */}
             <div className="hidden md:flex flex-1 items-center justify-between min-w-0">
               <div className="flex flex-col justify-center min-w-0">
-                <h3 className="text-xl font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <h3 className="text-xl font-bold text-gray-800 m-0 leading-tight truncate">{player.full_name}</h3>
+                  {player.is_phone_verified && (
+                    <span title="Tài khoản đã xác thực" className="inline-flex shrink-0">
+                      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                        <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
                 <span className="text-base font-medium text-gray-400 mt-1">
                   {formatFullLevel(player.rank)}
                 </span>
@@ -144,7 +164,17 @@ const PlayerRow = memo(function PlayerRow({
           </div>
           {/* Name & Rank Stacked */}
           <div className="flex-1 flex flex-col justify-center min-w-0">
-            <h3 className="text-[18px] font-bold text-gray-800 m-0 truncate leading-snug">{player.full_name}</h3>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h3 className="text-[18px] font-bold text-gray-800 m-0 truncate leading-snug">{player.full_name}</h3>
+              {player.is_phone_verified && (
+                <span title="Tài khoản đã xác thực" className="inline-flex shrink-0">
+                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                    <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              )}
+            </div>
             <span className="text-sm font-medium text-gray-400 mt-0.5">
               {formatFullLevel(player.rank)}
             </span>
@@ -165,7 +195,17 @@ const PlayerRow = memo(function PlayerRow({
           <span className="font-bold italic text-[#575E70] text-[18px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>{index + 1}</span>
         </div>
         <div className="flex-1 flex flex-col justify-center ml-4 min-w-0">
-          <h3 className="text-base font-bold text-gray-800 m-0 truncate">{player.full_name}</h3>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h3 className="text-base font-bold text-gray-800 m-0 truncate">{player.full_name}</h3>
+            {player.is_phone_verified && (
+              <span title="Tài khoản đã xác thực" className="inline-flex shrink-0">
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                  <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            )}
+          </div>
           <span className="text-xs text-gray-400">
             {formatFullLevel(player.rank)}
           </span>

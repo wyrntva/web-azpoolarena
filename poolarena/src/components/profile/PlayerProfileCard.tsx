@@ -235,8 +235,16 @@ export default function PlayerProfileCard({ user }: PlayerProfileCardProps) {
                 <div className="w-full lg:w-[674px] bg-[#172339] text-white p-12 lg:p-12 h-auto lg:h-full flex flex-col rounded-2xl lg:rounded-none lg:rounded-tr-2xl lg:rounded-br-2xl shadow-sm">
                     {/* Player Name and Rank */}
                     <div className="mb-0">
-                        <h1 className="text-white mb-1.5 text-2xl sm:text-4xl font-bold italic uppercase tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                            {user.fullName || user.full_name || "Tên Người Chơi"}
+                        <h1 className="text-white mb-1.5 text-2xl sm:text-4xl font-bold italic uppercase tracking-wide flex items-center gap-2 flex-wrap" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                            <span>{user.fullName || user.full_name || "Tên Người Chơi"}</span>
+                            {(user.is_phone_verified || user.isPhoneVerified) && (
+                                <span title="Tài khoản đã xác thực" className="inline-flex shrink-0">
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                                        <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </span>
+                            )}
                         </h1>
                         <div className="flex items-center space-x-3 text-sm sm:text-lg mb-4">
                             <span className="font-semibold text-white">

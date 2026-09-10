@@ -62,6 +62,9 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 10, nullable: true })
   gender: string;
 
+  @Column({ type: 'date', nullable: true })
+  birthday: string;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   address: string;
 

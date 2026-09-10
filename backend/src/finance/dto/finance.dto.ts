@@ -49,12 +49,14 @@ export class CreateRevenueDto {
   @IsDateString() revenue_date: string;
   @IsOptional() @IsNumber() cash_revenue?: number;
   @IsOptional() @IsNumber() bank_revenue?: number;
+  @IsOptional() @IsNumber() system_revenue?: number;
   @IsOptional() @IsString() note?: string;
 }
 
 export class UpdateRevenueDto {
   @IsOptional() @IsNumber() cash_revenue?: number;
   @IsOptional() @IsNumber() bank_revenue?: number;
+  @IsOptional() @IsNumber() system_revenue?: number;
   @IsOptional() @IsString() note?: string;
 }
 

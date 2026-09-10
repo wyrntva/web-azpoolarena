@@ -2,6 +2,7 @@ import { UserGender, UserRank, User } from "./user.types";
 export interface RegisterFormData {
   fullName: string;
   gender?: UserGender;
+  birthday: string;
   address?: string;
   rank?: UserRank;
   phoneNumber: string;

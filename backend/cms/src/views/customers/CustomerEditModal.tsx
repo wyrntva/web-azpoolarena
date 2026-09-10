@@ -22,9 +22,11 @@ interface CustomerFormData {
     phone_number: string;
     email: string;
     gender: string;
+    birthday: string;
     rank: string;
     address: string;
     is_active: boolean;
+    is_phone_verified: boolean;
     points: number;
     avatar_url: string;
     tiktok_url: string;
@@ -37,9 +39,11 @@ const DEFAULT_FORM_DATA: CustomerFormData = {
     phone_number: '',
     email: '',
     gender: '',
+    birthday: '',
     rank: '',
     address: '',
     is_active: true,
+    is_phone_verified: false,
     points: 0,
     avatar_url: '',
     tiktok_url: '',
@@ -52,6 +56,19 @@ const SOCIAL_FIELDS: { id: keyof CustomerFormData; label: string; placeholder: s
     { id: 'facebook_url', label: 'Facebook URL', placeholder: 'https://facebook.com/username' },
     { id: 'instagram_url', label: 'Instagram URL', placeholder: 'https://instagram.com/username' },
 ];
+
+export const getMissingVerificationFields = (data: CustomerFormData): string[] => {
+    const missing: string[] = [];
+    if (!data.full_name || !data.full_name.trim()) missing.push('Họ và tên');
+    if (!data.phone_number || !data.phone_number.trim()) missing.push('Số điện thoại');
+    if (!data.email || !data.email.trim()) missing.push('Email');
+    if (!data.gender || !data.gender.trim()) missing.push('Giới tính');
+    if (!data.rank || !data.rank.trim()) missing.push('Level');
+    if (data.points === undefined || data.points === null || isNaN(Number(data.points))) missing.push('Điểm');
+    if (!data.birthday || !data.birthday.trim()) missing.push('Ngày sinh');
+    if (!data.is_active) missing.push('Trạng thái (Hoạt động)');
+    return missing;
+};
 
 interface CustomerEditModalProps {
     open: boolean;
@@ -68,6 +85,7 @@ interface CustomerEditModalProps {
 const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: CustomerEditModalProps) => {
     const [formData, setFormData] = useState<CustomerFormData>(DEFAULT_FORM_DATA);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [resettingPassword, setResettingPassword] = useState(false);
     const [cropModalOpen, setCropModalOpen] = useState(false);
     const [selectedImageSrc, setSelectedImageSrc] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,9 +100,11 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
             phone_number: customer.phone_number,
             email: customer.email || '',
             gender: customer.gender || '',
+            birthday: customer.birthday ? customer.birthday.slice(0, 10) : '',
             rank: customer.rank || '',
             address: customer.address || '',
             is_active: customer.is_active,
+            is_phone_verified: Boolean(customer.is_phone_verified),
             points: customer.points ?? 0,
             avatar_url: customer.avatar_url || '',
             tiktok_url: customer.tiktok_url || '',
@@ -136,6 +156,25 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
         }
     };
 
+    // --- Reset Password ---
+
+    const handleResetPassword = async () => {
+        if (!customer) return;
+        if (!window.confirm(`Bạn có chắc chắn muốn đặt lại mật khẩu của khách hàng "${customer.full_name}" về mặc định (poolarenavn)?`)) {
+            return;
+        }
+        setResettingPassword(true);
+        try {
+            await poolArenaUserAPI.resetPassword(customer.id);
+            toast.success('Đặt lại mật khẩu thành công! Mật khẩu mới: poolarenavn');
+        } catch (error) {
+            const detail = (error as { response?: { data?: { detail?: string; message?: string } } })?.response?.data;
+            toast.error(detail?.detail || detail?.message || 'Đặt lại mật khẩu thất bại');
+        } finally {
+            setResettingPassword(false);
+        }
+    };
+
     // --- Submit ---
 
     const handleSubmit = async (e: FormEvent) => {
@@ -144,15 +183,24 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
         if (!formData.full_name || !formData.phone_number) {
             toast.error('Vui lòng điền đầy đủ thông tin'); return;
         }
+        if (formData.is_phone_verified) {
+            const missing = getMissingVerificationFields(formData);
+            if (missing.length > 0) {
+                toast.error(`Không thể xác thực tài khoản. Vui lòng bổ sung: ${missing.join(', ')}`);
+                return;
+            }
+        }
         try {
             await poolArenaUserAPI.updateUser(customer.id, {
                 full_name: formData.full_name,
                 phone_number: formData.phone_number,
                 email: formData.email || null,
                 gender: formData.gender || null,
+                birthday: formData.birthday || null,
                 rank: formData.rank || null,
                 address: formData.address || null,
                 is_active: formData.is_active,
+                is_phone_verified: formData.is_phone_verified,
                 points: formData.points,
                 avatar_url: formData.avatar_url || null,
                 tiktok_url: formData.tiktok_url || null,
@@ -239,6 +287,15 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
                                 onChange={(e) => update('points', Number(e.target.value))} />
                         </div>
                         <div>
+                            <Label htmlFor="birthday" value="Ngày sinh" />
+                            <TextInput
+                                id="birthday"
+                                type="date"
+                                value={formData.birthday}
+                                onChange={(e) => update('birthday', e.target.value)}
+                            />
+                        </div>
+                        <div>
                             <Label htmlFor="is_active" value="Trạng thái" />
                             <Select id="is_active" value={formData.is_active.toString()}
                                 onChange={(e) => update('is_active', e.target.value === 'true')}>
@@ -250,6 +307,65 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
                             <Label htmlFor="address" value="Địa chỉ" />
                             <TextInput id="address" value={formData.address}
                                 onChange={(e) => update('address', e.target.value)} />
+                        </div>
+
+                        {/* Verified Account Section */}
+                        <div className="md:col-span-2 p-3.5 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <div className="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-gray-200">
+                                        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                                            <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                        <span>Tài khoản xác thực</span>
+                                        {formData.is_phone_verified && (
+                                            <span className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1 border border-blue-200 dark:border-blue-800">
+                                                <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none">
+                                                    <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                                                    <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                Đã có tích xanh
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {getMissingVerificationFields(formData).length > 0 ? (
+                                            <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                                * Cần điền đủ các mục để chọn xác thực: {getMissingVerificationFields(formData).join(', ')}
+                                            </span>
+                                        ) : (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                                ✓ Đã đủ thông tin để kích hoạt tài khoản xác thực (tích xanh)
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
+                                <div className="shrink-0 w-full sm:w-48">
+                                    <Select
+                                        id="is_phone_verified"
+                                        value={formData.is_phone_verified ? 'true' : 'false'}
+                                        onChange={(e) => {
+                                            const willVerify = e.target.value === 'true';
+                                            if (willVerify) {
+                                                const missing = getMissingVerificationFields(formData);
+                                                if (missing.length > 0) {
+                                                    toast.error(`Chưa thể xác thực! Cần điền đầy đủ: ${missing.join(', ')}`, {
+                                                        duration: 4500,
+                                                    });
+                                                    return;
+                                                }
+                                            }
+                                            update('is_phone_verified', willVerify);
+                                        }}
+                                    >
+                                        <option value="false">Chưa xác thực</option>
+                                        <option value="true" disabled={getMissingVerificationFields(formData).length > 0}>
+                                            Xác thực (Tích xanh) {getMissingVerificationFields(formData).length > 0 ? '— Chưa đủ thông tin' : ''}
+                                        </option>
+                                    </Select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -270,6 +386,35 @@ const CustomerEditModal = ({ open, onClose, customer, ranks, onSaved }: Customer
                                     />
                                 </div>
                             ))}
+                        </div>
+                    </div>
+
+                    {/* Password Reset Section */}
+                    <div className="border-t pt-4 mt-2">
+                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                            <Icon icon="solar:shield-keyhole-outline" className="text-base text-amber-500" />
+                            Mật khẩu tài khoản
+                        </h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                            <div>
+                                <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                                    Đặt lại mật khẩu mặc định
+                                </p>
+                                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                                    Mật khẩu của khách hàng sẽ được đặt lại về mặc định: <span className="font-mono font-bold bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 rounded text-amber-800 dark:text-amber-200">poolarenavn</span>
+                                </p>
+                            </div>
+                            <Button
+                                type="button"
+                                color="warning"
+                                size="sm"
+                                onClick={handleResetPassword}
+                                disabled={resettingPassword}
+                                className="shrink-0"
+                            >
+                                <Icon icon="solar:restart-bold" className="mr-1.5 text-base" />
+                                {resettingPassword ? 'Đang đặt lại...' : 'Reset mật khẩu'}
+                            </Button>
                         </div>
                     </div>
 

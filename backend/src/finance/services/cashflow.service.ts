@@ -34,6 +34,16 @@ export class CashflowService {
   ) {}
 
   // ================= Revenues =================
+  async findRevenues(startDate?: string, endDate?: string, limit?: number, skip?: number) {
+    const qb = this.revRepo.createQueryBuilder('r').orderBy('r.revenue_date', 'DESC');
+    if (startDate) qb.andWhere('r.revenue_date >= :startDate', { startDate });
+    if (endDate) qb.andWhere('r.revenue_date <= :endDate', { endDate });
+    if (skip) qb.skip(skip);
+    if (limit) qb.take(limit);
+    const [items, total] = await qb.getManyAndCount();
+    return { data: items, total };
+  }
+
   async findRevenueByDate(date: string) {
     const d = moment(date).format('YYYY-MM-DD');
     return this.revRepo.findOne({
@@ -53,23 +63,33 @@ export class CashflowService {
       .getMany();
   }
 
-  async upsertRevenue(
-    dto: CreateRevenueDto | UpdateRevenueDto,
-    date: string,
-    userId: number,
-  ) {
-    const d = moment(date).format('YYYY-MM-DD');
+  async createRevenue(dto: CreateRevenueDto, userId: number) {
+    const d = moment(dto.revenue_date).format('YYYY-MM-DD');
     let rev = await this.revRepo.findOne({ where: { revenue_date: d } });
     if (!rev) {
       rev = this.revRepo.create({
+        ...dto,
         revenue_date: d,
         created_by: userId,
-        ...dto,
       });
     } else {
       Object.assign(rev, dto);
     }
     return this.revRepo.save(rev);
+  }
+
+  async updateRevenue(id: number, dto: UpdateRevenueDto) {
+    const rev = await this.revRepo.findOne({ where: { id } });
+    if (!rev) throw new NotFoundException('Revenue not found');
+    Object.assign(rev, dto);
+    return this.revRepo.save(rev);
+  }
+
+  async deleteRevenue(id: number) {
+    const rev = await this.revRepo.findOne({ where: { id } });
+    if (!rev) throw new NotFoundException('Revenue not found');
+    await this.revRepo.remove(rev);
+    return null;
   }
 
   // ================= Exchanges =================
@@ -100,14 +120,66 @@ export class CashflowService {
     return this.safeRepo.save(safe);
   }
 
-  async findSafes(startDate?: string, endDate?: string) {
+  async findSafes(startDate?: string, endDate?: string, month?: number, year?: number) {
     const qb = this.safeRepo
       .createQueryBuilder('s')
       .leftJoinAndSelect('s.created_by_user', 'creator')
       .orderBy('s.safe_date', 'DESC');
     if (startDate) qb.andWhere('s.safe_date >= :startDate', { startDate });
     if (endDate) qb.andWhere('s.safe_date <= :endDate', { endDate });
+    if (year && month) {
+      const monthStr = month.toString().padStart(2, '0');
+      const startOfMonth = `${year}-${monthStr}-01`;
+      const nextMonth = month === 12 ? 1 : month + 1;
+      const nextYear = month === 12 ? year + 1 : year;
+      const nextMonthStr = nextMonth.toString().padStart(2, '0');
+      const startOfNextMonth = `${nextYear}-${nextMonthStr}-01`;
+      qb.andWhere('s.safe_date >= :startOfMonth AND s.safe_date < :startOfNextMonth', {
+        startOfMonth,
+        startOfNextMonth,
+      });
+    }
     return qb.getMany();
+  }
+
+  async getSafeBalance(month?: number, year?: number) {
+    const qb = this.safeRepo.createQueryBuilder('s');
+    if (year && month) {
+      const monthStr = month.toString().padStart(2, '0');
+      const startOfMonth = `${year}-${monthStr}-01`;
+      const nextMonth = month === 12 ? 1 : month + 1;
+      const nextYear = month === 12 ? year + 1 : year;
+      const nextMonthStr = nextMonth.toString().padStart(2, '0');
+      const startOfNextMonth = `${nextYear}-${nextMonthStr}-01`;
+      qb.andWhere('s.safe_date >= :startOfMonth AND s.safe_date < :startOfNextMonth', {
+        startOfMonth,
+        startOfNextMonth,
+      });
+    }
+
+    const latestSafe = await qb.orderBy('s.safe_date', 'DESC').addOrderBy('s.id', 'DESC').getOne();
+
+    const sumQb = this.safeRepo.createQueryBuilder('s');
+    if (year && month) {
+      const monthStr = month.toString().padStart(2, '0');
+      const startOfMonth = `${year}-${monthStr}-01`;
+      const nextMonth = month === 12 ? 1 : month + 1;
+      const nextYear = month === 12 ? year + 1 : year;
+      const nextMonthStr = nextMonth.toString().padStart(2, '0');
+      const startOfNextMonth = `${nextYear}-${nextMonthStr}-01`;
+      sumQb.andWhere('s.safe_date >= :startOfMonth AND s.safe_date < :startOfNextMonth', {
+        startOfMonth,
+        startOfNextMonth,
+      });
+    }
+
+    const totalAmount = await sumQb.select('SUM(s.amount)', 'total').getRawOne();
+    const balance = latestSafe ? latestSafe.amount : (parseFloat(totalAmount?.total) || 0);
+
+    return {
+      balance: balance || 0,
+      bank_balance: 0,
+    };
   }
 
   async deleteSafe(id: number) {
@@ -122,12 +194,15 @@ export class CashflowService {
     return this.debtRepo.save(debt);
   }
 
-  async findDebts(isPaid?: boolean) {
+  async findDebts(isPaid?: boolean, startDate?: string, endDate?: string) {
     const qb = this.debtRepo
       .createQueryBuilder('d')
       .leftJoinAndSelect('d.created_by_user', 'creator')
-      .orderBy('d.created_at', 'DESC');
+      .orderBy('d.debt_date', 'DESC')
+      .addOrderBy('d.created_at', 'DESC');
     if (isPaid !== undefined) qb.andWhere('d.is_paid = :isPaid', { isPaid });
+    if (startDate) qb.andWhere('d.debt_date >= :startDate', { startDate });
+    if (endDate) qb.andWhere('d.debt_date <= :endDate', { endDate });
     return qb.getMany();
   }
 

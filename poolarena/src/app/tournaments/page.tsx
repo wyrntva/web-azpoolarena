@@ -187,7 +187,7 @@ export default function TournamentsPage() {
     <div className="min-h-screen bg-[#F0F2F4]">
       <NavBar />
 
-      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pb-[100px]">
+      <main className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-0 pt-4 sm:pt-6 pb-[100px]">
         <h1 className="sr-only">
           Giải đấu bida Poolarena VietNam
         </h1>
@@ -196,13 +196,11 @@ export default function TournamentsPage() {
           <>
             <BannerSkeleton />
             <div className="mt-6 sm:mt-12">
-              <Row gutter={[24, 24]}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Col xs={24} sm={12} xl={8} key={i}>
-                    <TournamentCardSkeleton />
-                  </Col>
+                  <TournamentCardSkeleton key={i} />
                 ))}
-              </Row>
+              </div>
             </div>
           </>
         ) : (
@@ -210,7 +208,7 @@ export default function TournamentsPage() {
             {/* Tournament Banner — mobile: 361×74 ratio, scales up on larger screens */}
             {bannerUrls.length > 0 && (
               <div
-                className="mb-6 sm:mb-12 mt-4 sm:mt-6 relative w-full rounded-xl overflow-hidden"
+                className="mb-6 sm:mb-12 relative w-full rounded-xl overflow-hidden"
                 style={{ aspectRatio: '361 / 74' }}
               >
                 {bannerUrls.map((url, index) => (

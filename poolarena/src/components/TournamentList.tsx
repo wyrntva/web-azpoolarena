@@ -19,49 +19,35 @@ interface TournamentListProps {
   delayOffset?: number;
 }
 
-// Memoize component để tránh re-render không cần thiết
 const TournamentList = memo(function TournamentList({
   tournaments,
   variant,
   onCardClick,
   onRegister,
   onViewResults,
-  gridConfig = {
-    xs: 24,
-    sm: 12,
-    xl: 8
-  },
   delayOffset = 0
 }: TournamentListProps) {
   return (
-    <Row gutter={[24, 24]}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
       {tournaments.map((tournament, index) => (
-        <Col
-          xs={gridConfig.xs}
-          sm={gridConfig.sm}
-          lg={gridConfig.lg}
-          xl={gridConfig.xl}
+        <div
           key={tournament.id}
+          className="w-full animate-slideInFromLeft"
+          style={{
+            animationDelay: `${Math.min((delayOffset + index) * 80, 1600)}ms`,
+            animationFillMode: 'backwards'
+          }}
         >
-          {/* Sử dụng CSS animation thay vì framer-motion để giảm bundle size và cải thiện performance */}
-          <div
-            className="animate-slideInFromLeft"
-            style={{
-              animationDelay: `${Math.min((delayOffset + index) * 80, 1600)}ms`, // Cap delay tối đa 1600ms
-              animationFillMode: 'backwards'
-            }}
-          >
-            <TournamentCard
-              tournament={tournament}
-              variant={variant}
-              onCardClick={onCardClick}
-              onRegister={onRegister}
-              onViewResults={onViewResults}
-            />
-          </div>
-        </Col>
+          <TournamentCard
+            tournament={tournament}
+            variant={variant}
+            onCardClick={onCardClick}
+            onRegister={onRegister}
+            onViewResults={onViewResults}
+          />
+        </div>
       ))}
-    </Row>
+    </div>
   );
 });
 

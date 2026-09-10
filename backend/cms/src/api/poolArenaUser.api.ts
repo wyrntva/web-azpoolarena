@@ -19,6 +19,7 @@ interface PoolArenaUserListResponse {
 interface PoolArenaUserUpdateData {
     full_name?: string;
     gender?: string | null;
+    birthday?: string | null;
     address?: string | null;
     rank?: string | null;
     phone_number?: string;
@@ -30,6 +31,8 @@ interface PoolArenaUserUpdateData {
     tiktok_url?: string | null;
     facebook_url?: string | null;
     instagram_url?: string | null;
+    is_phone_verified?: boolean;
+    is_email_verified?: boolean;
 }
 
 export const poolArenaUserAPI = {
@@ -57,5 +60,9 @@ export const poolArenaUserAPI = {
 
     deleteAvatar: (id: number): Promise<AxiosResponse<void>> => {
         return axiosClient.delete(`/api/pool-arena/users/${id}/avatar`);
+    },
+
+    resetPassword: (id: number): Promise<AxiosResponse<{ message: string; default_password: string }>> => {
+        return axiosClient.post(`/api/pool-arena/users/${id}/reset-password`);
     },
 };

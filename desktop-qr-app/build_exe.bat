@@ -53,7 +53,7 @@ REM Step 2: Install dependencies
 REM ========================================
 echo [2/4] Installing required packages...
 echo.
-pip install --upgrade pip
+python -m pip install --upgrade pip
 pip install pyinstaller PySide6>=6.6.0 "qrcode[pil]>=7.4.2" requests>=2.31.0 python-dotenv>=1.0.0 Pillow>=10.0.0
 
 if errorlevel 1 (

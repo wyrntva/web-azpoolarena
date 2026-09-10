@@ -27,8 +27,16 @@ function LoginFormContent() {
     const resultAction = await dispatch(loginThunk({ emailOrPhone: values.phone, password: values.password }));
     // Check if fulfilled or rejected
     if (loginThunk.fulfilled.match(resultAction)) {
-      // Redirect to the page user wanted to visit or home
+      const loggedUser = resultAction.payload?.users;
       const redirectTo = searchParams.get('redirect') || '/';
+
+      // Nếu tài khoản chưa có ngày tháng năm sinh, mở hẳn ra trang /update-birthday
+      if (!loggedUser?.birthday || !String(loggedUser.birthday).trim()) {
+        router.push(`/update-birthday?redirect=${encodeURIComponent(redirectTo)}`);
+        return;
+      }
+
+      // Redirect to the page user wanted to visit or home
       router.push(redirectTo);
     } else {
       api.error({

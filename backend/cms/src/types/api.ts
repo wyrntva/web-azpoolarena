@@ -57,6 +57,7 @@ export interface PoolArenaUser {
     user_type?: 'player' | 'both';
     full_name: string;
     gender?: string | null;
+    birthday?: string | null;
     address?: string | null;
     rank?: string | null;
     phone_number: string;
@@ -114,10 +115,17 @@ export interface ReceiptType {
 
 export interface Revenue {
     id: number;
-    amount: number;
+    revenue_date: string;
+    date?: string;
+    cash_revenue: number;
+    bank_revenue: number;
+    system_revenue?: number;
+    note?: string;
     description?: string;
-    date: string;
-    created_at: string;
+    amount?: number;
+    created_at?: string;
+    updated_at?: string;
+    created_by?: number;
 }
 
 export interface Exchange {

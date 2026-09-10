@@ -128,4 +128,11 @@ export class PoolArenaController {
     await this.service.deleteAvatar(id);
     return { message: 'Avatar removed' };
   }
+
+  @Post(':id/reset-password')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'Super Admin')
+  async resetPassword(@Param('id', ParseIntPipe) id: number) {
+    return this.service.resetPassword(id);
+  }
 }

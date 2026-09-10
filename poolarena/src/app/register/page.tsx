@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Form, Input, Button, Card, Typography, Select, notification } from "antd";
+import { Form, Input, Button, Card, Typography, Select, DatePicker, notification } from "antd";
 import { useRouter } from "next/navigation";
 import { LogoSection } from "@/components/LogoSection";
 import { Footer } from "@/components/Footer";
@@ -40,7 +40,18 @@ export default function RegisterPage() {
 
     const { confirmPassword, ...registerData } = values;
 
-    const resultAction = await dispatch(registerThunk(registerData as any));
+    const formattedBirthday = (registerData as any).birthday
+      ? (typeof (registerData as any).birthday.format === "function"
+          ? (registerData as any).birthday.format("YYYY-MM-DD")
+          : String((registerData as any).birthday))
+      : "";
+
+    const payload = {
+      ...registerData,
+      birthday: formattedBirthday,
+    };
+
+    const resultAction = await dispatch(registerThunk(payload as any));
     if (registerThunk.fulfilled.match(resultAction)) {
       // Auto login after successful registration
       const loginResult = await dispatch(loginThunk({
@@ -148,6 +159,28 @@ export default function RegisterPage() {
                     <Select.Option value="female">Nữ</Select.Option>
                     <Select.Option value="other">Khác</Select.Option>
                   </Select>
+                </Form.Item>
+
+                <Form.Item
+                  name="birthday"
+                  label={
+                    <div className="text-gray-800 text-base font-semibold">
+                      Ngày tháng năm sinh
+                      <span className="text-red-500 ml-1">*</span>
+                    </div>
+                  }
+                  hasFeedback
+                  rules={[
+                    { required: true, message: "Ngày tháng năm sinh không được để trống" },
+                  ]}
+                  style={{ marginBottom: 16 }}
+                >
+                  <DatePicker
+                    placeholder="Chọn ngày tháng năm sinh"
+                    format="DD/MM/YYYY"
+                    className="w-full rounded-lg"
+                    style={{ height: 40 }}
+                  />
                 </Form.Item>
 
                 <Form.Item

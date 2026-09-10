@@ -13,6 +13,7 @@ const Reports = () => {
         {
             title: 'Tài chính',
             reports: [
+                { name: 'Báo cáo tạm tính (Real-time)', path: '/reports/temp' },
                 { name: 'Báo cáo chi phí hàng tháng', path: '/expense-report' },
                 { name: 'Báo cáo doanh thu', path: '/finance' },
             ]

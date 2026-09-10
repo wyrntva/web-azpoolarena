@@ -104,9 +104,14 @@ export class PoolArenaAuthService {
     email?: string;
     password: string;
     gender?: string;
+    birthday: string;
     address?: string;
     rank?: string;
   }) {
+    if (!data.birthday || !data.birthday.trim()) {
+      throw new BadRequestException('Ngày tháng năm sinh không được để trống');
+    }
+
     const normalizedPhone = this.normalizePhone(data.phone_number);
     const conditions: any[] = [{ phone_number: normalizedPhone }];
     if (data.email) conditions.push({ email: data.email });
@@ -132,6 +137,7 @@ export class PoolArenaAuthService {
       email: data.email || undefined,
       hashed_password: await bcrypt.hash(data.password, 10),
       gender: data.gender || undefined,
+      birthday: data.birthday ? data.birthday : undefined,
       address: data.address || undefined,
       rank: userRank,
       points: defaultPoints,
@@ -163,6 +169,35 @@ export class PoolArenaAuthService {
     }
 
     return this.strip(user);
+  }
+
+  async updateProfile(
+    auth: string,
+    data: {
+      birthday?: string;
+      full_name?: string;
+      gender?: string;
+      address?: string;
+    },
+  ) {
+    const userId = this.verifyToken(auth);
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user || !user.is_active) {
+      throw new UnauthorizedException('Không tìm thấy người dùng');
+    }
+
+    if (data.birthday !== undefined) {
+      if (!data.birthday || !data.birthday.trim()) {
+        throw new BadRequestException('Ngày tháng năm sinh không được để trống');
+      }
+      user.birthday = data.birthday;
+    }
+    if (data.full_name !== undefined) user.full_name = data.full_name;
+    if (data.gender !== undefined) user.gender = data.gender;
+    if (data.address !== undefined) user.address = data.address;
+
+    const saved = await this.userRepo.save(user);
+    return this.strip(saved);
   }
 
   async changePassword(

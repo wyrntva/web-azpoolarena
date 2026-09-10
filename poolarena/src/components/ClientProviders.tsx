@@ -6,6 +6,7 @@ import { ConfigProvider } from 'antd';
 import { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { store } from '@/stores/store';
+import FloatingContactButtons from './FloatingContactButtons';
 
 export default function ClientProviders({ children }: { children: React.ReactNode }) {
     useEffect(() => {
@@ -44,6 +45,7 @@ export default function ClientProviders({ children }: { children: React.ReactNod
                     }}
                 >
                     {children}
+                    <FloatingContactButtons />
                 </ConfigProvider>
             </Provider>
         </QueryClientProvider>

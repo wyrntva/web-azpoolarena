@@ -35,7 +35,7 @@ export default function NavBar(props?: { logoUrl?: string }) {
   };
 
   return (
-    <div className="sticky top-0 z-50 shadow-md">
+    <div className="sticky top-0 z-50 shadow-md bg-white">
       <div className="h-[4px] w-full bg-[#172339]" />
     <div className="w-full h-[46px] xl:h-[62px] bg-white relative">
 

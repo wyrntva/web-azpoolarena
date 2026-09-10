@@ -13,6 +13,7 @@ import type { PoolArenaUser, TournamentRank } from '../../types/api';
 import CustomerEditModal from './CustomerEditModal';
 import { defaultAvatar, GENDER_LABELS } from '../../constants/shared';
 import { formatFullLevel } from '../../utils/formatters';
+import { Icon } from '@iconify/react';
 
 const ITEMS_PER_PAGE = 50;
 
@@ -195,7 +196,19 @@ function CustomerRow({ customer, onEdit, onDelete }: {
                     />
                 </div>
             </Table.Cell>
-            <Table.Cell className="font-medium text-gray-900 dark:text-white">{customer.full_name}</Table.Cell>
+            <Table.Cell className="font-medium text-gray-900 dark:text-white">
+                <div className="flex items-center gap-1.5">
+                    <span>{customer.full_name}</span>
+                    {customer.is_phone_verified && (
+                        <span title="Tài khoản đã xác thực" className="inline-flex items-center shrink-0">
+                            <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="11" fill="#3793F6" />
+                                <path d="M7.5 12.3L10.5 15.3L16.5 8.8" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </span>
+                    )}
+                </div>
+            </Table.Cell>
             <Table.Cell>{customer.phone_number}</Table.Cell>
             <Table.Cell>{customer.email || '-'}</Table.Cell>
             <Table.Cell>{GENDER_LABELS[customer.gender || ''] || '-'}</Table.Cell>

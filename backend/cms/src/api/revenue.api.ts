@@ -10,16 +10,22 @@ interface RevenueQueryParams {
     limit?: number;
 }
 
-interface CreateRevenueData {
-    amount: number;
+export interface CreateRevenueData {
+    revenue_date: string;
+    cash_revenue?: number;
+    bank_revenue?: number;
+    system_revenue?: number;
+    note?: string;
+    // Backwards compatibility
+    amount?: number;
     description?: string;
-    date: string;
+    date?: string;
 }
 
-type UpdateRevenueData = Partial<CreateRevenueData>;
+export type UpdateRevenueData = Partial<CreateRevenueData>;
 
 export const revenueAPI = {
-    getRevenues: (params?: RevenueQueryParams): Promise<AxiosResponse<PaginatedResponse<Revenue>>> => {
+    getRevenues: (params?: RevenueQueryParams): Promise<AxiosResponse<PaginatedResponse<Revenue> | Revenue[]>> => {
         return axiosClient.get('/api/revenues', { params });
     },
 
@@ -28,7 +34,7 @@ export const revenueAPI = {
     },
 
     getRevenueByDate: (date: string): Promise<AxiosResponse<Revenue>> => {
-        return axiosClient.get(`/api/revenues/by-date/${date}`);
+        return axiosClient.get(`/api/revenues/${date}`);
     },
 
     createRevenue: (data: CreateRevenueData): Promise<AxiosResponse<Revenue>> => {
@@ -36,7 +42,7 @@ export const revenueAPI = {
     },
 
     updateRevenue: (id: number, data: UpdateRevenueData): Promise<AxiosResponse<Revenue>> => {
-        return axiosClient.patch(`/api/revenues/${id}`, data);
+        return axiosClient.put(`/api/revenues/${id}`, data);
     },
 
     deleteRevenue: (id: number): Promise<AxiosResponse<void>> => {

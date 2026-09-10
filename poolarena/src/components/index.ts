@@ -19,3 +19,5 @@ export { MatchManagementModal } from './MatchManagementModal';
 export { default as MatchRow } from './MatchRow';
 export { RoundSection } from './RoundSection';
 export { RegisterTournamentModal } from './RegisterTournamentModal';
+export { default as ChatBox } from './ChatBox';
+export { default as FloatingContactButtons } from './FloatingContactButtons';

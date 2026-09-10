@@ -5,6 +5,13 @@ import urllib.request
 import urllib.error
 import json
 import time
+import urllib.parse
+
+try:
+    import paho.mqtt.client as mqtt
+    MQTT_AVAILABLE = True
+except ImportError:
+    MQTT_AVAILABLE = False
 
 # Ép buộc Qt6 sử dụng công cụ dựng hình bằng phần mềm (Software Rendering)
 # Giúp OBS dễ dàng bắt hình ảnh (Window Capture) mà không bị lỗi màn hình đen do tăng tốc phần cứng GPU.
@@ -22,7 +29,18 @@ from PyQt6.QtCore import Qt, QPoint, pyqtSignal, QSize, QRect, QThread, QTimer
 PLAYER_COLORS = ["#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c", "#e67e22", "#34495e"]
 
 # Thư mục chứa tài nguyên
-ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+if getattr(sys, 'frozen', False):
+    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+    exe_assets = os.path.join(os.path.dirname(sys.executable), "assets")
+    bundle_assets = os.path.join(BASE_DIR, "assets")
+    if os.path.exists(exe_assets):
+        ASSETS_DIR = exe_assets
+    elif os.path.exists(bundle_assets):
+        ASSETS_DIR = bundle_assets
+    else:
+        ASSETS_DIR = exe_assets
+else:
+    ASSETS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
 
 def generate_default_assets():
     """Tự động tạo các tệp tài nguyên mặc định nếu chưa tồn tại."""
@@ -103,62 +121,139 @@ def generate_default_assets():
 
 
 class LiveScoreReceiver(QThread):
-    """Thread nền poll API backend để nhận tỉ số realtime từ bảng điểm."""
+    """Thread nhận tỉ số realtime: ưu tiên MQTT qua WebSocket (tức thì 0.05s), fallback HTTP polling."""
     score_received = pyqtSignal(dict)
-    status_changed = pyqtSignal(str)  # "connected", "error: ...", "stopped"
+    status_changed = pyqtSignal(str)  # "Đã kết nối (MQTT)", "Lỗi: ...", "stopped"
 
-    def __init__(self, api_url: str, table_name: str, interval: int = 2):
+    def __init__(self, api_url: str, table_name: str, device_code: str = "", interval: int = 2):
         super().__init__()
         self.api_url = api_url.rstrip("/")
         self.table_name = table_name
+        self.device_code = device_code
         self.interval = interval
         self._running = False
         self._last_updated_at = None
+        self._mqtt_client = None
+
+    def publish_control(self, players: list):
+        """Bắn lệnh điều khiển tỉ số trực tiếp xuống bảng điểm tại bàn qua MQTT (tức thì 0.05s)."""
+        if self._mqtt_client and self.device_code:
+            try:
+                topic = f"azpool/scoreboard/{self.device_code}/control"
+                payload = json.dumps({"action": "update_players", "players": players})
+                self._mqtt_client.publish(topic, payload, qos=1)
+            except Exception as e:
+                print(f"[MQTT] Publish error: {e}")
 
     def run(self):
         self._running = True
         self.status_changed.emit("Đang kết nối...")
-        while self._running:
+
+        mqtt_connected = False
+        if MQTT_AVAILABLE and self.device_code:
             try:
-                encoded_name = urllib.request.quote(self.table_name, safe="")
-                url = f"{self.api_url}/api/tournaments/device/live-score?table_name={encoded_name}"
-                req = urllib.request.Request(url, headers={"User-Agent": "LiveScore-OBS/1.0"})
-                with urllib.request.urlopen(req, timeout=4) as resp:
-                    raw = resp.read().decode("utf-8")
-                    data = json.loads(raw)
+                parsed = urllib.parse.urlparse(self.api_url)
+                host = parsed.hostname or "cms.poolarena.vn"
+                self._mqtt_client = mqtt.Client(
+                    callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+                    transport="websockets"
+                )
+                self._mqtt_client.ws_set_options(path="/mqtt")
+                self._mqtt_client.tls_set()
 
-                # API trả về dict {table_name: {...}} hoặc list hoặc single object
-                if isinstance(data, dict) and "table_name" not in data:
-                    data = data.get(self.table_name)
-                elif isinstance(data, list):
-                    data = next((d for d in data if d.get("table_name") == self.table_name), None)
+                def on_connect(cl, userdata, flags, rc, properties=None):
+                    topic = f"azpool/scoreboard/{self.device_code}/state"
+                    cl.subscribe(topic, qos=1)
+                    self.status_changed.emit("Đã kết nối (Real-time MQTT)")
 
-                if data and isinstance(data, dict):
-                    players = data.get("players") or []
-                    if len(players) >= 2:
-                        updated_at = data.get("updated_at", "")
-                        if updated_at != self._last_updated_at:
-                            self._last_updated_at = updated_at
-                            self.score_received.emit(data)
-                        self.status_changed.emit("Đã kết nối")
-                    else:
-                        self.status_changed.emit("Bàn chưa có trận đang chơi")
-                else:
-                    self.status_changed.emit("Không nhận được dữ liệu từ bàn này")
+                def on_message(cl, userdata, msg):
+                    try:
+                        raw = msg.payload.decode("utf-8")
+                        payload = json.loads(raw)
+                        if isinstance(payload, dict) and "data" in payload and isinstance(payload["data"], dict) and "action" not in payload:
+                            payload = payload["data"]
+                        if payload and isinstance(payload, dict):
+                            players = payload.get("players") or []
+                            if len(players) >= 2:
+                                updated_at = payload.get("updated_at", "")
+                                if updated_at != self._last_updated_at:
+                                    self._last_updated_at = updated_at
+                                    self.score_received.emit(payload)
+                    except Exception as e:
+                        print(f"[MQTT] on_message error: {e}")
 
-            except urllib.error.URLError as e:
-                self.status_changed.emit(f"Lỗi: {e.reason}")
+                def on_disconnect(cl, userdata, flags, rc, properties=None):
+                    if self._running:
+                        self.status_changed.emit("Mất kết nối MQTT — đang kết nối lại...")
+
+                self._mqtt_client.on_connect = on_connect
+                self._mqtt_client.on_message = on_message
+                self._mqtt_client.on_disconnect = on_disconnect
+
+                self._mqtt_client.connect_async(host, 443, keepalive=30)
+                self._mqtt_client.loop_start()
+                mqtt_connected = True
             except Exception as e:
-                self.status_changed.emit(f"Lỗi: {str(e)[:60]}")
+                print(f"[MQTT] Connection setup failed: {e}")
+                mqtt_connected = False
 
-            # Ngủ theo từng 100ms để có thể dừng nhanh
+        while self._running:
+            if not mqtt_connected:
+                self._poll_http()
+
             for _ in range(self.interval * 10):
                 if not self._running:
                     break
                 QThread.msleep(100)
 
+        if self._mqtt_client:
+            try:
+                self._mqtt_client.loop_stop()
+                self._mqtt_client.disconnect()
+            except Exception:
+                pass
+            self._mqtt_client = None
+
+    def _poll_http(self):
+        try:
+            encoded_name = urllib.request.quote(self.table_name, safe="")
+            url = f"{self.api_url}/api/tournaments/device/live-score?table_name={encoded_name}"
+            req = urllib.request.Request(url, headers={"User-Agent": "LiveScore-OBS/1.0"})
+            with urllib.request.urlopen(req, timeout=4) as resp:
+                raw = resp.read().decode("utf-8")
+                data = json.loads(raw)
+
+            if isinstance(data, dict) and "table_name" not in data:
+                data = data.get(self.table_name)
+            elif isinstance(data, list):
+                data = next((d for d in data if d.get("table_name") == self.table_name), None)
+
+            if data and isinstance(data, dict):
+                players = data.get("players") or []
+                if len(players) >= 2:
+                    updated_at = data.get("updated_at", "")
+                    if updated_at != self._last_updated_at:
+                        self._last_updated_at = updated_at
+                        self.score_received.emit(data)
+                    self.status_changed.emit("Đã kết nối")
+                else:
+                    self.status_changed.emit("Bàn chưa có trận đang chơi")
+            else:
+                self.status_changed.emit("Không nhận được dữ liệu từ bàn này")
+        except urllib.error.URLError as e:
+            self.status_changed.emit(f"Lỗi: {e.reason}")
+        except Exception as e:
+            self.status_changed.emit(f"Lỗi: {str(e)[:60]}")
+
     def stop(self):
         self._running = False
+        if self._mqtt_client:
+            try:
+                self._mqtt_client.loop_stop()
+                self._mqtt_client.disconnect()
+            except Exception:
+                pass
+            self._mqtt_client = None
 
 
 class ScoreboardOverlay(QWidget):
@@ -194,7 +289,12 @@ class ScoreboardOverlay(QWidget):
         opacity = cfg.get("opacity", 1.0)
         self.setWindowOpacity(opacity)
         
-        self.resize(1000, 200)
+        players = cfg.get("players", [])
+        if len(players) > 2:
+            needed_h = 44 + len(players) * 46 + 40
+            self.resize(1000, max(200, needed_h))
+        else:
+            self.resize(1000, 200)
         
         self.update()
 
@@ -893,9 +993,9 @@ class ScoreboardOverlay(QWidget):
         w = 700
         total_h = header_h + n * row_h + 8
 
-        # Căn giữa theo chiều dọc trong widget 200px
-        x = (1000 - w) // 2
-        y = max(6, (200 - total_h) // 2)
+        # Căn giữa theo kích thước thực tế của widget
+        x = (self.width() - w) // 2
+        y = max(10, (self.height() - total_h) // 2)
 
         theme_color = QColor(cfg["theme_color"])
 
@@ -1212,7 +1312,15 @@ class ControlPanel(QMainWindow):
     def init_variables(self):
         self.receiver = None
         self._receiving = False
+        self.table_device_map = {}
         self.player_rows = []  # list of {widget, name_input, score_spin, color}
+        self._last_user_edit_time = 0.0
+
+        # Timer debounce để gửi tỉ số lên server khi người dùng bấm sửa trên LiveScore
+        self._sync_debounce_timer = QTimer(self)
+        self._sync_debounce_timer.setSingleShot(True)
+        self._sync_debounce_timer.setInterval(350)
+        self._sync_debounce_timer.timeout.connect(self._push_score_to_server)
 
         self.default_avatar = os.path.join(ASSETS_DIR, "default_avatar.png")
         self.default_flag = os.path.join(ASSETS_DIR, "flag_vn.png")
@@ -1415,9 +1523,9 @@ class ControlPanel(QMainWindow):
         # Tự động fetch danh sách bàn khi khởi động
         QTimer.singleShot(1000, self.fetch_active_tables)
 
-    def rebuild_player_widgets(self, n: int):
+    def rebuild_player_widgets(self, n: int, new_players: list = None, from_sync: bool = False):
         """Tạo lại danh sách widget người chơi với n người."""
-        # Lưu dữ liệu hiện tại trước khi xóa
+        # Lưu dữ liệu hiện tại trước khi xóa (chỉ dùng khi người dùng tự tăng/giảm bằng tay)
         old_data = [
             {"name": r["name_input"].text(), "score": r["score_spin"].value(), "color": r["color"]}
             for r in self.player_rows
@@ -1430,18 +1538,27 @@ class ControlPanel(QMainWindow):
         self.player_rows.clear()
 
         # Đảm bảo config players có đủ dữ liệu
-        saved = self.config.get("players", [])
+        saved = new_players if new_players is not None else self.config.get("players", [])
 
         for i in range(n):
             color = PLAYER_COLORS[i % len(PLAYER_COLORS)]
 
-            # Lấy tên/điểm từ old_data → saved → mặc định
-            if i < len(old_data):
+            # Nếu có new_players từ API/dữ liệu mới, ưu tiên new_players!
+            if new_players is not None and i < len(new_players):
+                init_name = new_players[i].get("name", f"Player {i+1}")
+                try:
+                    init_score = int(new_players[i].get("score", 0))
+                except (ValueError, TypeError):
+                    init_score = 0
+            elif new_players is None and i < len(old_data):
                 init_name = old_data[i]["name"]
                 init_score = old_data[i]["score"]
             elif i < len(saved):
                 init_name = saved[i].get("name", f"Player {i+1}")
-                init_score = saved[i].get("score", 0)
+                try:
+                    init_score = int(saved[i].get("score", 0))
+                except (ValueError, TypeError):
+                    init_score = 0
             else:
                 init_name = f"Player {i+1}"
                 init_score = 0
@@ -1465,7 +1582,7 @@ class ControlPanel(QMainWindow):
             name_input = QLineEdit(init_name)
             name_input.setPlaceholderText(f"Tên người chơi {i+1}")
             name_input.setStyleSheet("font-size: 13px; padding: 4px;")
-            name_input.textChanged.connect(self.update_data)
+            name_input.textChanged.connect(lambda: self.update_data(from_sync=False))
             row_layout.addWidget(name_input, stretch=1)
 
             # Nút -
@@ -1476,14 +1593,14 @@ class ControlPanel(QMainWindow):
                 "font-weight: bold; border-radius: 5px;"
             )
 
-            # Điểm spinbox
+            # Điểm spinbox (hỗ trợ điểm âm từ -9999 đến 9999 cho các thể loại bài/tá lả)
             score_spin = QSpinBox()
-            score_spin.setRange(0, 999)
+            score_spin.setRange(-9999, 9999)
             score_spin.setValue(init_score)
             score_spin.setFixedWidth(64)
             score_spin.setStyleSheet("font-size: 17px; font-weight: bold; padding: 2px;")
             score_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            score_spin.valueChanged.connect(self.update_data)
+            score_spin.valueChanged.connect(lambda: self.update_data(from_sync=False))
 
             # Nút +
             btn_plus = QPushButton("+")
@@ -1493,7 +1610,7 @@ class ControlPanel(QMainWindow):
                 "font-weight: bold; border-radius: 5px;"
             )
 
-            btn_minus.clicked.connect(lambda _, s=score_spin: s.setValue(max(0, s.value() - 1)))
+            btn_minus.clicked.connect(lambda _, s=score_spin: s.setValue(s.value() - 1))
             btn_plus.clicked.connect(lambda _, s=score_spin: s.setValue(s.value() + 1))
 
             row_layout.addWidget(btn_minus)
@@ -1509,7 +1626,13 @@ class ControlPanel(QMainWindow):
                 "color": color,
             })
 
-        self.update_data()
+        # Đồng bộ spin_num_players nếu có
+        if hasattr(self, 'spin_num_players') and self.spin_num_players.value() != n:
+            self.spin_num_players.blockSignals(True)
+            self.spin_num_players.setValue(n)
+            self.spin_num_players.blockSignals(False)
+
+        self.update_data(from_sync=from_sync)
 
     def choose_file(self, config_key):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -1559,7 +1682,7 @@ class ControlPanel(QMainWindow):
         
         self.update_overlay()
 
-    def update_data(self):
+    def update_data(self, from_sync=False):
         players = []
         for i, row in enumerate(self.player_rows):
             players.append({
@@ -1576,6 +1699,65 @@ class ControlPanel(QMainWindow):
             self.config["p2_name"] = players[1]["name"]
             self.config["p2_score"] = players[1]["score"]
         self.update_overlay()
+
+        # Đồng bộ 2 chiều: nếu người dùng chỉnh tay trên LiveScore và đang kết nối bàn
+        if not from_sync and getattr(self, '_receiving', False) and hasattr(self, 'combo_table'):
+            selected_table = self.combo_table.currentText().strip()
+            if selected_table and not selected_table.startswith("--"):
+                self._last_user_edit_time = time.time()
+                self._sync_debounce_timer.start()
+
+    def _push_score_to_server(self):
+        if not getattr(self, '_receiving', False) or not hasattr(self, 'combo_table'):
+            return
+        table_name = self.combo_table.currentText().strip()
+        if not table_name or table_name.startswith("--"):
+            return
+        api_url = self.input_api_url.text().strip().rstrip("/")
+        if not api_url:
+            return
+
+        players = [
+            {"name": r["name_input"].text(), "score": r["score_spin"].value(), "color": r["color"]}
+            for r in self.player_rows
+        ]
+
+        # 1. Bắn trực tiếp lệnh MQTT xuống bảng điểm (tức thì < 0.05s)
+        if self.receiver and hasattr(self.receiver, 'publish_control'):
+            self.receiver.publish_control(players)
+
+        # 2. Gửi HTTP PUT lên backend server
+        payload = {
+            "table_name": table_name,
+            "mode": "two" if len(players) <= 2 else "multi",
+            "players": players
+        }
+
+        class PushScoreWorker(QThread):
+            def __init__(self, url, data):
+                super().__init__()
+                self.url = url
+                self.data = data
+
+            def run(self):
+                try:
+                    target_url = f"{self.url}/api/tournaments/device/live-score"
+                    req = urllib.request.Request(
+                        target_url,
+                        data=json.dumps(self.data, ensure_ascii=False).encode("utf-8"),
+                        headers={
+                            "Content-Type": "application/json; charset=utf-8",
+                            "User-Agent": "LiveScore-OBS/1.0"
+                        },
+                        method="PUT"
+                    )
+                    with urllib.request.urlopen(req, timeout=3) as resp:
+                        pass
+                except Exception as e:
+                    print(f"[LiveScore] Error pushing score to server: {e}")
+
+        self._push_worker = PushScoreWorker(api_url, payload)
+        self._push_worker.start()
 
     def update_overlay(self):
         if hasattr(self, 'overlay1') and self.overlay1:
@@ -1666,18 +1848,27 @@ class ControlPanel(QMainWindow):
                 return
 
             tables = []
+            self.table_device_map = {}
             if isinstance(result, dict):
-                # Response là {table_name: {table_name, mode, players, ...}}
+                # Response là {table_name: {table_name, mode, players, device_code, ...}}
                 if "table_name" in result:
-                    # Single table object
                     tables = [result["table_name"]]
+                    if result.get("device_code"):
+                        self.table_device_map[result["table_name"]] = result["device_code"]
                 else:
-                    # Dict of tables keyed by table_name
                     for entry in result.values():
-                        if isinstance(entry, dict) and entry.get("table_name") and entry.get("device_code"):
-                            tables.append(entry["table_name"])
+                        if isinstance(entry, dict) and entry.get("table_name"):
+                            t_name = entry["table_name"]
+                            tables.append(t_name)
+                            if entry.get("device_code"):
+                                self.table_device_map[t_name] = entry["device_code"]
             elif isinstance(result, list):
-                tables = [d.get("table_name", "") for d in result if d.get("table_name")]
+                for d in result:
+                    if d.get("table_name"):
+                        t_name = d["table_name"]
+                        tables.append(t_name)
+                        if d.get("device_code"):
+                            self.table_device_map[t_name] = d["device_code"]
 
             current = self.combo_table.currentText()
             self.combo_table.clear()
@@ -1705,7 +1896,8 @@ class ControlPanel(QMainWindow):
 
         self.stop_live_receive()
 
-        self.receiver = LiveScoreReceiver(api_url, table_name, self.spin_interval.value())
+        device_code = getattr(self, 'table_device_map', {}).get(table_name, "")
+        self.receiver = LiveScoreReceiver(api_url, table_name, device_code, self.spin_interval.value())
         self.receiver.score_received.connect(self.on_score_received)
         self.receiver.status_changed.connect(self.on_receive_status)
         self.receiver.start()
@@ -1732,18 +1924,30 @@ class ControlPanel(QMainWindow):
         self.lbl_receive_status.setText("Trạng thái: Đã dừng")
 
     def on_score_received(self, data: dict):
+        # Nếu người dùng vừa chỉnh sửa trên LiveScore trong vòng 4s trước, bỏ qua để tránh giật lùi
+        cooldown = max(4.0, getattr(self, 'spin_interval', None).value() * 1.5 if hasattr(self, 'spin_interval') else 4.0)
+        if time.time() - self._last_user_edit_time < cooldown:
+            return
+
         players = data.get("players", [])
         if not players:
             return
 
         # Rebuild widget nếu số người chơi thay đổi
         if len(players) != len(self.player_rows):
-            self.config["players"] = [
-                {"name": p.get("name", f"Player {i+1}"), "score": p.get("score", 0),
-                 "color": p.get("color", PLAYER_COLORS[i % len(PLAYER_COLORS)])}
-                for i, p in enumerate(players)
-            ]
-            self.rebuild_player_widgets(len(players))
+            new_list = []
+            for i, p in enumerate(players):
+                try:
+                    sc = int(p.get("score", 0))
+                except (ValueError, TypeError):
+                    sc = 0
+                new_list.append({
+                    "name": p.get("name", f"Player {i+1}"),
+                    "score": sc,
+                    "color": p.get("color", PLAYER_COLORS[i % len(PLAYER_COLORS)])
+                })
+            self.config["players"] = new_list
+            self.rebuild_player_widgets(len(players), new_players=new_list, from_sync=True)
             return  # rebuild_player_widgets đã gọi update_data
 
         # Cập nhật từng người chơi
@@ -1754,16 +1958,21 @@ class ControlPanel(QMainWindow):
             row["score_spin"].blockSignals(True)
             row["name_input"].blockSignals(True)
 
-            row["score_spin"].setValue(int(p.get("score", 0)))
+            try:
+                sc = int(p.get("score", 0))
+                row["score_spin"].setValue(sc)
+            except (ValueError, TypeError):
+                pass
+
             if self.chk_auto_name.isChecked():
-                name = p.get("name", "").strip()
+                name = str(p.get("name", "")).strip()
                 if name:
                     row["name_input"].setText(name)
 
             row["score_spin"].blockSignals(False)
             row["name_input"].blockSignals(False)
 
-        self.update_data()
+        self.update_data(from_sync=True)
 
     def on_receive_status(self, status: str):
         if status == "Đã kết nối":
@@ -1783,10 +1992,12 @@ class ControlPanel(QMainWindow):
 
 
 if __name__ == "__main__":
+    app = QApplication.instance()
+    if not app:
+        app = QApplication(sys.argv)
+
     # Đảm bảo các tài nguyên mặc định đã được chuẩn bị sẵn sàng
     generate_default_assets()
-
-    app = QApplication(sys.argv)
     
     # Thiết lập giao diện điều khiển chính của Windows được trực quan và đẹp hơn
     app.setStyle('Fusion')

@@ -48,7 +48,7 @@ const TournamentCard = memo(function TournamentCard({
   return (
     <div
       className={`
-        w-full sm:w-[439px] h-auto sm:h-[452px] flex flex-col
+        w-full h-auto flex flex-col
         group rounded-2xl border-none shadow-lg overflow-hidden cursor-pointer 
         transition-all duration-300
         hover:shadow-2xl
@@ -57,7 +57,7 @@ const TournamentCard = memo(function TournamentCard({
       onClick={() => onCardClick(tournament)}
     >
       {/* Header (Image + Overlay) */}
-      <div className="relative aspect-[439/400] sm:aspect-auto sm:h-[400px] w-full overflow-hidden">
+      <div className="relative aspect-[439/400] w-full overflow-hidden">
         <Image
           src={imgSrc}
           alt={tournament.title}

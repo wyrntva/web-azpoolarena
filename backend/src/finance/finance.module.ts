@@ -7,6 +7,8 @@ import {
   ExchangeEntity,
   SafeEntity,
   DebtEntity,
+  DailyReportManualEntity,
+  MonthlyFinancialReportEntity,
 } from './entities';
 import { UserEntity } from '../users/entities/user.entity';
 import { AttendanceEntity, BonusEntity } from '../hr/entities';
@@ -30,6 +32,8 @@ import { TournamentsModule } from '../tournaments/tournaments.module';
       ExchangeEntity,
       SafeEntity,
       DebtEntity,
+      DailyReportManualEntity,
+      MonthlyFinancialReportEntity,
       UserEntity,
       AttendanceEntity,
       BonusEntity,

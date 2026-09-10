@@ -103,6 +103,9 @@ export class RevenueEntity {
   @Column({ type: 'float', default: 0.0 })
   bank_revenue: number;
 
+  @Column({ type: 'float', default: 0.0 })
+  system_revenue: number;
+
   @Column({ type: 'text', nullable: true })
   note: string;
 
@@ -220,4 +223,73 @@ export class DebtEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'created_by' })
   created_by_user: UserEntity;
+}
+
+@Entity('daily_report_manuals')
+export class DailyReportManualEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'date', unique: true })
+  report_date: string | Date;
+
+  @Column({ type: 'float', default: 0.0 })
+  cash_income: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  cash_expense: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  bank_exchange: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  bank_income: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  bank_expense: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  system_revenue: number;
+
+  @Column({ type: 'text', nullable: true })
+  note: string;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
+}
+
+@Entity('monthly_financial_reports')
+export class MonthlyFinancialReportEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'varchar', length: 7, unique: true })
+  month: string; // 'YYYY-MM'
+
+  @Column({ type: 'float', default: 0.0 })
+  salary: number;
+
+  @Column({ type: 'float', default: 24500000.0 })
+  fixed_cost: number;
+
+  @Column({ type: 'float', default: 75000000.0 })
+  premises: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  yard: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  cloth: number;
+
+  @Column({ type: 'float', default: 0.0 })
+  prev_month_cash_balance: number;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

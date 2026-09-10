@@ -26,7 +26,9 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
     const attendanceMap = useMemo(() => {
         const map: Record<string, Attendance> = {};
         attendances.forEach((a) => {
-            map[`${a.user_id}_${a.date}`] = a;
+            if (!a || !a.date) return;
+            const dStr = dayjs(a.date).format('YYYY-MM-DD');
+            map[`${a.user_id}_${dStr}`] = a;
         });
         return map;
     }, [attendances]);
@@ -34,7 +36,9 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
     const scheduleMap = useMemo(() => {
         const map: Record<string, WorkSchedule> = {};
         schedules.forEach((s) => {
-            map[`${s.user_id}_${s.work_date}`] = s;
+            if (!s || !s.work_date) return;
+            const dStr = dayjs(s.work_date).format('YYYY-MM-DD');
+            map[`${s.user_id}_${dStr}`] = s;
         });
         return map;
     }, [schedules]);
@@ -43,13 +47,12 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
         fetchEmployees();
         fetchData();
         fetchDebts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedDate]);
 
     const fetchEmployees = async () => {
         try {
             const response = await userAPI.getUsers();
-            setEmployees(response.data);
+            setEmployees(Array.isArray(response.data) ? response.data : ((response.data as any)?.data || []));
         } catch (_error) {
             toast.error('Không thể tải danh sách nhân viên');
         }
@@ -62,10 +65,13 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
             const response = await debtAPI.getDebts({
                 is_paid: false,
                 start_date: start,
-                end_date: end
+                end_date: end,
             });
-            setDebts(response.data.data || []);
-        } catch { /* ignore */ }
+            const list = Array.isArray(response.data) ? response.data : ((response.data as any)?.data || []);
+            setDebts(list);
+        } catch {
+            /* ignore */
+        }
     };
 
     const fetchData = async () => {
@@ -116,10 +122,10 @@ const SalaryTable = ({ selectedDate }: { selectedDate: dayjs.Dayjs }) => {
     }, [attendanceMap, scheduleMap]);
 
     const calculateEmployeeDebt = useCallback((name: string) => {
-        if (!name) return 0;
+        if (!name || !Array.isArray(debts)) return 0;
         const normalized = name.toLowerCase().trim().replace(/\s+/g, ' ');
         return debts
-            .filter(d => d.debtor_name?.toLowerCase().trim().replace(/\s+/g, ' ') === normalized)
+            .filter((d) => d && d.debtor_name?.toLowerCase().trim().replace(/\s+/g, ' ') === normalized)
             .reduce((sum, d) => sum + (d.amount || 0), 0);
     }, [debts]);
 

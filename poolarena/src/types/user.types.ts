@@ -22,6 +22,7 @@ export interface User {
   id: number;
   full_name: string;
   gender?: UserGender;
+  birthday?: string | null;
   rank?: string;
   phone_number?: string;
   email?: string;

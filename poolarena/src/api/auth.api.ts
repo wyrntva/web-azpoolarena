@@ -18,6 +18,7 @@ export const authAPI = {
       email: data.email,
       password: data.password,
       gender: data.gender,
+      birthday: data.birthday,
       rank: data.rank,
       address: data.address,
       role: data.role || 'player'
@@ -52,6 +53,10 @@ export const authAPI = {
       new_password: data.newPassword,
     };
     const response = await api.post('/api/pool-arena/auth/change-password', payload);
+    return response.data;
+  },
+  updateProfile: async (data: { birthday?: string; full_name?: string; gender?: string; address?: string }) => {
+    const response = await api.post('/api/pool-arena/auth/profile', data);
     return response.data;
   },
 };

@@ -106,6 +106,9 @@ export class PoolArenaService {
   async update(id: number, dto: UpdatePoolArenaUserDto) {
     const user = await this.findOne(id);
     Object.assign(user, dto);
+    if (dto.birthday !== undefined) {
+      user.birthday = dto.birthday ? dto.birthday : (null as any);
+    }
     if (dto.rank && dto.points === undefined) {
       const rank = await this.rankRepo.findOne({ where: { name: dto.rank } });
       if (rank) user.points = rank.default_score;
@@ -131,6 +134,17 @@ export class PoolArenaService {
     this.deleteLocalFile(user.avatar_url);
     (user as any).avatar_url = null;
     return this.repo.save(user);
+  }
+
+  async resetPassword(id: number) {
+    const user = await this.findOne(id);
+    const defaultPassword = 'poolarenavn';
+    user.hashed_password = await bcrypt.hash(defaultPassword, 10);
+    await this.repo.save(user);
+    return {
+      message: 'Đặt lại mật khẩu thành công',
+      default_password: defaultPassword,
+    };
   }
 
   private deleteLocalFile(url: string | null | undefined) {

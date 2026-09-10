@@ -93,6 +93,19 @@ const SidebarContent: MenuItem[] = [
         ],
       },
       {
+        name: "Báo cáo tạm",
+        icon: "solar:clock-circle-outline",
+        id: uniqueId(),
+        children: [
+          {
+            name: "Báo cáo tài chính",
+            icon: "solar:dollar-outline",
+            id: uniqueId(),
+            url: "/reports/temp",
+          },
+        ],
+      },
+      {
         name: "Mặt hàng",
         icon: "solar:bag-3-outline",
         id: uniqueId(),

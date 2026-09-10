@@ -23,6 +23,7 @@ const ReceiptTypes = lazy(() => import('../views/receipt-types/ReceiptTypes'));
 
 // Reports
 const Reports = lazy(() => import('../views/reports/Reports'));
+const TempReport = lazy(() => import('../views/reports/TempReport'));
 const ExpenseReport = lazy(() => import('../views/expense-report/ExpenseReport'));
 
 // Inventory Module
@@ -119,6 +120,9 @@ const Router = () => {
 
               {/* Reports */}
               <Route path="reports" element={<Reports />} />
+              <Route path="reports/temp" element={<TempReport />} />
+              <Route path="reports/temp/financial" element={<TempReport />} />
+              <Route path="temp-report" element={<TempReport />} />
               <Route path="reports/revenue" element={<Reports />} />
               <Route path="reports/products" element={<Reports />} />
               <Route path="reports/inventory" element={<Reports />} />

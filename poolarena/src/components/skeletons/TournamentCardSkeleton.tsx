@@ -3,12 +3,12 @@ import Skeleton from './Skeleton';
 
 export default function TournamentCardSkeleton() {
   return (
-    <div className="w-full sm:w-[439px] h-[452px] flex flex-col rounded-2xl shadow-lg overflow-hidden bg-white">
+    <div className="w-full h-auto flex flex-col rounded-2xl shadow-lg overflow-hidden bg-white">
       {/* Header part */}
-      <div className="relative flex-1 w-full bg-[#F8FAFC] flex flex-col items-center justify-between py-6">
+      <div className="relative aspect-[439/400] w-full bg-[#F8FAFC] flex flex-col items-center justify-between py-4 sm:py-6">
         {/* Top: Logo area */}
-        <div className="flex flex-col items-center mt-[30px]">
-          <Skeleton className="w-[140px] sm:w-[180px] h-[50px] sm:h-[60px] rounded-lg" />
+        <div className="flex flex-col items-center mt-[20px] sm:mt-[30px]">
+          <Skeleton className="w-[140px] sm:w-[180px] h-[40px] sm:h-[60px] rounded-lg" />
         </div>
 
         {/* Middle: Title/Subtitle area */}

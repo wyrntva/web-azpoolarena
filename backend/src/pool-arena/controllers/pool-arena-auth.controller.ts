@@ -32,6 +32,20 @@ export class PoolArenaAuthController {
     return this.authService.getMe(auth);
   }
 
+  @Post('profile')
+  async updateProfile(
+    @Headers('authorization') auth: string,
+    @Body()
+    body: {
+      birthday?: string;
+      full_name?: string;
+      gender?: string;
+      address?: string;
+    },
+  ) {
+    return this.authService.updateProfile(auth, body);
+  }
+
   @Post('change-password')
   async changePassword(
     @Headers('authorization') auth: string,
