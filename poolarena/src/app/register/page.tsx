@@ -40,11 +40,17 @@ export default function RegisterPage() {
 
     const { confirmPassword, ...registerData } = values;
 
-    const formattedBirthday = (registerData as any).birthday
-      ? (typeof (registerData as any).birthday.format === "function"
-          ? (registerData as any).birthday.format("YYYY-MM-DD")
-          : String((registerData as any).birthday))
-      : "";
+    let formattedBirthday = "";
+    const bday = (registerData as any).birthday;
+    if (bday) {
+      if (typeof bday.format === "function") {
+        formattedBirthday = bday.format("YYYY-MM-DD");
+      } else if (typeof bday === "string") {
+        formattedBirthday = bday.split("T")[0];
+      } else if (bday instanceof Date) {
+        formattedBirthday = bday.toISOString().slice(0, 10);
+      }
+    }
 
     const payload = {
       ...registerData,
@@ -65,24 +71,26 @@ export default function RegisterPage() {
         router.push("/login");
       }
     } else {
+      const errorMsg = String(resultAction.payload || '');
       api.error({
         message: "Đăng ký không thành công!",
+        description: errorMsg || undefined,
         placement: "top"
       });
       
-      const errorMsg = String(resultAction.payload || '').toLowerCase();
+      const lowerMsg = errorMsg.toLowerCase();
       if (
-        errorMsg.includes('số điện thoại') ||
-        errorMsg.includes('phone') ||
-        errorMsg.includes('đăng ký') ||
-        errorMsg.includes('registered') ||
-        errorMsg.includes('exist') ||
-        errorMsg.includes('tồn tại')
+        lowerMsg.includes('số điện thoại') ||
+        lowerMsg.includes('phone') ||
+        lowerMsg.includes('đăng ký') ||
+        lowerMsg.includes('registered') ||
+        lowerMsg.includes('exist') ||
+        lowerMsg.includes('tồn tại')
       ) {
         form.setFields([
           {
             name: "phoneNumber",
-            errors: ["Số điện thoại đã tồn tại"],
+            errors: ["Số điện thoại hoặc email đã tồn tại"],
           },
         ]);
       }

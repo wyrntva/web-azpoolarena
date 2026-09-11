@@ -137,7 +137,7 @@ export class PoolArenaAuthService {
       email: data.email || undefined,
       hashed_password: await bcrypt.hash(data.password, 10),
       gender: data.gender || undefined,
-      birthday: data.birthday ? data.birthday : undefined,
+      birthday: data.birthday ? data.birthday.trim().split('T')[0] : undefined,
       address: data.address || undefined,
       rank: userRank,
       points: defaultPoints,

@@ -44,13 +44,23 @@ export const loginThunk = createAsyncThunk<LoginResponse, { emailOrPhone: string
 
 export const registerThunk = createAsyncThunk<
   void,
-  { fullName: string; phoneNumber: string; password: string; email?: string; gender?: UserGender; address?: string; rank?: UserRank, role?: string }
+  {
+    fullName: string;
+    phoneNumber: string;
+    password: string;
+    birthday?: string;
+    email?: string;
+    gender?: UserGender;
+    address?: string;
+    rank?: UserRank;
+    role?: string;
+  }
 >(
   'auth/register',
   async (payload, { rejectWithValue }) => {
     try {
-      const { fullName, phoneNumber, password, email, gender, address, rank, role = 'player' } = payload;
-      await authService.register({ fullName, phoneNumber, password, email, gender, address, rank, role } as any);
+      const { fullName, phoneNumber, password, birthday, email, gender, address, rank, role = 'player' } = payload;
+      await authService.register({ fullName, phoneNumber, password, birthday, email, gender, address, rank, role } as any);
     } catch (error: any) {
       return rejectWithValue(error?.response?.data?.message ?? error?.response?.data?.detail ?? error?.message ?? 'Register failed');
     }
