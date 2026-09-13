@@ -1,4 +1,5 @@
-import { Card, Spinner } from 'flowbite-react';
+import { Button, Card, Spinner } from 'flowbite-react';
+import { Icon } from '@iconify/react';
 import type { Tournament, TournamentMatch, TournamentMatchUpsert, TournamentRegisteredPlayer } from '../../../api/tournament.api';
 import { useKnockoutBracket } from '../hooks/useKnockoutBracket';
 import KnockoutMatchTable from './KnockoutMatchTable';
@@ -21,10 +22,12 @@ const TournamentKnockoutTab = ({
 }: TournamentKnockoutTabProps) => {
     const { tables } = useAllTables();
     const {
+        saving,
         ko8Round1, ko8Round2, ko8Final, qualified8Players, qualified8Count, ko8SelectedIds,
         ko16R16, ko16QF, ko16SF, ko16Final, qualifiedPlayers, qualified16Count, ko16SelectedIds,
         ko32R32, ko32R16, ko32QF, ko32SF, ko32Final, qualified32Players, qualified32Count, ko32SelectedIds,
         handleKO8Change, handleKO16Change, handleKO32Change,
+        saveAll,
         saveKO8Match, saveKO16Match, saveKO32Match,
         isKO8Mode, isKO32Mode,
     } = useKnockoutBracket({ numberOfPlayers, players, matches, onUpsertMatch, tournament, onDirty, onClean });
@@ -42,6 +45,34 @@ const TournamentKnockoutTab = ({
             </Card>
         ) : null;
 
+    const HeaderBar = ({ current, required }: { current: number; required: number }) => (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1">
+                <QualificationWarning current={current} required={required} />
+            </div>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+                <Button
+                    color="primary"
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => saveAll()}
+                >
+                    {saving ? (
+                        <>
+                            <Spinner size="sm" className="mr-2" />
+                            Đang lưu...
+                        </>
+                    ) : (
+                        <>
+                            <Icon icon="solar:disk-bold" className="mr-1.5 w-4 h-4" />
+                            Lưu bảng đấu
+                        </>
+                    )}
+                </Button>
+            </div>
+        </div>
+    );
+
     const RoundDivider = () => (
         <div className="pt-8 border-t-2 border-dashed border-gray-200 dark:border-gray-700" />
     );
@@ -50,7 +81,7 @@ const TournamentKnockoutTab = ({
     if (isKO8Mode) {
         return (
             <div className="mt-4 space-y-12 pb-10">
-                <QualificationWarning current={qualified8Count} required={8} />
+                <HeaderBar current={qualified8Count} required={8} />
 
                 <KnockoutMatchTable
                     matches={ko8Round1} players={players} title="Tứ kết" matchRange="Trận 21-24" matchCount={4}
@@ -84,7 +115,7 @@ const TournamentKnockoutTab = ({
     if (isKO32Mode) {
         return (
             <div className="mt-4 space-y-12 pb-10">
-                <QualificationWarning current={qualified32Count} required={32} />
+                <HeaderBar current={qualified32Count} required={32} />
 
                 <KnockoutMatchTable
                     matches={ko32R32} players={players} title="Vòng 1/16" matchRange="Trận 81-96" matchCount={16}
@@ -134,7 +165,7 @@ const TournamentKnockoutTab = ({
     const is24 = numberOfPlayers === 24;
     return (
         <div className="mt-4 space-y-12 pb-10">
-            <QualificationWarning current={qualified16Count} required={16} />
+            <HeaderBar current={qualified16Count} required={16} />
 
             <KnockoutMatchTable
                 matches={ko16R16} players={players} title="Vòng 1/8" matchRange={is24 ? 'Trận 25-32' : 'Trận 41-48'} matchCount={8}

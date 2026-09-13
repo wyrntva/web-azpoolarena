@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import type { Tournament, TournamentRegisteredPlayer } from '../../../api/tournament.api';
 import { MatchVM } from './knockoutHelpers';
@@ -54,6 +54,47 @@ const KnockoutMatchTable: React.FC<KnockoutMatchTableProps> = ({
         setEditingIdx(null);
     }, [editingIdx, onSaveMatch]);
 
+    const qualifiedSet = useMemo(() => new Set(availablePlayers.map(p => p.id)), [availablePlayers]);
+    const otherPlayers = useMemo(() => players.filter(p => !qualifiedSet.has(p.id)), [players, qualifiedSet]);
+
+    const getPlayerTag = (playerId: number, currentMatchIdx: number, currentSlot: 'p1' | 'p2') => {
+        const idStr = String(playerId);
+        for (let i = 0; i < matches.length; i++) {
+            const m = matches[i];
+            if (i === currentMatchIdx) {
+                if (currentSlot === 'p1' && m.player2_id === idStr) return ` [Đang ở Người chơi 2]`;
+                if (currentSlot === 'p2' && m.player1_id === idStr) return ` [Đang ở Người chơi 1]`;
+            } else {
+                if (m.player1_id === idStr || m.player2_id === idStr) return ` [Trận ${m.match_no}]`;
+            }
+        }
+        return '';
+    };
+
+    const renderPlayerOptions = (currentMatchIdx: number, slot: 'p1' | 'p2') => (
+        <>
+            <option value="">Chọn người chơi</option>
+            {availablePlayers.length > 0 && (
+                <optgroup label="Cơ thủ vào vòng KO">
+                    {availablePlayers.map(p => (
+                        <option key={p.id} value={p.id}>
+                            {p.full_name}{p.rank ? ` (${p.rank})` : ''}{getPlayerTag(p.id, currentMatchIdx, slot)}
+                        </option>
+                    ))}
+                </optgroup>
+            )}
+            {otherPlayers.length > 0 && (
+                <optgroup label={availablePlayers.length > 0 ? "Tất cả cơ thủ khác" : "Tất cả cơ thủ"}>
+                    {otherPlayers.map(p => (
+                        <option key={p.id} value={p.id}>
+                            {p.full_name}{p.rank ? ` (${p.rank})` : ''}{getPlayerTag(p.id, currentMatchIdx, slot)}
+                        </option>
+                    ))}
+                </optgroup>
+            )}
+        </>
+    );
+
     return (
         <div className="space-y-3">
             <div className="flex items-center gap-2 px-2">
@@ -99,10 +140,7 @@ const KnockoutMatchTable: React.FC<KnockoutMatchTableProps> = ({
                                                     value={match.player1_id}
                                                     onChange={e => onChange(idx, 'player1_id', e.target.value)}
                                                 >
-                                                    <option value="">Chọn người chơi</option>
-                                                    {availablePlayers
-                                                        .filter(p => !selectedIds.includes(String(p.id)) || match.player1_id === String(p.id))
-                                                        .map(p => <option key={p.id} value={p.id}>{p.full_name}{p.rank ? ` (${p.rank})` : ''}</option>)}
+                                                    {renderPlayerOptions(idx, 'p1')}
                                                 </select>
                                             </div>
                                         ) : (
@@ -151,10 +189,7 @@ const KnockoutMatchTable: React.FC<KnockoutMatchTableProps> = ({
                                                     value={match.player2_id}
                                                     onChange={e => onChange(idx, 'player2_id', e.target.value)}
                                                 >
-                                                    <option value="">Chọn người chơi</option>
-                                                    {availablePlayers
-                                                        .filter(p => !selectedIds.includes(String(p.id)) || match.player2_id === String(p.id))
-                                                        .map(p => <option key={p.id} value={p.id}>{p.full_name}{p.rank ? ` (${p.rank})` : ''}</option>)}
+                                                    {renderPlayerOptions(idx, 'p2')}
                                                 </select>
                                             </div>
                                         ) : (

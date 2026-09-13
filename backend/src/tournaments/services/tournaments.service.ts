@@ -2166,6 +2166,31 @@ export class TournamentsService {
     return;
   }
 
+  private getTargetBracketAndRound(
+    matchNo: number,
+    numberOfPlayers: number,
+    currentBracket: string,
+    currentRound: number,
+  ): { bracket: string; round: number } {
+    const label = this.getMatchRoundLabel(matchNo, numberOfPlayers);
+    if (label) {
+      if (numberOfPlayers > 32) {
+        // 64 players: r16=1, r8=2, qf=3, sf=4, f=5
+        const roundMap: Record<string, number> = { r16: 1, r8: 2, qf: 3, sf: 4, f: 5 };
+        return { bracket: 'knockout', round: roundMap[label] || 1 };
+      } else if (numberOfPlayers === 24 || numberOfPlayers > 16) {
+        // 24 or 32 players: r8=1, qf=2, sf=3, f=4
+        const roundMap: Record<string, number> = { r8: 1, qf: 2, sf: 3, f: 4 };
+        return { bracket: 'knockout', round: roundMap[label] || 1 };
+      } else {
+        // 16 players: qf=1, sf=2, f=3
+        const roundMap: Record<string, number> = { qf: 1, sf: 2, f: 3 };
+        return { bracket: 'knockout', round: roundMap[label] || 1 };
+      }
+    }
+    return { bracket: currentBracket, round: currentRound + 1 };
+  }
+
   private async propagateWinnerToNextRound(
     match: TournamentMatchEntity,
   ): Promise<void> {
@@ -2197,14 +2222,24 @@ export class TournamentsService {
     // changed" event and incorrectly reset accumulated scores.
     if (!targetWinnerId) return;
 
+    const targetMeta = this.getTargetBracketAndRound(
+      nextMatchInfo.nextMatchNo,
+      tournament.number_of_players,
+      match.bracket,
+      match.round,
+    );
+
     if (!nextMatch) {
       nextMatch = this.matchRepo.create({
         tournament_id: match.tournament_id,
         match_no: nextMatchInfo.nextMatchNo,
-        bracket: match.bracket,
-        round: match.round + 1,
+        bracket: targetMeta.bracket,
+        round: targetMeta.round,
         status: TournamentMatchStatus.PENDING,
       });
+    } else if (nextMatch.bracket !== targetMeta.bracket || nextMatch.round !== targetMeta.round) {
+      nextMatch.bracket = targetMeta.bracket;
+      nextMatch.round = targetMeta.round;
     }
 
     let changed = false;

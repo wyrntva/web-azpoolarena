@@ -621,10 +621,120 @@ export const useKnockoutBracket = ({
     }, [ko32SF, isKO32Mode, propagateWinners]);
 
     // =====================
-    // Handlers
+    // Save Payloads & Handlers
     // =====================
+    const buildPayload = useCallback((m: MatchVM, round: number): { matchNo: number; data: TournamentMatchUpsert } => ({
+        matchNo: m.match_no,
+        data: {
+            bracket: 'knockout',
+            round,
+            player1_id: m.player1_id ? parseInt(m.player1_id, 10) : null,
+            player2_id: m.player2_id ? parseInt(m.player2_id, 10) : null,
+            player1_score: parseInt(m.player1_score, 10) || 0,
+            player2_score: parseInt(m.player2_score, 10) || 0,
+            table_no: m.table_no || null,
+            match_time: m.match_time || null,
+            status: m.status,
+            player1_check_in: m.player1_check_in || 'unconfirmed',
+            player2_check_in: m.player2_check_in || 'unconfirmed',
+            winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
+            player1_points: m.player1_points !== undefined && m.player1_points !== '' ? parseInt(m.player1_points, 10) : null,
+            player2_points: m.player2_points !== undefined && m.player2_points !== '' ? parseInt(m.player2_points, 10) : null,
+        },
+    }), []);
+
+    const computeHandicapScores = useCallback((m: MatchVM): { p1Score: string; p2Score: string } => {
+        if (m.player1_id && m.player2_id) {
+            const rl = getMatchRoundLabel(m.match_no, numberOfPlayers);
+            const info = getRaceToInfo(m.player1_id, m.player2_id, players, tournament, rl);
+            const p1Score = info.handicap > 0 && info.handicappedPlayerId === m.player1_id ? String(info.handicap) : '0';
+            const p2Score = info.handicap > 0 && info.handicappedPlayerId === m.player2_id ? String(info.handicap) : '0';
+            return { p1Score, p2Score };
+        }
+        return { p1Score: '0', p2Score: '0' };
+    }, [numberOfPlayers, players, tournament]);
+
+    const handleRound1PlayerChange = useCallback(async (
+        roundArr: MatchVM[],
+        setter: React.Dispatch<React.SetStateAction<MatchVM[]>>,
+        index: number,
+        field: 'player1_id' | 'player2_id',
+        value: string,
+        roundNum: number = 1
+    ) => {
+        onDirty?.();
+        const next = [...roundArr];
+        const prevVal = next[index][field];
+        const targetVal = value;
+        let swappedIdx = -1;
+        let swappedSlot: 'player1_id' | 'player2_id' | null = null;
+
+        if (targetVal) {
+            for (let i = 0; i < next.length; i++) {
+                if (i === index) {
+                    const otherSlot = field === 'player1_id' ? 'player2_id' : 'player1_id';
+                    if (next[i][otherSlot] === targetVal) {
+                        swappedIdx = i;
+                        swappedSlot = otherSlot;
+                        break;
+                    }
+                } else {
+                    if (next[i].player1_id === targetVal) {
+                        swappedIdx = i;
+                        swappedSlot = 'player1_id';
+                        break;
+                    }
+                    if (next[i].player2_id === targetVal) {
+                        swappedIdx = i;
+                        swappedSlot = 'player2_id';
+                        break;
+                    }
+                }
+            }
+        }
+
+        let swappedMatchToSave: MatchVM | null = null;
+        if (swappedIdx !== -1 && swappedSlot) {
+            let swappedMatch = { ...next[swappedIdx], [swappedSlot]: prevVal };
+            const scSwapped = computeHandicapScores(swappedMatch);
+            swappedMatch = { ...swappedMatch, player1_score: scSwapped.p1Score, player2_score: scSwapped.p2Score };
+            next[swappedIdx] = swappedMatch;
+            swappedMatchToSave = swappedMatch;
+        }
+
+        let currentMatch = { ...next[index], [field]: targetVal };
+        const scCurrent = computeHandicapScores(currentMatch);
+        currentMatch = { ...currentMatch, player1_score: scCurrent.p1Score, player2_score: scCurrent.p2Score };
+        next[index] = currentMatch;
+
+        setter(next);
+
+        try {
+            const pCurrent = buildPayload(currentMatch, roundNum);
+            await onUpsertMatch(pCurrent.matchNo, pCurrent.data);
+
+            if (swappedMatchToSave && swappedIdx !== index) {
+                const pSwapped = buildPayload(swappedMatchToSave, roundNum);
+                await onUpsertMatch(pSwapped.matchNo, pSwapped.data);
+                toast.success(`Đã hoán đổi vị trí cơ thủ (Trận ${currentMatch.match_no} & Trận ${swappedMatchToSave.match_no})`);
+            } else if (swappedIdx === index && swappedSlot) {
+                toast.success(`Đã đổi vị trí 2 cơ thủ trận ${currentMatch.match_no}`);
+            } else {
+                toast.success(`Đã lưu cơ thủ trận ${currentMatch.match_no}`);
+            }
+            onClean?.();
+        } catch (err: any) {
+            toast.error(err?.response?.data?.detail || err?.message || 'Lỗi khi lưu trận đấu');
+        }
+    }, [onDirty, computeHandicapScores, buildPayload, onUpsertMatch, onClean]);
+
     const handleKO8Change = useCallback(
         (round: 1 | 2 | 3, index: number, field: keyof MatchVM, value: string) => {
+            if (round === 1 && (field === 'player1_id' || field === 'player2_id')) {
+                handleRound1PlayerChange(ko8Round1, setKo8Round1, index, field, value, 1);
+                return;
+            }
+
             onDirty?.();
             const [arr, setter] =
                 round === 1
@@ -660,11 +770,21 @@ export const useKnockoutBracket = ({
             setter(next);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [ko8Round1, ko8Round2, ko8Final]
+        [ko8Round1, ko8Round2, ko8Final, handleRound1PlayerChange]
     );
 
     const handleKO16Change = useCallback(
         (round: 1 | 2 | 3 | 4, index: number, field: keyof MatchVM, value: string) => {
+            if (round === 1 && (field === 'player1_id' || field === 'player2_id')) {
+                handleRound1PlayerChange(ko16R16, setKo16R16, index, field, value, 1);
+                return;
+            }
+
+            // Only R16 allows manual player selection
+            if (round !== 1 && ['player1_id', 'player2_id'].includes(field)) {
+                return;
+            }
+
             onDirty?.();
             const [arr, setter] =
                 round === 1
@@ -674,11 +794,6 @@ export const useKnockoutBracket = ({
                         : round === 3
                             ? [ko16SF, setKo16SF]
                             : [ko16Final, setKo16Final];
-
-            // Only R16 allows manual player selection
-            if (round !== 1 && ['player1_id', 'player2_id'].includes(field)) {
-                return;
-            }
 
             const next = [...arr];
             let m = { ...next[index], [field]: value } as MatchVM;
@@ -706,11 +821,21 @@ export const useKnockoutBracket = ({
             setter(next);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [ko16R16, ko16QF, ko16SF, ko16Final]
+        [ko16R16, ko16QF, ko16SF, ko16Final, handleRound1PlayerChange]
     );
 
     const handleKO32Change = useCallback(
         (round: 1 | 2 | 3 | 4 | 5, index: number, field: keyof MatchVM, value: string) => {
+            if (round === 1 && (field === 'player1_id' || field === 'player2_id')) {
+                handleRound1PlayerChange(ko32R32, setKo32R32, index, field, value, 1);
+                return;
+            }
+
+            // Only R32 allows manual player selection
+            if (round !== 1 && ['player1_id', 'player2_id'].includes(field)) {
+                return;
+            }
+
             onDirty?.();
             const [arr, setter] =
                 round === 1
@@ -723,11 +848,6 @@ export const useKnockoutBracket = ({
                                 ? [ko32SF, setKo32SF]
                                 : [ko32Final, setKo32Final];
 
-            // Only R32 allows manual player selection
-            if (round !== 1 && ['player1_id', 'player2_id'].includes(field)) {
-                return;
-            }
-
             const next = [...arr];
             let m = { ...next[index], [field]: value } as MatchVM;
 
@@ -754,31 +874,12 @@ export const useKnockoutBracket = ({
             setter(next);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [ko32R32, ko32R16, ko32QF, ko32SF, ko32Final]
+        [ko32R32, ko32R16, ko32QF, ko32SF, ko32Final, handleRound1PlayerChange]
     );
 
     // =====================
     // Save All
     // =====================
-    const buildPayload = (m: MatchVM, round: number): { matchNo: number; data: TournamentMatchUpsert } => ({
-        matchNo: m.match_no,
-        data: {
-            bracket: 'knockout',
-            round,
-            player1_id: m.player1_id ? parseInt(m.player1_id, 10) : null,
-            player2_id: m.player2_id ? parseInt(m.player2_id, 10) : null,
-            player1_score: parseInt(m.player1_score, 10) || 0,
-            player2_score: parseInt(m.player2_score, 10) || 0,
-            table_no: m.table_no || null,
-            match_time: m.match_time || null,
-            status: m.status,
-            player1_check_in: m.player1_check_in || 'unconfirmed',
-            player2_check_in: m.player2_check_in || 'unconfirmed',
-            winner_id: m.winner_id ? parseInt(m.winner_id, 10) : null,
-            player1_points: m.player1_points !== undefined && m.player1_points !== '' ? parseInt(m.player1_points, 10) : null,
-            player2_points: m.player2_points !== undefined && m.player2_points !== '' ? parseInt(m.player2_points, 10) : null,
-        },
-    });
 
     const saveAll = useCallback(async () => {
         setSaving(true);
