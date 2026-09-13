@@ -14,7 +14,21 @@ import { formatLevel, formatFullLevel } from "@/lib/tournament-utils";
 
 const { Link } = Typography;
 
+const isAllowedLevel = (rankName: string | null | undefined): boolean => {
+  if (!rankName) return false;
+  const fullLevel = formatFullLevel(rankName);
+  const match = fullLevel.match(/Level\s+(\d+)/i);
+  if (!match) return false;
+  const level = parseInt(match[1], 10);
+  return level >= 2 && level <= 5;
+};
 
+const DEFAULT_RANKS = [
+  { id: 2, name: "H", order: 2 },
+  { id: 3, name: "G", order: 3 },
+  { id: 4, name: "F", order: 4 },
+  { id: 5, name: "E", order: 5 },
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -22,13 +36,15 @@ export default function RegisterPage() {
   const [api, contextHolder] = notification.useNotification();
   const dispatch = useAppDispatch();
   const authState = useAppSelector((state) => state.auth);
-  const [ranks, setRanks] = React.useState<any[]>([]);
+  const [ranks, setRanks] = React.useState<any[]>(DEFAULT_RANKS);
 
   React.useEffect(() => {
     const fetchRanks = async () => {
       try {
         const response = await tournamentSettingsAPI.getRanks();
-        setRanks(response.data);
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          setRanks(response.data);
+        }
       } catch (error) {
         console.error("Failed to fetch ranks:", error);
       }
@@ -36,9 +52,21 @@ export default function RegisterPage() {
     fetchRanks();
   }, []);
 
-  const handleRegister = async (values: RegisterFormData) => {
+  const availableRanks = React.useMemo(() => {
+    return ranks.filter((rank) => isAllowedLevel(rank.name));
+  }, [ranks]);
 
+  const handleRegister = async (values: RegisterFormData) => {
     const { confirmPassword, ...registerData } = values;
+
+    if (!isAllowedLevel(registerData.rank)) {
+      api.error({
+        message: "Đăng ký không thành công!",
+        description: "Chỉ được chọn Level từ Level 2 đến Level 5",
+        placement: "top",
+      });
+      return;
+    }
 
     let formattedBirthday = "";
     const bday = (registerData as any).birthday;
@@ -224,11 +252,22 @@ export default function RegisterPage() {
                      </div>
                    }
                    hasFeedback
-                   rules={[{ required: true, message: "Level không được để trống" }]}
+                   rules={[
+                     { required: true, message: "Level không được để trống" },
+                     {
+                       validator: (_, value) => {
+                         if (!value) return Promise.resolve();
+                         if (!isAllowedLevel(value)) {
+                           return Promise.reject(new Error("Chỉ được chọn từ Level 2 đến Level 5"));
+                         }
+                         return Promise.resolve();
+                       },
+                     },
+                   ]}
                    style={{ marginBottom: 16 }}
                  >
                    <Select placeholder="Level của bạn">
-                     {ranks.map((rank) => (
+                     {availableRanks.map((rank) => (
                        <Select.Option key={rank.id} value={rank.name}>
                          {formatFullLevel(rank.name)}
                        </Select.Option>

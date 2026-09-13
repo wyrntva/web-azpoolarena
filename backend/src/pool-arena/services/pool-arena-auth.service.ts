@@ -121,14 +121,23 @@ export class PoolArenaAuthService {
       throw new BadRequestException('Số điện thoại hoặc email đã được đăng ký');
     }
 
-    const userRank = data.rank || 'K';
-    let defaultPoints = 0;
+    const userRank = data.rank?.trim();
+    if (!userRank) {
+      throw new BadRequestException('Vui lòng chọn Level');
+    }
+
     const rankEntity = await this.rankRepo.findOne({
       where: { name: userRank },
     });
-    if (rankEntity) {
-      defaultPoints = rankEntity.default_score;
+    if (!rankEntity) {
+      throw new BadRequestException('Level không hợp lệ');
     }
+
+    if (rankEntity.order < 2 || rankEntity.order > 5) {
+      throw new BadRequestException('Chỉ được chọn Level từ Level 2 đến Level 5');
+    }
+
+    const defaultPoints = rankEntity.default_score;
 
     const user = this.userRepo.create({
       user_type: 'player',
