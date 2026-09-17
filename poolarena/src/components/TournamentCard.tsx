@@ -20,6 +20,7 @@ export interface Tournament {
   canRegister?: boolean;
   _startDate?: Date | null;
   _isPinned?: boolean;
+  _isEvent?: boolean;
 }
 
 interface TournamentCardProps {
@@ -38,7 +39,7 @@ const TournamentCard = memo(function TournamentCard({
   onRegister,
   onViewResults,
 }: TournamentCardProps) {
-  const isFull = tournament.participants.current >= tournament.participants.max;
+  const isFull = !tournament._isEvent && (tournament.participants.current >= tournament.participants.max);
   const [imgSrc, setImgSrc] = useState(tournament.img || "/images/tournament.webp");
 
   useEffect(() => {
@@ -121,11 +122,11 @@ const TournamentCard = memo(function TournamentCard({
         {/* Participant Badge (Bottom Right) */}
         <div className="absolute bottom-0" style={{ right: '12px' }}>
           <div
-            className="rounded-tl-xl rounded-tr-xl flex items-center justify-center"
+            className="flex items-center justify-center rounded-t-xl select-none px-2.5"
             style={{
-              width: '80px',
+              minWidth: tournament._isEvent ? 'auto' : '80px',
               height: '28px',
-              backgroundColor: tournament.participants.current >= tournament.participants.max ? '#C6010B' : '#1B03DC',
+              backgroundColor: !tournament._isEvent && tournament.participants.current >= tournament.participants.max ? '#C6010B' : '#1B03DC',
               color: '#FFF',
               fontFamily: 'Montserrat',
               fontSize: '11px',
@@ -134,7 +135,9 @@ const TournamentCard = memo(function TournamentCard({
               lineHeight: '16px',
             }}
           >
-            {tournament.participants.current}/{tournament.participants.max} người
+            {tournament._isEvent
+              ? `${tournament.participants.current} người`
+              : `${tournament.participants.current}/${tournament.participants.max} người`}
           </div>
         </div>
       </div>

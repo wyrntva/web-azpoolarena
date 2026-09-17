@@ -27,6 +27,7 @@ interface PrizeSectionProps {
   };
   status?: string;
   canRegister?: boolean;
+  isEvent?: boolean;
 }
 
 export const PrizeSection: React.FC<PrizeSectionProps> = ({
@@ -38,15 +39,16 @@ export const PrizeSection: React.FC<PrizeSectionProps> = ({
   participants,
   status,
   canRegister = true,
+  isEvent = false,
 }) => {
-  const isFull = participants ? participants.current >= participants.max : false;
+  const isFull = !isEvent && participants ? participants.current >= participants.max : false;
 
   // Tạo mảng các giải thưởng để hiển thị, chỉ lấy những giải thưởng có giá trị
   const prizeItems = [
     { label: 'Tổng giải thưởng', value: prizes.total },
-    { label: 'Vô địch', value: prizes.first },
-    { label: 'Giải nhì', value: prizes.second },
-    { label: 'Đồng giải ba', value: prizes.contribution },
+    { label: isEvent ? 'Top 1' : 'Vô địch', value: prizes.first },
+    { label: isEvent ? 'Top 2' : 'Giải nhì', value: prizes.second },
+    { label: isEvent ? 'Top 3' : 'Đồng giải ba', value: prizes.contribution },
     { label: 'Top 5-8', value: prizes.top5_8 },
     { label: 'Top 9-16', value: prizes.top9_16 },
     { label: 'Top 17-32', value: prizes.top17_32 },

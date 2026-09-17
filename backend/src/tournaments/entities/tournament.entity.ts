@@ -137,6 +137,9 @@ export class TournamentEntity {
   @Column({ type: 'varchar', length: 50, default: 'upcoming' })
   status: string;
 
+  @Column({ type: 'varchar', length: 50, default: 'tournament' })
+  category: string;
+
   @Column({ type: 'varchar', length: 50, default: 'knockout' })
   tournament_type: string;
 
@@ -151,6 +154,15 @@ export class TournamentEntity {
 
   @Column({ type: 'timestamp', nullable: true })
   start_date: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  end_date: Date;
+
+  @Column({ type: 'time', nullable: true })
+  match_creation_time: string;
+
+  @Column({ type: 'time', nullable: true })
+  match_creation_time_end: string;
 
   @Column({ type: 'timestamp', nullable: true })
   registration_start_date: Date;
@@ -219,10 +231,16 @@ export class TournamentEntity {
   draw_touch: string;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
+  draw_touch_11: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
   handicap_1_touch: string;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   handicap_2_touch: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  bonus: string;
 
   @Column({ type: 'boolean', default: false })
   round_1_64: boolean;
@@ -328,6 +346,9 @@ export class TournamentMatchEntity {
   @Column({ type: 'timestamp', nullable: true })
   match_time: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  match_end_time: Date;
+
   @Column({ type: 'varchar', length: 20, default: 'upcoming' })
   status: string;
 
@@ -351,6 +372,12 @@ export class TournamentMatchEntity {
 
   @Column({ type: 'varchar', length: 10, nullable: true })
   player2_rank: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  race_to: number | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  handicap_desc: string | null;
 
   @CreateDateColumn()
   created_at: Date;

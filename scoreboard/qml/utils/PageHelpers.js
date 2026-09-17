@@ -100,3 +100,32 @@ var idleTimeoutMs = 30 * 60 * 1000
 // History limit
 // -----------------------------------------------------------------------------
 var historyLimit = 100
+
+// -----------------------------------------------------------------------------
+// Rank / Level Formatting
+// -----------------------------------------------------------------------------
+function formatLevel(rank) {
+    if (!rank || rank === "N/A") return ""
+    var cleanRank = String(rank).trim().toUpperCase().replace(/^HẠNG\s+/, '').replace(/^HANG\s+/, '')
+    var hasPlus = cleanRank.endsWith('+')
+    var base = hasPlus ? cleanRank.slice(0, -1).trim() : cleanRank
+    var lvl = ""
+    switch (base) {
+        case 'I':
+        case 'K': lvl = 'Lv .1'; break
+        case 'H': lvl = 'Lv .2'; break
+        case 'G': lvl = 'Lv .3'; break
+        case 'F': lvl = 'Lv .4'; break
+        case 'E': lvl = 'Lv .5'; break
+        case 'D': lvl = 'Lv .6'; break
+        case 'C': lvl = 'Lv .7'; break
+        case 'B': lvl = 'Lv .8'; break
+        case 'A': lvl = 'Lv .9'; break
+        case 'S': lvl = 'Lv .10'; break
+        default:
+            if (base.indexOf('LV') === 0) lvl = base
+            else if (/^\d+$/.test(base)) lvl = 'Lv .' + base
+            else lvl = 'Lv .' + base
+    }
+    return hasPlus ? (lvl + "+") : lvl
+}

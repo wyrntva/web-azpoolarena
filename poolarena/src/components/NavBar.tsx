@@ -130,6 +130,14 @@ export default function NavBar(props?: { logoUrl?: string }) {
               GIẢI ĐẤU
             </Link>
             <Link
+              href="/events"
+              className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+              prefetch
+            >
+              SỰ KIỆN
+            </Link>
+            <Link
               href="/rankings"
               className="text-[16px] leading-[24px] text-[#37393E] font-medium hover:text-[#D22E39] transition-colors whitespace-nowrap"
               style={{ fontFamily: 'Montserrat, sans-serif' }}
@@ -378,6 +386,25 @@ export default function NavBar(props?: { logoUrl?: string }) {
                 <span>GIẢI ĐẤU</span>
               </Link>
               <Link
+                href="/events"
+                className="flex items-center space-x-3 text-[#37393E] hover:text-[#D22E39] font-medium text-[16px] leading-[24px] tracking-wide uppercase transition-colors"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
+                onClick={() => setOpenMenu(false)}
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none"
+                  className="flex-shrink-0"
+                >
+                  <path d="M2 9.5L8.5 8L12 2.5V19L6 21.5V15L2 9.5Z" fill="#C6010B"/>
+                  <path d="M8.58699 8.236L11.185 3.004C11.2606 2.85259 11.3769 2.72523 11.5209 2.63622C11.6648 2.54721 11.8307 2.50006 12 2.50006C12.1692 2.50006 12.3351 2.54721 12.4791 2.63622C12.6231 2.72523 12.7394 2.85259 12.815 3.004L15.413 8.236L21.221 9.08C21.3885 9.10323 21.5461 9.17309 21.6759 9.28161C21.8056 9.39013 21.9022 9.53294 21.9546 9.69373C22.0071 9.85452 22.0133 10.0268 21.9725 10.191C21.9317 10.3551 21.8456 10.5045 21.724 10.622L17.522 14.692L18.514 20.442C18.641 21.18 17.861 21.742 17.194 21.394L12 18.678L6.80499 21.394C6.13899 21.743 5.35899 21.18 5.48599 20.441L6.47799 14.691L2.27599 10.621C2.15498 10.5034 2.06939 10.3542 2.02896 10.1903C1.98852 10.0265 1.99487 9.85457 2.04726 9.69415C2.09966 9.53373 2.19601 9.39122 2.32536 9.28284C2.45471 9.17445 2.61188 9.10452 2.77899 9.081L8.58699 8.236Z" stroke="#37393E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span>SỰ KIỆN</span>
+              </Link>
+              <Link
                 href="/rankings"
                 className="flex items-center space-x-3 text-[#37393E] hover:text-[#D22E39] font-medium text-[16px] leading-[24px] tracking-wide uppercase transition-colors"
                 style={{ fontFamily: 'Montserrat, sans-serif' }}
@@ -524,7 +551,7 @@ export default function NavBar(props?: { logoUrl?: string }) {
         {/* Tournaments Tab */}
         <Link
           href="/tournaments"
-          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-3 min-[360px]:px-5 rounded-[12px] ${
+          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-2 min-[360px]:px-3 min-[390px]:px-4 rounded-[12px] ${
             pathname === "/tournaments"
               ? "bg-[#172339] text-white"
               : "text-[#172339]"
@@ -617,10 +644,35 @@ export default function NavBar(props?: { logoUrl?: string }) {
           </span>
         </Link>
 
+        {/* Events Tab */}
+        <Link
+          href="/events"
+          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-2 min-[360px]:px-3 min-[390px]:px-4 rounded-[12px] ${
+            pathname === "/events"
+              ? "bg-[#172339] text-white"
+              : "text-[#172339]"
+          }`}
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none"
+            className="mb-0.5 flex-shrink-0"
+          >
+            <path d="M2 9.5L8.5 8L12 2.5V19L6 21.5V15L2 9.5Z" fill="#C6010B"/>
+            <path d="M8.58699 8.236L11.185 3.004C11.2606 2.85259 11.3769 2.72523 11.5209 2.63622C11.6648 2.54721 11.8307 2.50006 12 2.50006C12.1692 2.50006 12.3351 2.54721 12.4791 2.63622C12.6231 2.72523 12.7394 2.85259 12.815 3.004L15.413 8.236L21.221 9.08C21.3885 9.10323 21.5461 9.17309 21.6759 9.28161C21.8056 9.39013 21.9022 9.53294 21.9546 9.69373C22.0071 9.85452 22.0133 10.0268 21.9725 10.191C21.9317 10.3551 21.8456 10.5045 21.724 10.622L17.522 14.692L18.514 20.442C18.641 21.18 17.861 21.742 17.194 21.394L12 18.678L6.80499 21.394C6.13899 21.743 5.35899 21.18 5.48599 20.441L6.47799 14.691L2.27599 10.621C2.15498 10.5034 2.06939 10.3542 2.02896 10.1903C1.98852 10.0265 1.99487 9.85457 2.04726 9.69415C2.09966 9.53373 2.19601 9.39122 2.32536 9.28284C2.45471 9.17445 2.61188 9.10452 2.77899 9.081L8.58699 8.236Z" stroke={pathname === "/events" ? "#FFF" : "#37393E"} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="text-[10px] font-normal uppercase tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Sự kiện
+          </span>
+        </Link>
+
         {/* Leaderboard Tab */}
         <Link
           href="/rankings"
-          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-3 min-[360px]:px-5 rounded-[12px] ${
+          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-2 min-[360px]:px-3 min-[390px]:px-4 rounded-[12px] ${
             pathname === "/rankings"
               ? "bg-[#172339] text-white"
               : "text-[#172339]"
@@ -658,7 +710,7 @@ export default function NavBar(props?: { logoUrl?: string }) {
         {/* News Tab */}
         <Link
           href="/news"
-          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-3 min-[360px]:px-5 rounded-[12px] relative ${
+          className={`flex flex-col items-center justify-center transition-all duration-300 h-[40px] px-2 min-[360px]:px-3 min-[390px]:px-4 rounded-[12px] relative ${
             pathname === "/news"
               ? "bg-[#172339] text-white"
               : "text-[#172339]"

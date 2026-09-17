@@ -1,5 +1,7 @@
+"use client";
+
 import TournamentNavbarItem from "./TournamentNavbarItem";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/stores/store";
@@ -7,11 +9,13 @@ import { tournamentAPI } from "@/api/tournament.api";
 import { resolveImageUrl } from "@/lib/tournament-utils";
 
 interface Props {
-  activeTab?: "info" | "matches" | "live" | "rankings" | "fav";
+  activeTab?: "info" | "matches" | "live" | "rankings" | "bonus" | "fav";
+  isEvent?: boolean;
 }
 
-export default function TournamentNavbar({ activeTab = "info" }: Props) {
+export default function TournamentNavbar({ activeTab = "info", isEvent: isEventProp }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const params = useParams();
   const slug = params?.slug as string | undefined;
   
@@ -52,12 +56,19 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
       setIsRegistered(false);
       return;
     }
-    tournamentAPI.getTournamentRegistrationsBySlug(slug)
-      .then((res) => {
-        const regs: { id: number }[] = res.data || [];
-        setIsRegistered(regs.some(r => r.id === user.id));
-      })
-      .catch(() => setIsRegistered(false));
+    const checkRegistration = () => {
+      tournamentAPI.getTournamentRegistrationsBySlug(slug)
+        .then((res) => {
+          const regs: { id: number }[] = res.data || [];
+          setIsRegistered(regs.some(r => r.id === user.id));
+        })
+        .catch(() => setIsRegistered(false));
+    };
+
+    checkRegistration();
+
+    window.addEventListener('tournament-registered', checkRegistration);
+    return () => window.removeEventListener('tournament-registered', checkRegistration);
   }, [slug, user]);
 
   const isRevealedPhase = (() => {
@@ -69,7 +80,12 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
     return closed || full;
   })();
 
-  const canAccessMatches = isRevealedPhase || isRegistered;
+  const isEvent = isEventProp ?? (
+    (pathname ? pathname.startsWith('/events') : false) ||
+    (typeof window !== 'undefined' ? window.location.pathname.startsWith('/events') : false) ||
+    tournament?.category === 'event'
+  );
+  const canAccessMatches = isEvent || isRevealedPhase || isRegistered || status === 'ongoing' || status === 'completed';
 
   const getKnockoutStart = (numberOfPlayers: number) => {
     if (numberOfPlayers > 32) return 81;
@@ -92,20 +108,28 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
     return hasOngoingOrCompletedKnockout ? 2 : 1;
   };
 
-  const go = (tab: "info" | "matches" | "live" | "rankings" | "fav") => {
+  const go = (tab: "info" | "matches" | "live" | "rankings" | "bonus" | "fav") => {
     if (!slug) return;
-    if (tab === "info") router.push(`/tournaments/${slug}`);
+    const basePath = isEvent ? '/events' : '/tournaments';
+    if (tab === "info") router.push(`${basePath}/${slug}`);
     if (tab === "matches") {
-      if (!canAccessMatches) return;
-      router.push(`/tournaments/${slug}/matches/${getTargetMatchesStage()}`);
+      if (!isEvent && !canAccessMatches) return;
+      if (isEvent) {
+        router.push(`${basePath}/${slug}/matches`);
+      } else {
+        router.push(`${basePath}/${slug}/matches/${getTargetMatchesStage()}`);
+      }
     }
     if (tab === "rankings") {
-      if (status !== "completed" && status !== "finished") return;
-      router.push(`/tournaments/${slug}/rankings`);
+      router.push(`${basePath}/${slug}/rankings`);
     }
     if (tab === "live") {
-      if (status !== "ongoing") return;
-      router.push(`/tournaments/${slug}/live`);
+      router.push(`${basePath}/${slug}/live`);
+    }
+    if (tab === "bonus") {
+      if (isEvent) {
+        router.push(`${basePath}/${slug}/bonus`);
+      }
     }
   };
 
@@ -223,7 +247,7 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
           variant={
             activeTab === "live"
               ? "active"
-              : status === "ongoing"
+              : (isEvent || status === "ongoing" || matches.some((m: any) => m.status === 'ongoing' || m.status === 'upcoming'))
                 ? "default"
                 : "disabled"
           }
@@ -261,9 +285,7 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
           variant={
             activeTab === "rankings"
               ? "active"
-              : (status === "completed" || status === "finished")
-                ? "default"
-                : "disabled"
+              : "default"
           }
           icon={
             <svg
@@ -299,8 +321,12 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
         />
 
         <TournamentNavbarItem
-          label="FAV"
-          variant="disabled"
+          label={isEvent ? "Bonus" : "FAV"}
+          variant={
+            isEvent
+              ? (activeTab === "bonus" ? "active" : "default")
+              : "disabled"
+          }
           icon={
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -311,7 +337,7 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
             >
               <path
                 d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z"
-                className={activeTab === "fav" ? "stroke-white" : "stroke-[#37393E] group-hover:stroke-white"}
+                className={isEvent && activeTab === "bonus" ? "stroke-white" : "stroke-[#37393E] group-hover:stroke-white"}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -325,21 +351,25 @@ export default function TournamentNavbar({ activeTab = "info" }: Props) {
               />
               <path
                 d="M23.0107 19.2064C22.9857 19.4623 22.9349 19.7196 22.8566 19.9749C22.225 22.0342 20.0437 23.1916 17.9844 22.56C15.9252 21.9285 14.7678 19.7472 15.3994 17.6879C16.0309 15.6287 18.2122 14.4713 20.2715 15.1028C20.3662 15.1319 20.4589 15.1642 20.5497 15.1996"
-                className={activeTab === "fav" ? "stroke-white" : "stroke-[#37393E] group-hover:stroke-white"}
+                className={isEvent && activeTab === "bonus" ? "stroke-white" : "stroke-[#37393E] group-hover:stroke-white"}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M13.5 16H8.5C7.17392 16 5.90215 16.4214 4.96447 17.1716C4.02678 17.9217 3.5 18.9391 3.5 20V22H12.4998"
-                className={activeTab === "fav" ? "stroke-white" : "stroke-[#37393E] group-hover:stroke-white"}
+                className={isEvent && activeTab === "bonus" ? "stroke-white" : "stroke-[#37393E] group-hover:stroke-white"}
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
           }
-          onClick={() => go("fav")}
+          onClick={() => {
+            if (isEvent) {
+              go("bonus");
+            }
+          }}
         />
       </div>
     </nav>

@@ -8,6 +8,7 @@ import { tournamentAPI } from "@/api/tournament.api";
 interface RegisterTournamentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
   tournament: {
     id: string;
     title: string;
@@ -25,6 +26,7 @@ interface RegisterTournamentModalProps {
 export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = ({
   isOpen,
   onClose,
+  onSuccess,
   tournament,
   user,
 }) => {
@@ -32,6 +34,19 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
   const [showSuccess, setShowSuccess] = useState(false);
   const [transferContent, setTransferContent] = useState<string>('');
   const [codeLoading, setCodeLoading] = useState(false);
+
+  useEffect(() => {
+    if (showSuccess) {
+      onSuccess?.();
+    }
+  }, [showSuccess, onSuccess]);
+
+  const handleClose = () => {
+    if (showSuccess) {
+      onSuccess?.();
+    }
+    onClose();
+  };
 
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -131,7 +146,10 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
   );
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm animate-fadeIn"
+      onClick={handleClose}
+    >
       <div className="flex min-h-full items-center justify-center p-4">
       <div
         className="relative bg-white rounded-[12px] shadow-2xl border border-gray-100 animate-scaleIn font-sans flex flex-col p-[24px] gap-[24px] w-full"
@@ -140,7 +158,7 @@ export const RegisterTournamentModal: React.FC<RegisterTournamentModalProps> = (
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-[24px] right-[24px] p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500 hover:text-gray-800 z-10 cursor-pointer"
           aria-label="Close modal"
           type="button"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useLocation } from 'react-router';
 import { Button, Card, Tabs, Spinner } from 'flowbite-react';
 import { Icon } from '@iconify/react';
 import { tournamentAPI, type Tournament, type TournamentMatch, type TournamentMatchUpsert, type TournamentRegisteredPlayer } from '../../api/tournament.api';
@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 import TournamentRegistrationsTab from './components/TournamentRegistrationsTab';
 import TournamentQualificationTab from './components/TournamentQualificationTab';
 import TournamentKnockoutTab from './components/TournamentKnockoutTab';
+import TournamentEventMatchesTab from './components/TournamentEventMatchesTab';
+import TournamentEventRankingsTab from './components/TournamentEventRankingsTab';
 import TournamentPaymentsTab from './components/TournamentPaymentsTab';
 import { getTournamentTypeLabel } from '../../constants/shared';
 
@@ -32,6 +34,9 @@ const dedupeMatches = (matches: TournamentMatch[]): TournamentMatch[] => {
 const TournamentDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
+    // Determine event vs tournament from the URL path — reliable before data loads
+    const isEventPage = location.pathname.startsWith('/events');
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<string>('registrations');
@@ -209,6 +214,7 @@ const TournamentDetail = () => {
 
     useEffect(() => {
         if (!tournament || bracketMatches.length === 0) return;
+        if (isEventPage || tournament.category === 'event') return;
 
         const matchesToAutoComplete = bracketMatches.filter((m) => {
             // Skip if already completed or already auto-processed
@@ -292,8 +298,9 @@ const TournamentDetail = () => {
         );
     }
 
-    const isDoubleElimination = tournament.tournament_type === 'double_elimination';
-    const isKnockout = tournament.tournament_type === 'knockout';
+    const isEvent = isEventPage || tournament.category === 'event';
+    const isDoubleElimination = !isEvent && tournament.tournament_type === 'double_elimination';
+    const isKnockout = !isEvent && tournament.tournament_type === 'knockout';
 
     return (
         <div className="p-6 space-y-6">
@@ -304,10 +311,10 @@ const TournamentDetail = () => {
                         <Button
                             color="gray"
                             size="sm"
-                            onClick={() => navigate('/tournaments')}
+                            onClick={() => navigate(isEvent ? '/events' : '/tournaments')}
                         >
                             <Icon icon="solar:arrow-left-outline" className="mr-2" />
-                            Quay lại trang giải đấu
+                            Quay lại {isEvent ? 'trang sự kiện' : 'trang giải đấu'}
                         </Button>
                     </div>
                     <div>
@@ -333,6 +340,7 @@ const TournamentDetail = () => {
                         <TournamentRegistrationsTab
                             tournamentId={tournament.id}
                             numberOfPlayers={tournament.number_of_players}
+                            isEvent={isEvent}
                             onBracketRefresh={() => {
                                 fetchBracket(tournament.id);
                                 fetchRegisteredPlayers(tournament.id);
@@ -365,34 +373,54 @@ const TournamentDetail = () => {
                         </Tabs.Item>
                     )}
 
-                    {/* Loại trực tiếp - For both types */}
-                    {(isDoubleElimination || isKnockout) && (
+                    {/* Trận đấu sự kiện (cho event) HOẶC Loại trực tiếp (cho tournament knockout/double) */}
+                    {(isEvent || isDoubleElimination || isKnockout) && (
                         <Tabs.Item
                             active={activeTab === 'knockout'}
-                            title="Loại trực tiếp"
+                            title={isEvent ? 'Trận đấu' : 'Loại trực tiếp'}
                             onClick={() => setActiveTab('knockout')}
                         >
-                            <TournamentKnockoutTab
-                                tournamentId={tournament.id}
-                                numberOfPlayers={tournament.number_of_players}
-                                players={registeredPlayers}
-                                matches={bracketMatches}
-                                tournament={tournament}
-                                bracketLoading={bracketLoading || playersLoading}
-                                onUpsertMatch={(matchNo, data) => upsertMatch(tournament.id, matchNo, data)}
-                                onDirty={markDirty}
-                                onClean={markClean}
-                            />
+                            {isEvent ? (
+                                <TournamentEventMatchesTab
+                                    tournamentId={tournament.id}
+                                    tournament={tournament}
+                                    matches={bracketMatches}
+                                    players={registeredPlayers}
+                                    bracketLoading={bracketLoading || playersLoading}
+                                    onUpsertMatch={(matchNo, data) => upsertMatch(tournament.id, matchNo, data)}
+                                    onRefresh={() => {
+                                        fetchBracket(tournament.id);
+                                        fetchRegisteredPlayers(tournament.id);
+                                    }}
+                                />
+                            ) : (
+                                <TournamentKnockoutTab
+                                    tournamentId={tournament.id}
+                                    numberOfPlayers={tournament.number_of_players}
+                                    players={registeredPlayers}
+                                    matches={bracketMatches}
+                                    tournament={tournament}
+                                    bracketLoading={bracketLoading || playersLoading}
+                                    onUpsertMatch={(matchNo, data) => upsertMatch(tournament.id, matchNo, data)}
+                                    onDirty={markDirty}
+                                    onClean={markClean}
+                                />
+                            )}
                         </Tabs.Item>
                     )}
 
-                    {/* Thanh toán */}
+                    {/* Bảng xếp hạng - Luôn hiển thị bên phải Trận đấu */}
                     <Tabs.Item
-                        active={activeTab === 'payments'}
-                        title="Thanh toán"
-                        onClick={() => setActiveTab('payments')}
+                        active={activeTab === 'rankings'}
+                        title="Bảng xếp hạng"
+                        onClick={() => setActiveTab('rankings')}
                     >
-                        <TournamentPaymentsTab tournamentId={tournament.id} />
+                        <TournamentEventRankingsTab
+                            tournamentId={tournament.id}
+                            tournament={tournament}
+                            players={registeredPlayers}
+                            matches={bracketMatches}
+                        />
                     </Tabs.Item>
                 </Tabs>
             </Card>

@@ -2,18 +2,20 @@ import type { TournamentMatch } from '../../../api/tournament.api';
 import { toDatetimeLocal } from '../utils/bracketUtils';
 
 export type PlayerIdStr = string;
-export type Status = 'pending' | 'upcoming' | 'ongoing' | 'completed';
+export type Status = 'pending' | 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
 export type Bracket = 'knockout';
 
 export interface MatchVM {
     match_no: number;
     table_no: string;
     match_time: string;
+    match_end_time?: string;
     player1_id: PlayerIdStr;
     player2_id: PlayerIdStr;
     player1_score: string;
     player2_score: string;
     race_to: string;
+    handicap_desc?: string;
     status: Status;
     player1_check_in: string;
     player2_check_in: string;
@@ -42,11 +44,13 @@ export const toVM = (m: TournamentMatch): MatchVM => ({
     match_no: m.match_no,
     table_no: m.table_no || '',
     match_time: m.match_time ? toDatetimeLocal(m.match_time) : '',
+    match_end_time: m.match_end_time ? toDatetimeLocal(m.match_end_time) : '',
     player1_id: m.player1_id ? String(m.player1_id) : '',
     player2_id: m.player2_id ? String(m.player2_id) : '',
     player1_score: String(m.player1_score ?? 0),
     player2_score: String(m.player2_score ?? 0),
-    race_to: '',
+    race_to: m.race_to ? String(m.race_to) : '',
+    handicap_desc: m.handicap_desc || '',
     status: m.status,
     player1_check_in: m.player1_check_in || 'unconfirmed',
     player2_check_in: m.player2_check_in || 'unconfirmed',

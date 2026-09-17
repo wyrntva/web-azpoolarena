@@ -269,7 +269,7 @@ export class TournamentsService {
     };
   }
 
-  async findAll(skip = 0, limit = 50) {
+  async findAll(skip = 0, limit = 50, category?: string) {
     const qb = this.tourRepo
       .createQueryBuilder('t')
       .addSelect(
@@ -279,14 +279,33 @@ export class TournamentsService {
             .from(TournamentRegistrationEntity, 'r')
             .where('r.tournament_id = t.id'),
         'registration_count',
-      )
-      .skip(skip)
+      );
+
+    if (category) {
+      if (category === 'tournament') {
+        qb.andWhere('(t.category = :category OR t.category IS NULL)', { category });
+      } else {
+        qb.andWhere('t.category = :category', { category });
+      }
+    }
+
+    qb.skip(skip)
       .take(limit)
       .orderBy('t.is_pinned', 'DESC')
       .addOrderBy('t.created_at', 'DESC');
 
     const { entities, raw } = await qb.getRawAndEntities();
-    const total = await this.tourRepo.count();
+
+    const countQb = this.tourRepo.createQueryBuilder('t');
+    if (category) {
+      if (category === 'tournament') {
+        countQb.andWhere('(t.category = :category OR t.category IS NULL)', { category });
+      } else {
+        countQb.andWhere('t.category = :category', { category });
+      }
+    }
+    const total = await countQb.getCount();
+
     const data = entities.map((t, idx) => ({
       ...this.mapTournament(t),
       registration_count: parseInt(raw[idx]?.registration_count ?? '0', 10),
@@ -406,7 +425,7 @@ export class TournamentsService {
     return this.mapTournament(tour);
   }
 
-  async findPublic(skip = 0, limit = 50) {
+  async findPublic(skip = 0, limit = 50, category?: string) {
     const qb = this.tourRepo
       .createQueryBuilder('t')
       .addSelect(
@@ -417,17 +436,36 @@ export class TournamentsService {
             .where('r.tournament_id = t.id'),
         'registration_count',
       )
-      .where('t.display = :display', { display: 'public' })
-      .skip(skip)
+      .where('t.display = :display', { display: 'public' });
+
+    if (category) {
+      if (category === 'tournament') {
+        qb.andWhere('(t.category = :category OR t.category IS NULL)', { category });
+      } else {
+        qb.andWhere('t.category = :category', { category });
+      }
+    }
+
+    qb.skip(skip)
       .take(limit)
       .orderBy('t.is_pinned', 'DESC')
       .addOrderBy('t.created_at', 'DESC');
 
     const { entities, raw } = await qb.getRawAndEntities();
-    const total = await this.tourRepo
+
+    const countQb = this.tourRepo
       .createQueryBuilder('t')
-      .where('t.display = :display', { display: 'public' })
-      .getCount();
+      .where('t.display = :display', { display: 'public' });
+
+    if (category) {
+      if (category === 'tournament') {
+        countQb.andWhere('(t.category = :category OR t.category IS NULL)', { category });
+      } else {
+        countQb.andWhere('t.category = :category', { category });
+      }
+    }
+    const total = await countQb.getCount();
+
     const data = entities.map((t, idx) => ({
       ...this.mapTournament(t),
       registration_count: parseInt(raw[idx]?.registration_count ?? '0', 10),
@@ -602,6 +640,9 @@ export class TournamentsService {
   }
 
   async getRegistrations(tournamentId: number) {
+    const tour = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    const isEvent = tour?.category === 'event';
+
     const regs = await this.regRepo
       .createQueryBuilder('r')
       .leftJoinAndSelect('r.user', 'user')
@@ -615,14 +656,16 @@ export class TournamentsService {
       phone_number: r.user?.phone_number || '',
       rank: r.rank || r.user?.rank || null,
       avatar_url: r.user?.avatar_url || null,
-      points:
-        r.points !== undefined && r.points !== null
+      points: isEvent
+        ? (r.points ?? 0)
+        : (r.points !== undefined && r.points !== null
           ? r.points
-          : r.user?.points || 0,
-      current_points:
-        r.user?.points !== undefined && r.user?.points !== null
+          : r.user?.points || 0),
+      current_points: isEvent
+        ? (r.points ?? 0)
+        : (r.user?.points !== undefined && r.user?.points !== null
           ? r.user.points
-          : 0,
+          : 0),
       registered_at: r.registered_at ? r.registered_at.toISOString() : null,
     }));
   }
@@ -758,7 +801,8 @@ export class TournamentsService {
         match.bracket,
         t?.tournament_type,
       ),
-      race_to: this.computeRaceTo(match.round, numPlayers, t, match.bracket),
+      race_to: match.race_to || this.computeRaceTo(match.round, numPlayers, t, match.bracket),
+      handicap_desc: match.handicap_desc || null,
       effective_race_to: effectiveRaceTo,
       match_time: match.match_time ? match.match_time.toISOString() : null,
       status: match.status,
@@ -806,6 +850,9 @@ export class TournamentsService {
       statusBefore !== TournamentMatchStatus.COMPLETED &&
       match.winner_id
     ) {
+      if (!match.match_end_time) {
+        match.match_end_time = new Date();
+      }
       await this.calculateAndApplyRating(match, match.winner_id);
     }
 
@@ -961,12 +1008,14 @@ export class TournamentsService {
     const reg = this.regRepo.create({
       tournament_id: tournamentId,
       user_id: userId,
-      points: user.points ?? 0,
+      points: tournament.category === 'event' ? 0 : (user.points ?? 0),
       rank: user.rank || undefined,
     });
     await this.regRepo.save(reg);
 
-    await this.assignPlayerToRound1(tournamentId, userId);
+    if (tournament.category !== 'event') {
+      await this.assignPlayerToRound1(tournamentId, userId);
+    }
 
     return this.regRepo.findOne({
       where: { id: reg.id },
@@ -1365,6 +1414,7 @@ export class TournamentsService {
     const oldWinnerId = match ? match.winner_id : null;
 
     if (
+      tournament?.category !== 'event' &&
       statusBefore === TournamentMatchStatus.COMPLETED &&
       oldWinnerId &&
       oldP1Id &&
@@ -1430,6 +1480,12 @@ export class TournamentsService {
     if (dto.match_time !== undefined) {
       match.match_time = dto.match_time
         ? new Date(dto.match_time)
+        : (null as any);
+    }
+
+    if (dto.match_end_time !== undefined) {
+      match.match_end_time = dto.match_end_time
+        ? new Date(dto.match_end_time)
         : (null as any);
     }
 
@@ -1507,6 +1563,10 @@ export class TournamentsService {
           await this.tourRepo.save(tour);
         }
       }
+    }
+
+    if (tournament?.category === 'event') {
+      await this.recalculateEventRegistrationsPoints(tournamentId);
     }
 
     await this.emitMatchUpdate(match.id);
@@ -1664,6 +1724,13 @@ export class TournamentsService {
     const tournament = await this.tourRepo.findOne({
       where: { id: match.tournament_id },
     });
+
+    // Events do not affect global ranking points or the leaderboard
+    if (tournament?.category === 'event') {
+      await this.applyEventMatchPoints(match, winnerId, tournament);
+      return;
+    }
+
     const coefficient = tournament
       ? await this.getRoundCoefficient(
           match.match_no,
@@ -1737,6 +1804,134 @@ export class TournamentsService {
         `Rank updated for player ${player.full_name} to ${matchingRank.name}`,
       );
     }
+  }
+
+  getEventWinPoints(
+    match: TournamentMatchEntity,
+    tournament: TournamentEntity,
+  ): number {
+    const desc = (match.handicap_desc || '').toLowerCase();
+    if (desc.includes('chấp 2') || desc.includes('13') || match.race_to === 13) {
+      return parseInt(tournament.handicap_2_touch || '7', 10) || 7;
+    }
+    if (desc.includes('chấp 1')) {
+      return parseInt(tournament.handicap_1_touch || '5', 10) || 5;
+    }
+    if (desc.includes('11') || match.race_to === 11) {
+      return parseInt(tournament.draw_touch_11 || '7', 10) || 7;
+    }
+    return parseInt(tournament.draw_touch || '5', 10) || 5;
+  }
+
+  getEventLosePoints(
+    match: TournamentMatchEntity,
+    tournament?: TournamentEntity | null,
+  ): number {
+    const desc = (match.handicap_desc || '').toLowerCase();
+    if (desc.includes('chấp 2') || desc.includes('13') || match.race_to === 13) {
+      return 2;
+    }
+    if (desc.includes('11') || match.race_to === 11) {
+      return 2;
+    }
+    // Đồng cơ chạm 9 hoặc Chạm 8 chấp 1
+    return 1;
+  }
+
+  async applyEventMatchPoints(
+    match: TournamentMatchEntity,
+    winnerId: number,
+    tournament: TournamentEntity,
+  ) {
+    const winPoints = this.getEventWinPoints(match, tournament);
+    const losePoints = this.getEventLosePoints(match, tournament);
+    const bonusVal = parseInt(tournament.bonus || '0', 10) || 0;
+
+    let bonus = 0;
+    if (match.player1_id && match.player2_id && bonusVal > 0) {
+      const priorMatch = await this.matchRepo
+        .createQueryBuilder('m')
+        .where('m.tournament_id = :tid', { tid: match.tournament_id })
+        .andWhere('m.status = :status', { status: TournamentMatchStatus.COMPLETED })
+        .andWhere('m.id != :currentId', { currentId: match.id || 0 })
+        .andWhere(
+          '((m.player1_id = :p1 AND m.player2_id = :p2) OR (m.player1_id = :p2 AND m.player2_id = :p1))',
+          { p1: match.player1_id, p2: match.player2_id },
+        )
+        .getOne();
+      if (!priorMatch) {
+        bonus = bonusVal;
+      }
+    }
+
+    if (match.player1_points === null || match.player1_points === undefined) {
+      match.player1_points = (match.player1_id === winnerId ? winPoints : losePoints) + bonus;
+    }
+    if (match.player2_points === null || match.player2_points === undefined) {
+      match.player2_points = (match.player2_id === winnerId ? winPoints : losePoints) + bonus;
+    }
+
+    await this.matchRepo.save(match);
+    await this.recalculateEventRegistrationsPoints(match.tournament_id);
+  }
+
+  async recalculateEventRegistrationsPoints(tournamentId: number) {
+    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
+    const bonusVal = tournament ? parseInt(tournament.bonus || '0', 10) || 0 : 0;
+
+    const completedMatches = await this.matchRepo.find({
+      where: {
+        tournament_id: tournamentId,
+        status: TournamentMatchStatus.COMPLETED,
+      },
+      order: { match_no: 'ASC', id: 'ASC' },
+    });
+
+    const seenPairs = new Set<string>();
+    const playerPointsMap = new Map<number, number>();
+
+    for (const m of completedMatches) {
+      let matchBonus = 0;
+      if (m.player1_id && m.player2_id && bonusVal > 0) {
+        const pairKey = [Math.min(m.player1_id, m.player2_id), Math.max(m.player1_id, m.player2_id)].join('_');
+        if (!seenPairs.has(pairKey)) {
+          seenPairs.add(pairKey);
+          matchBonus = bonusVal;
+        }
+      }
+
+      const winPts = tournament ? this.getEventWinPoints(m, tournament) : 5;
+      const losePts = this.getEventLosePoints(m, tournament);
+
+      if (m.player1_id) {
+        const pts =
+          m.player1_points !== null && m.player1_points !== undefined
+            ? Number(m.player1_points)
+            : (m.winner_id === m.player1_id ? winPts : losePts) + matchBonus;
+        playerPointsMap.set(
+          m.player1_id,
+          (playerPointsMap.get(m.player1_id) || 0) + pts,
+        );
+      }
+      if (m.player2_id) {
+        const pts =
+          m.player2_points !== null && m.player2_points !== undefined
+            ? Number(m.player2_points)
+            : (m.winner_id === m.player2_id ? winPts : losePts) + matchBonus;
+        playerPointsMap.set(
+          m.player2_id,
+          (playerPointsMap.get(m.player2_id) || 0) + pts,
+        );
+      }
+    }
+
+    const regs = await this.regRepo.find({
+      where: { tournament_id: tournamentId },
+    });
+    for (const reg of regs) {
+      reg.points = playerPointsMap.get(reg.user_id) || 0;
+    }
+    await this.regRepo.save(regs);
   }
 
   private getFinalMatchNo(numberOfPlayers: number): number {
@@ -2613,4 +2808,212 @@ export class TournamentsService {
     payment.status = TableFeePaymentStatus.CANCELLED;
     await this.tableFeePaymentRepo.save(payment);
   }
+
+  // ==== EVENT MATCH APIS FOR SCOREBOARD ==== //
+
+  async getActiveEvent() {
+    const event = await this.tourRepo.findOne({
+      where: { category: 'event' },
+      order: { created_at: 'DESC' },
+    });
+    if (!event) return null;
+    return {
+      id: event.id,
+      name: event.name,
+      banner: event.banner,
+      draw_touch: event.draw_touch || '9',
+      draw_touch_11: event.draw_touch_11 || '11',
+      handicap_1_touch: event.handicap_1_touch || '9',
+      handicap_2_touch: event.handicap_2_touch || '13',
+      bonus: event.bonus || '',
+      ranks: event.ranks || [],
+      category: event.category,
+      status: event.status,
+    };
+  }
+
+  async checkEventPlayer(tournamentId: number, phone: string) {
+    if (!phone || !phone.trim()) {
+      return { found: false, message: 'Vui lòng nhập số điện thoại' };
+    }
+    const rawDigits = phone.trim().replace(/\D/g, '');
+    if (!rawDigits || rawDigits.length < 8) {
+      return { found: false, message: 'Vui lòng nhập số điện thoại hợp lệ' };
+    }
+
+    // Build all possible variants: 0974814707, 84974814707, +84974814707
+    const zeroPhone = rawDigits.startsWith('84')
+      ? '0' + rawDigits.substring(2)
+      : rawDigits.startsWith('0')
+      ? rawDigits
+      : '0' + rawDigits;
+    const bare84 = rawDigits.startsWith('84')
+      ? rawDigits
+      : '84' + (rawDigits.startsWith('0') ? rawDigits.substring(1) : rawDigits);
+    const plus84 = '+' + bare84;
+
+    const user = await this.userRepo
+      .createQueryBuilder('u')
+      .where('u.phone_number IN (:...phones)', {
+        phones: [zeroPhone, bare84, plus84],
+      })
+      .getOne();
+
+    if (!user) {
+      return {
+        found: false,
+        message: 'Số điện thoại không tồn tại trong hệ thống',
+      };
+    }
+
+    // Check if user registered for this event
+    const reg = await this.regRepo.findOne({
+      where: { tournament_id: tournamentId, user_id: user.id },
+    });
+
+    if (!reg) {
+      return {
+        found: false,
+        message: `Khách hàng ${user.full_name} chưa đăng ký tham gia sự kiện này`,
+      };
+    }
+
+    return {
+      found: true,
+      player: {
+        id: user.id,
+        name: user.full_name,
+        phone: user.phone_number,
+        rank: reg.rank || user.rank || 'E',
+        avatar_url: user.avatar_url || '',
+      },
+    };
+  }
+
+  async createEventMatch(body: {
+    tournament_id: number;
+    player1_id: number;
+    player2_id: number;
+    table_name: string;
+    race_to: number;
+    player1_score?: number;
+    player2_score?: number;
+    handicap_desc?: string;
+  }) {
+    const tournament = await this.tourRepo.findOne({
+      where: { id: body.tournament_id },
+    });
+    if (!tournament) throw new NotFoundException('Sự kiện không tồn tại');
+
+    const [p1, p2] = await Promise.all([
+      this.userRepo.findOne({ where: { id: body.player1_id } }),
+      this.userRepo.findOne({ where: { id: body.player2_id } }),
+    ]);
+    if (!p1 || !p2) throw new BadRequestException('Không tìm thấy thông tin cơ thủ');
+
+    // Kiểm tra giới hạn số trận giữa 2 cơ thủ trong ngày (tối đa 3 trận, không thể tạo trận thứ 4)
+    const now = new Date();
+    const vnOffsetMs = 7 * 60 * 60 * 1000; // GMT+7
+    const vnNow = new Date(now.getTime() + vnOffsetMs);
+    const startOfDay = new Date(
+      Date.UTC(vnNow.getUTCFullYear(), vnNow.getUTCMonth(), vnNow.getUTCDate(), 0, 0, 0) -
+        vnOffsetMs,
+    );
+    const endOfDay = new Date(
+      Date.UTC(
+        vnNow.getUTCFullYear(),
+        vnNow.getUTCMonth(),
+        vnNow.getUTCDate(),
+        23,
+        59,
+        59,
+        999,
+      ) - vnOffsetMs,
+    );
+
+    const matchesTodayCount = await this.matchRepo
+      .createQueryBuilder('m')
+      .where('m.tournament_id = :tid', { tid: body.tournament_id })
+      .andWhere(
+        '((m.player1_id = :p1 AND m.player2_id = :p2) OR (m.player1_id = :p2 AND m.player2_id = :p1))',
+        { p1: body.player1_id, p2: body.player2_id },
+      )
+      .andWhere('m.created_at >= :startOfDay AND m.created_at <= :endOfDay', {
+        startOfDay,
+        endOfDay,
+      })
+      .andWhere('m.status != :cancelled', { cancelled: 'cancelled' })
+      .getCount();
+
+    if (matchesTodayCount >= 3) {
+      throw new BadRequestException(
+        'Hai cơ thủ đã thi đấu với nhau 3 trận trong ngày hôm nay, không thể tạo thêm trận đấu!',
+      );
+    }
+
+    // Get max match_no
+    const lastMatch = await this.matchRepo.findOne({
+      where: { tournament_id: body.tournament_id },
+      order: { match_no: 'DESC' },
+    });
+    const nextMatchNo = (lastMatch?.match_no || 0) + 1;
+
+    // Any existing ongoing match on this table should be cleared or finished
+    const existingOngoing = await this.matchRepo.find({
+      where: {
+        table_no: body.table_name,
+        status: TournamentMatchStatus.ONGOING,
+      },
+    });
+    for (const m of existingOngoing) {
+      m.status = TournamentMatchStatus.COMPLETED;
+      await this.matchRepo.save(m);
+    }
+
+    const match = this.matchRepo.create({
+      tournament_id: body.tournament_id,
+      match_no: nextMatchNo,
+      bracket: 'event',
+      round: 1,
+      table_no: body.table_name,
+      player1_id: body.player1_id,
+      player2_id: body.player2_id,
+      player1_rank: p1.rank || null,
+      player2_rank: p2.rank || null,
+      player1_score: body.player1_score || 0,
+      player2_score: body.player2_score || 0,
+      player1_check_in: 'confirmed',
+      player2_check_in: 'confirmed',
+      race_to: body.race_to,
+      handicap_desc: body.handicap_desc || null,
+      status: TournamentMatchStatus.ONGOING,
+      match_time: new Date(),
+    });
+
+    const saved = await this.matchRepo.save(match);
+    await this.emitMatchUpdate(saved.id);
+
+    return {
+      success: true,
+      match: {
+        id: saved.id,
+        match_id: saved.id,
+        tournament_id: saved.tournament_id,
+        tournament_name: tournament.name,
+        table_no: saved.table_no,
+        race_to: body.race_to,
+        player1_id: p1.id,
+        player1_name: p1.full_name,
+        player1_rank: p1.rank,
+        player1_score: saved.player1_score,
+        player2_id: p2.id,
+        player2_name: p2.full_name,
+        player2_rank: p2.rank,
+        player2_score: saved.player2_score,
+        handicap_desc: body.handicap_desc,
+        status: saved.status,
+      },
+    };
+  }
 }
+

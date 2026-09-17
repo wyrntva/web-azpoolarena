@@ -63,7 +63,7 @@ export default function TournamentsPage() {
   const fetchTournaments = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await tournamentAPI.getTournaments();
+      const response = await tournamentAPI.getTournaments({ category: 'tournament' });
       const tournaments: TournamentData[] = response.data?.data || [];
 
       if (!Array.isArray(tournaments)) {

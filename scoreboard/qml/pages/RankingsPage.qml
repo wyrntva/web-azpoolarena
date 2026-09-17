@@ -42,8 +42,12 @@ Item {
     }
 
     function displayRankLabel(entry) {
-        const rankName = (entry && entry.rank_name) ? entry.rank_name : "N/A"
-        return trArgsLocal("rankings_rank_label", [rankName], "Hạng " + rankName)
+        const rankName = (entry && entry.rank_name) ? entry.rank_name : ""
+        if (!rankName || rankName === "N/A") return ""
+        if (typeof win !== "undefined" && win && typeof win.formatLevel === "function") {
+            return win.formatLevel(rankName)
+        }
+        return rankName
     }
 
     property int currentPage: 1

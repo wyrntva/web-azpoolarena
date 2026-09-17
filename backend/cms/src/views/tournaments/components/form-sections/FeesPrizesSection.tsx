@@ -9,39 +9,42 @@ interface FeesPrizesSectionProps {
     setFormData: React.Dispatch<React.SetStateAction<TournamentFormData>>;
     handleCurrencyChange: (field: keyof TournamentFormData, value: string) => void;
     getFormattedValue: (value: string) => string;
+    isEvent?: boolean;
 }
 
 export default function FeesPrizesSection({
-    formData, setFormData, handleCurrencyChange, getFormattedValue,
+    formData, setFormData, handleCurrencyChange, getFormattedValue, isEvent = false,
 }: FeesPrizesSectionProps) {
     return (
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Lệ phí và giải thưởng
             </h3>
-            <div className="flex items-center gap-6 pb-2">
-                <ToggleSwitch
-                    checked={formData.free_registration_fee}
-                    onChange={(checked) => setFormData({
-                        ...formData,
-                        free_registration_fee: checked,
-                        registration_fee: checked ? '0' : formData.registration_fee
-                    })}
-                    label="FREE lệ phí"
-                />
-                <ToggleSwitch
-                    checked={formData.free_table_fee}
-                    onChange={(checked) => setFormData({ ...formData, free_table_fee: checked })}
-                    label="FREE tiền bàn"
-                />
-                <ToggleSwitch
-                    checked={formData.pre_payment}
-                    onChange={(checked) => setFormData({ ...formData, pre_payment: checked })}
-                    label="Thanh toán trước"
-                />
-            </div>
+            {!isEvent && (
+                <div className="flex items-center gap-6 pb-2">
+                    <ToggleSwitch
+                        checked={formData.free_registration_fee}
+                        onChange={(checked) => setFormData({
+                            ...formData,
+                            free_registration_fee: checked,
+                            registration_fee: checked ? '0' : formData.registration_fee
+                        })}
+                        label="FREE lệ phí"
+                    />
+                    <ToggleSwitch
+                        checked={formData.free_table_fee}
+                        onChange={(checked) => setFormData({ ...formData, free_table_fee: checked })}
+                        label="FREE tiền bàn"
+                    />
+                    <ToggleSwitch
+                        checked={formData.pre_payment}
+                        onChange={(checked) => setFormData({ ...formData, pre_payment: checked })}
+                        label="Thanh toán trước"
+                    />
+                </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {!formData.free_registration_fee && (
+                {!isEvent && !formData.free_registration_fee && (
                     <div>
                         <Label htmlFor="registration_fee" className="mb-2 block">Lệ phí tham gia</Label>
                         <TextInput
@@ -81,13 +84,7 @@ export default function FeesPrizesSection({
 
 /** Prize field definitions to reduce repetition */
 const PRIZE_FIELDS = [
-    { id: 'first_prize', label: 'Giải nhất' },
-    { id: 'second_prize', label: 'Giải nhì' },
-    { id: 'third_prize', label: 'Giải ba' },
-    { id: 'top_5_8_prize', label: 'Top 5-8' },
-    { id: 'top_9_16_prize', label: 'Top 9-16' },
-    { id: 'top_17_32_prize', label: 'Top 17-32' },
-    { id: 'top_33_64_prize', label: 'Top 33-64' },
-    { id: 'top_65_128_prize', label: 'Top 65-128' },
-    { id: 'top_129_256_prize', label: 'Top 129-256' },
+    { id: 'first_prize', label: 'Top 1' },
+    { id: 'second_prize', label: 'Top 2' },
+    { id: 'third_prize', label: 'Top 3' },
 ] as const;

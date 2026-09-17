@@ -1,7 +1,7 @@
 /**
  * HandicapSection — Section 6: Tỉ lệ chấp (draw settings, handicap rounds, quarter/semi/final)
  */
-import { Label, TextInput, Select, ToggleSwitch } from 'flowbite-react';
+import { Label, TextInput, ToggleSwitch } from 'flowbite-react';
 import type { TournamentFormData } from '../../types';
 
 interface HandicapSectionProps {
@@ -38,42 +38,24 @@ export default function HandicapSection({ formData, setFormData }: HandicapSecti
                 />
             </div>
 
-            {/* Draw From Round + Draw Touch */}
+            {/* Đồng cơ chạm 9 + Đồng cơ chạm 11 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <Label htmlFor="draw_from_round" className="mb-2 block">Đồng cơ từ vòng</Label>
-                    {(() => {
-                        const options: Array<{ value: string; label: string }> = [];
-                        if (showR16) options.push({ value: 'r16', label: 'Vòng 1/16' });
-                        if (showR8) options.push({ value: 'r8', label: 'Vòng 1/8' });
-                        options.push({ value: 'qf', label: 'Tứ kết' });
-                        options.push({ value: 'sf', label: 'Bán kết' });
-                        options.push({ value: 'f', label: 'Chung kết' });
-
-                        const allowed = new Set(options.map((o) => o.value));
-                        const value = allowed.has(formData.draw_from_round) ? formData.draw_from_round : '';
-
-                        return (
-                            <Select
-                                id="draw_from_round"
-                                value={value}
-                                onChange={(e) => setFormData({ ...formData, draw_from_round: e.target.value })}
-                            >
-                                <option value="">Chọn vòng</option>
-                                {options.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </Select>
-                        );
-                    })()}
-                </div>
-                <div>
-                    <Label htmlFor="draw_touch" className="mb-2 block">Đồng cơ chạm</Label>
+                    <Label htmlFor="draw_touch" className="mb-2 block">Đồng cơ chạm 9</Label>
                     <TextInput
                         id="draw_touch" type="text"
                         value={formData.draw_touch}
                         onChange={(e) => setFormData({ ...formData, draw_touch: e.target.value })}
-                        placeholder="Nhập tỉ lệ"
+                        placeholder="Nhập điểm"
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="draw_touch_11" className="mb-2 block">Đồng cơ chạm 11</Label>
+                    <TextInput
+                        id="draw_touch_11" type="text"
+                        value={formData.draw_touch_11}
+                        onChange={(e) => setFormData({ ...formData, draw_touch_11: e.target.value })}
+                        placeholder="Nhập điểm"
                     />
                 </div>
             </div>
@@ -82,25 +64,36 @@ export default function HandicapSection({ formData, setFormData }: HandicapSecti
             {!formData.has_draw && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="handicap_1_touch" className="mb-2 block">Chấp 1 chạm</Label>
+                        <Label htmlFor="handicap_1_touch" className="mb-2 block">Chạm 8 chấp 1</Label>
                         <TextInput
                             id="handicap_1_touch" type="text"
                             value={formData.handicap_1_touch}
                             onChange={(e) => setFormData({ ...formData, handicap_1_touch: e.target.value })}
-                            placeholder="Nhập tỉ lệ"
+                            placeholder="Nhập điểm"
                         />
                     </div>
                     <div>
-                        <Label htmlFor="handicap_2_touch" className="mb-2 block">Chấp 2 chạm</Label>
+                        <Label htmlFor="handicap_2_touch" className="mb-2 block">Chạm 13 chấp 2</Label>
                         <TextInput
                             id="handicap_2_touch" type="text"
                             value={formData.handicap_2_touch}
                             onChange={(e) => setFormData({ ...formData, handicap_2_touch: e.target.value })}
-                            placeholder="Nhập tỉ lệ"
+                            placeholder="Nhập điểm"
                         />
                     </div>
                 </div>
             )}
+
+            {/* Bonus */}
+            <div>
+                <Label htmlFor="bonus" className="mb-2 block">Bonus</Label>
+                <TextInput
+                    id="bonus" type="text"
+                    value={formData.bonus}
+                    onChange={(e) => setFormData({ ...formData, bonus: e.target.value })}
+                    placeholder="Nhập bonus"
+                />
+            </div>
 
             {/* Round-specific toggles (R16 / R8) */}
             {(showR16 || showR8) && (
@@ -140,7 +133,7 @@ export default function HandicapSection({ formData, setFormData }: HandicapSecti
                                 id="quarter_final" type="text"
                                 value={formData.quarter_final}
                                 onChange={(e) => setFormData({ ...formData, quarter_final: e.target.value })}
-                                placeholder="Nhập tỉ lệ"
+                                placeholder="Nhập điểm"
                             />
                         </div>
                     )}
@@ -151,7 +144,7 @@ export default function HandicapSection({ formData, setFormData }: HandicapSecti
                                 id="semi_final" type="text"
                                 value={formData.semi_final}
                                 onChange={(e) => setFormData({ ...formData, semi_final: e.target.value })}
-                                placeholder="Nhập tỉ lệ"
+                                placeholder="Nhập điểm"
                             />
                         </div>
                     )}
@@ -162,7 +155,7 @@ export default function HandicapSection({ formData, setFormData }: HandicapSecti
                                 id="final" type="text"
                                 value={formData.final}
                                 onChange={(e) => setFormData({ ...formData, final: e.target.value })}
-                                placeholder="Nhập tỉ lệ"
+                                placeholder="Nhập điểm"
                             />
                         </div>
                     )}
@@ -190,34 +183,34 @@ function RoundHandicapToggle({ label, checked, onToggle, formData, setFormData }
                 {checked && (
                     <div className="mt-3 space-y-3 pl-8">
                         <div>
-                            <Label className="mb-2 block text-sm">Đồng cơ chạm</Label>
+                            <Label className="mb-2 block text-sm">Đồng cơ chạm 9</Label>
                             <TextInput
                                 type="text"
                                 value={formData.draw_touch}
                                 onChange={(e) => setFormData({ ...formData, draw_touch: e.target.value })}
-                                placeholder="Nhập tỉ lệ"
+                                placeholder="Nhập điểm"
                                 className="w-full"
                             />
                         </div>
                         {!formData.has_draw && (
                             <>
                                 <div>
-                                    <Label className="mb-2 block text-sm">Chấp 1 chạm</Label>
+                                    <Label className="mb-2 block text-sm">Chạm 8 chấp 1</Label>
                                     <TextInput
                                         type="text"
                                         value={formData.handicap_1_touch}
                                         onChange={(e) => setFormData({ ...formData, handicap_1_touch: e.target.value })}
-                                        placeholder="Nhập tỉ lệ"
+                                        placeholder="Nhập điểm"
                                         className="w-full"
                                     />
                                 </div>
                                 <div>
-                                    <Label className="mb-2 block text-sm">Chấp 2 chạm</Label>
+                                    <Label className="mb-2 block text-sm">Chạm 13 chấp 2</Label>
                                     <TextInput
                                         type="text"
                                         value={formData.handicap_2_touch}
                                         onChange={(e) => setFormData({ ...formData, handicap_2_touch: e.target.value })}
-                                        placeholder="Nhập tỉ lệ"
+                                        placeholder="Nhập điểm"
                                         className="w-full"
                                     />
                                 </div>

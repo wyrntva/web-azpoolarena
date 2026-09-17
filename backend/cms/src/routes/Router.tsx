@@ -68,6 +68,7 @@ const Alert = lazy(() => import("../views/alerts/Alerts"));
 const Solar = lazy(() => import("../views/icons/Solar"));
 const SamplePage = lazy(() => import('../views/sample-page/SamplePage'));
 const Tournaments = lazy(() => import('../views/tournaments/Tournaments'));
+const Events = lazy(() => import('../views/events/Events'));
 const Leaderboard = lazy(() => import('../views/tournaments/Leaderboard'));
 const TournamentSettings = lazy(() => import('../views/tournament-settings/TournamentSettings'));
 const TournamentDetail = lazy(() => import('../views/tournaments/TournamentDetail'));
@@ -176,6 +177,8 @@ const Router = () => {
             <Route path="news" element={<News />} />
             <Route path="tournaments" element={<Tournaments />} />
             <Route path="tournaments/:id" element={<TournamentDetail />} />
+            <Route path="events" element={<Events />} />
+            <Route path="events/:id" element={<TournamentDetail />} />
             <Route path="tournaments/leaderboard" element={<Leaderboard />} />
             <Route path="tournament-settings" element={<TournamentSettings />} />
 

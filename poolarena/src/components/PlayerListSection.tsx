@@ -18,6 +18,7 @@ interface PlayerListSectionProps {
   maxPlayers?: number;
   currentUserId?: number | null;
   showFullList?: boolean;
+  isEvent?: boolean;
   onClose?: () => void;
 }
 
@@ -26,6 +27,7 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
   maxPlayers,
   currentUserId,
   showFullList = true,
+  isEvent = false,
   onClose,
 }) => {
   const router = useRouter();
@@ -94,6 +96,13 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
             </div>
           ))}
 
+          {/* Empty state when full list is shown but no players yet */}
+          {showFullList && displayedPlayers.length === 0 && (
+            <div className="col-span-full py-8 text-center text-[#575E70] text-[15px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              Chưa có người chơi nào đăng ký tham gia.
+            </div>
+          )}
+
           {/* Display "Số người tham gia" block if registration list is hidden */}
           {!showFullList && (
             <div className="flex items-center p-4 rounded-lg">
@@ -117,7 +126,7 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
                   className="!text-[#37393E] !text-[16px] !font-semibold !leading-[24px] !font-sans mt-1"
                   style={{ fontFamily: 'Montserrat, sans-serif' }}
                 >
-                  {players.length}/{maxPlayers || 24} người
+                  {isEvent ? `${players.length} người` : `${players.length}/${maxPlayers || 24} người`}
                 </div>
               </div>
             </div>
@@ -136,7 +145,9 @@ export const PlayerListSection: React.FC<PlayerListSectionProps> = ({
                   lineHeight: "24px",
                 }}
               >
-                * Toàn bộ người chơi sẽ được hiển thị đầy đủ ở đây khi đã đủ số lượng người tham gia hoặc giải đã kết thúc đăng ký.
+                {isEvent
+                  ? "* Toàn bộ người chơi sẽ được hiển thị đầy đủ ở đây khi sự kiện bắt đầu hoặc đã kết thúc đăng ký."
+                  : "* Toàn bộ người chơi sẽ được hiển thị đầy đủ ở đây khi đã đủ số lượng người tham gia hoặc giải đã kết thúc đăng ký."}
               </div>
             </div>
           )}

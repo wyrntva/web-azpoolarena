@@ -634,6 +634,7 @@ export const useKnockoutBracket = ({
             player2_score: parseInt(m.player2_score, 10) || 0,
             table_no: m.table_no || null,
             match_time: m.match_time || null,
+            match_end_time: m.match_end_time || null,
             status: m.status,
             player1_check_in: m.player1_check_in || 'unconfirmed',
             player2_check_in: m.player2_check_in || 'unconfirmed',

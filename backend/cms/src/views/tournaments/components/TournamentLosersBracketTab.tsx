@@ -331,6 +331,7 @@ const TournamentLosersBracketTab = ({ numberOfPlayers, players, matches, tournam
             player2_score: parseInt(match.player2_score, 10) || 0,
             table_no: match.table_no || null,
             match_time: match.match_time || null,
+            match_end_time: match.match_end_time || null,
             status: match.status,
             player1_check_in: match.player1_check_in || 'unconfirmed',
             player2_check_in: match.player2_check_in || 'unconfirmed',

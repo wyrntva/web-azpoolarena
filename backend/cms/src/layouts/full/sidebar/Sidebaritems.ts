@@ -322,6 +322,12 @@ const SidebarContent: MenuItem[] = [
         url: "/tournaments",
       },
       {
+        name: "Sự kiện",
+        icon: "solar:calendar-date-outline",
+        id: uniqueId(),
+        url: "/events",
+      },
+      {
         name: "Tin tức",
         icon: "solar:document-text-outline",
         id: uniqueId(),

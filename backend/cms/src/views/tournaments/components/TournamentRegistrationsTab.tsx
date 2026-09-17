@@ -9,10 +9,11 @@ import { formatLevel } from '../../../utils/formatters';
 interface TournamentRegistrationsTabProps {
     tournamentId: number;
     numberOfPlayers?: number;
+    isEvent?: boolean;
     onBracketRefresh?: () => void;
 }
 
-const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, onBracketRefresh }: TournamentRegistrationsTabProps) => {
+const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, isEvent = false, onBracketRefresh }: TournamentRegistrationsTabProps) => {
     const [players, setPlayers] = useState<TournamentRegisteredPlayer[]>([]);
     const [eligibleUsers, setEligibleUsers] = useState<TournamentEligibleUser[]>([]);
     const [loading, setLoading] = useState(true);
@@ -137,7 +138,8 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, onBrac
 
     // getAvatarUrl is now imported from shared constants
 
-    const isFull = numberOfPlayers > 0 && players.length >= numberOfPlayers;
+    // Events have no player limit — always allow registration
+    const isFull = !isEvent && numberOfPlayers > 0 && players.length >= numberOfPlayers;
 
     return (
         <div className="mt-4 space-y-4">
@@ -233,7 +235,7 @@ const TournamentRegistrationsTab = ({ tournamentId, numberOfPlayers = 32, onBrac
                         )}
                     </div>
                     <p className="text-sm text-gray-500">
-                        Đã đăng kí: {players.length} / {numberOfPlayers}
+                        Đã đăng kí: {players.length}{isEvent ? '' : ` / ${numberOfPlayers}`}
                     </p>
                 </div>
             </Card>

@@ -64,11 +64,11 @@ export default function TournamentRankingsPage() {
 
         const knockoutMatches = (matches ?? []).filter(m => m.bracket === 'knockout');
         if (knockoutMatches.length === 0) {
-            // Fallback: If no knockout matches exist yet, show sorted registrations by points
+            const isEvent = tournament?.category === 'event';
             const sorted = [...registrations].sort((a, b) => (b.points ?? 0) - (a.points ?? 0));
             return sorted.map((reg, index) => {
                 const diff = (reg.current_points ?? 0) - (reg.points ?? 0);
-                const formattedPoints = diff > 0 ? `+${diff}` : `${diff}`;
+                const formattedPoints = isEvent ? `${reg.points ?? 0}` : (diff > 0 ? `+${diff}` : `${diff}`);
                 return {
                     key: String(reg.id),
                     rank: index + 1,

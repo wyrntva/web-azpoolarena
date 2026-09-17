@@ -3,6 +3,12 @@ import os
 import sys
 from pathlib import Path
 
+# Force UTF-8 stdout/stderr on Windows to avoid UnicodeEncodeError crashes
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 # ===== Load .env file if exists =====
 _env_path = Path(__file__).resolve().parent / ".env"
 if _env_path.is_file():
@@ -28,7 +34,9 @@ if not os.environ.get("QT_QPA_FONTDIR"):
 
 # Chỉ đặt QT_QPA_PLATFORM khi chưa có
 if not os.environ.get("QT_QPA_PLATFORM"):
-    if session_type == "wayland" or wayland_env:
+    if sys.platform == "win32":
+        os.environ["QT_QPA_PLATFORM"] = "windows"
+    elif session_type == "wayland" or wayland_env:
         os.environ["QT_QPA_PLATFORM"] = "wayland"
     elif display_env:
         os.environ["QT_QPA_PLATFORM"] = "xcb"
@@ -129,6 +137,7 @@ from core.orders_service import OrdersService
 from core.image_cache_service import ImageCacheService
 from core.tournament_service import TournamentService
 from core.live_score_service import LiveScoreService
+from core.event_service import EventService
 
 def resource_path(*parts: str) -> str:
     base = Path(__file__).resolve().parent
@@ -198,6 +207,9 @@ def main():
     live_score_service = LiveScoreService(device_settings)
     engine.rootContext().setContextProperty("LiveScoreService", live_score_service)
 
+    event_service = EventService(device_settings)
+    engine.rootContext().setContextProperty("EventService", event_service)
+
     # MQTT Service for real-time control and synchronization
     from core.mqtt_service import ScoreboardMqttService
     mqtt_service = ScoreboardMqttService(device_settings, ctrl)
@@ -237,11 +249,14 @@ def main():
     # Note: Don't fetch yet - wait for QML to load first
 
     # Load UI chính
+    print("[App] Loading QML file:", resource_path("qml", "Main.qml"))
     main_qml = QUrl.fromLocalFile(resource_path("qml", "Main.qml"))
     engine.load(main_qml)
 
     if not engine.rootObjects():
+        print("[App] ERROR: Failed to load QML!")
         sys.exit("Failed to load QML.")
+    print("[App] QML loaded successfully. Root objects count:", len(engine.rootObjects()))
     
     # NOW fetch banners after QML is loaded and HomePage is ready to listen
     banner_service.fetch_banners("tournament")
@@ -261,6 +276,7 @@ def main():
     shutdown_listener = ShutdownListener(5555, app)
     engine.rootContext().setContextProperty("ShutdownListener", shutdown_listener)
     
+    print("[App] Entering Qt event loop app.exec()...")
     sys.exit(app.exec())
 
 if __name__ == "__main__":

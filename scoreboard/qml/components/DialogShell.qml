@@ -132,7 +132,12 @@ Popup {
     property real maxHeightRatio: 0.92
     property bool avoidKeyboard: false
     property real keyboardMargin: 0
-    readonly property real _safeH: Math.max(0, _overlayH * maxHeightRatio)
+    readonly property real _safeH: Math.max(
+        0,
+        (avoidKeyboard && _vkH > 0)
+        ? Math.min(_overlayH * maxHeightRatio, _overlayH - _vkH - keyboardMargin - contentMargins)
+        : (_overlayH * maxHeightRatio)
+    )
 
     // ===== Typography =====
     property int    titleFontSize:   Math.round(32 * uiScale)

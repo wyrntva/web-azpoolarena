@@ -16,12 +16,14 @@ export interface MatchVM {
     match_no: number;
     table_no: string;
     match_time: string;
+    match_end_time?: string;
     player1_id: string;
     player2_id: string;
     player1_score: string;
     player2_score: string;
     race_to: string;
-    status: 'pending' | 'upcoming' | 'ongoing' | 'completed';
+    handicap_desc?: string;
+    status: 'pending' | 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
     player1_check_in: string;
     player2_check_in: string;
     winner_id: string;
@@ -96,6 +98,7 @@ export const toVM = (m: TournamentMatch): MatchVM => ({
     match_no: m.match_no,
     table_no: m.table_no || '',
     match_time: m.match_time ? toDatetimeLocal(m.match_time) : '',
+    match_end_time: m.match_end_time ? toDatetimeLocal(m.match_end_time) : '',
     player1_id: m.player1_id ? String(m.player1_id) : '',
     player2_id: m.player2_id ? String(m.player2_id) : '',
     player1_score: String(m.player1_score ?? 0),

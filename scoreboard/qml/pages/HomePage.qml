@@ -28,6 +28,7 @@ Item {
             if (menuDlg && menuDlg.visible) menuDlg.close()
             if (promoDlg && promoDlg.visible) promoDlg.close()
             if (billDlg && billDlg.visible) billDlg.close()
+            if (eventMatchDlg && eventMatchDlg.visible) eventMatchDlg.close()
             if (replayLoader && replayLoader.active) {
                 if (replayLoader.item && typeof replayLoader.item.close === "function") {
                     replayLoader.item.close()
@@ -383,12 +384,16 @@ Item {
             }
         }
         NavCard {
-            title: "TẬP LUYỆN"
+            title: "SỰ KIỆN"
             width:  grid.cardW
             height: grid.cardH(width)
             iconSource: "../../assets/icon/practice_icon.svg"
-            onClicked: showInfo("TẬP LUYỆN", win.tr("info_default_message"))
+            onClicked: eventMatchDlg.openWith()
         }
+    }
+
+    EventMatchDialog {
+        id: eventMatchDlg
     }
 
     TournamentsDialog {

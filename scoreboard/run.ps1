@@ -26,4 +26,6 @@ Write-Host "Log    : $LogFile"
 Write-Host ""
 
 Set-Location $AppDir
-& $VenvPython -X utf8 $AppScript @args 2>&1 | Tee-Object -FilePath $LogFile
+Write-Host "Dang khoi chay cua so GUI Scoreboard..." -ForegroundColor Green
+$process = Start-Process -FilePath $VenvPython -ArgumentList "-X utf8 `"$AppScript`"" -WorkingDirectory $AppDir -PassThru
+Write-Host "Scoreboard dang chay voi PID: $($process.Id)" -ForegroundColor Green

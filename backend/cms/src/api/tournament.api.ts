@@ -11,6 +11,7 @@ export interface Tournament {
     sponsor_logos: string[];
     ranks: string[];
     display: string;
+    category?: string;
     public_date: string | null;
     status: string;
     tournament_type: string;
@@ -18,6 +19,9 @@ export interface Tournament {
     competition_format: string | null;
     number_of_players: number;
     start_date: string | null;
+    end_date?: string | null;
+    match_creation_time?: string | null;
+    match_creation_time_end?: string | null;
     registration_start_date: string | null;
     registration_end_date: string | null;
     location: string | null;
@@ -40,8 +44,10 @@ export interface Tournament {
     top_129_256_prize: number | null;
     has_draw: boolean;
     draw_touch: string | null;
+    draw_touch_11?: string | null;
     handicap_1_touch: string | null;
     handicap_2_touch: string | null;
+    bonus?: string | null;
     round_1_64: boolean;
     round_1_16: boolean;
     round_1_32: boolean;
@@ -61,6 +67,7 @@ export interface Tournament {
 export interface TournamentCreate {
     name: string;
     slug: string;
+    category?: string;
     banner?: string | null;
     organizer_logo?: string | null;
     detail_logo?: string | null;
@@ -126,7 +133,7 @@ export interface TournamentMatch {
     id: number;
     tournament_id: number;
     match_no: number;
-    bracket: 'winners' | 'losers' | 'knockout';
+    bracket: 'winners' | 'losers' | 'knockout' | 'event';
     round: number;
     player1_id: number | null;
     player2_id: number | null;
@@ -134,18 +141,26 @@ export interface TournamentMatch {
     player2_score: number;
     table_no?: string | null;
     match_time?: string | null;
-    status: 'pending' | 'upcoming' | 'ongoing' | 'completed';
+    match_end_time?: string | null;
+    status: 'pending' | 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
     player1_check_in?: string;
     player2_check_in?: string;
     winner_id: number | null;
     player1_points?: number | null;
     player2_points?: number | null;
+    race_to?: number | null;
+    handicap_desc?: string | null;
+    player1_rank?: string | null;
+    player2_rank?: string | null;
+    player1?: any;
+    player2?: any;
+    winner?: any;
     created_at?: string | null;
     updated_at?: string | null;
 }
 
 export interface TournamentMatchUpsert {
-    bracket: TournamentMatch['bracket'];
+    bracket: TournamentMatch['bracket'] | string;
     round: number;
     player1_id?: number | null;
     player2_id?: number | null;
@@ -153,20 +168,23 @@ export interface TournamentMatchUpsert {
     player2_score?: number;
     table_no?: string | null;
     match_time?: string | null;
+    match_end_time?: string | null;
     status?: TournamentMatch['status'];
     player1_check_in?: string;
     player2_check_in?: string;
     winner_id?: number | null;
     player1_points?: number | null;
     player2_points?: number | null;
+    race_to?: number | null;
+    handicap_desc?: string | null;
 }
 
 export const tournamentAPI = {
-    getTournaments: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<PaginatedResponse<Tournament[]>>> => {
+    getTournaments: (params?: { skip?: number; limit?: number; category?: string }): Promise<AxiosResponse<PaginatedResponse<Tournament[]>>> => {
         return axiosClient.get('/api/tournaments', { params });
     },
 
-    getPublicTournaments: (params?: { skip?: number; limit?: number }): Promise<AxiosResponse<PaginatedResponse<Tournament[]>>> => {
+    getPublicTournaments: (params?: { skip?: number; limit?: number; category?: string }): Promise<AxiosResponse<PaginatedResponse<Tournament[]>>> => {
         return axiosClient.get('/api/tournaments/public', { params });
     },
 
@@ -282,6 +300,8 @@ export interface TournamentRegisteredPlayer {
     rank?: string | null;
     avatar_url?: string | null;
     registered_at: string | null;
+    points?: number | null;
+    current_points?: number | null;
 }
 
 export interface TournamentEligibleUser {

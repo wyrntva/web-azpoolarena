@@ -91,10 +91,11 @@ export class TournamentsController {
   async findAll(
     @Query('skip') skipStr?: string,
     @Query('limit') limitStr?: string,
+    @Query('category') category?: string,
   ) {
     const skip = skipStr ? parseInt(skipStr, 10) : 0;
     const limit = limitStr ? parseInt(limitStr, 10) : 50;
-    const [data, total] = await this.service.findAll(skip, limit);
+    const [data, total] = await this.service.findAll(skip, limit, category);
     return { data, meta: { total, skip, limit } };
   }
 
@@ -102,11 +103,32 @@ export class TournamentsController {
   async findPublic(
     @Query('skip') skipStr?: string,
     @Query('limit') limitStr?: string,
+    @Query('category') category?: string,
   ) {
     const skip = skipStr ? parseInt(skipStr, 10) : 0;
     const limit = limitStr ? parseInt(limitStr, 10) : 50;
-    const [data, total] = await this.service.findPublic(skip, limit);
+    const [data, total] = await this.service.findPublic(skip, limit, category);
     return { data, meta: { total, skip, limit } };
+  }
+
+  // ==== EVENT MATCH APIS (SCOREBOARD) ==== //
+
+  @Get('events/active')
+  async getActiveEvent() {
+    return this.service.getActiveEvent();
+  }
+
+  @Get('events/check-player')
+  async checkEventPlayer(
+    @Query('tournament_id', ParseIntPipe) tournamentId: number,
+    @Query('phone') phone: string,
+  ) {
+    return this.service.checkEventPlayer(tournamentId, phone);
+  }
+
+  @Post('events/create-match')
+  async createEventMatch(@Body() body: any) {
+    return this.service.createEventMatch(body);
   }
 
   @Get(':id')

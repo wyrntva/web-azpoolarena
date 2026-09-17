@@ -28,6 +28,7 @@ interface TournamentFormProps {
     handleSubmit: (e: React.FormEvent) => void;
     handleNameChange: (value: string) => void;
     handleStartDateChange: (value: string) => void;
+    isEvent?: boolean;
 }
 
 const TournamentForm = ({
@@ -48,6 +49,7 @@ const TournamentForm = ({
     handleSubmit,
     handleNameChange,
     handleStartDateChange,
+    isEvent = false,
 }: TournamentFormProps) => {
     return (
         <form id="tournament-form" onSubmit={handleSubmit} className="space-y-6">
@@ -70,6 +72,7 @@ const TournamentForm = ({
                 setFormData={setFormData}
                 ranks={ranks}
                 handleRankToggle={handleRankToggle}
+                isEvent={isEvent}
             />
 
             <StatusDisplaySection
@@ -88,6 +91,7 @@ const TournamentForm = ({
                 setFormData={setFormData}
                 handleCurrencyChange={handleCurrencyChange}
                 getFormattedValue={getFormattedValue}
+                isEvent={isEvent}
             />
 
             <HandicapSection

@@ -50,9 +50,9 @@ export function middleware(request: NextRequest) {
   const userAgent = request.headers.get('user-agent');
   const isBot = isSearchBot(userAgent);
 
-  // Nếu là bot, cho phép truy cập các trang giải đấu (/tournaments) và trang chủ ("/") để hiển thị preview và lập chỉ mục
+  // Nếu là bot, cho phép truy cập các trang giải đấu (/tournaments), sự kiện (/events) và trang chủ ("/") để hiển thị preview và lập chỉ mục
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  const isAllowedRoute = isPublicRoute || (isBot && (pathname.startsWith('/tournaments') || pathname === '/'));
+  const isAllowedRoute = isPublicRoute || (isBot && (pathname.startsWith('/tournaments') || pathname.startsWith('/events') || pathname === '/'));
 
   // Nếu chưa đăng nhập và không ở trang được phép -> redirect về login
   if (!token && !isAllowedRoute) {

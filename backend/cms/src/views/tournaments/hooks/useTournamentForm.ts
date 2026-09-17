@@ -33,6 +33,9 @@ const initialFormData: TournamentFormData = {
     competition_format: '',
     number_of_players: '32',
     start_date: '',
+    end_date: '',
+    match_creation_time: '',
+    match_creation_time_end: '',
     registration_start_date: '',
     registration_end_date: '',
     location: '',
@@ -55,8 +58,10 @@ const initialFormData: TournamentFormData = {
     top_129_256_prize: '',
     has_draw: false,
     draw_touch: '',
+    draw_touch_11: '',
     handicap_1_touch: '',
     handicap_2_touch: '',
+    bonus: '',
     round_1_64: false,
     round_1_16: false,
     round_1_32: false,
@@ -66,14 +71,18 @@ const initialFormData: TournamentFormData = {
     final: '',
     draw_from_round: '',
     is_pinned: false,
+    category: 'tournament',
 };
 
 // ============================================
 // HOOK
 // ============================================
 
-export const useTournamentForm = () => {
-    const [formData, setFormData] = useState<TournamentFormData>(initialFormData);
+export const useTournamentForm = (defaultCategory: string = 'tournament') => {
+    const [formData, setFormData] = useState<TournamentFormData>(() => ({
+        ...initialFormData,
+        category: defaultCategory,
+    }));
     const [ranks, setRanks] = useState<TournamentRank[]>([]);
     const [editingTournamentId, setEditingTournamentId] = useState<number | null>(null);
     const [loadedTournament, setLoadedTournament] = useState<Tournament | null>(null);
@@ -185,10 +194,10 @@ export const useTournamentForm = () => {
 
             if (tournamentId) {
                 await tournamentAPI.updateTournament(tournamentId, apiData as TournamentUpdate);
-                toast.success('Cập nhật giải đấu thành công');
+                toast.success(defaultCategory === 'event' ? 'Cập nhật sự kiện thành công' : 'Cập nhật giải đấu thành công');
             } else {
                 await tournamentAPI.createTournament(apiData as unknown as TournamentCreate);
-                toast.success('Thêm giải đấu thành công');
+                toast.success(defaultCategory === 'event' ? 'Thêm sự kiện thành công' : 'Thêm giải đấu thành công');
             }
             resetForm();
         } finally {
@@ -220,6 +229,9 @@ export const useTournamentForm = () => {
             competition_format: tournament.competition_format || '',
             number_of_players: tournament.number_of_players?.toString() || '32',
             start_date: formatDateForInput(tournament.start_date),
+            end_date: formatDateForInput(tournament.end_date),
+            match_creation_time: tournament.match_creation_time ? String(tournament.match_creation_time).substring(0, 5) : '',
+            match_creation_time_end: tournament.match_creation_time_end ? String(tournament.match_creation_time_end).substring(0, 5) : '',
             registration_start_date: formatDateForInput(tournament.registration_start_date),
             registration_end_date: formatDateForInput(tournament.registration_end_date),
             location: tournament.location || '',
@@ -242,8 +254,10 @@ export const useTournamentForm = () => {
             top_129_256_prize: tournament.top_129_256_prize?.toString() || '',
             has_draw: tournament.has_draw ?? false,
             draw_touch: tournament.draw_touch || '',
+            draw_touch_11: (tournament as any).draw_touch_11 || '',
             handicap_1_touch: tournament.handicap_1_touch || '',
             handicap_2_touch: tournament.handicap_2_touch || '',
+            bonus: (tournament as any).bonus || '',
             round_1_64: tournament.round_1_64 ?? false,
             round_1_16: tournament.round_1_16 ?? false,
             round_1_32: tournament.round_1_32 ?? false,
@@ -253,13 +267,14 @@ export const useTournamentForm = () => {
             final: tournament.final || '',
             draw_from_round: (tournament.draw_from_round as string) || '',
             is_pinned: tournament.is_pinned ?? false,
+            category: tournament.category || defaultCategory,
         });
     };
 
     // --- Reset ---
 
     const resetForm = () => {
-        setFormData(initialFormData);
+        setFormData({ ...initialFormData, category: defaultCategory });
         setEditingTournamentId(null);
         setLoadedTournament(null);
     };

@@ -7,6 +7,7 @@ export interface TournamentFormData {
     sponsor_logos: (File | string)[]; // Can be File[] (new uploads) or string[] (existing URLs)
     ranks: string[];
     display: string;
+    category?: string;
     public_date: string;
     status: string;
     tournament_type: string;
@@ -14,6 +15,9 @@ export interface TournamentFormData {
     competition_format: string;
     number_of_players: string;
     start_date: string;
+    end_date: string;
+    match_creation_time: string;
+    match_creation_time_end: string;
     registration_start_date: string;
     registration_end_date: string;
     location: string;
@@ -38,8 +42,10 @@ export interface TournamentFormData {
     // Tỉ lệ chấp
     has_draw: boolean;
     draw_touch: string;
+    draw_touch_11: string;
     handicap_1_touch: string;
     handicap_2_touch: string;
+    bonus: string;
     round_1_64: boolean;
     round_1_16: boolean;
     round_1_32: boolean;

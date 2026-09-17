@@ -14,6 +14,8 @@ ApplicationWindow {
     visible: true
     color: "#F0F2F4"
     title: "Scoreboard (Qt/QML)"
+    width: IsProduction ? Screen.width : 1280
+    height: IsProduction ? Screen.height : 720
     minimumWidth: 1024
     minimumHeight: 600
 
@@ -214,6 +216,12 @@ ApplicationWindow {
         function onStatusChecked(connected, message, tableName) {
             console.log("[DeviceStatus] Result - connected:", connected, "message:", message, "tableName:", tableName)
             win._isCheckingStatus = false
+
+            // On dev mode: never unbind or redirect to activation
+            if (!IsProduction) {
+                console.log("[DeviceStatus] DEV MODE: ignoring server connection status")
+                return
+            }
 
             // Always update tableName if provided and different from current
             if (connected && tableName && DeviceSettings) {
@@ -442,29 +450,39 @@ ApplicationWindow {
 
 
     Component.onCompleted: {
-        try { showFullScreen() } catch(_) {}
+        try {
+            if (IsProduction) {
+                showFullScreen()
+            } else {
+                showNormal()
+                raise()
+                requestActivate()
+            }
+        } catch(_) {}
         try { setLanguage(currentLanguageCode) } catch(_) {}
 
         // Reset disconnected flag on startup
         _deviceDisconnected = false
 
-        // First run or not activated: show activation page
+        // First run or not activated: show activation page ONLY in production
         try {
-            if (DeviceSettings && !DeviceSettings.activated) {
+            if (IsProduction && DeviceSettings && !DeviceSettings.activated) {
                 console.log("[DeviceStatus] Not activated, showing activation page")
                 stack.clear()
                 stack.push(Qt.resolvedUrl("pages/ActivationPage.qml"), {})
             } else if (DeviceSettings && DeviceSettings.activated) {
-                // Already activated - verify with server and start periodic check
-                console.log("[DeviceStatus] Already activated, starting status check timer")
-                checkDeviceStatus()
-                deviceStatusTimer.start()
-                console.log("[DeviceStatus] Timer started, running:", deviceStatusTimer.running)
+                if (IsProduction) {
+                    // Already activated - verify with server and start periodic check
+                    console.log("[DeviceStatus] Already activated, starting status check timer")
+                    checkDeviceStatus()
+                    deviceStatusTimer.start()
+                    console.log("[DeviceStatus] Timer started, running:", deviceStatusTimer.running)
+                } else {
+                    console.log("[DEV MODE] Bypassing activation page, entering app directly!")
+                }
                 
                 // Start background fetching of tournament matches
                 if (typeof TournamentService !== "undefined") {
-                    // Delay auto-refresh by 3 seconds to ensure showFullScreen() finishes 
-                    // and window dimensions are final, preventing layout race conditions on startup
                     var autoRefreshDelay = Qt.createQmlObject('import QtQuick 6; Timer { interval: 3000; onTriggered: TournamentService.startAutoRefresh() }', win, "autoRefreshDelay");
                     autoRefreshDelay.start()
                 }
@@ -644,6 +662,32 @@ ApplicationWindow {
             result = result.split(token).join(String(args[i]))
         }
         return result
+    }
+
+    function formatLevel(rank) {
+        if (!rank || rank === "N/A") return ""
+        var cleanRank = String(rank).trim().toUpperCase().replace(/^HẠNG\s+/, '').replace(/^HANG\s+/, '')
+        var hasPlus = cleanRank.endsWith('+')
+        var base = hasPlus ? cleanRank.slice(0, -1).trim() : cleanRank
+        var lvl = ""
+        switch (base) {
+            case 'I':
+            case 'K': lvl = 'Lv .1'; break
+            case 'H': lvl = 'Lv .2'; break
+            case 'G': lvl = 'Lv .3'; break
+            case 'F': lvl = 'Lv .4'; break
+            case 'E': lvl = 'Lv .5'; break
+            case 'D': lvl = 'Lv .6'; break
+            case 'C': lvl = 'Lv .7'; break
+            case 'B': lvl = 'Lv .8'; break
+            case 'A': lvl = 'Lv .9'; break
+            case 'S': lvl = 'Lv .10'; break
+            default:
+                if (base.indexOf('LV') === 0) lvl = base
+                else if (/^\d+$/.test(base)) lvl = 'Lv .' + base
+                else lvl = 'Lv .' + base
+        }
+        return hasPlus ? (lvl + "+") : lvl
     }
 
     InputPanel {
@@ -901,7 +945,7 @@ ApplicationWindow {
 
             // Auto-start device status timer when navigating to HomePage
             if (currentItem && currentItem.routeName === "home") {
-                if (DeviceSettings && DeviceSettings.activated && !_deviceDisconnected) {
+                if (IsProduction && DeviceSettings && DeviceSettings.activated && !_deviceDisconnected) {
                     if (!deviceStatusTimer.running) {
                         console.log("[DeviceStatus] HomePage loaded, starting timer...")
                         deviceStatusTimer.start()

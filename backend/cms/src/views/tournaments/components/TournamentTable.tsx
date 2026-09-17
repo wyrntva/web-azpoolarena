@@ -13,6 +13,7 @@ interface TournamentTableProps {
     tournaments: Tournament[];
     total: number;
     currentPage: number;
+    category?: 'tournament' | 'event';
     onPageChange: (page: number) => void;
     onRefresh?: () => void;
     onUpdate?: (tournamentId: number) => void;
@@ -20,7 +21,7 @@ interface TournamentTableProps {
 
 
 
-const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefresh, onUpdate }: TournamentTableProps) => {
+const TournamentTable = ({ tournaments, total, currentPage, category = 'tournament', onPageChange, onRefresh, onUpdate }: TournamentTableProps) => {
     const navigate = useNavigate();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [tournamentToDelete, setTournamentToDelete] = useState<Tournament | null>(null);
@@ -47,7 +48,7 @@ const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefr
             setTournamentToDelete(null);
             onRefresh?.();
         } catch {
-            toast.error('Không thể xóa giải đấu. Vui lòng thử lại.');
+            toast.error(category === 'event' ? 'Không thể xóa sự kiện. Vui lòng thử lại.' : 'Không thể xóa giải đấu. Vui lòng thử lại.');
         } finally {
             setDeleting(false);
         }
@@ -96,14 +97,14 @@ const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefr
                         <Table.HeadCell className="text-center">THỜI GIAN BẮT ĐẦU</Table.HeadCell>
                         <Table.HeadCell className="text-center">HIỂN THỊ</Table.HeadCell>
                         <Table.HeadCell className="text-center">LƯỢT ĐĂNG KÝ</Table.HeadCell>
-                        <Table.HeadCell className="text-center">LOẠI GIẢI ĐẤU</Table.HeadCell>
+                        <Table.HeadCell className="text-center">{category === 'event' ? 'LOẠI SỰ KIỆN' : 'LOẠI GIẢI ĐẤU'}</Table.HeadCell>
                         <Table.HeadCell className="text-center">HÀNH ĐỘNG</Table.HeadCell>
                     </Table.Head>
                     <Table.Body className="divide-y">
                         {filteredTournaments.length === 0 ? (
                             <Table.Row>
                                 <Table.Cell colSpan={10} className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                    {searchTerm ? 'Không tìm thấy kết quả' : 'Không có dữ liệu'}
+                                    {searchTerm ? 'Không tìm thấy kết quả' : (category === 'event' ? 'Không có sự kiện nào' : 'Không có giải đấu nào')}
                                 </Table.Cell>
                             </Table.Row>
                         ) : (
@@ -113,7 +114,7 @@ const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefr
                                     <Table.Row
                                         key={tournament.id}
                                         className="bg-white dark:border-gray-700 dark:bg-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
-                                        onClick={() => navigate(`/tournaments/${tournament.id}`)}
+                                        onClick={() => navigate(category === 'event' ? `/events/${tournament.id}` : `/tournaments/${tournament.id}`)}
                                     >
                                         <Table.Cell className="text-center text-[#37393E] dark:text-white/80">{(currentPage - 1) * 10 + index + 1}</Table.Cell>
                                         <Table.Cell className="text-center">
@@ -170,7 +171,9 @@ const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefr
                                          </Table.Cell>
                                         <Table.Cell className="text-center">
                                             <span className="text-[#37393E] dark:text-white/80">
-                                                {tournament.registration_count ?? 0}/{tournament.number_of_players}
+                                                {category === 'event'
+                                                    ? (tournament.registration_count ?? 0)
+                                                    : `${tournament.registration_count ?? 0}/${tournament.number_of_players}`}
                                             </span>
                                         </Table.Cell>
                                         <Table.Cell className="text-center text-[#37393E] dark:text-white/80">
@@ -203,7 +206,7 @@ const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefr
             {/* Footer */}
             <div className="flex items-center justify-between p-4 border-t">
                 <span className="text-sm text-[#37393E] dark:text-white/80">
-                    Hiển thị {filteredTournaments.length} / {searchTerm ? filteredTournaments.length : total} giải đấu
+                    Hiển thị {filteredTournaments.length} / {searchTerm ? filteredTournaments.length : total} {category === 'event' ? 'sự kiện' : 'giải đấu'}
                     {searchTerm && ` (tìm kiếm: "${searchTerm}")`}
                 </span>
                 <CustomPagination
@@ -220,7 +223,7 @@ const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefr
                     setDeleteModalOpen(false);
                     setTournamentToDelete(null);
                 }}
-                title="Xác nhận xóa"
+                title={category === 'event' ? "Xác nhận xóa sự kiện" : "Xác nhận xóa"}
                 size="md"
                 showFooter={true}
                 footer={
@@ -248,7 +251,7 @@ const TournamentTable = ({ tournaments, total, currentPage, onPageChange, onRefr
                 }
             >
                 <p className="text-gray-700 dark:text-gray-300">
-                    Bạn có chắc chắn muốn xóa giải đấu <strong>{tournamentToDelete?.name}</strong> không?
+                    Bạn có chắc chắn muốn xóa {category === 'event' ? 'sự kiện' : 'giải đấu'} <strong>{tournamentToDelete?.name}</strong> không?
                 </p>
                 <p className="text-sm text-red-600 mt-2">Hành động này không thể hoàn tác.</p>
             </BaseDialog>

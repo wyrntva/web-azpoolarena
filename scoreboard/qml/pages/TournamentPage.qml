@@ -60,11 +60,24 @@ Item {
     property int leftMinScore: 0
     property int rightMinScore: 0
 
+    function parseRankIdx(rankStr) {
+        if (!rankStr) return -1
+        const RANK_ORDER = ['I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A', 'S']
+        var r = String(rankStr).trim().toUpperCase().replace(/^HẠNG\s+/, '').replace(/^HANG\s+/, '')
+        var idx = RANK_ORDER.indexOf(r)
+        if (idx !== -1) return idx
+        var match = r.match(/LV\s*\.?\s*(\d+)/) || r.match(/^(\d+)$/)
+        if (match) {
+            var num = parseInt(match[1])
+            if (num >= 1 && num <= 10) return num - 1
+        }
+        return -1
+    }
+
     function updateMatchRules(m) {
         if (!m) return;
-        const RANK_ORDER = ['I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A', 'S'];
-        const r1 = m.player1_rank ? RANK_ORDER.indexOf(m.player1_rank.toUpperCase()) : -1;
-        const r2 = m.player2_rank ? RANK_ORDER.indexOf(m.player2_rank.toUpperCase()) : -1;
+        const r1 = parseRankIdx(m.player1_rank);
+        const r2 = parseRankIdx(m.player2_rank);
 
         let hc = 0;
         let hcP1 = false;
@@ -76,6 +89,22 @@ Item {
             hc = diff === 0 ? 0 : (diff === 1 ? 1 : 2);
             if (r1 < r2) hcP1 = true;
             else if (r2 < r1) hcP2 = true;
+        }
+
+        // Sự kiện tự ghép trận (event bracket): luôn xuất phát từ 0-0, raceTo và thể thức theo cài đặt lúc ghép trận
+        if (m.bracket === "event") {
+            page.leftMinScore = 0;
+            page.rightMinScore = 0;
+            const rt = parseInt(m.race_to) || 9;
+            Controller.raceTo = rt;
+            if (m.handicap_desc && String(m.handicap_desc).trim() !== "") {
+                page.matchHandicapText = m.handicap_desc;
+            } else if (hc === 0) {
+                page.matchHandicapText = "Chạm " + rt;
+            } else {
+                page.matchHandicapText = "Chạm " + rt + " chấp " + hc;
+            }
+            return;
         }
 
         // Round-specific override (semi-final / final / quarter-final) — no handicap applied.
@@ -270,7 +299,12 @@ Item {
 
     function formatPlayerName(name, rank) {
         if (!name) return ""
-        if (rank) return name + " (" + rank + ")"
+        if (rank) {
+            var lvl = (typeof win !== "undefined" && win && typeof win.formatLevel === "function")
+                ? win.formatLevel(rank)
+                : rank
+            return name + (lvl ? " (" + lvl + ")" : "")
+        }
         return name
     }
 
@@ -318,20 +352,10 @@ Item {
                 var p2CheckIn = m.player2_check_in || "unconfirmed"
                 console.log("[TournamentPage] Check-in status: p1=" + p1CheckIn + " p2=" + p2CheckIn)
 
-                if (p1CheckIn === "confirmed" && p2CheckIn === "confirmed") {
-                    var savedElapsed = (typeof TournamentService !== "undefined") ? TournamentService.getMatchElapsedSec(m.match_id) : 0
-                    if (savedElapsed > 0) {
-                        page.matchJoined = true
-                        page.startMatchTimer()
-                        console.log("[TournamentPage] Active running timer found (" + savedElapsed + "s), skipping join dialog")
-                    } else {
-                        page.matchJoined = false
-                        Qt.callLater(function() {
-                            joinDlg.leftConfirmed = true
-                            joinDlg.rightConfirmed = true
-                            joinDlg.open()
-                        })
-                    }
+                if (m.bracket === "event" || (p1CheckIn === "confirmed" && p2CheckIn === "confirmed")) {
+                    page.matchJoined = true
+                    page.startMatchTimer()
+                    console.log("[TournamentPage] Event match or both confirmed, skipping join dialog")
                 } else if (!page.matchJoined) {
                     Qt.callLater(function() {
                         // Pre-populate confirmed status from backend
@@ -441,7 +465,7 @@ Item {
                 var p1ci = m.player1_check_in || "unconfirmed"
                 var p2ci = m.player2_check_in || "unconfirmed"
                 var savedElapsed = (typeof TournamentService !== "undefined") ? TournamentService.getMatchElapsedSec(m.match_id) : 0
-                if (savedElapsed > 0) {
+                if (m.bracket === "event" || (p1ci === "confirmed" && p2ci === "confirmed") || savedElapsed > 0) {
                     page.matchJoined = true
                     page.startMatchTimer()
                 } else {
@@ -450,7 +474,7 @@ Item {
                     joinDlg.rightConfirmed = (p2ci === "confirmed")
                     joinDlg.open()
                 }
-            } else if (!page.matchJoined) {
+            } else if (m.bracket !== "event" && !page.matchJoined) {
                 // Match loaded but not yet joined: update check-in status dynamically
                 var p1ci = m.player1_check_in || "unconfirmed"
                 var p2ci = m.player2_check_in || "unconfirmed"

@@ -1,6 +1,7 @@
-from __future__ import annotations
-
+import os
 from PySide6.QtCore import QObject, Signal, Slot, Property, QSettings
+
+IS_DEV = "/opt/" not in os.path.abspath(__file__)
 
 
 class DeviceSettings(QObject):
@@ -29,6 +30,8 @@ class DeviceSettings(QObject):
         self._settings.setValue(key, value)
 
     def getActivated(self) -> bool:
+        if IS_DEV:
+            return True
         return self._get_int("device/activated", 0) == 1
 
     def setActivated(self, v: bool) -> None:
@@ -40,7 +43,10 @@ class DeviceSettings(QObject):
     activated = Property(bool, getActivated, setActivated, notify=activatedChanged)
 
     def getDeviceCode(self) -> str:
-        return self._get_str("device/code", "")
+        val = self._get_str("device/code", "")
+        if not val and IS_DEV:
+            return "DEV001"
+        return val
 
     def setDeviceCode(self, code: str) -> None:
         code = (code or "").strip().upper()
@@ -51,7 +57,10 @@ class DeviceSettings(QObject):
     deviceCode = Property(str, getDeviceCode, setDeviceCode, notify=deviceCodeChanged)
 
     def getTableId(self) -> int:
-        return self._get_int("device/table_id", 0)
+        val = self._get_int("device/table_id", 0)
+        if val == 0 and IS_DEV:
+            return 1
+        return val
 
     def setTableId(self, v: int) -> None:
         try:
@@ -79,7 +88,10 @@ class DeviceSettings(QObject):
     areaId = Property(int, getAreaId, setAreaId, notify=areaIdChanged)
 
     def getTableName(self) -> str:
-        return self._get_str("device/table_name", "")
+        val = self._get_str("device/table_name", "")
+        if not val and IS_DEV:
+            return "Bàn 1"
+        return val
 
     @Slot(str)
     def setTableName(self, v: str) -> None:
