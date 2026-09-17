@@ -73,9 +73,9 @@ function getRankIndex(rank?: string | null): number {
 }
 
 function computeRaceText(
-    p1Rank: string | null,
-    p2Rank: string | null,
-    tournament: any,
+    p1Rank?: string | null,
+    p2Rank?: string | null,
+    tournament?: any,
 ): string {
     if (!p1Rank || !p2Rank) return "";
     const r1 = getRankIndex(p1Rank);
