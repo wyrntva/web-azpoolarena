@@ -599,74 +599,79 @@ export default function EventDetailPage() {
               </div>
 
             </div>
+          </div>
 
+          {/* 2. PRIZE SECTION CARD (Dark background) */}
+          <div className="bg-[#172339] rounded-2xl shadow-[0_4px_20px_rgba(23,35,57,0.15)] w-full flex flex-col px-6 py-5 gap-1">
             {/* Total Prize */}
-            <div className="flex flex-col py-3 px-4 w-full">
-              <span className="text-[16px] text-[#BAE3FF] font-normal leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Tổng giải thưởng</span>
-              <span className="text-[24px] font-black italic text-white leading-[32px] mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                {tournament.prizes.total}
+            <div className="flex flex-col py-2 w-full">
+              <span className="text-[14px] text-[#BAE3FF] font-normal leading-[20px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Tổng giải thưởng</span>
+              <span className="text-[24px] font-black italic text-white leading-[32px] mt-0.5" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {tournament.prizes.total || '—'}
               </span>
             </div>
 
+            <div className="w-full h-px bg-white/10" />
+
             {/* First Prize */}
-            <div className="flex flex-col py-3 px-4 w-full">
-              <span className="text-[16px] text-[#BAE3FF] font-normal leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 1</span>
-              <span className="text-[20px] font-extrabold italic text-white leading-[28px] mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                {tournament.prizes.first}
+            <div className="flex items-center justify-between py-2 w-full">
+              <span className="text-[14px] text-[#BAE3FF] font-normal leading-[20px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 1</span>
+              <span className="text-[18px] font-extrabold italic text-white leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {tournament.prizes.first || '—'}
               </span>
             </div>
 
             {/* Second Prize */}
-            <div className="flex flex-col py-3 px-4 w-full">
-              <span className="text-[16px] text-[#BAE3FF] font-normal leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 2</span>
-              <span className="text-[20px] font-extrabold italic text-white leading-[28px] mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                {tournament.prizes.second}
+            <div className="flex items-center justify-between py-2 w-full">
+              <span className="text-[14px] text-[#BAE3FF] font-normal leading-[20px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 2</span>
+              <span className="text-[18px] font-extrabold italic text-white leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {tournament.prizes.second || '—'}
               </span>
             </div>
 
             {/* Third Prize */}
-            <div className="flex flex-col py-3 px-4 w-full">
-              <span className="text-[16px] text-[#BAE3FF] font-normal leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 3</span>
-              <span className="text-[20px] font-extrabold italic text-white leading-[28px] mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                {tournament.prizes.contribution}
+            <div className="flex items-center justify-between py-2 w-full">
+              <span className="text-[14px] text-[#BAE3FF] font-normal leading-[20px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 3</span>
+              <span className="text-[18px] font-extrabold italic text-white leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {tournament.prizes.contribution || '—'}
               </span>
             </div>
 
             {/* Optional Additional Prizes */}
             {tournament.prizes.top5_8 && (
-              <div className="flex flex-col py-3 px-4 w-full">
-                <span className="text-[16px] text-[#BAE3FF] font-normal leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 5-8</span>
-                <span className="text-[20px] font-extrabold italic text-white leading-[28px] mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              <div className="flex items-center justify-between py-2 w-full">
+                <span className="text-[14px] text-[#BAE3FF] font-normal leading-[20px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>Top 5-8</span>
+                <span className="text-[18px] font-extrabold italic text-white leading-[24px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                   {tournament.prizes.top5_8}
                 </span>
               </div>
             )}
-
-            {/* Countdown timer */}
-            <div className="flex flex-col items-center justify-center py-1">
-              <CountdownTimer targetDate={tournament.startDate} status={tournament.status} />
-            </div>
-
-            {/* Button */}
-            <button
-              onClick={handleRegisterClick}
-              disabled={isAlreadyRegistered || tournament.canRegister === false}
-              className={`w-full text-white font-medium text-[16px] leading-[24px] h-[40px] py-2 px-6 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
-                isAlreadyRegistered
-                  ? "bg-[#00B814] cursor-not-allowed"
-                  : tournament.canRegister === false
-                  ? "bg-[#808996] cursor-not-allowed"
-                  : "bg-[#D22E39] hover:bg-[#b5242e] hover:shadow-lg active:scale-[0.98]"
-              }`}
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              {isAlreadyRegistered
-                ? "Đã đăng ký"
-                : tournament.canRegister === false
-                ? "Khóa đăng ký"
-                : "Đăng ký ngay"}
-            </button>
           </div>
+
+          {/* Countdown timer */}
+          <div className="flex flex-col items-center justify-center py-1">
+            <CountdownTimer targetDate={tournament.startDate} status={tournament.status} />
+          </div>
+
+          {/* Register Button */}
+          <button
+            onClick={handleRegisterClick}
+            disabled={isAlreadyRegistered || tournament.canRegister === false}
+            className={`w-full text-white font-medium text-[16px] leading-[24px] h-[44px] py-2 px-6 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
+              isAlreadyRegistered
+                ? "bg-[#00B814] cursor-not-allowed"
+                : tournament.canRegister === false
+                ? "bg-[#808996] cursor-not-allowed"
+                : "bg-[#D22E39] hover:bg-[#b5242e] hover:shadow-lg active:scale-[0.98]"
+            }`}
+            style={{ fontFamily: 'Montserrat, sans-serif' }}
+          >
+            {isAlreadyRegistered
+              ? "Đã đăng ký"
+              : tournament.canRegister === false
+              ? "Khóa đăng ký"
+              : "Đăng ký ngay"}
+          </button>
 
           {/* 3. CHAMPIONSHIP BANNER (Mobile: exact 361x74 ratio, same as tournaments listing page) */}
           <ChampionshipBanner />
