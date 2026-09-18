@@ -2811,10 +2811,135 @@ export class TournamentsService {
 
   // ==== EVENT MATCH APIS FOR SCOREBOARD ==== //
 
+  validateEventMatchTime(tournament: TournamentEntity): {
+    valid: boolean;
+    message?: string;
+  } {
+    const now = new Date();
+
+    // 1. Kiểm tra trạng thái sự kiện
+    if (tournament.status === 'completed') {
+      return {
+        valid: false,
+        message: 'Sự kiện đã kết thúc, không thể tạo thêm trận đấu!',
+      };
+    }
+    if (tournament.status === 'cancelled') {
+      return {
+        valid: false,
+        message: 'Sự kiện đã bị hủy, không thể tạo trận đấu!',
+      };
+    }
+
+    const formatDateVN = (d: Date | string): string => {
+      try {
+        const dateObj = typeof d === 'string' ? new Date(d) : d;
+        return new Intl.DateTimeFormat('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        }).format(dateObj);
+      } catch (e) {
+        return String(d);
+      }
+    };
+
+    // 2. Kiểm tra ngày bắt đầu & ngày kết thúc
+    if (tournament.start_date) {
+      const startDate = new Date(tournament.start_date);
+      if (now.getTime() < startDate.getTime()) {
+        return {
+          valid: false,
+          message: `Sự kiện chưa bắt đầu (bắt đầu lúc ${formatDateVN(tournament.start_date)})!`,
+        };
+      }
+    }
+
+    if (tournament.end_date) {
+      const endDate = new Date(tournament.end_date);
+      if (now.getTime() > endDate.getTime()) {
+        return {
+          valid: false,
+          message: `Sự kiện đã kết thúc (kết thúc lúc ${formatDateVN(tournament.end_date)})!`,
+        };
+      }
+    }
+
+    // 3. Kiểm tra khung giờ tạo trận đấu trong ngày (match_creation_time & match_creation_time_end)
+    const parseMinutes = (t: string | null | undefined): number | null => {
+      if (!t || typeof t !== 'string' || !t.trim()) return null;
+      const parts = t.trim().split(':').map(Number);
+      if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        return parts[0] * 60 + parts[1];
+      }
+      return null;
+    };
+
+    const formatTimeStr = (t: string): string => {
+      const parts = t.trim().split(':');
+      return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+    };
+
+    const startMin = parseMinutes(tournament.match_creation_time);
+    const endMin = parseMinutes(tournament.match_creation_time_end);
+
+    if (startMin !== null || endMin !== null) {
+      const vnTimeFormatter = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+      const parts = vnTimeFormatter.format(now).split(':').map(Number);
+      const currentMin = parts[0] * 60 + parts[1];
+
+      if (startMin !== null && endMin !== null) {
+        if (startMin < endMin) {
+          // Khung giờ trong cùng một ngày (ví dụ: 08:00 - 12:00 hoặc 08:00 - 22:00)
+          if (currentMin < startMin || currentMin > endMin) {
+            return {
+              valid: false,
+              message: `Thời gian tạo trận đấu chỉ trong khung giờ từ ${formatTimeStr(tournament.match_creation_time)} đến ${formatTimeStr(tournament.match_creation_time_end)}!`,
+            };
+          }
+        } else if (startMin > endMin) {
+          // Khung giờ qua đêm (ví dụ: 20:00 tối - 02:00 sáng)
+          if (currentMin < startMin && currentMin > endMin) {
+            return {
+              valid: false,
+              message: `Thời gian tạo trận đấu chỉ trong khung giờ từ ${formatTimeStr(tournament.match_creation_time)} đến ${formatTimeStr(tournament.match_creation_time_end)} hôm sau!`,
+            };
+          }
+        }
+      } else if (startMin !== null && endMin === null) {
+        if (currentMin < startMin) {
+          return {
+            valid: false,
+            message: `Thời gian tạo trận đấu chỉ bắt đầu từ ${formatTimeStr(tournament.match_creation_time)}!`,
+          };
+        }
+      } else if (startMin === null && endMin !== null) {
+        if (currentMin > endMin) {
+          return {
+            valid: false,
+            message: `Thời gian tạo trận đấu đã kết thúc lúc ${formatTimeStr(tournament.match_creation_time_end)}!`,
+          };
+        }
+      }
+    }
+
+    return { valid: true };
+  }
+
   async getActiveEvent() {
     const event = await this.tourRepo.findOne({
       where: { category: 'event' },
-      order: { created_at: 'DESC' },
+      order: { is_pinned: 'DESC', created_at: 'DESC' },
     });
     if (!event) return null;
     return {
@@ -2829,6 +2954,10 @@ export class TournamentsService {
       ranks: event.ranks || [],
       category: event.category,
       status: event.status,
+      start_date: event.start_date,
+      end_date: event.end_date,
+      match_creation_time: event.match_creation_time,
+      match_creation_time_end: event.match_creation_time_end,
     };
   }
 
@@ -2836,6 +2965,20 @@ export class TournamentsService {
     if (!phone || !phone.trim()) {
       return { found: false, message: 'Vui lòng nhập số điện thoại' };
     }
+
+    const tournament = await this.tourRepo.findOne({
+      where: { id: tournamentId },
+    });
+    if (!tournament) {
+      return { found: false, message: 'Sự kiện không tồn tại' };
+    }
+
+    // 1. Kiểm tra thời gian diễn ra và khung giờ tạo trận
+    const timeCheck = this.validateEventMatchTime(tournament);
+    if (!timeCheck.valid) {
+      return { found: false, message: timeCheck.message };
+    }
+
     const rawDigits = phone.trim().replace(/\D/g, '');
     if (!rawDigits || rawDigits.length < 8) {
       return { found: false, message: 'Vui lòng nhập số điện thoại hợp lệ' };
@@ -2878,6 +3021,21 @@ export class TournamentsService {
       };
     }
 
+    // 2. Kiểm tra xem cơ thủ có đang trong một trận đấu khác đang diễn ra không
+    const ongoingMatch = await this.matchRepo
+      .createQueryBuilder('m')
+      .where('m.status = :status', { status: TournamentMatchStatus.ONGOING })
+      .andWhere('(m.player1_id = :uid OR m.player2_id = :uid)', { uid: user.id })
+      .getOne();
+
+    if (ongoingMatch) {
+      const tableInfo = ongoingMatch.table_no ? ` tại ${ongoingMatch.table_no}` : '';
+      return {
+        found: false,
+        message: `Cơ thủ ${user.full_name} đang có trận đấu diễn ra${tableInfo}, không thể ghép trận!`,
+      };
+    }
+
     return {
       found: true,
       player: {
@@ -2900,10 +3058,20 @@ export class TournamentsService {
     player2_score?: number;
     handicap_desc?: string;
   }) {
+    if (body.player1_id === body.player2_id) {
+      throw new BadRequestException('Không thể tạo trận đấu với chính mình');
+    }
+
     const tournament = await this.tourRepo.findOne({
       where: { id: body.tournament_id },
     });
     if (!tournament) throw new NotFoundException('Sự kiện không tồn tại');
+
+    // 1. Kiểm tra thời gian diễn ra và khung giờ tạo trận
+    const timeCheck = this.validateEventMatchTime(tournament);
+    if (!timeCheck.valid) {
+      throw new BadRequestException(timeCheck.message);
+    }
 
     const [p1, p2] = await Promise.all([
       this.userRepo.findOne({ where: { id: body.player1_id } }),
@@ -2911,7 +3079,30 @@ export class TournamentsService {
     ]);
     if (!p1 || !p2) throw new BadRequestException('Không tìm thấy thông tin cơ thủ');
 
-    // Kiểm tra giới hạn số trận giữa 2 cơ thủ trong ngày (tối đa 3 trận, không thể tạo trận thứ 4)
+    // 2. Kiểm tra xem cơ thủ 1 hoặc 2 có đang diễn ra trận đấu nào không
+    const playerOngoingMatch = await this.matchRepo
+      .createQueryBuilder('m')
+      .where('m.status = :status', { status: TournamentMatchStatus.ONGOING })
+      .andWhere('(m.player1_id IN (:...pids) OR m.player2_id IN (:...pids))', {
+        pids: [body.player1_id, body.player2_id],
+      })
+      .getOne();
+
+    if (playerOngoingMatch) {
+      const busyPlayer =
+        playerOngoingMatch.player1_id === body.player1_id ||
+        playerOngoingMatch.player2_id === body.player1_id
+          ? p1
+          : p2;
+      const tableInfo = playerOngoingMatch.table_no
+        ? ` tại ${playerOngoingMatch.table_no}`
+        : '';
+      throw new BadRequestException(
+        `Cơ thủ ${busyPlayer.full_name} đang có trận đấu diễn ra${tableInfo}, vui lòng kết thúc trận trước khi tạo trận mới!`,
+      );
+    }
+
+    // 3. Kiểm tra giới hạn số trận giữa 2 cơ thủ trong ngày (tối đa 3 trận, không thể tạo trận thứ 4)
     const now = new Date();
     const vnOffsetMs = 7 * 60 * 60 * 1000; // GMT+7
     const vnNow = new Date(now.getTime() + vnOffsetMs);
@@ -2951,14 +3142,14 @@ export class TournamentsService {
       );
     }
 
-    // Get max match_no
+    // 4. Get max match_no
     const lastMatch = await this.matchRepo.findOne({
       where: { tournament_id: body.tournament_id },
       order: { match_no: 'DESC' },
     });
     const nextMatchNo = (lastMatch?.match_no || 0) + 1;
 
-    // Any existing ongoing match on this table should be cleared or finished
+    // 5. Any existing ongoing match on this table should be cleared or finished
     const existingOngoing = await this.matchRepo.find({
       where: {
         table_no: body.table_name,

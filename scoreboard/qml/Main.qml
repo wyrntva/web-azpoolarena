@@ -44,7 +44,10 @@ ApplicationWindow {
     property real uiScale: Math.min(width / 1920, height / 1080)
     function px(v)  { return Math.round(v * uiScale) }
     function dpr(h) { return Math.max(1, Math.round(h * Screen.devicePixelRatio)) }
-    property real vkHeight: inputPanel.visible ? (inputPanel.height * (1 + inputPanel.scale) / 2) : 0
+    property bool isDigitsOnly: false
+    property real vkHeight: (typeof inputPanelWrapper !== "undefined" && inputPanelWrapper && inputPanelWrapper.visible)
+                            ? (inputPanelWrapper.height + inputPanelWrapper.anchors.bottomMargin)
+                            : (inputPanel.visible ? (inputPanel.height * inputPanel.scale) : 0)
 
     readonly property var languageOptions: Translations.languageOptions
     property string currentLanguageCode: Translations.defaultLanguageCode
@@ -559,7 +562,13 @@ ApplicationWindow {
         if (onHome) splashTimer.restart()
         else splashTimer.stop()
     }
-    onActiveFocusItemChanged: scheduleSplashTimerReset()
+    onActiveFocusItemChanged: {
+        scheduleSplashTimerReset()
+        var it = win.activeFocusItem
+        if (it && typeof it.inputMethodHints !== "undefined") {
+            win.isDigitsOnly = !!(it.inputMethodHints & Qt.ImhDigitsOnly)
+        }
+    }
 
     function setLanguage(code) {
         var selected = Translations.optionFor(code)
@@ -690,16 +699,33 @@ ApplicationWindow {
         return hasPlus ? (lvl + "+") : lvl
     }
 
-    InputPanel {
-        id: inputPanel
+    Item {
+        id: inputPanelWrapper
         parent: win.contentItem
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: win.isDigitsOnly ? Math.round(20 * win.uiScale) : 0
+        z: 10000
         visible: Qt.inputMethod.visible
         enabled: visible
-        z: 10000
-        scale: Math.max(0.65, Math.min(0.9, 0.75 * win.uiScale))
+
+        // In digits mode, numpad layout is ~590px wide before scale.
+        // Clip width to numpad width to eliminate empty wings on both sides.
+        readonly property real numpadWidth: Math.round((590 + 20) * inputPanel.scale)
+        width: win.isDigitsOnly ? numpadWidth : parent.width
+        height: Math.round(inputPanel.height * inputPanel.scale)
+        clip: true
+
+        InputPanel {
+            id: inputPanel
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            width: win.width
+            transformOrigin: Item.Bottom
+            scale: Math.max(0.65, Math.min(0.9, 0.75 * win.uiScale))
+            visible: Qt.inputMethod.visible
+            enabled: visible
+        }
     }
 
     ToolBar {

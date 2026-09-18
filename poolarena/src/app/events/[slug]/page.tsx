@@ -47,6 +47,14 @@ const TOURNAMENT_TYPE_MAP: Record<string, string> = {
   'double_elimination': 'Nhánh thắng thua',
 };
 
+const EVENT_ZALO_QR_MAP: Record<string, { url: string; title?: string; subtitle?: string }> = {
+  'tet-trung-thu-20260917': {
+    url: 'https://zalo.me/g/ytqpxk355',
+    title: 'Nhóm Zalo Sự Kiện Tết Trung Thu',
+    subtitle: 'Quét mã QR hoặc nhấn vào nút bên cạnh để tham gia nhóm Zalo sự kiện',
+  },
+};
+
 interface TournamentDetail {
   id: string;
   title: string;
@@ -205,6 +213,12 @@ export default function EventDetailPage() {
 
   // Events always show the full player list immediately upon registration
   const showFullList = true;
+
+  const eventZaloConfig = EVENT_ZALO_QR_MAP[tournamentSlug] || (tournamentSlug.includes('tet-trung-thu') ? {
+    url: 'https://zalo.me/g/ytqpxk355',
+    title: 'Nhóm Zalo Sự Kiện Tết Trung Thu',
+    subtitle: 'Quét mã QR hoặc nhấn vào nút bên cạnh để tham gia nhóm Zalo sự kiện',
+  } : undefined);
 
   useEffect(() => {
     if (!tournamentSlug) return;
@@ -705,6 +719,9 @@ export default function EventDetailPage() {
               showFullList={showFullList}
               isEvent={true}
               onClose={() => {}}
+              qrCodeUrl={eventZaloConfig?.url}
+              qrCodeTitle={eventZaloConfig?.title}
+              qrCodeSubtitle={eventZaloConfig?.subtitle}
             />
           </div>
 
@@ -756,6 +773,9 @@ export default function EventDetailPage() {
               showFullList={showFullList}
               isEvent={true}
               onClose={() => {}}
+              qrCodeUrl={eventZaloConfig?.url}
+              qrCodeTitle={eventZaloConfig?.title}
+              qrCodeSubtitle={eventZaloConfig?.subtitle}
             />
           </main>
         </div>

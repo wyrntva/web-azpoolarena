@@ -33,28 +33,27 @@ Popup {
                                     : Qt.rect(0, 0, 0, 0)
         readonly property bool imOk: (imRect.width > 0 && imRect.height > 0)
 
-        // 2) Rect thực tế của InputPanel sau khi scale/transform (nếu có)
-        //    Lưu ý: 'inputPanel' là id bạn khai báo ở main. Nếu khác id, đổi ở đây.
-        readonly property bool panelOk: (typeof inputPanel !== "undefined" && inputPanel && inputPanel.visible)
+        // 2) Rect thực tế của InputPanel / inputPanelWrapper sau khi scale/transform (nếu có)
+        //    Lưu ý: ưu tiên 'inputPanelWrapper' nếu có (đã xử lý numpad clip), fallback 'inputPanel'.
+        readonly property var targetPanel: (typeof inputPanelWrapper !== "undefined" && inputPanelWrapper)
+                                           ? inputPanelWrapper
+                                           : ((typeof inputPanel !== "undefined" && inputPanel) ? inputPanel : null)
+        readonly property bool panelOk: (targetPanel && targetPanel.visible)
 
-        readonly property var _p0: panelOk ? inputPanel.mapToItem(dimmer, 0, 0) : Qt.point(0, 0)
-        readonly property var _p1: panelOk ? inputPanel.mapToItem(dimmer, inputPanel.width, inputPanel.height) : Qt.point(0, 0)
+        readonly property var _p0: panelOk ? targetPanel.mapToItem(dimmer, 0, 0) : Qt.point(0, 0)
+        readonly property var _p1: panelOk ? targetPanel.mapToItem(dimmer, targetPanel.width, targetPanel.height) : Qt.point(0, 0)
         readonly property real pX: panelOk ? Math.min(_p0.x, _p1.x) : 0
         readonly property real pY: panelOk ? Math.min(_p0.y, _p1.y) : 0
         readonly property real pW: panelOk ? Math.abs(_p1.x - _p0.x) : 0
         readonly property real pH: panelOk ? Math.abs(_p1.y - _p0.y) : 0
 
-        // 3) Hợp nhất 2 rect (cái nào visible thì tính)
-        readonly property bool kbVisible: (imOk || panelOk)
+        // 3) Hợp nhất rect: ưu tiên targetPanel nếu có, fallback imRect
+        readonly property bool kbVisible: (panelOk || imOk)
 
-        readonly property real rawX: (imOk && panelOk) ? Math.min(imRect.x, pX)
-                                : (imOk ? imRect.x : pX)
-        readonly property real rawY: (imOk && panelOk) ? Math.min(imRect.y, pY)
-                                : (imOk ? imRect.y : pY)
-        readonly property real rawRight: (imOk && panelOk) ? Math.max(imRect.x + imRect.width,  pX + pW)
-                                    : (imOk ? (imRect.x + imRect.width) : (pX + pW))
-        readonly property real rawBottom:(imOk && panelOk) ? Math.max(imRect.y + imRect.height, pY + pH)
-                                    : (imOk ? (imRect.y + imRect.height) : (pY + pH))
+        readonly property real rawX: panelOk ? pX : (imOk ? imRect.x : 0)
+        readonly property real rawY: panelOk ? pY : (imOk ? imRect.y : 0)
+        readonly property real rawRight: panelOk ? (pX + pW) : (imOk ? (imRect.x + imRect.width) : 0)
+        readonly property real rawBottom: panelOk ? (pY + pH) : (imOk ? (imRect.y + imRect.height) : 0)
 
         // 4) Nới lỗ bằng margin, có clamp về biên màn hình overlay
         readonly property real holeX: Math.max(0, rawX - holeMarginX)
@@ -379,6 +378,7 @@ Popup {
                             renderType: Text.NativeRendering
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.NoWrap
                         }
                         onClicked: { root.cancelled(); root.close() }
                     }
@@ -406,6 +406,7 @@ Popup {
                             renderType: Text.NativeRendering
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.NoWrap
                         }
                         onClicked: { root.confirmed(); root.close() }
                     }

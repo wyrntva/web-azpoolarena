@@ -23,9 +23,27 @@ DialogShell {
 
     avoidKeyboard: true
     keyboardMargin: Math.round(16 * dlg.uiScale)
+    initialFocusItem: p1Input
+    property bool isClosing: false
+
+    onOpened: {
+        isClosing = false
+        p1Input.forceActiveFocus()
+        try { Qt.inputMethod.show() } catch(e) {}
+    }
+
+    onAboutToHide: {
+        isClosing = true
+        try { Qt.inputMethod.hide() } catch(e) {}
+    }
+
+    onClosed: {
+        isClosing = true
+        try { Qt.inputMethod.hide() } catch(e) {}
+    }
 
     buttonHeight:         Math.round(56 * dlg.uiScale)
-    buttonMinWidth:       Math.round(150 * dlg.uiScale)
+    buttonMinWidth:       Math.round(200 * dlg.uiScale)
     buttonFontSize:       Math.round(18 * dlg.uiScale)
     titleFontSize:        Math.round(24 * dlg.uiScale)
     headerContentSpacing: Math.round(14 * dlg.uiScale)
@@ -56,11 +74,16 @@ DialogShell {
     property string creationError: ""
 
     function openWith() {
+        isClosing = false
         resetState()
         if (typeof EventService !== "undefined" && EventService) {
             EventService.fetchActiveEvent()
         }
         open()
+        Qt.callLater(function() {
+            p1Input.forceActiveFocus()
+            try { Qt.inputMethod.show() } catch(e) {}
+        })
     }
 
     function resetState() {
@@ -87,6 +110,26 @@ DialogShell {
     }
 
     Connections {
+        target: Qt.inputMethod
+        function onVisibleChanged() {
+            if (dlg.visible && !dlg.isClosing && !Qt.inputMethod.visible) {
+                Qt.callLater(function() {
+                    if (dlg.visible && !dlg.isClosing && !Qt.inputMethod.visible) {
+                        if (!p1Input.activeFocus && !p2Input.activeFocus) {
+                            if (dlg.p1Found && !dlg.p2Found) {
+                                p2Input.forceActiveFocus()
+                            } else {
+                                p1Input.forceActiveFocus()
+                            }
+                        }
+                        try { Qt.inputMethod.show() } catch(e) {}
+                    }
+                })
+            }
+        }
+    }
+
+    Connections {
         target: typeof EventService !== "undefined" && EventService ? EventService : null
         function onPlayerChecked(slotIndex, found, data, errorMsg) {
             dlg.creationError = ""
@@ -95,6 +138,10 @@ DialogShell {
                 dlg.p1Found = found
                 dlg.p1Data = data || ({})
                 dlg.p1Error = found ? "" : (errorMsg || "Không tìm thấy")
+                if (found && !dlg.p2Found && p2Input.text.trim().length === 0) {
+                    p2Input.forceActiveFocus()
+                    try { Qt.inputMethod.show() } catch(e) {}
+                }
             } else if (slotIndex === 2) {
                 dlg.p2Loading = false
                 dlg.p2Found = found
@@ -264,6 +311,45 @@ DialogShell {
         width: parent.width
         spacing: Math.round(12 * dlg.uiScale)
 
+        // Hiển thị khung giờ tạo trận của sự kiện nếu có cấu hình
+        Rectangle {
+            visible: {
+                var ev = dlg.activeEventData
+                return !!(ev && (ev.match_creation_time || ev.match_creation_time_end))
+            }
+            width: parent.width
+            implicitHeight: Math.round(32 * dlg.uiScale)
+            radius: Math.round(8 * dlg.uiScale)
+            color: "#EFF6FF"
+            border.color: "#BFDBFE"
+            border.width: 1
+
+            RowLayout {
+                anchors.centerIn: parent
+                spacing: Math.round(8 * dlg.uiScale)
+
+                AppText {
+                    text: "⏰"
+                    font.pixelSize: Math.round(14 * dlg.uiScale)
+                }
+
+                AppText {
+                    text: {
+                        var ev = dlg.activeEventData || {}
+                        var t1 = ev.match_creation_time ? String(ev.match_creation_time).substring(0, 5) : ""
+                        var t2 = ev.match_creation_time_end ? String(ev.match_creation_time_end).substring(0, 5) : ""
+                        if (t1 && t2) return "Khung giờ tạo trận đấu: " + t1 + " - " + t2
+                        if (t1) return "Khung giờ tạo trận đấu: Từ " + t1
+                        if (t2) return "Khung giờ tạo trận đấu: Đến " + t2
+                        return ""
+                    }
+                    color: "#1D4ED8"
+                    font.pixelSize: Math.round(13 * dlg.uiScale)
+                    font.bold: true
+                }
+            }
+        }
+
         // Hàng 2 thẻ cơ thủ
         RowLayout {
             width: parent.width
@@ -272,18 +358,19 @@ DialogShell {
             // === CƠ THỦ 1 ===
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.round(136 * dlg.uiScale)
-                radius: Math.round(12 * dlg.uiScale)
-                color: dlg.p1Found ? "#F0FDF4" : "#F8FAFC"
-                border.color: dlg.p1Found ? "#86EFAC" : (p1Input.activeFocus ? "#172339" : "#E2E8F0")
-                border.width: dlg.p1Found || p1Input.activeFocus ? 2 : 1
+                Layout.preferredHeight: Math.round(124 * dlg.uiScale)
+                Layout.alignment: Qt.AlignTop
+                color: "transparent"
+                border.width: 0
 
                 ColumnLayout {
+                    id: p1Col
                     anchors.fill: parent
-                    anchors.margins: Math.round(12 * dlg.uiScale)
+                    anchors.margins: 0
                     spacing: Math.round(6 * dlg.uiScale)
 
                     RowLayout {
+                        id: p1HeaderRow
                         Layout.fillWidth: true
                         AppText {
                             text: "CƠ THỦ 1"
@@ -311,39 +398,63 @@ DialogShell {
 
                     // Ô nhập số điện thoại
                     Rectangle {
+                        id: p1InputBox
                         Layout.fillWidth: true
-                        implicitHeight: Math.round(44 * dlg.uiScale)
-                        radius: Math.round(8 * dlg.uiScale)
-                        color: "#FFFFFF"
-                        border.color: p1Input.activeFocus ? "#172339" : "#CBD5E1"
-                        border.width: 1
+                        implicitHeight: Math.round(54 * dlg.uiScale)
+                        radius: Math.round(10 * dlg.uiScale)
+                        color: "#2b3242"
+                        border.color: dlg.p1Found ? "#4ADE80" : (p1Input.activeFocus ? "#60A5FA" : "#475569")
+                        border.width: dlg.p1Found ? 2 : 1
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: Math.round(12 * dlg.uiScale)
-                            anchors.rightMargin: Math.round(12 * dlg.uiScale)
+                            anchors.leftMargin: Math.round(14 * dlg.uiScale)
+                            anchors.rightMargin: Math.round(14 * dlg.uiScale)
 
                             TextInput {
                                 id: p1Input
                                 Layout.fillWidth: true
                                 verticalAlignment: Text.AlignVCenter
-                                font.pixelSize: Math.round(16 * dlg.uiScale)
+                                font.family: (typeof win !== "undefined" && win) ? win.appFontFamily : "Montserrat"
+                                font.pixelSize: Math.round(18 * dlg.uiScale)
                                 font.bold: true
-                                color: "#172339"
+                                font.hintingPreference: Font.PreferFullHinting
+                                renderType: Text.NativeRendering
+                                color: "#EDEFF3"
+                                cursorVisible: true
+                                selectByMouse: true
                                 clip: true
                                 inputMethodHints: Qt.ImhDigitsOnly
                                 maximumLength: 12
 
                                 AppText {
+                                    id: p1Placeholder
                                     text: "Nhập số điện thoại..."
-                                    color: "#94A3B8"
-                                    font.pixelSize: Math.round(14 * dlg.uiScale)
+                                    color: "#8891a7"
+                                    font.pixelSize: Math.round(18 * dlg.uiScale)
+                                    font.hintingPreference: Font.PreferFullHinting
+                                    renderType: Text.NativeRendering
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: p1Input.text.length === 0 && !p1Input.activeFocus
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            p1Input.forceActiveFocus()
+                                            try { Qt.inputMethod.show() } catch(e) {}
+                                        }
+                                    }
                                 }
 
-                                onActiveFocusChanged: if (activeFocus) Qt.inputMethod.show()
-                                onAccepted: p2Input.forceActiveFocus()
+                                onActiveFocusChanged: {
+                                    if (activeFocus) {
+                                        try { Qt.inputMethod.show() } catch(e) {}
+                                    }
+                                }
+                                onAccepted: {
+                                    p2Input.forceActiveFocus()
+                                    try { Qt.inputMethod.show() } catch(e) {}
+                                }
 
                                 onTextEdited: {
                                     dlg.p1Phone = text.trim()
@@ -357,8 +468,17 @@ DialogShell {
                             BusyIndicator {
                                 running: dlg.p1Loading
                                 visible: dlg.p1Loading
-                                implicitWidth: Math.round(20 * dlg.uiScale)
-                                implicitHeight: Math.round(20 * dlg.uiScale)
+                                implicitWidth: Math.round(24 * dlg.uiScale)
+                                implicitHeight: Math.round(24 * dlg.uiScale)
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            z: -1
+                            onClicked: {
+                                p1Input.forceActiveFocus()
+                                try { Qt.inputMethod.show() } catch(e) {}
                             }
                         }
                     }
@@ -410,37 +530,43 @@ DialogShell {
                 }
             }
 
-            // VS Icon giữa 2 cơ thủ
-            Rectangle {
-                implicitWidth: Math.round(36 * dlg.uiScale)
-                implicitHeight: Math.round(36 * dlg.uiScale)
-                radius: width / 2
-                color: "#172339"
-                Layout.alignment: Qt.AlignVCenter
+            // VS giữa 2 cơ thủ - bỏ nền, căn giữa theo ô nhập SĐT
+            Item {
+                id: vsWrap
+                Layout.preferredWidth: Math.round(36 * dlg.uiScale)
+                Layout.preferredHeight: Math.round(124 * dlg.uiScale)
+                Layout.alignment: Qt.AlignTop
+
                 AppText {
-                    anchors.centerIn: parent
+                    id: vsLabel
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: Math.round(p1InputBox.y + (p1InputBox.height - height) / 2 + 1 * dlg.uiScale)
                     text: "VS"
-                    color: "#FFFFFF"
+                    color: "#64748B"
                     font.bold: true
-                    font.pixelSize: Math.round(13 * dlg.uiScale)
+                    font.italic: false
+                    font.pixelSize: Math.round(15 * dlg.uiScale)
+                    font.hintingPreference: Font.PreferFullHinting
+                    renderType: Text.NativeRendering
                 }
             }
 
             // === CƠ THỦ 2 ===
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: Math.round(136 * dlg.uiScale)
-                radius: Math.round(12 * dlg.uiScale)
-                color: dlg.p2Found ? "#F0FDF4" : "#F8FAFC"
-                border.color: dlg.p2Found ? "#86EFAC" : (p2Input.activeFocus ? "#172339" : "#E2E8F0")
-                border.width: dlg.p2Found || p2Input.activeFocus ? 2 : 1
+                Layout.preferredHeight: Math.round(124 * dlg.uiScale)
+                Layout.alignment: Qt.AlignTop
+                color: "transparent"
+                border.width: 0
 
                 ColumnLayout {
+                    id: p2Col
                     anchors.fill: parent
-                    anchors.margins: Math.round(12 * dlg.uiScale)
+                    anchors.margins: 0
                     spacing: Math.round(6 * dlg.uiScale)
 
                     RowLayout {
+                        id: p2HeaderRow
                         Layout.fillWidth: true
                         AppText {
                             text: "CƠ THỦ 2"
@@ -468,41 +594,70 @@ DialogShell {
 
                     // Ô nhập số điện thoại
                     Rectangle {
+                        id: p2InputBox
                         Layout.fillWidth: true
-                        implicitHeight: Math.round(44 * dlg.uiScale)
-                        radius: Math.round(8 * dlg.uiScale)
-                        color: "#FFFFFF"
-                        border.color: p2Input.activeFocus ? "#172339" : "#CBD5E1"
-                        border.width: 1
+                        implicitHeight: Math.round(54 * dlg.uiScale)
+                        radius: Math.round(10 * dlg.uiScale)
+                        color: "#2b3242"
+                        border.color: dlg.p2Found ? "#4ADE80" : (p2Input.activeFocus ? "#60A5FA" : "#475569")
+                        border.width: dlg.p2Found ? 2 : 1
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: Math.round(12 * dlg.uiScale)
-                            anchors.rightMargin: Math.round(12 * dlg.uiScale)
+                            anchors.leftMargin: Math.round(14 * dlg.uiScale)
+                            anchors.rightMargin: Math.round(14 * dlg.uiScale)
 
                             TextInput {
                                 id: p2Input
                                 Layout.fillWidth: true
                                 verticalAlignment: Text.AlignVCenter
-                                font.pixelSize: Math.round(16 * dlg.uiScale)
+                                font.family: (typeof win !== "undefined" && win) ? win.appFontFamily : "Montserrat"
+                                font.pixelSize: Math.round(18 * dlg.uiScale)
                                 font.bold: true
-                                color: "#172339"
+                                font.hintingPreference: Font.PreferFullHinting
+                                renderType: Text.NativeRendering
+                                color: "#EDEFF3"
+                                cursorVisible: true
+                                selectByMouse: true
                                 clip: true
                                 inputMethodHints: Qt.ImhDigitsOnly
                                 maximumLength: 12
 
                                 AppText {
+                                    id: p2Placeholder
                                     text: "Nhập số điện thoại..."
-                                    color: "#94A3B8"
-                                    font.pixelSize: Math.round(14 * dlg.uiScale)
+                                    color: "#8891a7"
+                                    font.pixelSize: Math.round(18 * dlg.uiScale)
+                                    font.hintingPreference: Font.PreferFullHinting
+                                    renderType: Text.NativeRendering
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: p2Input.text.length === 0 && !p2Input.activeFocus
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        onClicked: {
+                                            p2Input.forceActiveFocus()
+                                            try { Qt.inputMethod.show() } catch(e) {}
+                                        }
+                                    }
                                 }
 
-                                onActiveFocusChanged: if (activeFocus) Qt.inputMethod.show()
+                                onActiveFocusChanged: {
+                                    if (activeFocus) {
+                                        try { Qt.inputMethod.show() } catch(e) {}
+                                    }
+                                }
                                 onAccepted: {
-                                    if (dlg.confirmEnabled) dlg.confirmed()
-                                    else Qt.inputMethod.hide()
+                                    if (dlg.confirmEnabled) {
+                                        dlg.confirmed()
+                                    } else {
+                                        if (!dlg.p1Found) {
+                                            p1Input.forceActiveFocus()
+                                        } else {
+                                            p2Input.forceActiveFocus()
+                                        }
+                                        try { Qt.inputMethod.show() } catch(e) {}
+                                    }
                                 }
 
                                 onTextEdited: {
@@ -517,8 +672,17 @@ DialogShell {
                             BusyIndicator {
                                 running: dlg.p2Loading
                                 visible: dlg.p2Loading
-                                implicitWidth: Math.round(20 * dlg.uiScale)
-                                implicitHeight: Math.round(20 * dlg.uiScale)
+                                implicitWidth: Math.round(24 * dlg.uiScale)
+                                implicitHeight: Math.round(24 * dlg.uiScale)
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            z: -1
+                            onClicked: {
+                                p2Input.forceActiveFocus()
+                                try { Qt.inputMethod.show() } catch(e) {}
                             }
                         }
                     }
@@ -574,15 +738,13 @@ DialogShell {
         // === KHUNG CHỌN THỂ THỨC THI ĐẤU ===
         Rectangle {
             width: parent.width
-            implicitHeight: Math.round(112 * dlg.uiScale)
-            radius: Math.round(12 * dlg.uiScale)
-            color: "#F8FAFC"
-            border.color: (dlg.p1Found && dlg.p2Found) ? "#172339" : "#E2E8F0"
-            border.width: 1
+            implicitHeight: Math.round(100 * dlg.uiScale)
+            color: "transparent"
+            border.width: 0
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Math.round(12 * dlg.uiScale)
+                anchors.margins: 0
                 spacing: Math.round(8 * dlg.uiScale)
 
                 RowLayout {

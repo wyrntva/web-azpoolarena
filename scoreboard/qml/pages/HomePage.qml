@@ -387,7 +387,7 @@ Item {
             title: "SỰ KIỆN"
             width:  grid.cardW
             height: grid.cardH(width)
-            iconSource: "../../assets/icon/practice_icon.svg"
+            iconSource: "../../assets/icon/event_icon.svg"
             onClicked: eventMatchDlg.openWith()
         }
     }
