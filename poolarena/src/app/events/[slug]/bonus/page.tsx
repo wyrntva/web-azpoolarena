@@ -264,17 +264,21 @@ export default function EventBonusPage() {
 
     // Component for 5 category tabs
     const renderCategoryTabs = () => (
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 w-full">
+        <div className="flex items-center gap-2 overflow-x-auto sm:overflow-visible sm:flex-wrap no-scrollbar py-2 w-full">
             {CATEGORIES.map((cat) => {
                 const isSelected = activeCategory === cat.key;
                 return (
                     <button
                         key={cat.key}
-                        onClick={() => setActiveCategory(cat.key)}
-                        className={`whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 cursor-pointer flex-shrink-0 ${
+                        type="button"
+                        onClick={(e) => {
+                            e.currentTarget.blur();
+                            setActiveCategory(cat.key);
+                        }}
+                        className={`whitespace-nowrap px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm border transition-colors duration-150 cursor-pointer flex-shrink-0 select-none ${
                             isSelected
-                                ? "bg-[#172339] text-white shadow-sm"
-                                : "bg-white text-[#575E70] hover:bg-gray-100 hover:text-[#172339] border border-gray-200/60"
+                                ? "bg-[#172339] text-white border-[#172339] shadow-sm"
+                                : "bg-white text-[#575E70] border-gray-200/80 hover:bg-gray-100 hover:text-[#172339]"
                         }`}
                         style={{ fontFamily: 'Montserrat, sans-serif' }}
                     >
@@ -286,7 +290,7 @@ export default function EventBonusPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
+        <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans overflow-y-scroll [scrollbar-gutter:stable]">
             <NavBar />
 
             {/* MOBILE LAYOUT (block sm:hidden) */}
@@ -306,7 +310,7 @@ export default function EventBonusPage() {
                     )}
                 </div>
 
-                <div className="px-4 -mt-[40px] pb-8 relative z-10 flex flex-col gap-4">
+                <div className="px-4 -mt-[40px] pb-8 relative z-10 flex flex-col gap-4 min-h-[500px]">
                     {/* Category tabs */}
                     {renderCategoryTabs()}
 
@@ -338,7 +342,7 @@ export default function EventBonusPage() {
                         }}
                     >
                         <main className="w-full max-w-[1360px] mx-auto mt-[288px] flex flex-col items-center px-4">
-                            <div className="w-full z-10 flex flex-col gap-3">
+                            <div className="w-full z-10 flex flex-col gap-3 min-h-[550px]">
                                 {/* Category tabs */}
                                 {renderCategoryTabs()}
 
@@ -370,3 +374,4 @@ export default function EventBonusPage() {
         </div>
     );
 }
+
