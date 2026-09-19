@@ -38,13 +38,21 @@ function LoginFormContent() {
 
       // Redirect to the page user wanted to visit or home
       router.push(redirectTo);
-    } else {
-      api.error({
-        message: "Đăng nhập thất bại",
-        placement: "top"
-      });
-      const errorMsg = String(resultAction.payload || '').toLowerCase();
-      if (
+      const rawError = String(resultAction.payload || '');
+      const errorMsg = rawError.toLowerCase();
+      if (errorMsg.includes('khóa') || errorMsg.includes('lock')) {
+        api.error({
+          message: "Tài khoản đã bị khóa",
+          description: rawError || "Tài khoản của bạn đã bị khóa hoặc tạm ngưng hoạt động. Vui lòng liên hệ quản trị viên.",
+          placement: "top",
+        });
+        form.setFields([
+          {
+            name: "phone",
+            errors: ["Tài khoản đã bị khóa"],
+          },
+        ]);
+      } else if (
         errorMsg.includes('phone') || 
         errorMsg.includes('user') || 
         errorMsg.includes('tồn tại') || 
@@ -54,19 +62,38 @@ function LoginFormContent() {
         errorMsg.includes('số điện thoại') ||
         errorMsg.includes('sđt')
       ) {
+        api.error({
+          message: "Đăng nhập thất bại",
+          description: rawError || "Số điện thoại không đúng",
+          placement: "top",
+        });
         form.setFields([
           {
             name: "phone",
             errors: ["Số điện thoại không đúng"],
           },
         ]);
-      } else {
+      } else if (
+        errorMsg.includes('mật khẩu') || 
+        errorMsg.includes('password')
+      ) {
+        api.error({
+          message: "Đăng nhập thất bại",
+          description: rawError || "Mật khẩu không đúng",
+          placement: "top",
+        });
         form.setFields([
           {
             name: "password",
             errors: ["Mật khẩu không đúng"],
           },
         ]);
+      } else {
+        api.error({
+          message: "Đăng nhập thất bại",
+          description: rawError || "Đăng nhập không thành công, vui lòng thử lại sau.",
+          placement: "top",
+        });
       }
     }
   };

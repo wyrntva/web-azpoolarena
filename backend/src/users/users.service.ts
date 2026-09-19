@@ -205,6 +205,16 @@ export class UsersService {
     if (user.id === currentUserId)
       throw new BadRequestException('Cannot delete your own account');
 
+    if (user.user_type === 'both') {
+      // Người dùng vừa là nhân viên vừa là khách hàng/player
+      // Khi xóa khỏi danh sách nhân viên, chỉ gỡ quyền nhân viên (chuyển sang 'player'),
+      // giữ nguyên tài khoản khách hàng để họ vẫn có thể đăng nhập app chơi bình thường.
+      user.user_type = 'player';
+      user.role_id = null as any;
+      await this.userRepo.save(user);
+      return;
+    }
+
     try {
       await this.userRepo.remove(user);
     } catch (error) {

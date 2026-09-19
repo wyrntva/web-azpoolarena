@@ -87,12 +87,12 @@ export class PoolArenaAuthService {
       throw new UnauthorizedException('Số điện thoại không đúng');
     }
 
-    if (!(await bcrypt.compare(password, user.hashed_password))) {
-      throw new UnauthorizedException('Mật khẩu không đúng');
-    }
-
     if (!user.is_active) {
       throw new UnauthorizedException('Tài khoản đã bị khóa');
+    }
+
+    if (!(await bcrypt.compare(password, user.hashed_password))) {
+      throw new UnauthorizedException('Mật khẩu không đúng');
     }
 
     return { access_token: this.sign(user.id), users: this.strip(user) };
@@ -237,6 +237,12 @@ export class PoolArenaAuthService {
       throw new BadRequestException('Email không tồn tại trong hệ thống');
     }
 
+    if (!user.is_active) {
+      throw new BadRequestException(
+        'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.',
+      );
+    }
+
     const code = String(crypto.randomInt(100000, 1000000));
     const expires = Date.now() + 10 * 60 * 1000;
     this.resetCodes.set(email, { code, expires });
@@ -316,6 +322,12 @@ export class PoolArenaAuthService {
       throw new BadRequestException('Email không tồn tại trong hệ thống');
     }
 
+    if (!user.is_active) {
+      throw new BadRequestException(
+        'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.',
+      );
+    }
+
     const newPassword = this.generatePassword();
 
     const mailHost =
@@ -388,6 +400,12 @@ export class PoolArenaAuthService {
       throw new BadRequestException('Email không tồn tại trong hệ thống');
     }
 
+    if (!user.is_active) {
+      throw new BadRequestException(
+        'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.',
+      );
+    }
+
     const isMatch = await bcrypt.compare(tempPassword, user.hashed_password);
     if (!isMatch) {
       throw new BadRequestException('Mật khẩu tạm thời không chính xác');
@@ -441,6 +459,12 @@ export class PoolArenaAuthService {
     const user = await this.userRepo.findOne({ where: { email } });
     if (!user) {
       throw new BadRequestException('Email không tồn tại trong hệ thống');
+    }
+
+    if (!user.is_active) {
+      throw new BadRequestException(
+        'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.',
+      );
     }
 
     user.hashed_password = await bcrypt.hash(password, 10);
