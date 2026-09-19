@@ -118,7 +118,7 @@ export function convertFormDataToAPI(
         final: data.final || null,
         draw_from_round: data.draw_from_round || null,
         is_pinned: data.is_pinned ?? false,
-        ranks: data.ranks,
+        ranks: data.category === 'event' ? [] : data.ranks,
     };
 
     // --- Image fields ---

@@ -7,6 +7,8 @@ import { tournamentSettingsAPI } from '../../../api/tournamentSettings.api';
 import type { MatchVM } from './knockoutHelpers';
 import { getMinDatetimeLocal, getRaceToInfo, getMatchRoundLabel, STATUS_OPTIONS, toDatetimeLocal } from '../utils/bracketUtils';
 
+import toast from 'react-hot-toast';
+
 interface Props {
     isOpen: boolean;
     onClose: () => void;
@@ -71,15 +73,20 @@ const MatchManagementDialog: React.FC<Props> = ({
     const bonusVal = parseInt(tournament.bonus || '0', 10) || 0;
     const p1IdNum = parseInt(match?.player1_id || '0', 10);
     const p2IdNum = parseInt(match?.player2_id || '0', 10);
-    const isFirstEncounter = useMemo(() => {
+    const matchDate = match?.match_time ? new Date(match.match_time) : new Date();
+    const matchMonthStr = matchDate.toISOString().slice(0, 7);
+    const matchDateStr = matchDate.toISOString().slice(0, 10);
+
+    const isFirstEncounterInMonth = useMemo(() => {
         if (!p1IdNum || !p2IdNum) return false;
         return !(matches || []).some(m =>
             m.id !== (match as any)?.id &&
             m.match_no !== match?.match_no &&
             m.status === 'completed' &&
-            ((m.player1_id === p1IdNum && m.player2_id === p2IdNum) || (m.player1_id === p2IdNum && m.player2_id === p1IdNum))
+            ((m.player1_id === p1IdNum && m.player2_id === p2IdNum) || (m.player1_id === p2IdNum && m.player2_id === p1IdNum)) &&
+            (m.match_time ? new Date(m.match_time).toISOString().slice(0, 7) : '') === matchMonthStr
         );
-    }, [matches, p1IdNum, p2IdNum, match?.match_no, (match as any)?.id]);
+    }, [matches, p1IdNum, p2IdNum, match?.match_no, (match as any)?.id, matchMonthStr]);
 
     const calculateDefaultPoints = (
         p1Rank: string | null | undefined,
@@ -87,26 +94,39 @@ const MatchManagementDialog: React.FC<Props> = ({
         winnerId: string | null | undefined
     ) => {
         if (tournament.category === 'event') {
+            const raceTo = Number(match?.race_to) || 9;
+            let handicap = 0;
             const desc = (match?.handicap_desc || '').toLowerCase();
-            let winPoints = parseInt(tournament.draw_touch || '5', 10) || 5;
-            let losePoints = 1;
-            const rTo = Number(match?.race_to || 0);
-            if (desc.includes('chấp 2') || desc.includes('13') || rTo === 13) {
-                winPoints = parseInt(tournament.handicap_2_touch || '7', 10) || 7;
-                losePoints = 2;
-            } else if (desc.includes('chấp 1') || rTo === 8) {
-                winPoints = parseInt(tournament.handicap_1_touch || '5', 10) || 5;
-                losePoints = 1;
-            } else if (desc.includes('11') || rTo === 11) {
-                winPoints = parseInt(tournament.draw_touch_11 || '7', 10) || 7;
-                losePoints = 2;
+            const hcMatch = desc.match(/chấp\s*(\d+)/i);
+            if (hcMatch) {
+                handicap = parseInt(hcMatch[1], 10) || 0;
             }
 
-            const matchBonus = isFirstEncounter ? bonusVal : 0;
+            const totalRounds = Math.max(0, (raceTo * 2 - 1) - handicap);
+            let winPoints = Number((totalRounds * 0.35).toFixed(2));
+            let losePoints = Number((totalRounds * 0.05).toFixed(2));
+
+            // Kiểm tra quy tắc chống cày điểm: tối đa 3 trận/ngày được tính điểm
+            const todayMatchesBefore = (matches || []).filter(m => {
+                if (m.id === (match as any)?.id || m.match_no === match?.match_no) return false;
+                if (m.status !== 'completed') return false;
+                const mDate = m.match_time ? new Date(m.match_time).toISOString().slice(0, 10) : '';
+                const isSamePair = (m.player1_id === p1IdNum && m.player2_id === p2IdNum) || (m.player1_id === p2IdNum && m.player2_id === p1IdNum);
+                return isSamePair && mDate === matchDateStr;
+            });
+
+            if (todayMatchesBefore.length >= 3) {
+                winPoints = 0;
+                losePoints = 0;
+            }
+
+            // Thưởng chạm trán lần đầu: +20 điểm/người (1 lần duy nhất trong tháng cho mỗi cặp)
+            const matchBonus = (todayMatchesBefore.length < 3 && isFirstEncounterInMonth) ? 20 : 0;
+
             const isP1Winner = String(winnerId) === String(match?.player1_id);
             return {
-                p1: (isP1Winner ? winPoints : losePoints) + matchBonus,
-                p2: (isP1Winner ? losePoints : winPoints) + matchBonus,
+                p1: Number(((isP1Winner ? winPoints : losePoints) + matchBonus).toFixed(2)),
+                p2: Number(((isP1Winner ? losePoints : winPoints) + matchBonus).toFixed(2)),
             };
         }
 
@@ -188,6 +208,16 @@ const MatchManagementDialog: React.FC<Props> = ({
     const p2 = players.find(p => p.id === parseInt(match.player2_id, 10));
 
     const handleSave = async () => {
+        const isEvent = tournament?.category === 'event' || (match as any)?.bracket === 'event';
+        if (isEvent && match?.status === 'completed' && match?.winner_id) {
+            const start = match.match_time ? new Date(match.match_time).getTime() : ((match as any).created_at ? new Date((match as any).created_at).getTime() : Date.now());
+            const elapsedSec = Math.floor((Date.now() - start) / 1000);
+            if (elapsedSec < 2700) {
+                const remMin = Math.ceil((2700 - elapsedSec) / 60);
+                toast.error(`Trận đấu sự kiện phải diễn ra tối thiểu 45 phút mới có thể kết thúc! (Đã thi đấu: ${Math.floor(elapsedSec / 60)} phút, còn thiếu ${remMin} phút)`);
+                return;
+            }
+        }
         setSaving(true);
         try { await onSave(); }
         catch { /* error shown via toast by parent */ }
@@ -247,15 +277,16 @@ const MatchManagementDialog: React.FC<Props> = ({
                             <span className="text-xs text-gray-500 font-medium italic">
                                 {tournament.category === 'event' ? 'Điểm thưởng giải' : 'Cộng/Trừ điểm'}
                             </span>
-                            {tournament.category === 'event' && isFirstEncounter && bonusVal > 0 && (
+                            {tournament.category === 'event' && isFirstEncounterInMonth && (
                                 <span className="text-[10px] text-emerald-600 font-medium">
-                                    (+{bonusVal} bonus lần đầu đối đầu)
+                                    (+20 bonus chạm trán lần đầu trong tháng)
                                 </span>
                             )}
                         </div>
                         <div className="match-dialog-score w-[160px]">
                             <TextInput 
-                                type="number" 
+                                type="number"
+                                step="0.01"
                                 placeholder="Nhập điểm" 
                                 value={pointsVal}
                                 onChange={e => {

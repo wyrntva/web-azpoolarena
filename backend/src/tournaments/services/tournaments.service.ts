@@ -158,24 +158,26 @@ export class TournamentsService {
       );
     }
 
-    let allowedRanks: string[] = [];
-    if (tournament.ranks) {
-      try {
-        allowedRanks = JSON.parse(tournament.ranks);
-      } catch (e) {
-        allowedRanks = [];
+    if (tournament.category !== 'event') {
+      let allowedRanks: string[] = [];
+      if (tournament.ranks) {
+        try {
+          allowedRanks = JSON.parse(tournament.ranks);
+        } catch (e) {
+          allowedRanks = [];
+        }
       }
-    }
 
-    if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
-      const userRank = user.rank ? user.rank.toUpperCase() : '';
-      const isAllowed = allowedRanks
-        .map((r) => r.toUpperCase())
-        .includes(userRank);
-      if (!isAllowed) {
-        throw new BadRequestException(
-          `Level của bạn (${user.rank ? formatLevel(user.rank) : 'N/A'}) không được tham gia giải đấu này (Chỉ nhận các level: ${allowedRanks.map(formatLevel).join(', ')})`,
-        );
+      if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
+        const userRank = user.rank ? user.rank.toUpperCase() : '';
+        const isAllowed = allowedRanks
+          .map((r) => r.toUpperCase())
+          .includes(userRank);
+        if (!isAllowed) {
+          throw new BadRequestException(
+            `Level của bạn (${user.rank ? formatLevel(user.rank) : 'N/A'}) không được tham gia giải đấu này (Chỉ nhận các level: ${allowedRanks.map(formatLevel).join(', ')})`,
+          );
+        }
       }
     }
 
@@ -320,7 +322,11 @@ export class TournamentsService {
     Object.assign(entity, rest);
     if (sponsor_logos !== undefined)
       entity.sponsor_logos = JSON.stringify(sponsor_logos);
-    if (ranks !== undefined) entity.ranks = JSON.stringify(ranks);
+    if (entity.category === 'event') {
+      entity.ranks = JSON.stringify([]);
+    } else if (ranks !== undefined) {
+      entity.ranks = JSON.stringify(ranks);
+    }
     if (enabled_tables !== undefined)
       entity.enabled_tables = enabled_tables
         ? JSON.stringify(enabled_tables)
@@ -342,7 +348,11 @@ export class TournamentsService {
     const updates: any = { ...rest };
     if (sponsor_logos !== undefined)
       updates.sponsor_logos = JSON.stringify(sponsor_logos);
-    if (ranks !== undefined) updates.ranks = JSON.stringify(ranks);
+    if (tour.category === 'event' || updates.category === 'event') {
+      updates.ranks = JSON.stringify([]);
+    } else if (ranks !== undefined) {
+      updates.ranks = JSON.stringify(ranks);
+    }
     if (enabled_tables !== undefined)
       updates.enabled_tables = enabled_tables
         ? JSON.stringify(enabled_tables)
@@ -527,6 +537,26 @@ export class TournamentsService {
     // If winner is assigned and status is not COMPLETED, mark it as COMPLETED
     if (match.winner_id && match.status !== TournamentMatchStatus.COMPLETED) {
       match.status = TournamentMatchStatus.COMPLETED;
+    }
+
+    if (
+      match.bracket === 'event' &&
+      match.status === TournamentMatchStatus.COMPLETED &&
+      statusBefore !== TournamentMatchStatus.COMPLETED &&
+      !dto.force
+    ) {
+      const start = match.match_time
+        ? new Date(match.match_time).getTime()
+        : match.created_at
+          ? new Date(match.created_at).getTime()
+          : Date.now();
+      const elapsedSec = Math.floor((Date.now() - start) / 1000);
+      if (elapsedSec < 2700) {
+        const remMin = Math.ceil((2700 - elapsedSec) / 60);
+        throw new BadRequestException(
+          `Trận đấu sự kiện phải diễn ra tối thiểu 45 phút mới có thể kết thúc! (Đã thi đấu: ${Math.floor(elapsedSec / 60)} phút, còn thiếu ${remMin} phút)`,
+        );
+      }
     }
 
     // Auto-derive winner_id from scores/check-in when completed but winner not provided
@@ -795,6 +825,7 @@ export class TournamentsService {
       match_no: match.match_no,
       round: match.round,
       bracket: match.bracket,
+      is_event: match.bracket === 'event' || t?.category === 'event',
       round_name: this.computeRoundName(
         match.round,
         numPlayers,
@@ -843,6 +874,31 @@ export class TournamentsService {
 
     if (match.winner_id && match.status !== TournamentMatchStatus.COMPLETED) {
       match.status = TournamentMatchStatus.COMPLETED;
+    }
+
+    const isEvent = match.bracket === 'event';
+    if (
+      isEvent &&
+      (match.winner_id || match.status === TournamentMatchStatus.COMPLETED) &&
+      statusBefore !== TournamentMatchStatus.COMPLETED
+    ) {
+      const start = match.match_time
+        ? new Date(match.match_time).getTime()
+        : match.created_at
+          ? new Date(match.created_at).getTime()
+          : Date.now();
+      const elapsedSec = Math.floor((Date.now() - start) / 1000);
+      const effectiveElapsed =
+        dto.elapsed_sec !== undefined && typeof dto.elapsed_sec === 'number'
+          ? Math.max(elapsedSec, dto.elapsed_sec)
+          : elapsedSec;
+      if (effectiveElapsed < 2700) {
+        const remSec = 2700 - effectiveElapsed;
+        const remMin = Math.ceil(remSec / 60);
+        throw new BadRequestException(
+          `Trận đấu sự kiện phải diễn ra tối thiểu 45 phút mới có thể kết thúc! (Đã thi đấu: ${Math.floor(effectiveElapsed / 60)} phút, còn lại khoảng ${remMin} phút)`,
+        );
+      }
     }
 
     if (
@@ -927,18 +983,20 @@ export class TournamentsService {
       qb.andWhere('u.id NOT IN (:...ids)', { ids: registeredUserIds });
     }
 
-    let allowedRanks: string[] = [];
-    if (tournament.ranks) {
-      try {
-        allowedRanks = JSON.parse(tournament.ranks);
-      } catch (e) {
-        allowedRanks = [];
+    if (tournament.category !== 'event') {
+      let allowedRanks: string[] = [];
+      if (tournament.ranks) {
+        try {
+          allowedRanks = JSON.parse(tournament.ranks);
+        } catch (e) {
+          allowedRanks = [];
+        }
       }
-    }
 
-    if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
-      const upperRanks = allowedRanks.map((r) => r.toUpperCase());
-      qb.andWhere('UPPER(u.rank) IN (:...upperRanks)', { upperRanks });
+      if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
+        const upperRanks = allowedRanks.map((r) => r.toUpperCase());
+        qb.andWhere('UPPER(u.rank) IN (:...upperRanks)', { upperRanks });
+      }
     }
 
     if (search) {
@@ -984,24 +1042,26 @@ export class TournamentsService {
     }
 
     // Validate rank restriction
-    let allowedRanks: string[] = [];
-    if (tournament.ranks) {
-      try {
-        allowedRanks = JSON.parse(tournament.ranks);
-      } catch (e) {
-        allowedRanks = [];
+    if (tournament.category !== 'event') {
+      let allowedRanks: string[] = [];
+      if (tournament.ranks) {
+        try {
+          allowedRanks = JSON.parse(tournament.ranks);
+        } catch (e) {
+          allowedRanks = [];
+        }
       }
-    }
 
-    if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
-      const userRank = user.rank ? user.rank.toUpperCase() : '';
-      const isAllowed = allowedRanks
-        .map((r) => r.toUpperCase())
-        .includes(userRank);
-      if (!isAllowed) {
-        throw new BadRequestException(
-          `Cơ thủ ${user.full_name} có level ${user.rank ? formatLevel(user.rank) : 'N/A'}, không nằm trong các level được phép của giải đấu: ${allowedRanks.map(formatLevel).join(', ')}`,
-        );
+      if (Array.isArray(allowedRanks) && allowedRanks.length > 0) {
+        const userRank = user.rank ? user.rank.toUpperCase() : '';
+        const isAllowed = allowedRanks
+          .map((r) => r.toUpperCase())
+          .includes(userRank);
+        if (!isAllowed) {
+          throw new BadRequestException(
+            `Cơ thủ ${user.full_name} có level ${user.rank ? formatLevel(user.rank) : 'N/A'}, không nằm trong các level được phép của giải đấu: ${allowedRanks.map(formatLevel).join(', ')}`,
+          );
+        }
       }
     }
 
@@ -1493,6 +1553,26 @@ export class TournamentsService {
       match.status = TournamentMatchStatus.COMPLETED;
     }
 
+    if (
+      match.bracket === 'event' &&
+      match.status === TournamentMatchStatus.COMPLETED &&
+      statusBefore !== TournamentMatchStatus.COMPLETED &&
+      !dto.force
+    ) {
+      const start = match.match_time
+        ? new Date(match.match_time).getTime()
+        : match.created_at
+          ? new Date(match.created_at).getTime()
+          : Date.now();
+      const elapsedSec = Math.floor((Date.now() - start) / 1000);
+      if (elapsedSec < 2700) {
+        const remMin = Math.ceil((2700 - elapsedSec) / 60);
+        throw new BadRequestException(
+          `Trận đấu sự kiện phải diễn ra tối thiểu 45 phút mới có thể kết thúc! (Đã thi đấu: ${Math.floor(elapsedSec / 60)} phút, còn thiếu ${remMin} phút)`,
+        );
+      }
+    }
+
     // Auto-derive winner_id from scores/check-in when completed but winner not provided
     if (!match.winner_id && match.status === TournamentMatchStatus.COMPLETED) {
       if (!match.player2_id && match.player1_id) {
@@ -1806,69 +1886,122 @@ export class TournamentsService {
     }
   }
 
+  private parseEventHandicap(handicapDesc?: string | null): number {
+    if (!handicapDesc) return 0;
+    const m = String(handicapDesc).match(/chấp\s*(\d+)/i);
+    return m ? parseInt(m[1], 10) || 0 : 0;
+  }
+
+  calculateEventBasePoints(
+    raceTo: number,
+    handicap: number,
+  ): { totalRounds: number; winPoints: number; losePoints: number } {
+    const rt = Number(raceTo) > 0 ? Number(raceTo) : 9;
+    const hc = Number(handicap) >= 0 ? Number(handicap) : 0;
+    const totalRounds = Math.max(0, rt * 2 - 1 - hc);
+    const winPoints = Number((totalRounds * 0.35).toFixed(2));
+    const losePoints = Number((totalRounds * 0.05).toFixed(2));
+    return { totalRounds, winPoints, losePoints };
+  }
+
   getEventWinPoints(
     match: TournamentMatchEntity,
-    tournament: TournamentEntity,
+    _tournament?: TournamentEntity,
   ): number {
-    const desc = (match.handicap_desc || '').toLowerCase();
-    if (desc.includes('chấp 2') || desc.includes('13') || match.race_to === 13) {
-      return parseInt(tournament.handicap_2_touch || '7', 10) || 7;
-    }
-    if (desc.includes('chấp 1')) {
-      return parseInt(tournament.handicap_1_touch || '5', 10) || 5;
-    }
-    if (desc.includes('11') || match.race_to === 11) {
-      return parseInt(tournament.draw_touch_11 || '7', 10) || 7;
-    }
-    return parseInt(tournament.draw_touch || '5', 10) || 5;
+    const rt = match.race_to || 9;
+    const hc = this.parseEventHandicap(match.handicap_desc);
+    return this.calculateEventBasePoints(rt, hc).winPoints;
   }
 
   getEventLosePoints(
     match: TournamentMatchEntity,
-    tournament?: TournamentEntity | null,
+    _tournament?: TournamentEntity | null,
   ): number {
-    const desc = (match.handicap_desc || '').toLowerCase();
-    if (desc.includes('chấp 2') || desc.includes('13') || match.race_to === 13) {
-      return 2;
-    }
-    if (desc.includes('11') || match.race_to === 11) {
-      return 2;
-    }
-    // Đồng cơ chạm 9 hoặc Chạm 8 chấp 1
-    return 1;
+    const rt = match.race_to || 9;
+    const hc = this.parseEventHandicap(match.handicap_desc);
+    return this.calculateEventBasePoints(rt, hc).losePoints;
   }
 
   async applyEventMatchPoints(
     match: TournamentMatchEntity,
     winnerId: number,
-    tournament: TournamentEntity,
+    _tournament: TournamentEntity,
   ) {
-    const winPoints = this.getEventWinPoints(match, tournament);
-    const losePoints = this.getEventLosePoints(match, tournament);
-    const bonusVal = parseInt(tournament.bonus || '0', 10) || 0;
+    const p1Id = match.player1_id;
+    const p2Id = match.player2_id;
+    if (!p1Id || !p2Id) return;
+
+    const rt = match.race_to || 9;
+    const hc = this.parseEventHandicap(match.handicap_desc);
+    let { winPoints, losePoints } = this.calculateEventBasePoints(rt, hc);
+
+    // Kiểm tra quy tắc chống cày điểm: tối đa 3 trận/ngày được tính điểm giữa 2 cơ thủ cụ thể (VN GMT+7)
+    const matchDate = match.match_time || match.created_at || new Date();
+    const vnOffsetMs = 7 * 60 * 60 * 1000;
+    const vnMatchDate = new Date(new Date(matchDate).getTime() + vnOffsetMs);
+    const startOfDay = new Date(
+      Date.UTC(vnMatchDate.getUTCFullYear(), vnMatchDate.getUTCMonth(), vnMatchDate.getUTCDate(), 0, 0, 0) - vnOffsetMs,
+    );
+    const endOfDay = new Date(
+      Date.UTC(vnMatchDate.getUTCFullYear(), vnMatchDate.getUTCMonth(), vnMatchDate.getUTCDate(), 23, 59, 59, 999) - vnOffsetMs,
+    );
+
+    const priorMatchesToday = await this.matchRepo
+      .createQueryBuilder('m')
+      .where('m.tournament_id = :tid', { tid: match.tournament_id })
+      .andWhere('m.status = :status', { status: TournamentMatchStatus.COMPLETED })
+      .andWhere('m.id != :currentId', { currentId: match.id || 0 })
+      .andWhere(
+        '((m.player1_id = :p1 AND m.player2_id = :p2) OR (m.player1_id = :p2 AND m.player2_id = :p1))',
+        { p1: p1Id, p2: p2Id },
+      )
+      .andWhere('COALESCE(m.match_time, m.created_at) >= :startOfDay AND COALESCE(m.match_time, m.created_at) <= :endOfDay', {
+        startOfDay,
+        endOfDay,
+      })
+      .getCount();
+
+    const isCappedToday = priorMatchesToday >= 3;
+    if (isCappedToday) {
+      winPoints = 0;
+      losePoints = 0;
+    }
+
+    // Thưởng chạm trán lần đầu: +20 điểm/người (chỉ 1 lần duy nhất trong tháng cho mỗi cặp)
+    const startOfMonth = new Date(
+      Date.UTC(vnMatchDate.getUTCFullYear(), vnMatchDate.getUTCMonth(), 1, 0, 0, 0) - vnOffsetMs,
+    );
+    const endOfMonth = new Date(
+      Date.UTC(vnMatchDate.getUTCFullYear(), vnMatchDate.getUTCMonth() + 1, 0, 23, 59, 59, 999) - vnOffsetMs,
+    );
 
     let bonus = 0;
-    if (match.player1_id && match.player2_id && bonusVal > 0) {
-      const priorMatch = await this.matchRepo
+    if (!isCappedToday) {
+      const priorMatchInMonth = await this.matchRepo
         .createQueryBuilder('m')
         .where('m.tournament_id = :tid', { tid: match.tournament_id })
         .andWhere('m.status = :status', { status: TournamentMatchStatus.COMPLETED })
         .andWhere('m.id != :currentId', { currentId: match.id || 0 })
         .andWhere(
           '((m.player1_id = :p1 AND m.player2_id = :p2) OR (m.player1_id = :p2 AND m.player2_id = :p1))',
-          { p1: match.player1_id, p2: match.player2_id },
+          { p1: p1Id, p2: p2Id },
         )
+        .andWhere('COALESCE(m.match_time, m.created_at) >= :startOfMonth AND COALESCE(m.match_time, m.created_at) <= :endOfMonth', {
+          startOfMonth,
+          endOfMonth,
+        })
         .getOne();
-      if (!priorMatch) {
-        bonus = bonusVal;
+
+      if (!priorMatchInMonth) {
+        bonus = 20;
       }
     }
 
     if (match.player1_points === null || match.player1_points === undefined) {
-      match.player1_points = (match.player1_id === winnerId ? winPoints : losePoints) + bonus;
+      match.player1_points = Number(((match.player1_id === winnerId ? winPoints : losePoints) + bonus).toFixed(2));
     }
     if (match.player2_points === null || match.player2_points === undefined) {
-      match.player2_points = (match.player2_id === winnerId ? winPoints : losePoints) + bonus;
+      match.player2_points = Number(((match.player2_id === winnerId ? winPoints : losePoints) + bonus).toFixed(2));
     }
 
     await this.matchRepo.save(match);
@@ -1876,51 +2009,71 @@ export class TournamentsService {
   }
 
   async recalculateEventRegistrationsPoints(tournamentId: number) {
-    const tournament = await this.tourRepo.findOne({ where: { id: tournamentId } });
-    const bonusVal = tournament ? parseInt(tournament.bonus || '0', 10) || 0 : 0;
-
     const completedMatches = await this.matchRepo.find({
       where: {
         tournament_id: tournamentId,
         status: TournamentMatchStatus.COMPLETED,
       },
-      order: { match_no: 'ASC', id: 'ASC' },
+      order: { match_time: 'ASC', match_no: 'ASC', id: 'ASC' },
     });
 
-    const seenPairs = new Set<string>();
+    const seenPairMonths = new Set<string>();
+    const dailyPairCount = new Map<string, number>();
     const playerPointsMap = new Map<number, number>();
 
+    const vnOffsetMs = 7 * 60 * 60 * 1000;
+
     for (const m of completedMatches) {
+      if (!m.player1_id || !m.player2_id) continue;
+
+      const p1 = m.player1_id;
+      const p2 = m.player2_id;
+      const pairKey = [Math.min(p1, p2), Math.max(p1, p2)].join('_');
+
+      const matchDate = m.match_time || m.created_at || new Date();
+      const vnMatchDate = new Date(new Date(matchDate).getTime() + vnOffsetMs);
+      const dayKey = `${pairKey}_${vnMatchDate.getUTCFullYear()}-${String(vnMatchDate.getUTCMonth() + 1).padStart(2, '0')}-${String(vnMatchDate.getUTCDate()).padStart(2, '0')}`;
+      const monthKey = `${pairKey}_${vnMatchDate.getUTCFullYear()}-${String(vnMatchDate.getUTCMonth() + 1).padStart(2, '0')}`;
+
+      const currentDayCount = (dailyPairCount.get(dayKey) || 0) + 1;
+      dailyPairCount.set(dayKey, currentDayCount);
+
+      const isCappedToday = currentDayCount > 3;
+
       let matchBonus = 0;
-      if (m.player1_id && m.player2_id && bonusVal > 0) {
-        const pairKey = [Math.min(m.player1_id, m.player2_id), Math.max(m.player1_id, m.player2_id)].join('_');
-        if (!seenPairs.has(pairKey)) {
-          seenPairs.add(pairKey);
-          matchBonus = bonusVal;
-        }
+      if (!isCappedToday && !seenPairMonths.has(monthKey)) {
+        seenPairMonths.add(monthKey);
+        matchBonus = 20;
       }
 
-      const winPts = tournament ? this.getEventWinPoints(m, tournament) : 5;
-      const losePts = this.getEventLosePoints(m, tournament);
+      let winPts = 0;
+      let losePts = 0;
+      if (!isCappedToday) {
+        const rt = m.race_to || 9;
+        const hc = this.parseEventHandicap(m.handicap_desc);
+        const base = this.calculateEventBasePoints(rt, hc);
+        winPts = base.winPoints;
+        losePts = base.losePoints;
+      }
 
       if (m.player1_id) {
         const pts =
           m.player1_points !== null && m.player1_points !== undefined
             ? Number(m.player1_points)
-            : (m.winner_id === m.player1_id ? winPts : losePts) + matchBonus;
+            : Number(((m.winner_id === m.player1_id ? winPts : losePts) + matchBonus).toFixed(2));
         playerPointsMap.set(
           m.player1_id,
-          (playerPointsMap.get(m.player1_id) || 0) + pts,
+          Number(((playerPointsMap.get(m.player1_id) || 0) + pts).toFixed(2)),
         );
       }
       if (m.player2_id) {
         const pts =
           m.player2_points !== null && m.player2_points !== undefined
             ? Number(m.player2_points)
-            : (m.winner_id === m.player2_id ? winPts : losePts) + matchBonus;
+            : Number(((m.winner_id === m.player2_id ? winPts : losePts) + matchBonus).toFixed(2));
         playerPointsMap.set(
           m.player2_id,
-          (playerPointsMap.get(m.player2_id) || 0) + pts,
+          Number(((playerPointsMap.get(m.player2_id) || 0) + pts).toFixed(2)),
         );
       }
     }
@@ -1929,7 +2082,7 @@ export class TournamentsService {
       where: { tournament_id: tournamentId },
     });
     for (const reg of regs) {
-      reg.points = playerPointsMap.get(reg.user_id) || 0;
+      reg.points = Number((playerPointsMap.get(reg.user_id) || 0).toFixed(2));
     }
     await this.regRepo.save(regs);
   }
@@ -2535,6 +2688,25 @@ export class TournamentsService {
     const tournament = await this.tourRepo.findOne({
       where: { id: match.tournament_id },
     });
+
+    const isEvent =
+      match.bracket === 'event' || tournament?.category === 'event';
+    if (isEvent) {
+      const start = match.match_time
+        ? new Date(match.match_time).getTime()
+        : match.created_at
+          ? new Date(match.created_at).getTime()
+          : Date.now();
+      const serverElapsed = Math.floor((Date.now() - start) / 1000);
+      const effectiveElapsed = Math.max(elapsedSec || 0, serverElapsed);
+      if (effectiveElapsed < 2700) {
+        const remMin = Math.ceil((2700 - effectiveElapsed) / 60);
+        throw new BadRequestException(
+          `Trận đấu sự kiện phải diễn ra tối thiểu 45 phút mới có thể kết thúc! (Còn lại khoảng ${remMin} phút)`,
+        );
+      }
+    }
+
     const config = this.getTableFeeConfig();
 
     const roundName = this.computeRoundName(
@@ -3062,6 +3234,10 @@ export class TournamentsService {
       throw new BadRequestException('Không thể tạo trận đấu với chính mình');
     }
 
+    if (!body.race_to || Number(body.race_to) < 9) {
+      throw new BadRequestException('Số chạm tối thiểu cho trận đấu sự kiện là 9 ván');
+    }
+
     const tournament = await this.tourRepo.findOne({
       where: { id: body.tournament_id },
     });
@@ -3102,45 +3278,9 @@ export class TournamentsService {
       );
     }
 
-    // 3. Kiểm tra giới hạn số trận giữa 2 cơ thủ trong ngày (tối đa 3 trận, không thể tạo trận thứ 4)
-    const now = new Date();
-    const vnOffsetMs = 7 * 60 * 60 * 1000; // GMT+7
-    const vnNow = new Date(now.getTime() + vnOffsetMs);
-    const startOfDay = new Date(
-      Date.UTC(vnNow.getUTCFullYear(), vnNow.getUTCMonth(), vnNow.getUTCDate(), 0, 0, 0) -
-        vnOffsetMs,
-    );
-    const endOfDay = new Date(
-      Date.UTC(
-        vnNow.getUTCFullYear(),
-        vnNow.getUTCMonth(),
-        vnNow.getUTCDate(),
-        23,
-        59,
-        59,
-        999,
-      ) - vnOffsetMs,
-    );
-
-    const matchesTodayCount = await this.matchRepo
-      .createQueryBuilder('m')
-      .where('m.tournament_id = :tid', { tid: body.tournament_id })
-      .andWhere(
-        '((m.player1_id = :p1 AND m.player2_id = :p2) OR (m.player1_id = :p2 AND m.player2_id = :p1))',
-        { p1: body.player1_id, p2: body.player2_id },
-      )
-      .andWhere('m.created_at >= :startOfDay AND m.created_at <= :endOfDay', {
-        startOfDay,
-        endOfDay,
-      })
-      .andWhere('m.status != :cancelled', { cancelled: 'cancelled' })
-      .getCount();
-
-    if (matchesTodayCount >= 3) {
-      throw new BadRequestException(
-        'Hai cơ thủ đã thi đấu với nhau 3 trận trong ngày hôm nay, không thể tạo thêm trận đấu!',
-      );
-    }
+    // 3. Quy định chống cày điểm: Tối đa 3 trận/ngày được tính điểm giữa 2 cơ thủ.
+    // Từ trận thứ 4 trở đi trong ngày giữa cặp cơ thủ đó, trận đấu vẫn được tạo và diễn ra bình thường,
+    // nhưng khi kết thúc sẽ nhận 0 điểm BXH (đã được xử lý trong applyEventMatchPoints).
 
     // 4. Get max match_no
     const lastMatch = await this.matchRepo.findOne({

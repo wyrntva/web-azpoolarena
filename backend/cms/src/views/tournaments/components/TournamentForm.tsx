@@ -67,13 +67,15 @@ const TournamentForm = ({
                 handleRemoveDetailLogo={handleRemoveDetailLogo}
             />
 
-            <LevelTypeSection
-                formData={formData}
-                setFormData={setFormData}
-                ranks={ranks}
-                handleRankToggle={handleRankToggle}
-                isEvent={isEvent}
-            />
+            {!isEvent && (
+                <LevelTypeSection
+                    formData={formData}
+                    setFormData={setFormData}
+                    ranks={ranks}
+                    handleRankToggle={handleRankToggle}
+                    isEvent={isEvent}
+                />
+            )}
 
             <StatusDisplaySection
                 formData={formData}
@@ -94,10 +96,12 @@ const TournamentForm = ({
                 isEvent={isEvent}
             />
 
-            <HandicapSection
-                formData={formData}
-                setFormData={setFormData}
-            />
+            {!isEvent && (
+                <HandicapSection
+                    formData={formData}
+                    setFormData={setFormData}
+                />
+            )}
 
             <OtherInfoSection
                 formData={formData}

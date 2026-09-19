@@ -88,8 +88,8 @@ const TournamentEventMatchesTab: React.FC<TournamentEventMatchesTabProps> = ({
             player1_check_in: vm.player1_check_in || 'confirmed',
             player2_check_in: vm.player2_check_in || 'confirmed',
             winner_id: vm.winner_id ? parseInt(vm.winner_id, 10) : null,
-            player1_points: vm.player1_points !== undefined && vm.player1_points !== '' ? parseInt(vm.player1_points, 10) : null,
-            player2_points: vm.player2_points !== undefined && vm.player2_points !== '' ? parseInt(vm.player2_points, 10) : null,
+            player1_points: vm.player1_points !== undefined && vm.player1_points !== '' ? parseFloat(vm.player1_points) : null,
+            player2_points: vm.player2_points !== undefined && vm.player2_points !== '' ? parseFloat(vm.player2_points) : null,
             race_to: targetMatch?.race_to || null,
             handicap_desc: targetMatch?.handicap_desc || null,
         });

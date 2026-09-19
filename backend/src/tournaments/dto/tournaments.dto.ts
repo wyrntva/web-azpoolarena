@@ -156,4 +156,5 @@ export class UpdateMatchDto {
   @IsOptional() @IsNumber() round?: number;
   @IsOptional() @IsNumber() player1_points?: number | null;
   @IsOptional() @IsNumber() player2_points?: number | null;
+  @IsOptional() @IsBoolean() force?: boolean;
 }

@@ -21,13 +21,47 @@ DialogShell {
     fixedW: Math.round(860 * dlg.uiScale)
     minW:   Math.round(680 * dlg.uiScale)
 
-    avoidKeyboard: true
-    keyboardMargin: Math.round(16 * dlg.uiScale)
+    avoidKeyboard: false
+    maxHeightRatio: 0.96
     initialFocusItem: p1Input
     property bool isClosing: false
 
+    function checkCreationTimeError() {
+        var ev = dlg.activeEventData
+        if (!ev || (!ev.match_creation_time && !ev.match_creation_time_end)) return ""
+        var now = new Date()
+        var nowMin = now.getHours() * 60 + now.getMinutes()
+        function parseMin(tStr) {
+            if (!tStr) return null
+            var parts = String(tStr).split(":")
+            if (parts.length < 2) return null
+            return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10)
+        }
+        function fmtTime(tStr) {
+            if (!tStr) return ""
+            return String(tStr).substring(0, 5)
+        }
+        var sMin = parseMin(ev.match_creation_time)
+        var eMin = parseMin(ev.match_creation_time_end)
+        var t1 = fmtTime(ev.match_creation_time)
+        var t2 = fmtTime(ev.match_creation_time_end)
+
+        if (sMin !== null && eMin !== null) {
+            var ok = (sMin <= eMin) ? (nowMin >= sMin && nowMin <= eMin) : (nowMin >= sMin || nowMin <= eMin)
+            if (!ok) return "Thời gian tạo trận đấu chỉ trong khung giờ từ " + t1 + " đến " + t2 + "!"
+        } else if (sMin !== null) {
+            if (nowMin < sMin) return "Thời gian tạo trận đấu chỉ bắt đầu từ " + t1 + "!"
+        } else if (eMin !== null) {
+            if (nowMin > eMin) return "Thời gian tạo trận đấu đã kết thúc lúc " + t2 + "!"
+        }
+        return ""
+    }
+
     onOpened: {
         isClosing = false
+        if (typeof win !== "undefined" && win) win.activeDialog = dlg
+        var timeWarn = checkCreationTimeError()
+        dlg.creationError = (timeWarn !== "") ? timeWarn : ""
         p1Input.forceActiveFocus()
         try { Qt.inputMethod.show() } catch(e) {}
     }
@@ -39,15 +73,16 @@ DialogShell {
 
     onClosed: {
         isClosing = true
+        if (typeof win !== "undefined" && win && win.activeDialog === dlg) win.activeDialog = null
         try { Qt.inputMethod.hide() } catch(e) {}
     }
 
     buttonHeight:         Math.round(56 * dlg.uiScale)
     buttonMinWidth:       Math.round(200 * dlg.uiScale)
-    buttonFontSize:       Math.round(18 * dlg.uiScale)
-    titleFontSize:        Math.round(24 * dlg.uiScale)
-    headerContentSpacing: Math.round(14 * dlg.uiScale)
-    contentMargins:       Math.round(18 * dlg.uiScale)
+    buttonFontSize:       Math.round(20 * dlg.uiScale)
+    titleFontSize:        Math.round(26 * dlg.uiScale)
+    headerContentSpacing: Math.round(10 * dlg.uiScale)
+    contentMargins:       Math.round(14 * dlg.uiScale)
 
     // Trạng thái cơ thủ 1
     property string p1Phone: ""
@@ -63,12 +98,26 @@ DialogShell {
     property var    p2Data: ({})
     property string p2Error: ""
 
-    // Thể thức thi đấu
-    property string selectedMode: ""
-    property int    selectedRaceTo: 9
-    property int    p1StartScore: 0
-    property int    p2StartScore: 0
-    property string matchFormatLabel: ""
+    // Thể thức thi đấu linh hoạt
+    readonly property int minRaceTo: 9
+    property int selectedRaceTo: 9
+    property int handicapMode: 0 // 0 = Đồng cơ, 1 = P1 chấp P2, 2 = P2 chấp P1
+    property int handicapValue: 0 // 0, 1, 2, ...
+    readonly property int effectiveHandicap: (handicapMode === 0) ? 0 : handicapValue
+    readonly property int totalRounds: Math.max(0, (selectedRaceTo * 2 - 1) - effectiveHandicap)
+    readonly property real winPoints: Number((totalRounds * 0.35).toFixed(2))
+    readonly property real losePoints: Number((totalRounds * 0.05).toFixed(2))
+
+    readonly property int p1StartScore: (handicapMode === 2 ? handicapValue : 0)
+    readonly property int p2StartScore: (handicapMode === 1 ? handicapValue : 0)
+
+    readonly property string matchFormatLabel: {
+        if (handicapMode === 0 || handicapValue === 0) {
+            return "Đồng cơ chạm " + selectedRaceTo
+        }
+        var pName = (handicapMode === 1) ? (dlg.p1Data.name || "Cơ thủ 1") : (dlg.p2Data.name || "Cơ thủ 2")
+        return "Chạm " + selectedRaceTo + " - " + pName + " chấp " + handicapValue
+    }
 
     // Lỗi khi tạo trận đấu
     property string creationError: ""
@@ -101,11 +150,11 @@ DialogShell {
         p2Data = ({})
         p2Error = ""
 
-        selectedMode = ""
         selectedRaceTo = 9
-        p1StartScore = 0
-        p2StartScore = 0
-        matchFormatLabel = ""
+        handicapMode = 0
+        handicapValue = 0
+        try { if (typeof raceToInput !== "undefined" && raceToInput) raceToInput.text = "9" } catch(e) {}
+        try { if (typeof handicapInput !== "undefined" && handicapInput) handicapInput.text = "0" } catch(e) {}
         creationError = ""
     }
 
@@ -116,13 +165,14 @@ DialogShell {
                 Qt.callLater(function() {
                     if (dlg.visible && !dlg.isClosing && !Qt.inputMethod.visible) {
                         if (!p1Input.activeFocus && !p2Input.activeFocus) {
-                            if (dlg.p1Found && !dlg.p2Found) {
-                                p2Input.forceActiveFocus()
-                            } else {
+                            if (!dlg.p1Found) {
                                 p1Input.forceActiveFocus()
+                                try { Qt.inputMethod.show() } catch(e) {}
+                            } else if (!dlg.p2Found) {
+                                p2Input.forceActiveFocus()
+                                try { Qt.inputMethod.show() } catch(e) {}
                             }
                         }
-                        try { Qt.inputMethod.show() } catch(e) {}
                     }
                 })
             }
@@ -222,59 +272,13 @@ DialogShell {
 
     function evaluateRules() {
         if (!p1Found || !p2Found) {
-            selectedMode = ""
             return
         }
-
-        var r1 = getRankIndex(p1Data.rank)
-        var r2 = getRankIndex(p2Data.rank)
-        var diff = Math.abs(r1 - r2)
-
-        if (diff === 0) {
-            if (selectedMode !== "draw_9" && selectedMode !== "draw_11") {
-                setDrawMode(9)
-            }
-        } else {
-            if (selectedMode !== "handicap_1" && selectedMode !== "handicap_2") {
-                setHandicapMode(1)
-            }
+        if (selectedRaceTo < minRaceTo) {
+            selectedRaceTo = minRaceTo
         }
-    }
-
-    function setDrawMode(touchVal) {
-        var ev = activeEventData || ({})
-        // touchVal là 9 hoặc 11 (raceTo)
-        // ev.draw_touch và ev.draw_touch_11 là điểm thưởng người thắng (mặc định 5 và 7)
-        var winPoints = (touchVal === 11) ? (parseInt(ev.draw_touch_11 || 7) || 7) : (parseInt(ev.draw_touch || 5) || 5)
-        selectedMode = (touchVal === 11) ? "draw_11" : "draw_9"
-        selectedRaceTo = touchVal
-        p1StartScore = 0
-        p2StartScore = 0
-        matchFormatLabel = "Đồng cơ chạm " + touchVal
-    }
-
-    function setHandicapMode(handicapPoints) {
-        var ev = activeEventData || ({})
-        var r1 = getRankIndex(p1Data.rank)
-        var r2 = getRankIndex(p2Data.rank)
-        var p1IsFav = (r1 >= r2)
-
-        if (handicapPoints === 2) {
-            // Chạm 13 chấp 2, người thắng nhận điểm từ handicap_2_touch (mặc định 7)
-            var winPoints = parseInt(ev.handicap_2_touch || 7) || 7
-            selectedMode = "handicap_2"
-            selectedRaceTo = 13
-            p1StartScore = 0
-            p2StartScore = 0
-            matchFormatLabel = "Chạm 13 chấp 2"
-        } else {
-            // Chạm 8 chấp 1, người thắng nhận điểm từ handicap_1_touch (mặc định 5), người thua nhận 1 điểm
-            var winPoints = parseInt(ev.handicap_1_touch || 5) || 5
-            selectedMode = "handicap_1"
-            selectedRaceTo = 8
-            p1StartScore = 0
-            p2StartScore = 0
-            matchFormatLabel = "Chạm 8 chấp 1"
+        if (handicapValue >= selectedRaceTo) {
+            handicapValue = Math.max(0, selectedRaceTo - 1)
         }
     }
 
@@ -288,11 +292,20 @@ DialogShell {
     }
 
     // Nút xác nhận của DialogShell
-    confirmEnabled: (p1Found && p2Found && selectedMode !== "")
+    confirmEnabled: (p1Found && p2Found && p1Data.id && p2Data.id && (p1Data.id !== p2Data.id) && selectedRaceTo >= minRaceTo)
 
     onConfirmed: {
         if (!p1Found || !p2Found || !p1Data.id || !p2Data.id) return
-        if (!selectedMode) return
+        if (selectedRaceTo < minRaceTo) {
+            dlg.creationError = "Số chạm tối thiểu cho trận đấu sự kiện là " + minRaceTo + " ván!"
+            return
+        }
+        var timeErr = checkCreationTimeError()
+        if (timeErr !== "") {
+            dlg.creationError = timeErr
+            return
+        }
+        dlg.creationError = ""
         EventService.createMatch(
             p1Data.id,
             p2Data.id,
@@ -309,46 +322,7 @@ DialogShell {
     body: Column {
         id: bodyCol
         width: parent.width
-        spacing: Math.round(12 * dlg.uiScale)
-
-        // Hiển thị khung giờ tạo trận của sự kiện nếu có cấu hình
-        Rectangle {
-            visible: {
-                var ev = dlg.activeEventData
-                return !!(ev && (ev.match_creation_time || ev.match_creation_time_end))
-            }
-            width: parent.width
-            implicitHeight: Math.round(32 * dlg.uiScale)
-            radius: Math.round(8 * dlg.uiScale)
-            color: "#EFF6FF"
-            border.color: "#BFDBFE"
-            border.width: 1
-
-            RowLayout {
-                anchors.centerIn: parent
-                spacing: Math.round(8 * dlg.uiScale)
-
-                AppText {
-                    text: "⏰"
-                    font.pixelSize: Math.round(14 * dlg.uiScale)
-                }
-
-                AppText {
-                    text: {
-                        var ev = dlg.activeEventData || {}
-                        var t1 = ev.match_creation_time ? String(ev.match_creation_time).substring(0, 5) : ""
-                        var t2 = ev.match_creation_time_end ? String(ev.match_creation_time_end).substring(0, 5) : ""
-                        if (t1 && t2) return "Khung giờ tạo trận đấu: " + t1 + " - " + t2
-                        if (t1) return "Khung giờ tạo trận đấu: Từ " + t1
-                        if (t2) return "Khung giờ tạo trận đấu: Đến " + t2
-                        return ""
-                    }
-                    color: "#1D4ED8"
-                    font.pixelSize: Math.round(13 * dlg.uiScale)
-                    font.bold: true
-                }
-            }
-        }
+        spacing: Math.round(10 * dlg.uiScale)
 
         // Hàng 2 thẻ cơ thủ
         RowLayout {
@@ -376,22 +350,22 @@ DialogShell {
                             text: "CƠ THỦ 1"
                             color: "#172339"
                             font.bold: true
-                            font.pixelSize: Math.round(15 * dlg.uiScale)
+                            font.pixelSize: Math.round(16 * dlg.uiScale)
                         }
                         Item { Layout.fillWidth: true }
                         Rectangle {
                             visible: dlg.p1Found
                             radius: Math.round(5 * dlg.uiScale)
                             color: "#166534"
-                            implicitHeight: Math.round(22 * dlg.uiScale)
-                            implicitWidth: p1RankBadge.implicitWidth + 14
+                            implicitHeight: Math.round(24 * dlg.uiScale)
+                            implicitWidth: p1RankBadge.implicitWidth + 16
                             AppText {
                                 id: p1RankBadge
                                 anchors.centerIn: parent
                                 text: dlg.formatLevel(dlg.p1Data.rank)
                                 color: "#FFFFFF"
                                 font.bold: true
-                                font.pixelSize: Math.round(12 * dlg.uiScale)
+                                font.pixelSize: Math.round(13 * dlg.uiScale)
                             }
                         }
                     }
@@ -416,7 +390,7 @@ DialogShell {
                                 Layout.fillWidth: true
                                 verticalAlignment: Text.AlignVCenter
                                 font.family: (typeof win !== "undefined" && win) ? win.appFontFamily : "Montserrat"
-                                font.pixelSize: Math.round(18 * dlg.uiScale)
+                                font.pixelSize: Math.round(20 * dlg.uiScale)
                                 font.bold: true
                                 font.hintingPreference: Font.PreferFullHinting
                                 renderType: Text.NativeRendering
@@ -502,7 +476,7 @@ DialogShell {
                             text: dlg.p1Data.name || ""
                             color: "#166534"
                             font.bold: true
-                            font.pixelSize: Math.round(17 * dlg.uiScale)
+                            font.pixelSize: Math.round(20 * dlg.uiScale)
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -513,7 +487,8 @@ DialogShell {
                             anchors.verticalCenter: parent.verticalCenter
                             text: dlg.p1Error
                             color: "#DC2626"
-                            font.pixelSize: Math.round(12 * dlg.uiScale)
+                            font.pixelSize: Math.round(13 * dlg.uiScale)
+                            font.bold: true
                             wrapMode: Text.WordWrap
                             width: parent.width
                         }
@@ -524,7 +499,7 @@ DialogShell {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "Nhập SĐT đã đăng ký sự kiện"
                             color: "#94A3B8"
-                            font.pixelSize: Math.round(12 * dlg.uiScale)
+                            font.pixelSize: Math.round(13 * dlg.uiScale)
                         }
                     }
                 }
@@ -545,7 +520,7 @@ DialogShell {
                     color: "#64748B"
                     font.bold: true
                     font.italic: false
-                    font.pixelSize: Math.round(15 * dlg.uiScale)
+                    font.pixelSize: Math.round(16 * dlg.uiScale)
                     font.hintingPreference: Font.PreferFullHinting
                     renderType: Text.NativeRendering
                 }
@@ -572,22 +547,22 @@ DialogShell {
                             text: "CƠ THỦ 2"
                             color: "#172339"
                             font.bold: true
-                            font.pixelSize: Math.round(15 * dlg.uiScale)
+                            font.pixelSize: Math.round(16 * dlg.uiScale)
                         }
                         Item { Layout.fillWidth: true }
                         Rectangle {
                             visible: dlg.p2Found
                             radius: Math.round(5 * dlg.uiScale)
                             color: "#166534"
-                            implicitHeight: Math.round(22 * dlg.uiScale)
-                            implicitWidth: p2RankBadge.implicitWidth + 14
+                            implicitHeight: Math.round(24 * dlg.uiScale)
+                            implicitWidth: p2RankBadge.implicitWidth + 16
                             AppText {
                                 id: p2RankBadge
                                 anchors.centerIn: parent
                                 text: dlg.formatLevel(dlg.p2Data.rank)
                                 color: "#FFFFFF"
                                 font.bold: true
-                                font.pixelSize: Math.round(12 * dlg.uiScale)
+                                font.pixelSize: Math.round(13 * dlg.uiScale)
                             }
                         }
                     }
@@ -612,7 +587,7 @@ DialogShell {
                                 Layout.fillWidth: true
                                 verticalAlignment: Text.AlignVCenter
                                 font.family: (typeof win !== "undefined" && win) ? win.appFontFamily : "Montserrat"
-                                font.pixelSize: Math.round(18 * dlg.uiScale)
+                                font.pixelSize: Math.round(20 * dlg.uiScale)
                                 font.bold: true
                                 font.hintingPreference: Font.PreferFullHinting
                                 renderType: Text.NativeRendering
@@ -706,7 +681,7 @@ DialogShell {
                             text: dlg.p2Data.name || ""
                             color: "#166534"
                             font.bold: true
-                            font.pixelSize: Math.round(17 * dlg.uiScale)
+                            font.pixelSize: Math.round(20 * dlg.uiScale)
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -717,7 +692,8 @@ DialogShell {
                             anchors.verticalCenter: parent.verticalCenter
                             text: dlg.p2Error
                             color: "#DC2626"
-                            font.pixelSize: Math.round(12 * dlg.uiScale)
+                            font.pixelSize: Math.round(13 * dlg.uiScale)
+                            font.bold: true
                             wrapMode: Text.WordWrap
                             width: parent.width
                         }
@@ -728,142 +704,608 @@ DialogShell {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "Nhập SĐT đã đăng ký sự kiện"
                             color: "#94A3B8"
-                            font.pixelSize: Math.round(12 * dlg.uiScale)
+                            font.pixelSize: Math.round(13 * dlg.uiScale)
                         }
                     }
                 }
             }
         }
 
-        // === KHUNG CHỌN THỂ THỨC THI ĐẤU ===
+        // === THÔNG BÁO KHI CHƯA NHẬP ĐỦ 2 CƠ THỦ ===
         Rectangle {
+            visible: !(dlg.p1Found && dlg.p2Found)
             width: parent.width
-            implicitHeight: Math.round(100 * dlg.uiScale)
-            color: "transparent"
-            border.width: 0
+            implicitHeight: Math.round(46 * dlg.uiScale)
+            radius: Math.round(10 * dlg.uiScale)
+            color: "#F8FAFC"
+            border.color: "#E2E8F0"
+            border.width: 1
+
+            AppText {
+                anchors.centerIn: parent
+                text: "Nhập số điện thoại 2 cơ thủ để thiết lập số Chạm, Chấp và tính điểm."
+                color: "#64748B"
+                font.pixelSize: Math.round(14 * dlg.uiScale)
+            }
+        }
+
+        // === KHUNG CÀI ĐẶT THỂ THỨC (CHẠM & CHẤP & TÍNH ĐIỂM) ===
+        Rectangle {
+            visible: dlg.p1Found && dlg.p2Found
+            width: parent.width
+            implicitHeight: setupCol.implicitHeight + Math.round(24 * dlg.uiScale)
+            radius: Math.round(14 * dlg.uiScale)
+            color: "#F8FAFC"
+            border.color: "#CBD5E1"
+            border.width: 1
 
             ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 0
-                spacing: Math.round(8 * dlg.uiScale)
+                id: setupCol
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: Math.round(12 * dlg.uiScale)
+                spacing: Math.round(12 * dlg.uiScale)
 
+                // Tiêu đề thể thức
                 RowLayout {
                     Layout.fillWidth: true
                     AppText {
                         text: "THỂ THỨC THI ĐẤU"
-                        color: "#172339"
+                        color: "#0F172A"
                         font.bold: true
-                        font.pixelSize: Math.round(14 * dlg.uiScale)
+                        font.pixelSize: Math.round(15 * dlg.uiScale)
                     }
                     Item { Layout.fillWidth: true }
                     AppText {
-                        visible: dlg.p1Found && dlg.p2Found
                         text: dlg.matchFormatLabel
                         color: "#16A34A"
                         font.bold: true
-                        font.pixelSize: Math.round(14 * dlg.uiScale)
+                        font.pixelSize: Math.round(15 * dlg.uiScale)
                     }
                 }
 
-                // Thông báo khi chưa nhập đủ 2 cơ thủ
-                AppText {
-                    visible: !(dlg.p1Found && dlg.p2Found)
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    text: "Nhập số điện thoại 2 cơ thủ để hệ thống kiểm tra và xác định thể thức thi đấu."
-                    color: "#94A3B8"
-                    font.pixelSize: Math.round(13 * dlg.uiScale)
-                }
-
-                // Khi đã xác thực đủ 2 cơ thủ: Các nút lựa chọn thể thức
+                // HÀNG 2 Ô NHẬP LIỆU: SỐ CHẠM & SỐ VÁN CHẤP
                 RowLayout {
-                    visible: dlg.p1Found && dlg.p2Found
                     Layout.fillWidth: true
-                    spacing: Math.round(12 * dlg.uiScale)
+                    spacing: Math.round(14 * dlg.uiScale)
 
-                    readonly property int r1: dlg.getRankIndex(dlg.p1Data.rank)
-                    readonly property int r2: dlg.getRankIndex(dlg.p2Data.rank)
-                    readonly property bool isEqual: (r1 === r2)
-                    readonly property bool p1IsFav: (r1 >= r2)
-
-                    // Nút Lựa chọn 1
-                    Rectangle {
+                    // === Ô NHẬP SỐ CHẠM (RACE TO) ===
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        implicitHeight: Math.round(52 * dlg.uiScale)
-                        radius: Math.round(10 * dlg.uiScale)
-                        readonly property bool isSelected: parent.isEqual ? (dlg.selectedMode === "draw_9") : (dlg.selectedMode === "handicap_1")
-                        color: isSelected ? "#172339" : "#FFFFFF"
-                        border.color: isSelected ? "#172339" : "#CBD5E1"
-                        border.width: isSelected ? 2 : 1
+                        spacing: Math.round(6 * dlg.uiScale)
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (parent.parent.isEqual) dlg.setDrawMode(9)
-                                else dlg.setHandicapMode(1)
+                        RowLayout {
+                            Layout.fillWidth: true
+                            AppText {
+                                text: "SỐ CHẠM (RACE TO)"
+                                color: "#0F172A"
+                                font.bold: true
+                                font.pixelSize: Math.round(14 * dlg.uiScale)
+                            }
+                            Item { Layout.fillWidth: true }
+                            AppText {
+                                text: dlg.selectedRaceTo < dlg.minRaceTo ? ("Tối thiểu chạm " + dlg.minRaceTo + "!") : ("Mục tiêu: " + dlg.selectedRaceTo + " ván")
+                                color: dlg.selectedRaceTo < dlg.minRaceTo ? "#EF4444" : "#2563EB"
+                                font.bold: true
+                                font.pixelSize: Math.round(13 * dlg.uiScale)
                             }
                         }
 
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 1
-                            AppText {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: parent.parent.parent.isEqual ? "Đồng cơ chạm 9" : "Chạm 8 chấp 1"
-                                color: parent.parent.isSelected ? "#FFFFFF" : "#172339"
-                                font.bold: true
-                                font.pixelSize: Math.round(15 * dlg.uiScale)
+                        // Khung nhập số Chạm
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: Math.round(52 * dlg.uiScale)
+                            radius: Math.round(10 * dlg.uiScale)
+                            color: "#2b3242"
+                            border.color: dlg.selectedRaceTo < dlg.minRaceTo ? "#EF4444" : (raceToInput.activeFocus ? "#60A5FA" : "#475569")
+                            border.width: (dlg.selectedRaceTo < dlg.minRaceTo || raceToInput.activeFocus) ? 2 : 1
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: Math.round(6 * dlg.uiScale)
+                                anchors.rightMargin: Math.round(6 * dlg.uiScale)
+                                spacing: Math.round(6 * dlg.uiScale)
+
+                                // Nút giảm
+                                Rectangle {
+                                    implicitWidth: Math.round(40 * dlg.uiScale)
+                                    implicitHeight: Math.round(40 * dlg.uiScale)
+                                    radius: Math.round(8 * dlg.uiScale)
+                                    color: "#3b4354"
+                                    AppText {
+                                        anchors.centerIn: parent
+                                        text: "−"
+                                        font.bold: true
+                                        font.pixelSize: Math.round(20 * dlg.uiScale)
+                                        color: dlg.selectedRaceTo > dlg.minRaceTo ? "#EDEFF3" : "#64748B"
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (dlg.selectedRaceTo > dlg.minRaceTo) {
+                                                dlg.selectedRaceTo--
+                                                raceToInput.text = String(dlg.selectedRaceTo)
+                                                if (dlg.handicapValue >= dlg.selectedRaceTo) {
+                                                    dlg.handicapValue = Math.max(0, dlg.selectedRaceTo - 1)
+                                                    handicapInput.text = String(dlg.handicapValue)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Ô gõ số Chạm
+                                TextInput {
+                                    id: raceToInput
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    font.family: (typeof win !== "undefined" && win) ? win.appFontFamily : "Montserrat"
+                                    font.pixelSize: Math.round(24 * dlg.uiScale)
+                                    font.bold: true
+                                    color: dlg.selectedRaceTo < dlg.minRaceTo ? "#F87171" : "#FFFFFF"
+                                    cursorVisible: activeFocus
+                                    selectByMouse: true
+                                    clip: true
+                                    inputMethodHints: Qt.ImhDigitsOnly
+                                    maximumLength: 3
+                                    text: String(dlg.selectedRaceTo)
+
+                                    onActiveFocusChanged: {
+                                        if (activeFocus) {
+                                            selectAll()
+                                            try { Qt.inputMethod.show() } catch(e) {}
+                                        } else {
+                                            var val = parseInt(text.trim())
+                                            if (isNaN(val) || val < dlg.minRaceTo) {
+                                                dlg.selectedRaceTo = dlg.minRaceTo
+                                                text = String(dlg.minRaceTo)
+                                            }
+                                        }
+                                    }
+
+                                    onTextEdited: {
+                                        var val = parseInt(text.trim())
+                                        if (!isNaN(val)) {
+                                            dlg.selectedRaceTo = val
+                                            if (dlg.handicapValue >= dlg.selectedRaceTo) {
+                                                dlg.handicapValue = Math.max(0, dlg.selectedRaceTo - 1)
+                                                handicapInput.text = String(dlg.handicapValue)
+                                            }
+                                        }
+                                    }
+
+                                    onEditingFinished: {
+                                        var val = parseInt(text.trim())
+                                        if (isNaN(val) || val < dlg.minRaceTo) {
+                                            dlg.selectedRaceTo = dlg.minRaceTo
+                                            text = String(dlg.minRaceTo)
+                                        } else {
+                                            dlg.selectedRaceTo = val
+                                            text = String(val)
+                                        }
+                                    }
+                                }
+
+                                // Nút tăng
+                                Rectangle {
+                                    implicitWidth: Math.round(40 * dlg.uiScale)
+                                    implicitHeight: Math.round(40 * dlg.uiScale)
+                                    radius: Math.round(8 * dlg.uiScale)
+                                    color: "#3b4354"
+                                    AppText {
+                                        anchors.centerIn: parent
+                                        text: "+"
+                                        font.bold: true
+                                        font.pixelSize: Math.round(20 * dlg.uiScale)
+                                        color: dlg.selectedRaceTo < 99 ? "#EDEFF3" : "#64748B"
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (dlg.selectedRaceTo < 99) {
+                                                dlg.selectedRaceTo++
+                                                raceToInput.text = String(dlg.selectedRaceTo)
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                            AppText {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: parent.parent.parent.isEqual 
-                                    ? ("Thắng nhận " + (dlg.activeEventData.draw_touch || "5") + "đ • Thua +1đ") 
-                                    : ((parent.parent.parent.p1IsFav ? (dlg.p1Data.name + " chấp 1") : (dlg.p2Data.name + " chấp 1")) + " • Thắng +" + (dlg.activeEventData.handicap_1_touch || "5") + "đ • Thua +1đ")
-                                color: parent.parent.isSelected ? "#86EFAC" : "#64748B"
-                                font.pixelSize: Math.round(11 * dlg.uiScale)
+
+                            MouseArea {
+                                anchors.fill: parent
+                                z: -1
+                                onClicked: {
+                                    raceToInput.forceActiveFocus()
+                                    try { Qt.inputMethod.show() } catch(e) {}
+                                }
                             }
                         }
                     }
 
-                    // Nút Lựa chọn 2
-                    Rectangle {
+                    // === Ô NHẬP SỐ VÁN CHẤP ===
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        implicitHeight: Math.round(52 * dlg.uiScale)
-                        radius: Math.round(10 * dlg.uiScale)
-                        readonly property bool isSelected: parent.isEqual ? (dlg.selectedMode === "draw_11") : (dlg.selectedMode === "handicap_2")
-                        color: isSelected ? "#172339" : "#FFFFFF"
-                        border.color: isSelected ? "#172339" : "#CBD5E1"
-                        border.width: isSelected ? 2 : 1
+                        spacing: Math.round(6 * dlg.uiScale)
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (parent.parent.isEqual) dlg.setDrawMode(11)
-                                else dlg.setHandicapMode(2)
+                        RowLayout {
+                            Layout.fillWidth: true
+                            AppText {
+                                text: "SỐ VÁN CHẤP"
+                                color: "#0F172A"
+                                font.bold: true
+                                font.pixelSize: Math.round(14 * dlg.uiScale)
+                            }
+                            Item { Layout.fillWidth: true }
+                            AppText {
+                                text: dlg.handicapMode === 0 ? "Đồng cơ (0 ván)" : ("Chấp: " + dlg.handicapValue + " ván")
+                                color: dlg.handicapMode === 0 ? "#64748B" : "#D97706"
+                                font.bold: true
+                                font.pixelSize: Math.round(13 * dlg.uiScale)
                             }
                         }
 
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 1
+                        // Khung nhập số ván chấp
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: Math.round(52 * dlg.uiScale)
+                            radius: Math.round(10 * dlg.uiScale)
+                            color: dlg.handicapMode === 0 ? "#222733" : "#2b3242"
+                            border.color: handicapInput.activeFocus ? "#F59E0B" : (dlg.handicapMode === 0 ? "#334155" : "#475569")
+                            border.width: handicapInput.activeFocus ? 2 : 1
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: Math.round(6 * dlg.uiScale)
+                                anchors.rightMargin: Math.round(6 * dlg.uiScale)
+                                spacing: Math.round(6 * dlg.uiScale)
+
+                                // Nút giảm
+                                Rectangle {
+                                    implicitWidth: Math.round(40 * dlg.uiScale)
+                                    implicitHeight: Math.round(40 * dlg.uiScale)
+                                    radius: Math.round(8 * dlg.uiScale)
+                                    color: "#3b4354"
+                                    AppText {
+                                        anchors.centerIn: parent
+                                        text: "−"
+                                        font.bold: true
+                                        font.pixelSize: Math.round(20 * dlg.uiScale)
+                                        color: dlg.handicapValue > 0 ? "#EDEFF3" : "#64748B"
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (dlg.handicapValue > 0) {
+                                                dlg.handicapValue--
+                                                handicapInput.text = String(dlg.handicapValue)
+                                                if (dlg.handicapValue === 0) dlg.handicapMode = 0
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Ô gõ số Ván Chấp
+                                TextInput {
+                                    id: handicapInput
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    font.family: (typeof win !== "undefined" && win) ? win.appFontFamily : "Montserrat"
+                                    font.pixelSize: Math.round(24 * dlg.uiScale)
+                                    font.bold: true
+                                    color: dlg.handicapMode === 0 ? "#94A3B8" : "#FBBF24"
+                                    cursorVisible: activeFocus
+                                    selectByMouse: true
+                                    clip: true
+                                    inputMethodHints: Qt.ImhDigitsOnly
+                                    maximumLength: 2
+                                    text: String(dlg.handicapValue)
+
+                                    onActiveFocusChanged: {
+                                        if (activeFocus) {
+                                            selectAll()
+                                            try { Qt.inputMethod.show() } catch(e) {}
+                                        }
+                                    }
+
+                                    onTextEdited: {
+                                        var val = parseInt(text.trim())
+                                        if (!isNaN(val) && val >= 0) {
+                                            if (val >= dlg.selectedRaceTo) {
+                                                val = Math.max(0, dlg.selectedRaceTo - 1)
+                                            }
+                                            dlg.handicapValue = val
+                                            if (val === 0) {
+                                                dlg.handicapMode = 0
+                                            } else if (dlg.handicapMode === 0) {
+                                                dlg.handicapMode = 1
+                                            }
+                                        } else if (text.trim() === "") {
+                                            dlg.handicapValue = 0
+                                            dlg.handicapMode = 0
+                                        }
+                                    }
+                                }
+
+                                // Nút tăng
+                                Rectangle {
+                                    implicitWidth: Math.round(40 * dlg.uiScale)
+                                    implicitHeight: Math.round(40 * dlg.uiScale)
+                                    radius: Math.round(8 * dlg.uiScale)
+                                    color: "#3b4354"
+                                    AppText {
+                                        anchors.centerIn: parent
+                                        text: "+"
+                                        font.bold: true
+                                        font.pixelSize: Math.round(20 * dlg.uiScale)
+                                        color: dlg.handicapValue < (dlg.selectedRaceTo - 1) ? "#EDEFF3" : "#64748B"
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (dlg.handicapValue < (dlg.selectedRaceTo - 1)) {
+                                                dlg.handicapValue++
+                                                handicapInput.text = String(dlg.handicapValue)
+                                                if (dlg.handicapMode === 0) dlg.handicapMode = 1
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                z: -1
+                                onClicked: {
+                                    if (dlg.handicapMode === 0) {
+                                        dlg.handicapMode = 1
+                                        if (dlg.handicapValue <= 0) dlg.handicapValue = 1
+                                        handicapInput.text = String(dlg.handicapValue)
+                                    }
+                                    handicapInput.forceActiveFocus()
+                                    try { Qt.inputMethod.show() } catch(e) {}
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // CHỌN CƠ THỦ CHẤP: Đồng cơ | P1 chấp | P2 chấp
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Math.round(6 * dlg.uiScale)
+
+                    AppText {
+                        text: "Bên chấp điểm:"
+                        color: "#475569"
+                        font.bold: true
+                        font.pixelSize: Math.round(13 * dlg.uiScale)
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Math.round(8 * dlg.uiScale)
+
+                        // Đồng cơ
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: Math.round(44 * dlg.uiScale)
+                            radius: Math.round(8 * dlg.uiScale)
+                            readonly property bool isSelected: dlg.handicapMode === 0
+                            color: isSelected ? "#0F172A" : "#FFFFFF"
+                            border.color: isSelected ? "#0F172A" : "#CBD5E1"
+                            border.width: isSelected ? 2 : 1
+
                             AppText {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: parent.parent.parent.isEqual ? "Đồng cơ chạm 11" : "Chạm 13 chấp 2"
-                                color: parent.parent.isSelected ? "#FFFFFF" : "#172339"
+                                anchors.centerIn: parent
+                                text: "Đồng cơ (Không chấp)"
+                                color: parent.isSelected ? "#FFFFFF" : "#1E293B"
+                                font.bold: parent.isSelected
+                                font.pixelSize: Math.round(14 * dlg.uiScale)
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    dlg.handicapMode = 0
+                                    dlg.handicapValue = 0
+                                    handicapInput.text = "0"
+                                }
+                            }
+                        }
+
+                        // P1 chấp
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: Math.round(44 * dlg.uiScale)
+                            radius: Math.round(8 * dlg.uiScale)
+                            readonly property bool isSelected: dlg.handicapMode === 1
+                            color: isSelected ? "#0F172A" : "#FFFFFF"
+                            border.color: isSelected ? "#0F172A" : "#CBD5E1"
+                            border.width: isSelected ? 2 : 1
+
+                            AppText {
+                                anchors.centerIn: parent
+                                text: (dlg.p1Data.name ? (dlg.p1Data.name + " chấp") : "Cơ thủ 1 chấp")
+                                color: parent.isSelected ? "#FFFFFF" : "#1E293B"
+                                font.bold: parent.isSelected
+                                font.pixelSize: Math.round(14 * dlg.uiScale)
+                                elide: Text.ElideRight
+                                width: parent.width - 12
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    dlg.handicapMode = 1
+                                    if (dlg.handicapValue <= 0) dlg.handicapValue = 1
+                                    handicapInput.text = String(dlg.handicapValue)
+                                    handicapInput.forceActiveFocus()
+                                    try { Qt.inputMethod.show() } catch(e) {}
+                                }
+                            }
+                        }
+
+                        // P2 chấp
+                        Rectangle {
+                            Layout.fillWidth: true
+                            implicitHeight: Math.round(44 * dlg.uiScale)
+                            radius: Math.round(8 * dlg.uiScale)
+                            readonly property bool isSelected: dlg.handicapMode === 2
+                            color: isSelected ? "#0F172A" : "#FFFFFF"
+                            border.color: isSelected ? "#0F172A" : "#CBD5E1"
+                            border.width: isSelected ? 2 : 1
+
+                            AppText {
+                                anchors.centerIn: parent
+                                text: (dlg.p2Data.name ? (dlg.p2Data.name + " chấp") : "Cơ thủ 2 chấp")
+                                color: parent.isSelected ? "#FFFFFF" : "#1E293B"
+                                font.bold: parent.isSelected
+                                font.pixelSize: Math.round(14 * dlg.uiScale)
+                                elide: Text.ElideRight
+                                width: parent.width - 12
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    dlg.handicapMode = 2
+                                    if (dlg.handicapValue <= 0) dlg.handicapValue = 1
+                                    handicapInput.text = String(dlg.handicapValue)
+                                    handicapInput.forceActiveFocus()
+                                    try { Qt.inputMethod.show() } catch(e) {}
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Đồng bộ 2 ô nhập liệu khi dlg thay đổi giá trị
+                Connections {
+                    target: dlg
+                    function onSelectedRaceToChanged() {
+                        if (!raceToInput.activeFocus) {
+                            raceToInput.text = String(dlg.selectedRaceTo)
+                        }
+                    }
+                    function onHandicapValueChanged() {
+                        if (!handicapInput.activeFocus) {
+                            handicapInput.text = String(dlg.handicapValue)
+                        }
+                    }
+                }
+
+                // 3. LIVE CALCULATION CARD (CÔNG THỨC HỆ SỐ MỚI)
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: calcCol.implicitHeight + Math.round(16 * dlg.uiScale)
+                    radius: Math.round(10 * dlg.uiScale)
+                    color: "#FFFFFF"
+                    border.color: "#CBD5E1"
+                    border.width: 1
+
+                    ColumnLayout {
+                        id: calcCol
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: Math.round(10 * dlg.uiScale)
+                        spacing: Math.round(6 * dlg.uiScale)
+
+                        // Dòng công thức quy đổi
+                        RowLayout {
+                            Layout.fillWidth: true
+                            AppText {
+                                text: "Tổng số trận quy đổi:"
+                                color: "#475569"
+                                font.pixelSize: Math.round(13 * dlg.uiScale)
+                            }
+                            Item { Layout.fillWidth: true }
+                            AppText {
+                                text: "(" + dlg.selectedRaceTo + " × 2 - 1) - " + dlg.effectiveHandicap + " = " + dlg.totalRounds + " ván"
+                                color: "#0F172A"
                                 font.bold: true
                                 font.pixelSize: Math.round(15 * dlg.uiScale)
                             }
+                        }
+
+                        // Dòng điểm thắng / điểm thua
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Math.round(10 * dlg.uiScale)
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: Math.round(36 * dlg.uiScale)
+                                radius: Math.round(8 * dlg.uiScale)
+                                color: "#ECFDF5"
+                                border.color: "#A7F3D0"
+                                border.width: 1
+
+                                RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: Math.round(6 * dlg.uiScale)
+                                    AppText {
+                                        text: "Thắng (x0.35):"
+                                        color: "#065F46"
+                                        font.pixelSize: Math.round(13 * dlg.uiScale)
+                                    }
+                                    AppText {
+                                        text: "+" + dlg.winPoints + " điểm"
+                                        color: "#047857"
+                                        font.bold: true
+                                        font.pixelSize: Math.round(15 * dlg.uiScale)
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: Math.round(36 * dlg.uiScale)
+                                radius: Math.round(8 * dlg.uiScale)
+                                color: "#F8FAFC"
+                                border.color: "#E2E8F0"
+                                border.width: 1
+
+                                RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: Math.round(6 * dlg.uiScale)
+                                    AppText {
+                                        text: "Thua (x0.05):"
+                                        color: "#475569"
+                                        font.pixelSize: Math.round(13 * dlg.uiScale)
+                                    }
+                                    AppText {
+                                        text: "+" + dlg.losePoints + " điểm"
+                                        color: "#334155"
+                                        font.bold: true
+                                        font.pixelSize: Math.round(15 * dlg.uiScale)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Ghi chú bonus + giới hạn cày điểm
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Math.round(4 * dlg.uiScale)
                             AppText {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: parent.parent.parent.isEqual 
-                                    ? ("Thắng nhận " + (dlg.activeEventData.draw_touch_11 || "7") + "đ • Thua +2đ") 
-                                    : ((parent.parent.parent.p1IsFav ? (dlg.p1Data.name + " chấp 2") : (dlg.p2Data.name + " chấp 2")) + " • Thắng +" + (dlg.activeEventData.handicap_2_touch || "7") + "đ • Thua +2đ")
-                                color: parent.parent.isSelected ? "#86EFAC" : "#64748B"
-                                font.pixelSize: Math.round(11 * dlg.uiScale)
+                                Layout.fillWidth: true
+                                text: "⭐ Chạm trán lần đầu: +20đ/người (1 lần/tháng)  •  Tối đa 3 trận tính điểm/ngày giữa 2 cơ thủ"
+                                color: "#B45309"
+                                font.pixelSize: Math.round(12 * dlg.uiScale)
+                                font.italic: true
+                                wrapMode: Text.WordWrap
                             }
                         }
                     }
@@ -889,14 +1331,14 @@ DialogShell {
 
                 AppText {
                     text: "⚠️"
-                    font.pixelSize: Math.round(16 * dlg.uiScale)
+                    font.pixelSize: Math.round(18 * dlg.uiScale)
                 }
 
                 AppText {
                     Layout.fillWidth: true
                     text: dlg.creationError
                     color: "#DC2626"
-                    font.pixelSize: Math.round(13 * dlg.uiScale)
+                    font.pixelSize: Math.round(14 * dlg.uiScale)
                     font.bold: true
                     wrapMode: Text.Wrap
                 }

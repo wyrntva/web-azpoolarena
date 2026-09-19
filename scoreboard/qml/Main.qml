@@ -45,8 +45,10 @@ ApplicationWindow {
     function px(v)  { return Math.round(v * uiScale) }
     function dpr(h) { return Math.max(1, Math.round(h * Screen.devicePixelRatio)) }
     property bool isDigitsOnly: false
+    property var  activeDialog: null
+    property var  inputPanelWrapper: inputPanelWrapper
     property real vkHeight: (typeof inputPanelWrapper !== "undefined" && inputPanelWrapper && inputPanelWrapper.visible)
-                            ? (inputPanelWrapper.height + inputPanelWrapper.anchors.bottomMargin)
+                            ? inputPanelWrapper.height
                             : (inputPanel.visible ? (inputPanel.height * inputPanel.scale) : 0)
 
     readonly property var languageOptions: Translations.languageOptions
@@ -702,19 +704,45 @@ ApplicationWindow {
     Item {
         id: inputPanelWrapper
         parent: win.contentItem
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: win.isDigitsOnly ? Math.round(20 * win.uiScale) : 0
         z: 10000
         visible: Qt.inputMethod.visible
         enabled: visible
 
-        // In digits mode, numpad layout is ~590px wide before scale.
-        // Clip width to numpad width to eliminate empty wings on both sides.
-        readonly property real numpadWidth: Math.round((590 + 20) * inputPanel.scale)
+        // In digits mode, numpad layout is 590px wide unscaled.
+        readonly property real numpadWidth: Math.round(590 * inputPanel.scale)
         width: win.isDigitsOnly ? numpadWidth : parent.width
         height: Math.round(inputPanel.height * inputPanel.scale)
-        clip: true
+        clip: win.isDigitsOnly
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#263238"
+            visible: win.isDigitsOnly
+            z: -1
+        }
+
+        readonly property var activeDlg: (win && win.activeDialog && win.activeDialog.visible) ? win.activeDialog : null
+        readonly property real groupGap: Math.round(24 * win.uiScale)
+        readonly property bool hasSideDialog: (win.isDigitsOnly && activeDlg && (activeDlg.x + activeDlg.width + groupGap + width <= parent.width + 10))
+
+        x: {
+            if (!win.isDigitsOnly) return 0
+            if (hasSideDialog) {
+                return Math.round(activeDlg.x + activeDlg.width + groupGap)
+            }
+            return Math.round(parent.width - width - 30 * win.uiScale)
+        }
+
+        y: {
+            if (!win.isDigitsOnly) return Math.round(parent.height - height)
+            if (hasSideDialog) {
+                // Căn giữa theo chiều dọc so với dialog
+                var targetY = activeDlg.y + (activeDlg.height - height) / 2
+                return Math.round(Math.max(10 * win.uiScale, Math.min(parent.height - height - 10 * win.uiScale, targetY)))
+            }
+            // Mặc định căn giữa màn hình theo chiều dọc khi là bàn phím số
+            return Math.round((parent.height - height) / 2)
+        }
 
         InputPanel {
             id: inputPanel

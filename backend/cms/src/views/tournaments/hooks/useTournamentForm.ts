@@ -220,7 +220,7 @@ export const useTournamentForm = (defaultCategory: string = 'tournament') => {
             organizer_logo: tournament.organizer_logo ? (tournament.organizer_logo as string) : null,
             detail_logo: tournament.detail_logo ? (tournament.detail_logo as string) : null,
             sponsor_logos: tournament.sponsor_logos ? (tournament.sponsor_logos as string[]) : [],
-            ranks: tournament.ranks || [],
+            ranks: tournament.category === 'event' ? [] : (tournament.ranks || []),
             display: tournament.display || 'public',
             public_date: formatDateForInput(tournament.public_date),
             status: tournament.status || 'upcoming',

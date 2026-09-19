@@ -91,10 +91,10 @@ Item {
             else if (r2 < r1) hcP2 = true;
         }
 
-        // Sự kiện tự ghép trận (event bracket): luôn xuất phát từ 0-0, raceTo và thể thức theo cài đặt lúc ghép trận
+        // Sự kiện tự ghép trận (event bracket): điểm khởi đầu theo handicap lúc ghép trận (nếu có chấp)
         if (m.bracket === "event") {
-            page.leftMinScore = 0;
-            page.rightMinScore = 0;
+            page.leftMinScore = Math.max(0, parseInt(m.player1_score) || 0);
+            page.rightMinScore = Math.max(0, parseInt(m.player2_score) || 0);
             const rt = parseInt(m.race_to) || 9;
             Controller.raceTo = rt;
             if (m.handicap_desc && String(m.handicap_desc).trim() !== "") {
@@ -264,6 +264,11 @@ Item {
             var mid = TournamentService.activeMatch.match_id
             TournamentService.recordMatchStart(mid)
             var elapsed = TournamentService.getMatchElapsedSec(mid)
+            var m = TournamentService.activeMatch
+            if (m && m.match_time) {
+                var sElapsed = Math.max(0, Math.floor((new Date().getTime() - new Date(m.match_time).getTime()) / 1000))
+                if (sElapsed > elapsed) elapsed = sElapsed
+            }
             if (elapsed > matchElapsedSec)
                 matchElapsedSec = elapsed
         }
@@ -277,6 +282,12 @@ Item {
         const s = sec % 60
         function pad(n){ return (n < 10 ? "0" : "") + n }
         return pad(h) + ":" + pad(m) + ":" + pad(s)
+    }
+    function fmtMinSec(sec) {
+        const m = Math.floor(sec / 60)
+        const s = sec % 60
+        function pad(n){ return (n < 10 ? "0" : "") + n }
+        return pad(m) + ":" + pad(s)
     }
 
     function trLocal(key) {
@@ -385,6 +396,10 @@ Item {
     property bool matchJoined: false
     property string matchHandicapText: ""
     property bool isMatchFinished: Controller.leftScore >= Controller.raceTo || Controller.rightScore >= Controller.raceTo
+    readonly property bool isEventMatch: (typeof TournamentService !== "undefined" && TournamentService.activeMatch && (TournamentService.activeMatch.bracket === "event" || TournamentService.activeMatch.is_event))
+    readonly property int minEventDurationSec: 2700 // 45 phút = 2700 giây
+    readonly property bool isEventDurationMet: (!isEventMatch || matchElapsedSec >= minEventDurationSec)
+    readonly property int eventRemainingSec: Math.max(0, minEventDurationSec - matchElapsedSec)
 
     function syncScore(forceFinish) {
         if (!page.matchLoaded || typeof TournamentService === "undefined" || !TournamentService.activeMatch) return
@@ -392,6 +407,10 @@ Item {
         if (m && m.match_id) {
             var winner_id = 0
             if (forceFinish) {
+                if (page.isEventMatch && !page.isEventDurationMet) {
+                    console.warn("[TournamentPage] Blocked syncScore(true): event match duration under 45 minutes (" + page.matchElapsedSec + "s / 2700s)")
+                    return
+                }
                 if (Controller.leftScore >= Controller.raceTo) winner_id = m.player1_id
                 else if (Controller.rightScore >= Controller.raceTo) winner_id = m.player2_id
             }
@@ -413,6 +432,13 @@ Item {
         function onMatchChanged() {
             var m = TournamentService.activeMatch
             if (!m || !m.match_id) return
+
+            if (m.match_time) {
+                var sElapsed = Math.max(0, Math.floor((new Date().getTime() - new Date(m.match_time).getTime()) / 1000))
+                if (sElapsed > page.matchElapsedSec) {
+                    page.matchElapsedSec = sElapsed
+                }
+            }
             
             var p1Name = page.formatPlayerName(m.player1_name, m.player1_rank)
             var p2Name = page.formatPlayerName(m.player2_name, m.player2_rank)
@@ -726,9 +752,11 @@ Item {
     // ==== HANDICAP CARD ====
     Rectangle {
         id: handicapCard
-        width: Math.round(panel.width * 0.7)
+        width: (page.isMatchFinished && page.isEventMatch && !page.isEventDurationMet)
+               ? Math.round(panel.width * 0.95)
+               : Math.round(panel.width * 0.7)
         height: Math.round(55 * win.uiScale)
-        color: "#C6010B"
+        color: (page.isMatchFinished && page.isEventMatch && !page.isEventDurationMet) ? "#B45309" : "#C6010B"
         radius: Math.round(24 * win.uiScale)
         anchors.top: panel.bottom
         anchors.topMargin: Math.round(15 * win.uiScale)
@@ -738,9 +766,17 @@ Item {
         AppText {
             id: hcText
             anchors.centerIn: parent
-            text: page.isMatchFinished ? "XÁC NHẬN KẾT THÚC" : page.matchHandicapText
+            text: {
+                if (!page.isMatchFinished) return page.matchHandicapText
+                if (page.isEventMatch && !page.isEventDurationMet) {
+                    return "CHƯA ĐỦ 45P (CÒN " + page.fmtMinSec(page.eventRemainingSec) + ")"
+                }
+                return "XÁC NHẬN KẾT THÚC"
+            }
             color: "white"
-            font.pixelSize: Math.round(26 * win.uiScale)
+            font.pixelSize: (page.isMatchFinished && page.isEventMatch && !page.isEventDurationMet)
+                            ? Math.round(20 * win.uiScale)
+                            : Math.round(26 * win.uiScale)
             font.bold: true
         }
 
@@ -750,6 +786,21 @@ Item {
             hoverEnabled: page.isMatchFinished
             cursorShape: Qt.PointingHandCursor
             onClicked: {
+                if (page.isEventMatch && !page.isEventDurationMet) {
+                    page.pendingAction = "eventTimeWarning"
+                    confirmDlg.destructive = false
+                    confirmDlg.openWith(
+                        "Trận đấu sự kiện phải diễn ra tối thiểu 45 phút mới có thể kết thúc!\n\n" +
+                        "• Thời gian thi đấu: " + page.fmtTime(page.matchElapsedSec) + " / 45:00\n" +
+                        "• Thời gian còn lại: " + page.fmtMinSec(page.eventRemainingSec) + "\n\n" +
+                        "Vui lòng tiếp tục thi đấu hoặc chờ đủ thời gian quy định.",
+                        "CHƯA ĐỦ 45 PHÚT",
+                        "ĐÃ HIỂU",
+                        ""
+                    )
+                    return
+                }
+
                 page.pendingAction = "finishMatch"
                 confirmDlg.destructive = true
                 confirmDlg.openWith(
@@ -843,6 +894,10 @@ Item {
                 page.logAction(trLocal("log_reset_match"))
                 page.syncScore()
             } else if (page.pendingAction === "finishMatch") {
+                if (page.isEventMatch && !page.isEventDurationMet) {
+                    console.warn("[TournamentPage] Blocked finishMatch: event match under 45 minutes")
+                    return
+                }
                 page.logAction("Xác nhận kết thúc trận đấu")
                 if (typeof TournamentService !== "undefined" && TournamentService.activeMatch && TournamentService.activeMatch.match_id) {
                     var fMatch = TournamentService.activeMatch

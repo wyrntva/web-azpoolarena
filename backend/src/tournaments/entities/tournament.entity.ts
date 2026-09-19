@@ -291,7 +291,7 @@ export class TournamentRegistrationEntity {
   @Column()
   user_id: number;
 
-  @Column({ type: 'int', default: 0 })
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   points: number;
 
   @Column({ type: 'varchar', length: 10, nullable: true })
@@ -361,10 +361,10 @@ export class TournamentMatchEntity {
   @Column({ nullable: true })
   winner_id: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'numeric', precision: 10, scale: 2, nullable: true })
   player1_points: number | null;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'numeric', precision: 10, scale: 2, nullable: true })
   player2_points: number | null;
 
   @Column({ type: 'varchar', length: 10, nullable: true })

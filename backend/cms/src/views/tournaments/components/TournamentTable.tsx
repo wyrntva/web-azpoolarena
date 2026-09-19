@@ -92,7 +92,7 @@ const TournamentTable = ({ tournaments, total, currentPage, category = 'tourname
                         <Table.HeadCell className="text-center">STT</Table.HeadCell>
                         <Table.HeadCell className="text-center">ẢNH</Table.HeadCell>
                         <Table.HeadCell className="text-center">TÊN</Table.HeadCell>
-                        <Table.HeadCell className="text-center">LEVEL</Table.HeadCell>
+                        {category !== 'event' && <Table.HeadCell className="text-center">LEVEL</Table.HeadCell>}
                         <Table.HeadCell className="text-center">TRẠNG THÁI</Table.HeadCell>
                         <Table.HeadCell className="text-center">THỜI GIAN BẮT ĐẦU</Table.HeadCell>
                         <Table.HeadCell className="text-center">HIỂN THỊ</Table.HeadCell>
@@ -103,7 +103,7 @@ const TournamentTable = ({ tournaments, total, currentPage, category = 'tourname
                     <Table.Body className="divide-y">
                         {filteredTournaments.length === 0 ? (
                             <Table.Row>
-                                <Table.Cell colSpan={10} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                <Table.Cell colSpan={category === 'event' ? 9 : 10} className="text-center py-8 text-gray-500 dark:text-gray-400">
                                     {searchTerm ? 'Không tìm thấy kết quả' : (category === 'event' ? 'Không có sự kiện nào' : 'Không có giải đấu nào')}
                                 </Table.Cell>
                             </Table.Row>
@@ -143,19 +143,21 @@ const TournamentTable = ({ tournaments, total, currentPage, category = 'tourname
                                                 )}
                                             </div>
                                         </Table.Cell>
-                                        <Table.Cell className="text-center">
-                                            {tournament.ranks && tournament.ranks.length > 0 ? (
-                                                <div className="flex flex-wrap gap-1 justify-center">
-                                                     {tournament.ranks.map((rank, idx) => (
-                                                         <span key={idx} className="px-2 py-1 text-[#37393E] dark:text-white/80 text-xs">
-                                                             {formatLevel(rank)}
-                                                         </span>
-                                                     ))}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </Table.Cell>
+                                        {category !== 'event' && (
+                                            <Table.Cell className="text-center">
+                                                {tournament.ranks && tournament.ranks.length > 0 ? (
+                                                    <div className="flex flex-wrap gap-1 justify-center">
+                                                         {tournament.ranks.map((rank, idx) => (
+                                                             <span key={idx} className="px-2 py-1 text-[#37393E] dark:text-white/80 text-xs">
+                                                                 {formatLevel(rank)}
+                                                             </span>
+                                                         ))}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400">-</span>
+                                                )}
+                                            </Table.Cell>
+                                        )}
                                         <Table.Cell className="text-center">
                                             <span className="px-2 py-1 text-[#37393E] dark:text-white/80 text-xs">
                                                 {TOURNAMENT_STATUS_MAP[tournament.status] || tournament.status}

@@ -141,6 +141,47 @@ export default function EventBonusPage() {
                         </div>
                     )}
 
+                    {/* Cơ chế tích lũy điểm số hàng ngày */}
+                    <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100/50 flex flex-col gap-3">
+                        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                            <FaStar className="text-amber-500" />
+                            Cơ chế tích lũy điểm số hàng ngày
+                        </h2>
+                        <div className="text-xs text-gray-600 leading-relaxed flex flex-col gap-2.5">
+                            <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl">
+                                <div className="font-bold text-blue-900 mb-1">A. Công thức tính điểm</div>
+                                <div className="text-gray-700">
+                                    • <span className="font-semibold">Quy đổi Tổng số trận:</span>
+                                    <div className="mt-1 font-mono font-bold text-blue-800 bg-white px-2 py-1 rounded border border-blue-200">
+                                        Tổng số trận = (Chạm × 2 - 1) - Chấp
+                                    </div>
+                                    <div className="text-[11px] text-gray-500 mt-1 italic">
+                                        (Ví dụ: Trận Chạm 15 chấp 4 ➔ Tổng số trận = 15 × 2 - 1 - 4 = 25 ván).
+                                    </div>
+                                </div>
+                                <div className="text-gray-700 mt-2">
+                                    • <span className="font-semibold">Hệ số tính điểm:</span> Thắng: <b className="text-emerald-600">0.35</b> | Thua: <b className="text-gray-600">0.05</b>
+                                </div>
+                                <div className="text-gray-700 mt-1">
+                                    • <span className="font-semibold">Điểm trận đấu nhận được:</span>
+                                    <div className="text-[11px] text-gray-600 mt-0.5 space-y-0.5">
+                                        <div>- Điểm người thắng = Tổng số trận × 0.35 (VD: 25 × 0.35 = 8.75 điểm)</div>
+                                        <div>- Điểm người thua = Tổng số trận × 0.05 (VD: 25 × 0.05 = 1.25 điểm)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-3 bg-amber-50/70 border border-amber-100 rounded-xl">
+                                <div className="font-bold text-amber-900 mb-1">B. Quy định & Điểm cộng thêm</div>
+                                <div className="text-gray-700">
+                                    • <span className="font-semibold">Chạm trán lần đầu:</span> <b className="text-amber-700">+20 điểm / người</b>. Thưởng ngay cho cả 2 cơ thủ khi lần đầu thi đấu với nhau (chỉ tính 01 lần duy nhất trong tháng dương lịch cho mỗi cặp).
+                                </div>
+                                <div className="text-gray-700 mt-1.5">
+                                    • <span className="font-semibold">Quy định chống cày điểm:</span> Tối đa <b className="text-rose-600">03 trận/ngày</b> được tính điểm giữa 2 cơ thủ cụ thể. Từ trận thứ 4 trở đi trong ngày giữa cặp cơ thủ đó: Trận đấu vẫn được diễn ra bình thường, nhưng sẽ không được cộng điểm BXH (0 điểm).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Danh sách cơ thủ */}
                     <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100/50 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
@@ -276,6 +317,81 @@ export default function EventBonusPage() {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Cơ chế tích lũy điểm số hàng ngày */}
+                                <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
+                                    <h2 className="text-base font-bold text-gray-900 uppercase tracking-wider mb-6 flex items-center gap-2">
+                                        <FaStar className="text-amber-500 text-lg" />
+                                        Cơ chế tích lũy điểm số hàng ngày
+                                    </h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="p-5 bg-blue-50/60 border border-blue-100 rounded-2xl flex flex-col justify-between">
+                                            <div>
+                                                <div className="text-sm font-bold text-blue-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                                    <span>📐</span> A. Công thức tính điểm
+                                                </div>
+                                                <div className="space-y-3 text-sm text-gray-700">
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">1. Quy đổi Tổng số trận:</div>
+                                                        <div className="mt-1 font-mono font-bold text-blue-800 bg-white px-3 py-1.5 rounded-xl border border-blue-200 inline-block shadow-sm">
+                                                            Tổng số trận = (Chạm × 2 - 1) - Chấp
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 mt-1 italic">
+                                                            (Ví dụ: Trận Chạm 15 chấp 4 ➔ Tổng số trận = 15 × 2 - 1 - 4 = 25 ván)
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">2. Hệ số tính điểm:</div>
+                                                        <div className="flex gap-4 mt-1 text-sm">
+                                                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold">
+                                                                Hệ số thắng: 0.35
+                                                            </span>
+                                                            <span className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg font-bold">
+                                                                Hệ số thua: 0.05
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">3. Điểm trận đấu nhận được:</div>
+                                                        <ul className="list-disc list-inside text-xs text-gray-600 mt-1 space-y-1">
+                                                            <li><b>Điểm người thắng</b> = Tổng số trận × 0.35 <span className="text-emerald-700 font-semibold">(VD: 25 × 0.35 = 8.75 điểm)</span></li>
+                                                            <li><b>Điểm người thua</b> = Tổng số trận × 0.05 <span className="text-gray-700 font-semibold">(VD: 25 × 0.05 = 1.25 điểm)</span></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-5 bg-amber-50/60 border border-amber-100 rounded-2xl flex flex-col justify-between">
+                                            <div>
+                                                <div className="text-sm font-bold text-amber-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                                                    <span>🎁</span> B. Quy định & Điểm cộng thêm
+                                                </div>
+                                                <div className="space-y-4 text-sm text-gray-700">
+                                                    <div className="p-3.5 bg-white rounded-xl border border-amber-200 shadow-sm">
+                                                        <div className="font-bold text-amber-800 flex items-center gap-1.5 mb-1">
+                                                            <FaStar className="text-amber-500" />
+                                                            Chạm trán lần đầu (+20 điểm / người)
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 leading-relaxed">
+                                                            Thưởng ngay cho cả 2 cơ thủ khi lần đầu thi đấu với nhau. Chỉ tính <b>01 lần duy nhất trong tháng dương lịch</b> cho mỗi cặp cơ thủ.
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="p-3.5 bg-white rounded-xl border border-rose-200 shadow-sm">
+                                                        <div className="font-bold text-rose-800 flex items-center gap-1.5 mb-1">
+                                                            <span>🛡️</span> Quy định chống cày điểm
+                                                        </div>
+                                                        <div className="text-xs text-gray-600 leading-relaxed space-y-1">
+                                                            <div>• Tối đa <b>03 trận/ngày</b> được tính điểm giữa 2 cơ thủ cụ thể.</div>
+                                                            <div>• Từ trận thứ 4 trở đi trong ngày giữa cặp cơ thủ đó: Trận đấu vẫn được diễn ra bình thường, nhưng sẽ <b>không được cộng điểm BXH (0 điểm)</b>.</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {/* Danh sách cơ thủ */}
                                 <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">

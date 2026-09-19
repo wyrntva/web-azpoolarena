@@ -78,13 +78,11 @@ function computeRaceText(
     const r2 = getRankIndex(p2Rank);
     if (r1 < 0 || r2 < 0) return "";
 
-    const diff = Math.abs(r1 - r2);
     if (tournament?.category === 'event') {
-        if (diff === 0) return "chạm 9";
-        if (diff === 1) return "chạm 8 chấp 1";
-        return "chạm 13 chấp 2";
+        return "";
     }
 
+    const diff = Math.abs(r1 - r2);
     let raceTo = 0;
     let handicap = 0;
 

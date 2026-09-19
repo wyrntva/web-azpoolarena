@@ -23,9 +23,9 @@ Popup {
         id: dimmer
         anchors.fill: parent
 
-        // Tuỳ chỉnh khoảng chừa thêm
-        readonly property real holeMarginX: Math.round(0 * root.uiScale)
-        readonly property real holeMarginY: Math.round(0 * root.uiScale)
+        // Tuỳ chỉnh khoảng chừa thêm: digitsOnly thì ôm khít 100% (margin = 0)
+        readonly property real holeMarginX: (typeof win !== "undefined" && win && win.isDigitsOnly) ? 0 : Math.round(6 * root.uiScale)
+        readonly property real holeMarginY: (typeof win !== "undefined" && win && win.isDigitsOnly) ? 0 : Math.round(6 * root.uiScale)
 
         // 1) Rect do Qt báo (không tính scale của InputPanel)
         readonly property rect imRect: (Qt.inputMethod && Qt.inputMethod.visible)
@@ -34,32 +34,46 @@ Popup {
         readonly property bool imOk: (imRect.width > 0 && imRect.height > 0)
 
         // 2) Rect thực tế của InputPanel / inputPanelWrapper sau khi scale/transform (nếu có)
-        //    Lưu ý: ưu tiên 'inputPanelWrapper' nếu có (đã xử lý numpad clip), fallback 'inputPanel'.
-        readonly property var targetPanel: (typeof inputPanelWrapper !== "undefined" && inputPanelWrapper)
-                                           ? inputPanelWrapper
-                                           : ((typeof inputPanel !== "undefined" && inputPanel) ? inputPanel : null)
+        //    Lưu ý: ưu tiên 'win.inputPanelWrapper' nếu có (đã xử lý numpad clip), fallback 'inputPanel'.
+        readonly property var targetPanel: (typeof win !== "undefined" && win && win.inputPanelWrapper)
+                                           ? win.inputPanelWrapper
+                                           : ((typeof inputPanelWrapper !== "undefined" && inputPanelWrapper)
+                                              ? inputPanelWrapper
+                                              : ((typeof inputPanel !== "undefined" && inputPanel) ? inputPanel : null))
         readonly property bool panelOk: (targetPanel && targetPanel.visible)
 
-        readonly property var _p0: panelOk ? targetPanel.mapToItem(dimmer, 0, 0) : Qt.point(0, 0)
-        readonly property var _p1: panelOk ? targetPanel.mapToItem(dimmer, targetPanel.width, targetPanel.height) : Qt.point(0, 0)
-        readonly property real pX: panelOk ? Math.min(_p0.x, _p1.x) : 0
-        readonly property real pY: panelOk ? Math.min(_p0.y, _p1.y) : 0
-        readonly property real pW: panelOk ? Math.abs(_p1.x - _p0.x) : 0
-        readonly property real pH: panelOk ? Math.abs(_p1.y - _p0.y) : 0
+        function getTargetRect() {
+            if (!panelOk || !targetPanel) return Qt.rect(0, 0, 0, 0)
+            var dw = dimmer.width; var dh = dimmer.height
+            var tx = targetPanel.x
+            var ty = targetPanel.y
+            var tw = targetPanel.width
+            var th = targetPanel.height
+            if (tw <= 0 || th <= 0) return Qt.rect(0, 0, 0, 0)
+            var p0 = targetPanel.mapToItem(dimmer, 0, 0)
+            var p1 = targetPanel.mapToItem(dimmer, tw, th)
+            return Qt.rect(Math.round(Math.min(p0.x, p1.x)), Math.round(Math.min(p0.y, p1.y)), Math.round(Math.abs(p1.x - p0.x)), Math.round(Math.abs(p1.y - p0.y)))
+        }
+
+        readonly property rect targetRect: getTargetRect()
+        readonly property real pX: targetRect.x
+        readonly property real pY: targetRect.y
+        readonly property real pW: targetRect.width
+        readonly property real pH: targetRect.height
 
         // 3) Hợp nhất rect: ưu tiên targetPanel nếu có, fallback imRect
         readonly property bool kbVisible: (panelOk || imOk)
 
-        readonly property real rawX: panelOk ? pX : (imOk ? imRect.x : 0)
-        readonly property real rawY: panelOk ? pY : (imOk ? imRect.y : 0)
-        readonly property real rawRight: panelOk ? (pX + pW) : (imOk ? (imRect.x + imRect.width) : 0)
-        readonly property real rawBottom: panelOk ? (pY + pH) : (imOk ? (imRect.y + imRect.height) : 0)
+        readonly property real rawX: (typeof win !== "undefined" && win && win.isDigitsOnly) ? (panelOk ? pX : 0) : (panelOk ? pX : (imOk ? imRect.x : 0))
+        readonly property real rawY: (typeof win !== "undefined" && win && win.isDigitsOnly) ? (panelOk ? pY : 0) : (panelOk ? pY : (imOk ? imRect.y : 0))
+        readonly property real rawRight: (typeof win !== "undefined" && win && win.isDigitsOnly) ? (panelOk ? (pX + pW) : 0) : (panelOk ? (pX + pW) : (imOk ? (imRect.x + imRect.width) : 0))
+        readonly property real rawBottom: (typeof win !== "undefined" && win && win.isDigitsOnly) ? (panelOk ? (pY + pH) : 0) : (panelOk ? (pY + pH) : (imOk ? (imRect.y + imRect.height) : 0))
 
-        // 4) Nới lỗ bằng margin, có clamp về biên màn hình overlay
-        readonly property real holeX: Math.max(0, rawX - holeMarginX)
-        readonly property real holeY: Math.max(0, rawY - holeMarginY)
-        readonly property real holeW: Math.min(dimmer.width  - holeX, (rawRight  - rawX) + 2*holeMarginX)
-        readonly property real holeH: Math.min(dimmer.height - holeY, (rawBottom - rawY) + 2*holeMarginY)
+        // 4) Nới lỗ bằng margin (nếu có), có clamp về biên màn hình overlay
+        readonly property real holeX: Math.round(Math.max(0, rawX - holeMarginX))
+        readonly property real holeY: Math.round(Math.max(0, rawY - holeMarginY))
+        readonly property real holeW: Math.round(Math.min(dimmer.width  - holeX, (rawRight  - rawX) + 2*holeMarginX))
+        readonly property real holeH: Math.round(Math.min(dimmer.height - holeY, (rawBottom - rawY) + 2*holeMarginY))
 
         // === 4 mảnh overlay xung quanh lỗ ===
         Rectangle { // TRÊN
@@ -122,8 +136,8 @@ Popup {
     property real minW:       320 * uiScale
     property real sideMargin: 20  * uiScale
 
-    readonly property real _overlayW: (win ? win.width  : width)
-    readonly property real _overlayH: (win ? win.height : height)
+    readonly property real _overlayW: (typeof win !== "undefined" && win ? win.width  : width)
+    readonly property real _overlayH: (typeof win !== "undefined" && win ? win.height : height)
     readonly property real _maxW: Math.max(0, _overlayW - 2*sideMargin)
     property  real dialogW: Math.round(Math.max(minW, Math.min(fixedW, _maxW)))
 
@@ -133,7 +147,7 @@ Popup {
     property real keyboardMargin: 0
     readonly property real _safeH: Math.max(
         0,
-        (avoidKeyboard && _vkH > 0)
+        (avoidKeyboard && _vkH > 0 && !_kbIsRightSide)
         ? Math.min(_overlayH * maxHeightRatio, _overlayH - _vkH - keyboardMargin - contentMargins)
         : (_overlayH * maxHeightRatio)
     )
@@ -181,12 +195,23 @@ Popup {
     signal confirmed()
     signal cancelled()
 
-    // Định vị theo window — luôn căn giữa, chỉ né bàn phím khi avoidKeyboard = true
-    x: Math.round((_overlayW - width) / 2)
+    // Định vị theo window — căn giữa cả cụm (dialog + gap + bàn phím) khi bàn phím số ở bên phải
+    readonly property var _targetWrapper: (typeof win !== "undefined" && win && win.inputPanelWrapper)
+                                          ? win.inputPanelWrapper
+                                          : ((typeof inputPanelWrapper !== "undefined" && inputPanelWrapper) ? inputPanelWrapper : null)
+    readonly property bool _kbIsRightSide: (typeof win !== "undefined" && win && win.isDigitsOnly && ((_targetWrapper && _targetWrapper.visible) || (Qt.inputMethod && Qt.inputMethod.visible)))
+    readonly property real _groupGap: Math.round(24 * uiScale)
+    readonly property real _numpadW: _targetWrapper ? _targetWrapper.width : Math.round(450 * uiScale)
+    readonly property real _combinedW: width + _groupGap + _numpadW
+    readonly property bool _canFitSideBySide: (_kbIsRightSide && (_combinedW <= _overlayW - 2 * sideMargin))
+
+    x: _canFitSideBySide
+       ? Math.round((_overlayW - _combinedW) / 2)
+       : Math.round((_overlayW - width) / 2)
     readonly property real _centerY: Math.round((_overlayH - height) / 2)
     readonly property real _maxTop: Math.max(contentMargins, _overlayH - height - contentBottomMargin)
     readonly property real _vkH: (typeof win !== "undefined" && win) ? win.vkHeight : 0
-    readonly property real _kbTop: (avoidKeyboard && _vkH > 0)
+    readonly property real _kbTop: (avoidKeyboard && _vkH > 0 && !_kbIsRightSide)
                                    ? Math.max(contentMargins, _overlayH - _vkH - height - keyboardMargin)
                                    : _centerY
     y: Math.round(Math.max(contentMargins, Math.min(_maxTop, _kbTop)))
@@ -194,8 +219,22 @@ Popup {
     background: Rectangle { color: "#FFFFFFFF"; radius: Math.round(14 * root.uiScale) }
     implicitWidth: dialogW
 
+    onVisibleChanged: {
+        if (typeof win !== "undefined" && win) {
+            if (visible) win.activeDialog = root
+            else if (win.activeDialog === root) win.activeDialog = null
+        }
+    }
+
+    Component.onDestruction: {
+        if (typeof win !== "undefined" && win && win.activeDialog === root) {
+            win.activeDialog = null
+        }
+    }
+
     // === NEW: Khi mở, ép focus vào input & bật VK ===
     onOpened: {
+        if (typeof win !== "undefined" && win) win.activeDialog = root
         // 1) ưu tiên item do caller truyền
         if (initialFocusItem && initialFocusItem.forceActiveFocus) {
             initialFocusItem.forceActiveFocus()
