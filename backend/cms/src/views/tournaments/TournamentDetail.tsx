@@ -104,6 +104,17 @@ const TournamentDetail = () => {
     }, [tournament, id]);
 
     useEffect(() => {
+        if (tournament) {
+            const shouldBeEvent = tournament.category === 'event';
+            if (shouldBeEvent && !isEventPage) {
+                navigate(`/events/${tournament.id}`, { replace: true });
+            } else if (!shouldBeEvent && isEventPage) {
+                navigate(`/tournaments/${tournament.id}`, { replace: true });
+            }
+        }
+    }, [tournament, isEventPage, navigate]);
+
+    useEffect(() => {
         let interval: ReturnType<typeof setInterval>;
         if (id) {
             interval = setInterval(() => {
@@ -298,7 +309,7 @@ const TournamentDetail = () => {
         );
     }
 
-    const isEvent = isEventPage || tournament.category === 'event';
+    const isEvent = tournament ? (tournament.category === 'event') : isEventPage;
     const isDoubleElimination = !isEvent && tournament.tournament_type === 'double_elimination';
     const isKnockout = !isEvent && tournament.tournament_type === 'knockout';
 

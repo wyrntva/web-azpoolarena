@@ -92,13 +92,41 @@ Item {
         }
 
         // Sự kiện tự ghép trận (event bracket): điểm khởi đầu theo handicap lúc ghép trận (nếu có chấp)
-        if (m.bracket === "event") {
-            page.leftMinScore = Math.max(0, parseInt(m.player1_score) || 0);
-            page.rightMinScore = Math.max(0, parseInt(m.player2_score) || 0);
+        if (m.bracket === "event" || m.is_event) {
             const rt = parseInt(m.race_to) || 9;
             Controller.raceTo = rt;
-            if (m.handicap_desc && String(m.handicap_desc).trim() !== "") {
-                page.matchHandicapText = m.handicap_desc;
+
+            const hDesc = (m.handicap_desc && String(m.handicap_desc).trim() !== "") ? String(m.handicap_desc).trim() : "";
+            let hcVal = 0;
+            let p1Given = false;
+            let p2Given = false;
+
+            const matchHc = hDesc.match(/chấp\s*(\d+)/i);
+            if (matchHc) {
+                hcVal = parseInt(matchHc[1]) || 0;
+            }
+
+            if (hcVal > 0) {
+                const descLower = hDesc.toLowerCase();
+                const beforeChap = descLower.split(/chấp/i)[0];
+                const p1Name = String(m.player1_name || "").toLowerCase().trim();
+                const p2Name = String(m.player2_name || "").toLowerCase().trim();
+
+                if (p1Name && beforeChap.indexOf(p1Name) !== -1) {
+                    p2Given = true;
+                } else if (p2Name && beforeChap.indexOf(p2Name) !== -1) {
+                    p1Given = true;
+                } else if (r1 >= 0 && r2 >= 0) {
+                    if (r1 > r2) p2Given = true;
+                    else if (r2 > r1) p1Given = true;
+                }
+            }
+
+            page.leftMinScore = p1Given ? hcVal : 0;
+            page.rightMinScore = p2Given ? hcVal : 0;
+
+            if (hDesc !== "") {
+                page.matchHandicapText = hDesc;
             } else if (hc === 0) {
                 page.matchHandicapText = "Chạm " + rt;
             } else {

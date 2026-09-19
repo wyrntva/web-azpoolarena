@@ -1,39 +1,145 @@
 "use client";
 
-import React from "react";
-import { useParams } from "next/navigation";
+import React, { useState, useMemo, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { TournamentNavbar } from "@/components";
 import NavBar from "@/components/NavBar";
 import Skeleton from "@/components/skeletons/Skeleton";
 import { tournamentAPI } from "@/api/tournament.api";
-import { resolveImageUrl, formatFullLevel, formatCurrency } from "@/lib/tournament-utils";
+import { resolveImageUrl, formatLevel } from "@/lib/tournament-utils";
 import Image from "next/image";
-import { FaGift, FaTrophy, FaStar, FaMedal } from "react-icons/fa";
+import { 
+    FaUsers, 
+    FaGamepad, 
+    FaTrophy, 
+    FaFire, 
+    FaHeartBroken, 
+    FaCrown, 
+    FaMedal,
+    FaArrowRight
+} from "react-icons/fa";
 
-interface RegistrationItem {
+type CategoryKey = "opponents" | "matches" | "wins" | "streak" | "losses";
+
+interface CategoryConfig {
+    key: CategoryKey;
+    title: string;
+    shortTitle: string;
+    icon: React.ElementType;
+    color: string;
+    textColor: string;
+    bgLight: string;
+    badgeBg: string;
+    unit: string;
+    description: string;
+}
+
+const CATEGORIES: CategoryConfig[] = [
+    {
+        key: "opponents",
+        title: "Gặp nhiều đối thủ nhất",
+        shortTitle: "Gặp nhiều đối thủ",
+        icon: FaUsers,
+        color: "from-blue-600 to-indigo-600",
+        textColor: "text-blue-600",
+        bgLight: "bg-blue-50/80",
+        badgeBg: "bg-blue-100 text-blue-800 border-blue-200",
+        unit: "đối thủ",
+        description: "Cơ thủ chạm trán với nhiều đối thủ khác nhau nhất"
+    },
+    {
+        key: "matches",
+        title: "Số trận đã thi đấu",
+        shortTitle: "Thi đấu nhiều nhất",
+        icon: FaGamepad,
+        color: "from-purple-600 to-indigo-600",
+        textColor: "text-purple-600",
+        bgLight: "bg-purple-50/80",
+        badgeBg: "bg-purple-100 text-purple-800 border-purple-200",
+        unit: "trận",
+        description: "Cơ thủ tham gia nhiều trận đấu nhất giải"
+    },
+    {
+        key: "wins",
+        title: "Thắng nhiều trận nhất",
+        shortTitle: "Thắng nhiều nhất",
+        icon: FaTrophy,
+        color: "from-amber-500 to-orange-500",
+        textColor: "text-amber-600",
+        bgLight: "bg-amber-50/80",
+        badgeBg: "bg-amber-100 text-amber-800 border-amber-200",
+        unit: "trận thắng",
+        description: "Cơ thủ sở hữu số trận thắng nhiều nhất"
+    },
+    {
+        key: "streak",
+        title: "Chuỗi thắng dài nhất",
+        shortTitle: "Chuỗi thắng dài nhất",
+        icon: FaFire,
+        color: "from-rose-500 to-red-600",
+        textColor: "text-rose-600",
+        bgLight: "bg-rose-50/80",
+        badgeBg: "bg-rose-100 text-rose-800 border-rose-200",
+        unit: "trận liên tiếp",
+        description: "Cơ thủ có chuỗi trận thắng liên tiếp ấn tượng nhất"
+    },
+    {
+        key: "losses",
+        title: "Thua nhiều trận nhất",
+        shortTitle: "Thua nhiều nhất",
+        icon: FaHeartBroken,
+        color: "from-slate-600 to-gray-700",
+        textColor: "text-slate-600",
+        bgLight: "bg-slate-50/80",
+        badgeBg: "bg-slate-200 text-slate-800 border-slate-300",
+        unit: "trận thua",
+        description: "Cơ thủ thi đấu cống hiến nhưng chưa may mắn"
+    }
+];
+
+interface PlayerStats {
     id: number;
-    full_name: string;
-    rank?: string | null;
-    avatar_url?: string | null;
-    points?: number;
-    current_points?: number;
-    registered_at?: string | null;
+    name: string;
+    avatarUrl: string;
+    rank: string | null;
+    opponentsCount: number;
+    totalMatches: number;
+    wins: number;
+    losses: number;
+    maxStreak: number;
 }
 
 export default function EventBonusPage() {
     const params = useParams();
+    const router = useRouter();
     const slug = params?.slug as string;
 
+    const [activeCategory, setActiveCategory] = useState<CategoryKey>("opponents");
+    const [bannerSrc, setBannerSrc] = useState<string>("/images/tour_banner.webp");
+
+    // Fetch tournament details
     const { data: tournament, isLoading: tourLoading } = useQuery({
         queryKey: ['tournament', slug],
         queryFn: () => tournamentAPI.getTournament(slug).then(r => r.data),
         enabled: !!slug,
     });
 
-    const [bannerSrc, setBannerSrc] = React.useState<string>("/images/tour_banner.webp");
+    // Fetch matches for statistics
+    const { data: rawMatches = [], isLoading: matchesLoading } = useQuery({
+        queryKey: ['tournament-matches', slug],
+        queryFn: () => tournamentAPI.getTournamentMatchesBySlug(slug).then(r => r.data || []),
+        enabled: !!slug,
+    });
 
-    React.useEffect(() => {
+    // Fetch registrations as fallback for avatars/ranks
+    const { data: registrations = [] } = useQuery({
+        queryKey: ['tournament-registrations', slug],
+        queryFn: () => tournamentAPI.getTournamentRegistrationsBySlug(slug).then(r => r.data || []),
+        enabled: !!slug,
+    });
+
+    useEffect(() => {
         if (tournament?.banner) {
             setBannerSrc(resolveImageUrl(tournament.banner, '/images/tour_banner.webp'));
         } else {
@@ -41,435 +147,491 @@ export default function EventBonusPage() {
         }
     }, [tournament?.banner]);
 
-    const { data: registrations, isLoading: regLoading } = useQuery({
-        queryKey: ['tournament-registrations', slug],
-        queryFn: () => tournamentAPI.getTournamentRegistrationsBySlug(slug).then(r => r.data as RegistrationItem[]),
-        enabled: !!slug,
-    });
+    // Map registrations for quick lookup
+    const regMap = useMemo(() => {
+        const map = new Map<number, any>();
+        registrations.forEach((r: any) => {
+            if (r.id) map.set(r.id, r);
+        });
+        return map;
+    }, [registrations]);
 
-    const isLoading = tourLoading || regLoading;
-    const bonusPoints = tournament?.bonus ? parseInt(tournament.bonus, 10) : 0;
+    // Compute player statistics across all completed matches
+    const playerStatsMap = useMemo(() => {
+        const stats: Record<number, {
+            id: number;
+            name: string;
+            avatarUrl: string;
+            rank: string | null;
+            opponents: Set<number>;
+            matches: { time: string; matchNo: number; won: boolean }[];
+            wins: number;
+            losses: number;
+        }> = {};
 
-    const prizeList = [
-        { label: "Tổng giải thưởng", value: tournament?.total_prize, icon: FaTrophy, color: "text-amber-500", bg: "bg-amber-50" },
-        { label: "Giải Nhất", value: tournament?.first_prize, icon: FaMedal, color: "text-yellow-600", bg: "bg-yellow-50" },
-        { label: "Giải Nhì", value: tournament?.second_prize, icon: FaMedal, color: "text-gray-500", bg: "bg-gray-100" },
-        { label: "Đồng Hạng Ba", value: tournament?.third_prize, icon: FaMedal, color: "text-amber-700", bg: "bg-orange-50" },
-        { label: "Top 5 - 8", value: tournament?.top_5_8_prize, icon: FaStar, color: "text-blue-500", bg: "bg-blue-50" },
-        { label: "Top 9 - 16", value: tournament?.top_9_16_prize, icon: FaStar, color: "text-indigo-500", bg: "bg-indigo-50" },
-    ].filter(p => p.value && Number(p.value) > 0);
+        // Helper to register player in map
+        const getOrCreate = (playerObj: any, playerId: number | null, pName?: string, pAvatar?: string, pRank?: string) => {
+            if (!playerId) return null;
+            if (!stats[playerId]) {
+                const regInfo = regMap.get(playerId);
+                const name = (playerObj && playerObj.full_name) || pName || regInfo?.full_name || `Cơ thủ #${playerId}`;
+                const avatar = (playerObj && playerObj.avatar_url) || pAvatar || regInfo?.avatar_url || '';
+                const rank = (playerObj && playerObj.rank) || pRank || regInfo?.rank || null;
+
+                stats[playerId] = {
+                    id: playerId,
+                    name,
+                    avatarUrl: avatar,
+                    rank,
+                    opponents: new Set<number>(),
+                    matches: [],
+                    wins: 0,
+                    losses: 0,
+                };
+            }
+            return stats[playerId];
+        };
+
+        // Filter only completed matches
+        const completedMatches = rawMatches.filter((m: any) => m.status === 'completed');
+
+        completedMatches.forEach((m: any) => {
+            const p1Id = m.player1_id || m.player1?.id;
+            const p2Id = m.player2_id || m.player2?.id;
+            if (!p1Id || !p2Id) return;
+
+            const p1 = getOrCreate(m.player1, p1Id, m.player1_name, m.player1_avatar, m.player1_rank);
+            const p2 = getOrCreate(m.player2, p2Id, m.player2_name, m.player2_avatar, m.player2_rank);
+            if (!p1 || !p2) return;
+
+            // Opponents
+            p1.opponents.add(p2Id);
+            p2.opponents.add(p1Id);
+
+            const winnerId = m.winner_id;
+            const p1Won = winnerId === p1Id;
+            const p2Won = winnerId === p2Id;
+
+            const timeVal = m.match_time || m.created_at || '';
+            const matchNo = m.match_no || 0;
+
+            p1.matches.push({ time: timeVal, matchNo, won: p1Won });
+            p2.matches.push({ time: timeVal, matchNo, won: p2Won });
+
+            if (p1Won) {
+                p1.wins += 1;
+                p2.losses += 1;
+            } else if (p2Won) {
+                p2.wins += 1;
+                p1.losses += 1;
+            }
+        });
+
+        // Compute streaks and finalize
+        const result: PlayerStats[] = [];
+        Object.values(stats).forEach(p => {
+            // Sort matches chronologically to calculate streak
+            p.matches.sort((a, b) => {
+                if (a.time && b.time) {
+                    const diff = new Date(a.time).getTime() - new Date(b.time).getTime();
+                    if (diff !== 0) return diff;
+                }
+                return a.matchNo - b.matchNo;
+            });
+
+            let maxStreak = 0;
+            let curStreak = 0;
+            p.matches.forEach(match => {
+                if (match.won) {
+                    curStreak += 1;
+                    if (curStreak > maxStreak) maxStreak = curStreak;
+                } else {
+                    curStreak = 0;
+                }
+            });
+
+            result.push({
+                id: p.id,
+                name: p.name,
+                avatarUrl: p.avatarUrl,
+                rank: p.rank,
+                opponentsCount: p.opponents.size,
+                totalMatches: p.matches.length,
+                wins: p.wins,
+                losses: p.losses,
+                maxStreak,
+            });
+        });
+
+        return result;
+    }, [rawMatches, regMap]);
+
+    // Rank list for each category
+    const rankedLists = useMemo(() => {
+        const players = [...playerStatsMap];
+
+        const listOpponents = [...players].sort((a, b) => 
+            b.opponentsCount - a.opponentsCount || b.totalMatches - a.totalMatches || b.wins - a.wins
+        );
+
+        const listMatches = [...players].sort((a, b) => 
+            b.totalMatches - a.totalMatches || b.wins - a.wins || a.losses - b.losses
+        );
+
+        const listWins = [...players].sort((a, b) => 
+            b.wins - a.wins || (b.wins / (b.totalMatches || 1)) - (a.wins / (a.totalMatches || 1))
+        );
+
+        const listStreak = [...players].sort((a, b) => 
+            b.maxStreak - a.maxStreak || b.wins - a.wins || b.totalMatches - a.totalMatches
+        );
+
+        const listLosses = [...players].sort((a, b) => 
+            b.losses - a.losses || b.totalMatches - a.totalMatches
+        );
+
+        return {
+            opponents: listOpponents,
+            matches: listMatches,
+            wins: listWins,
+            streak: listStreak,
+            losses: listLosses,
+        };
+    }, [playerStatsMap]);
+
+    const activeConfig = CATEGORIES.find(c => c.key === activeCategory) || CATEGORIES[0];
+    const currentList = rankedLists[activeCategory] || [];
+    const top1Player = currentList.length > 0 ? currentList[0] : null;
+
+    const isLoading = tourLoading || matchesLoading;
+
+    const getStatValue = (player: PlayerStats, key: CategoryKey): number => {
+        switch (key) {
+            case "opponents": return player.opponentsCount;
+            case "matches": return player.totalMatches;
+            case "wins": return player.wins;
+            case "streak": return player.maxStreak;
+            case "losses": return player.losses;
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#F0F2F4] pb-24 font-sans">
             <NavBar />
 
-            {/* MOBILE LAYOUT (block sm:hidden) */}
-            <div className="block sm:hidden bg-[#F0F2F4]">
-                {/* Banner Image */}
-                <div className="relative w-full h-[180px] bg-gray-200 overflow-hidden">
-                    {tournament ? (
-                        <Image
-                            src={bannerSrc}
-                            alt={tournament?.name || "Event Banner"}
-                            fill
-                            className="object-cover"
-                            priority
-                            onError={() => setBannerSrc('/images/tour_banner.webp')}
-                        />
-                    ) : (
-                        <Skeleton className="w-full h-full" />
-                    )}
-                </div>
-
-                {/* Main Content Area */}
-                <div className="px-4 -mt-[40px] pb-8 relative z-10 flex flex-col gap-4">
-                    {/* Header Card */}
-                    <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100/50 flex flex-col gap-3">
-                        <div className="flex items-center gap-2">
-                            <span className="p-2 bg-rose-50 text-rose-600 rounded-xl">
-                                <FaGift className="w-5 h-5" />
-                            </span>
-                            <div>
-                                <h1 className="text-lg font-bold text-gray-900 leading-tight">
-                                    {tournament?.name || "Sự kiện"}
-                                </h1>
-                                <p className="text-xs font-semibold text-rose-600 uppercase tracking-wider">
-                                    Phần thưởng & Điểm Bonus
-                                </p>
-                            </div>
-                        </div>
-
-                        {bonusPoints > 0 && (
-                            <div className="mt-2 p-3 bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 border border-amber-200 rounded-xl flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <FaStar className="text-amber-500 text-lg" />
-                                    <div>
-                                        <div className="text-xs text-gray-600 font-medium">Bonus lần đầu đối đầu</div>
-                                        <div className="text-sm font-bold text-gray-900">Cộng trực tiếp vào BXH</div>
-                                    </div>
-                                </div>
-                                <span className="text-base font-extrabold text-amber-600 bg-white px-3 py-1 rounded-full shadow-sm">
-                                    +{bonusPoints} điểm
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Cơ cấu giải thưởng */}
-                    {prizeList.length > 0 && (
-                        <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100/50 flex flex-col gap-3">
-                            <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                                <FaTrophy className="text-amber-500" />
-                                Cơ cấu giải thưởng & Thưởng
-                            </h2>
-                            <div className="grid grid-cols-2 gap-2.5">
-                                {prizeList.map((prize, idx) => {
-                                    const Icon = prize.icon;
-                                    return (
-                                        <div key={idx} className={`p-3 rounded-xl ${prize.bg} border border-black/5 flex flex-col`}>
-                                            <div className="flex items-center gap-1.5 text-xs text-gray-600 font-medium mb-1">
-                                                <Icon className={prize.color} />
-                                                <span>{prize.label}</span>
-                                            </div>
-                                            <div className="text-sm font-extrabold text-gray-900">
-                                                {formatCurrency(prize.value)}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Cơ chế tích lũy điểm số hàng ngày */}
-                    <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100/50 flex flex-col gap-3">
-                        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                            <FaStar className="text-amber-500" />
-                            Cơ chế tích lũy điểm số hàng ngày
-                        </h2>
-                        <div className="text-xs text-gray-600 leading-relaxed flex flex-col gap-2.5">
-                            <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl">
-                                <div className="font-bold text-blue-900 mb-1">A. Công thức tính điểm</div>
-                                <div className="text-gray-700">
-                                    • <span className="font-semibold">Quy đổi Tổng số trận:</span>
-                                    <div className="mt-1 font-mono font-bold text-blue-800 bg-white px-2 py-1 rounded border border-blue-200">
-                                        Tổng số trận = (Chạm × 2 - 1) - Chấp
-                                    </div>
-                                    <div className="text-[11px] text-gray-500 mt-1 italic">
-                                        (Ví dụ: Trận Chạm 15 chấp 4 ➔ Tổng số trận = 15 × 2 - 1 - 4 = 25 ván).
-                                    </div>
-                                </div>
-                                <div className="text-gray-700 mt-2">
-                                    • <span className="font-semibold">Hệ số tính điểm:</span> Thắng: <b className="text-emerald-600">0.35</b> | Thua: <b className="text-gray-600">0.05</b>
-                                </div>
-                                <div className="text-gray-700 mt-1">
-                                    • <span className="font-semibold">Điểm trận đấu nhận được:</span>
-                                    <div className="text-[11px] text-gray-600 mt-0.5 space-y-0.5">
-                                        <div>- Điểm người thắng = Tổng số trận × 0.35 (VD: 25 × 0.35 = 8.75 điểm)</div>
-                                        <div>- Điểm người thua = Tổng số trận × 0.05 (VD: 25 × 0.05 = 1.25 điểm)</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="p-3 bg-amber-50/70 border border-amber-100 rounded-xl">
-                                <div className="font-bold text-amber-900 mb-1">B. Quy định & Điểm cộng thêm</div>
-                                <div className="text-gray-700">
-                                    • <span className="font-semibold">Chạm trán lần đầu:</span> <b className="text-amber-700">+20 điểm / người</b>. Thưởng ngay cho cả 2 cơ thủ khi lần đầu thi đấu với nhau (chỉ tính 01 lần duy nhất trong tháng dương lịch cho mỗi cặp).
-                                </div>
-                                <div className="text-gray-700 mt-1.5">
-                                    • <span className="font-semibold">Quy định chống cày điểm:</span> Tối đa <b className="text-rose-600">03 trận/ngày</b> được tính điểm giữa 2 cơ thủ cụ thể. Từ trận thứ 4 trở đi trong ngày giữa cặp cơ thủ đó: Trận đấu vẫn được diễn ra bình thường, nhưng sẽ không được cộng điểm BXH (0 điểm).
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Danh sách cơ thủ */}
-                    <div className="bg-white rounded-2xl p-5 shadow-md border border-gray-100/50 flex flex-col gap-3">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex items-center gap-2">
-                                <FaStar className="text-rose-500" />
-                                Cơ thủ tham gia
-                            </h2>
-                            <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
-                                {registrations?.length || 0} cơ thủ
-                            </span>
-                        </div>
-
-                        {isLoading ? (
-                            <div className="flex flex-col gap-2 py-3">
-                                {[1, 2, 3].map(i => (
-                                    <Skeleton key={i} className="w-full h-12 rounded-xl" />
-                                ))}
-                            </div>
-                        ) : !registrations || registrations.length === 0 ? (
-                            <div className="py-8 text-center text-gray-500 text-sm">
-                                Chưa có dữ liệu cơ thủ đăng ký
-                            </div>
-                        ) : (
-                            <div className="flex flex-col divide-y divide-gray-100">
-                                {registrations.map((player, index) => (
-                                    <div key={player.id || index} className="py-2.5 flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-6 text-xs font-bold text-gray-400 text-center">
-                                                #{index + 1}
-                                            </div>
-                                            <div className="relative w-9 h-9 rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
-                                                {player.avatar_url ? (
-                                                    <Image
-                                                        src={resolveImageUrl(player.avatar_url, '')}
-                                                        alt={player.full_name}
-                                                        fill
-                                                        className="object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500 bg-gray-200">
-                                                        {player.full_name?.charAt(0)?.toUpperCase() || "?"}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-semibold text-gray-900 leading-tight">
-                                                    {player.full_name}
-                                                </div>
-                                                {player.rank && (
-                                                    <div className="text-[11px] font-medium text-gray-500">
-                                                        {formatFullLevel(player.rank)}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-xs font-bold px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700">
-                                                {player.points ?? player.current_points ?? 0} pts
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
+            {/* BANNER SECTION - Responsive */}
+            {/* Mobile Banner */}
+            <div className="block sm:hidden w-full h-[180px] bg-gray-200 relative overflow-hidden">
+                {tournament ? (
+                    <Image
+                        src={bannerSrc}
+                        alt={tournament?.name || "Event Banner"}
+                        fill
+                        className="object-cover"
+                        priority
+                        onError={() => setBannerSrc('/images/tour_banner.webp')}
+                    />
+                ) : (
+                    <Skeleton className="w-full h-full" />
+                )}
             </div>
 
-            {/* DESKTOP LAYOUT (hidden sm:block) */}
+            {/* Desktop Banner Container */}
             <div className="hidden sm:block">
                 {tournament ? (
                     <div 
-                        className="flex flex-col bg-no-repeat"
+                        className="flex flex-col bg-no-repeat bg-top"
                         style={{ 
                             backgroundImage: `url(${bannerSrc})`,
                             backgroundSize: '1920px 450px'
                         }}
                     >
-                        <main className="w-full max-w-[1360px] mx-auto mt-[288px] flex flex-col items-center px-4 pb-12">
-                            <div className="w-full z-10 flex flex-col gap-6">
-                                {/* Header Card */}
-                                <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100 flex items-center justify-between">
-                                    <div className="flex items-center gap-5">
-                                        <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 shadow-inner">
-                                            <FaGift className="w-8 h-8" />
-                                        </div>
-                                        <div>
-                                            <div className="text-xs font-bold text-rose-600 uppercase tracking-widest mb-1">
-                                                Phần thưởng & Cơ chế Bonus
-                                            </div>
-                                            <h1 className="text-2xl lg:text-3xl font-black text-gray-900">
-                                                {tournament?.name}
-                                            </h1>
-                                        </div>
-                                    </div>
-
-                                    {bonusPoints > 0 && (
-                                        <div className="flex items-center gap-4 bg-gradient-to-r from-amber-50 via-rose-50 to-purple-50 border border-amber-200 px-6 py-4 rounded-2xl">
-                                            <FaStar className="text-amber-500 text-2xl" />
-                                            <div>
-                                                <div className="text-xs text-gray-600 font-semibold">Thưởng lần đầu đối đầu</div>
-                                                <div className="text-sm text-gray-800">Cộng trực tiếp vào BXH</div>
-                                            </div>
-                                            <div className="text-2xl font-black text-amber-600 ml-2">
-                                                +{bonusPoints} điểm
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Giải thưởng & Phần thưởng */}
-                                {prizeList.length > 0 && (
-                                    <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
-                                        <h2 className="text-base font-bold text-gray-900 uppercase tracking-wider mb-6 flex items-center gap-2">
-                                            <FaTrophy className="text-amber-500 text-lg" />
-                                            Cơ cấu giải thưởng & Thưởng của sự kiện
-                                        </h2>
-                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                                            {prizeList.map((prize, idx) => {
-                                                const Icon = prize.icon;
-                                                return (
-                                                    <div key={idx} className={`p-4 rounded-2xl ${prize.bg} border border-black/5 flex flex-col justify-between`}>
-                                                        <div className="flex items-center gap-2 text-xs text-gray-600 font-medium mb-2">
-                                                            <Icon className={prize.color} />
-                                                            <span>{prize.label}</span>
-                                                        </div>
-                                                        <div className="text-lg font-black text-gray-900">
-                                                            {formatCurrency(prize.value)}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Cơ chế tích lũy điểm số hàng ngày */}
-                                <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
-                                    <h2 className="text-base font-bold text-gray-900 uppercase tracking-wider mb-6 flex items-center gap-2">
-                                        <FaStar className="text-amber-500 text-lg" />
-                                        Cơ chế tích lũy điểm số hàng ngày
-                                    </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="p-5 bg-blue-50/60 border border-blue-100 rounded-2xl flex flex-col justify-between">
-                                            <div>
-                                                <div className="text-sm font-bold text-blue-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                                    <span>📐</span> A. Công thức tính điểm
-                                                </div>
-                                                <div className="space-y-3 text-sm text-gray-700">
-                                                    <div>
-                                                        <div className="font-semibold text-gray-900">1. Quy đổi Tổng số trận:</div>
-                                                        <div className="mt-1 font-mono font-bold text-blue-800 bg-white px-3 py-1.5 rounded-xl border border-blue-200 inline-block shadow-sm">
-                                                            Tổng số trận = (Chạm × 2 - 1) - Chấp
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 mt-1 italic">
-                                                            (Ví dụ: Trận Chạm 15 chấp 4 ➔ Tổng số trận = 15 × 2 - 1 - 4 = 25 ván)
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-semibold text-gray-900">2. Hệ số tính điểm:</div>
-                                                        <div className="flex gap-4 mt-1 text-sm">
-                                                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold">
-                                                                Hệ số thắng: 0.35
-                                                            </span>
-                                                            <span className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg font-bold">
-                                                                Hệ số thua: 0.05
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <div className="font-semibold text-gray-900">3. Điểm trận đấu nhận được:</div>
-                                                        <ul className="list-disc list-inside text-xs text-gray-600 mt-1 space-y-1">
-                                                            <li><b>Điểm người thắng</b> = Tổng số trận × 0.35 <span className="text-emerald-700 font-semibold">(VD: 25 × 0.35 = 8.75 điểm)</span></li>
-                                                            <li><b>Điểm người thua</b> = Tổng số trận × 0.05 <span className="text-gray-700 font-semibold">(VD: 25 × 0.05 = 1.25 điểm)</span></li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-5 bg-amber-50/60 border border-amber-100 rounded-2xl flex flex-col justify-between">
-                                            <div>
-                                                <div className="text-sm font-bold text-amber-900 uppercase tracking-wide mb-3 flex items-center gap-2">
-                                                    <span>🎁</span> B. Quy định & Điểm cộng thêm
-                                                </div>
-                                                <div className="space-y-4 text-sm text-gray-700">
-                                                    <div className="p-3.5 bg-white rounded-xl border border-amber-200 shadow-sm">
-                                                        <div className="font-bold text-amber-800 flex items-center gap-1.5 mb-1">
-                                                            <FaStar className="text-amber-500" />
-                                                            Chạm trán lần đầu (+20 điểm / người)
-                                                        </div>
-                                                        <div className="text-xs text-gray-600 leading-relaxed">
-                                                            Thưởng ngay cho cả 2 cơ thủ khi lần đầu thi đấu với nhau. Chỉ tính <b>01 lần duy nhất trong tháng dương lịch</b> cho mỗi cặp cơ thủ.
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="p-3.5 bg-white rounded-xl border border-rose-200 shadow-sm">
-                                                        <div className="font-bold text-rose-800 flex items-center gap-1.5 mb-1">
-                                                            <span>🛡️</span> Quy định chống cày điểm
-                                                        </div>
-                                                        <div className="text-xs text-gray-600 leading-relaxed space-y-1">
-                                                            <div>• Tối đa <b>03 trận/ngày</b> được tính điểm giữa 2 cơ thủ cụ thể.</div>
-                                                            <div>• Từ trận thứ 4 trở đi trong ngày giữa cặp cơ thủ đó: Trận đấu vẫn được diễn ra bình thường, nhưng sẽ <b>không được cộng điểm BXH (0 điểm)</b>.</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Danh sách cơ thủ */}
-                                <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-100">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-base font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                                            <FaStar className="text-rose-500 text-lg" />
-                                            Danh sách cơ thủ tham gia
-                                        </h2>
-                                        <span className="text-xs font-bold px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
-                                            {registrations?.length || 0} cơ thủ đăng ký
-                                        </span>
-                                    </div>
-
-                                    {isLoading ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            {[1, 2, 3, 4, 5, 6].map(i => (
-                                                <Skeleton key={i} className="w-full h-16 rounded-2xl" />
-                                            ))}
-                                        </div>
-                                    ) : !registrations || registrations.length === 0 ? (
-                                        <div className="py-12 text-center text-gray-500 font-medium">
-                                            Chưa có cơ thủ đăng ký sự kiện này
-                                        </div>
-                                    ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            {registrations.map((player, index) => (
-                                                <div 
-                                                    key={player.id || index}
-                                                    className="p-3.5 rounded-2xl border border-gray-100 hover:border-gray-300 hover:shadow-sm transition-all flex items-center justify-between bg-gray-50/50"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="w-6 text-xs font-bold text-gray-400 text-center">
-                                                            #{index + 1}
-                                                        </span>
-                                                        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 border border-gray-200 flex-shrink-0">
-                                                            {player.avatar_url ? (
-                                                                <Image
-                                                                    src={resolveImageUrl(player.avatar_url, '')}
-                                                                    alt={player.full_name}
-                                                                    fill
-                                                                    className="object-cover"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500 bg-gray-200">
-                                                                    {player.full_name?.charAt(0)?.toUpperCase() || "?"}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-sm font-bold text-gray-900">
-                                                                {player.full_name}
-                                                            </div>
-                                                            {player.rank && (
-                                                                <div className="text-xs text-gray-500 font-medium">
-                                                                    {formatFullLevel(player.rank)}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700">
-                                                            {player.points ?? player.current_points ?? 0} pts
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </main>
+                        <div className="w-full h-[288px]" />
                     </div>
                 ) : (
-                    <div className="w-full h-[450px] bg-[#172339] overflow-hidden">
+                    <div className="w-full h-[320px] bg-[#172339]">
                         <Skeleton className="w-full h-full" />
                     </div>
                 )}
             </div>
+
+            {/* MAIN CONTENT AREA */}
+            <main className="w-full max-w-[1360px] mx-auto px-4 -mt-[30px] sm:-mt-[160px] relative z-20 flex flex-col gap-6">
+
+                {/* 5 CATEGORY TABS / SWITCHER CARDS */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {CATEGORIES.map(cat => {
+                        const Icon = cat.icon;
+                        const isSelected = activeCategory === cat.key;
+                        const catTop1 = (rankedLists[cat.key] && rankedLists[cat.key][0]) || null;
+                        const top1Val = catTop1 ? getStatValue(catTop1, cat.key) : 0;
+
+                        return (
+                            <button
+                                key={cat.key}
+                                onClick={() => setActiveCategory(cat.key)}
+                                className={`text-left p-3.5 sm:p-4 rounded-2xl transition-all duration-300 border flex flex-col justify-between cursor-pointer ${
+                                    isSelected
+                                        ? "bg-white border-2 border-amber-500 shadow-xl scale-[1.02] ring-2 ring-amber-400/20"
+                                        : "bg-white/90 hover:bg-white border-gray-100 hover:border-gray-200 shadow-sm hover:shadow-md"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between w-full mb-2">
+                                    <span className={`p-2 rounded-xl text-base ${isSelected ? "bg-amber-500 text-white shadow-sm" : `${cat.bgLight} ${cat.textColor}`}`}>
+                                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                                    </span>
+                                    {isSelected && (
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase tracking-wider">
+                                            Đang xem
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <div className={`text-xs font-bold uppercase tracking-wider mb-1 line-clamp-1 ${isSelected ? "text-gray-900" : "text-gray-600"}`}>
+                                        {cat.shortTitle}
+                                    </div>
+                                    {catTop1 ? (
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="text-lg sm:text-xl font-black text-gray-900">
+                                                {top1Val}
+                                            </span>
+                                            <span className="text-xs font-semibold text-gray-500">
+                                                {cat.unit}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-gray-400">Chưa có số liệu</div>
+                                    )}
+                                    {catTop1 && (
+                                        <div className="text-[11px] text-gray-500 truncate mt-0.5 font-medium">
+                                            👑 {catTop1.name}
+                                        </div>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* ACTIVE CATEGORY HEADER & DESCRIPTION */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3.5">
+                        <span className={`p-3 rounded-2xl bg-gradient-to-br ${activeConfig.color} text-white shadow-md shadow-gray-200`}>
+                            <activeConfig.icon className="w-6 h-6" />
+                        </span>
+                        <div>
+                            <h2 className="text-lg sm:text-xl font-black text-gray-900 leading-tight">
+                                {activeConfig.title}
+                            </h2>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                                {activeConfig.description}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700">
+                            {currentList.length} cơ thủ có số liệu
+                        </span>
+                    </div>
+                </div>
+
+                {/* LEADERBOARD CONTENT */}
+                {isLoading ? (
+                    <div className="flex flex-col gap-3">
+                        <Skeleton className="w-full h-32 rounded-2xl" />
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <Skeleton key={i} className="w-full h-16 rounded-xl" />
+                        ))}
+                    </div>
+                ) : currentList.length === 0 ? (
+                    <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-2xl">
+                            <activeConfig.icon />
+                        </div>
+                        <h3 className="text-base font-bold text-gray-800">
+                            Chưa có dữ liệu trận đấu
+                        </h3>
+                        <p className="text-xs text-gray-500 max-w-sm">
+                            Khi các cơ thủ hoàn thành các trận đấu tại bàn Scoreboard, bảng xếp hạng sẽ tự động thống kê và cập nhật tại đây.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-4">
+
+                        {/* TOP 1 SHOWCASE CARD */}
+                        {top1Player && (
+                            <div 
+                                onClick={() => top1Player.id && router.push(`/player/${top1Player.id}`)}
+                                className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 rounded-3xl p-5 sm:p-7 shadow-xl text-white cursor-pointer hover:shadow-2xl transition-all duration-300 group"
+                            >
+                                {/* Decorative elements */}
+                                <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                                <div className="absolute right-6 top-6 text-white/20 text-7xl sm:text-8xl font-black select-none pointer-events-none">
+                                    #1
+                                </div>
+
+                                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                                    <div className="flex items-center gap-4 sm:gap-6">
+                                        {/* Avatar with Crown */}
+                                        <div className="relative flex-shrink-0">
+                                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white p-1 shadow-lg ring-4 ring-white/40 overflow-hidden relative">
+                                                {top1Player.avatarUrl ? (
+                                                    <Image
+                                                        src={resolveImageUrl(top1Player.avatarUrl, '')}
+                                                        alt={top1Player.name}
+                                                        fill
+                                                        className="object-cover rounded-xl"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-xl font-black text-amber-600 bg-amber-50 rounded-xl">
+                                                        {top1Player.name.charAt(0)?.toUpperCase()}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className="absolute -top-3 -right-2 text-xl filter drop-shadow">
+                                                👑
+                                            </span>
+                                        </div>
+
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-[11px] font-black tracking-widest uppercase bg-black/20 text-white px-2.5 py-0.5 rounded-full">
+                                                    Dẫn đầu bảng vàng
+                                                </span>
+                                                {top1Player.rank && (
+                                                    <span className="text-xs font-bold bg-white/30 text-white px-2 py-0.5 rounded-full">
+                                                        {formatLevel(top1Player.rank)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h3 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-sm group-hover:underline">
+                                                {top1Player.name}
+                                            </h3>
+                                            <div className="text-xs text-white/90 mt-1 font-medium flex items-center gap-3">
+                                                <span>{top1Player.totalMatches} trận đã đấu</span>
+                                                <span>•</span>
+                                                <span>{top1Player.wins} thắng - {top1Player.losses} thua</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Big Stat Value */}
+                                    <div className="bg-black/15 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3.5 flex flex-col items-center sm:items-end justify-center self-stretch sm:self-auto">
+                                        <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
+                                            {activeConfig.shortTitle}
+                                        </span>
+                                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                                            <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                                                {getStatValue(top1Player, activeCategory)}
+                                            </span>
+                                            <span className="text-sm font-bold text-white/90">
+                                                {activeConfig.unit}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* RANKING LIST ROWS */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+                            {currentList.map((player, index) => {
+                                const statVal = getStatValue(player, activeCategory);
+                                const isTop1 = index === 0;
+                                const isTop2 = index === 1;
+                                const isTop3 = index === 2;
+
+                                return (
+                                    <div
+                                        key={player.id || index}
+                                        onClick={() => player.id && router.push(`/player/${player.id}`)}
+                                        className={`p-3.5 sm:p-4.5 flex items-center justify-between gap-3 sm:gap-4 transition-all duration-200 cursor-pointer ${
+                                            isTop1
+                                                ? "bg-amber-50/40 hover:bg-amber-50/70"
+                                                : isTop2
+                                                    ? "bg-slate-50/50 hover:bg-slate-100/70"
+                                                    : isTop3
+                                                        ? "bg-orange-50/30 hover:bg-orange-50/60"
+                                                        : "hover:bg-gray-50/80"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                                            {/* Rank Badge */}
+                                            <div className="w-8 sm:w-10 text-center flex-shrink-0 flex items-center justify-center">
+                                                {isTop1 ? (
+                                                    <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-sm shadow-amber-200">
+                                                        1
+                                                    </span>
+                                                ) : isTop2 ? (
+                                                    <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-400 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-sm">
+                                                        2
+                                                    </span>
+                                                ) : isTop3 ? (
+                                                    <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-700 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-sm">
+                                                        3
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs sm:text-sm font-bold text-gray-400">
+                                                        #{index + 1}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Avatar */}
+                                            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
+                                                {player.avatarUrl ? (
+                                                    <Image
+                                                        src={resolveImageUrl(player.avatarUrl, '')}
+                                                        alt={player.name}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-xs sm:text-sm font-bold text-gray-500 bg-gray-200">
+                                                        {player.name.charAt(0)?.toUpperCase() || "?"}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Player Details */}
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm sm:text-base font-bold text-gray-900 truncate hover:text-amber-600 transition-colors">
+                                                        {player.name}
+                                                    </span>
+                                                    {player.rank && (
+                                                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 flex-shrink-0">
+                                                            {formatLevel(player.rank)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-gray-500 font-medium truncate mt-0.5">
+                                                    Đã đấu: <span className="font-semibold text-gray-700">{player.totalMatches}</span> trận • Thắng: <span className="font-semibold text-emerald-600">{player.wins}</span> • Thua: <span className="font-semibold text-gray-600">{player.losses}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Stat Badge */}
+                                        <div className="flex items-center gap-3 flex-shrink-0">
+                                            <div className="text-right">
+                                                <div className="text-sm sm:text-base font-black text-gray-900">
+                                                    {statVal}
+                                                </div>
+                                                <div className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                    {activeConfig.unit}
+                                                </div>
+                                            </div>
+                                            <FaArrowRight className="w-3 h-3 text-gray-300 hidden sm:block" />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </main>
 
             <TournamentNavbar activeTab="bonus" isEvent={true} />
         </div>
